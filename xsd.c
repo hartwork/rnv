@@ -581,13 +581,9 @@ int xsd_allows(char *typ,char *ps,char *s,int n) {
     fct.pattern[fct.npat++]=PAT_ANY_URI;
     length=toklenn(s,n);
     break;
-  case TYP_QNAME:
+  case TYP_QNAME: case TYP_NOTATION:
     fct.pattern[fct.npat++]=PAT_QNAME;
-    length=toklenn(s,n);
-    break;
-  case TYP_NOTATION:
-    fct.pattern[fct.npat++]=PAT_QNAME;
-    length=toklenn(s,n);
+    fct.set&=~(1<<FCT_LENGTH|1<<FCT_MIN_LENGTH|1<<FCT_MAX_LENGTH); /* the errata states that any value is valid */
     break;
  /*derived*/
   case TYP_NORMALIZED_STRING: fct.whiteSpace=WS_REPLACE; 

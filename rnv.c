@@ -19,12 +19,14 @@
 #define LEN_T RNV_LEN_T
 #define LIM_T RNV_LIM_T
 
-#define ELEMENT_NOT_ALLOWED "element '%s^%s' not allowed"
-#define ATTRIBUTE_NOT_ALLOWED "attribute '%s^%s' not allowed"
-#define VALUE_NOT_ALLOWED "attribute '%s^%s=\"%s\"' not allowed"
-#define ELEMENTS_MISSING "required elements missing"
-#define ATTRIBUTES_MISSING "required attributes of element '%s^%s' missing"
-#define TEXT_NOT_ALLOWED "text not allowed"
+#define RNVER_ELEM 0
+#define RNVER_AKEY 1
+#define RNVER_AVAL 2
+#define RNVER_EMIS 3
+#define RNVER_AMIS 4
+#define RNVER_UFIN 5
+#define RNVER_TEXT 6
+#define RNVER_MIXT 7
 
 static char *xml;
 static XML_Parser expat;
@@ -38,7 +40,6 @@ static char *text; static int len_t;
 static int n_t;
 
 static char *suri=NULL,*sname; static int len_suri=-1; /* qname() splits, handlers use */
-static char *msg=NULL; static int len_msg=-1; /* buffer for error messages */
 
 static void init(void) {
   rn_init();
@@ -65,10 +66,26 @@ static int load_rnc(char *fn) {
   return 1;
 }
 
-static void error(char *msg) {
+#define err(msg) vfprintf(stderr,msg,ap);
+
+static void error(int erno,...) {
   char *s;
+  va_list ap;
   ++errors;
-  fprintf(stderr,"invalid document (%s,%i,%i): %s",xml,XML_GetCurrentLineNumber(expat),XML_GetCurrentColumnNumber(expat),msg);
+  fprintf(stderr,"invalid document (%s,%i,%i): ",xml,XML_GetCurrentLineNumber(expat),XML_GetCurrentColumnNumber(expat));
+  va_start(ap,erno);
+  switch(erno) {
+  case RNVER_ELEM: err("element '%s^%s' not allowed"); break;
+  case RNVER_AKEY: err("attribute '%s^%s' not allowed"); break;
+  case RNVER_AVAL: err("attribute '%s^%s with invalid value \"%s\"'"); break;
+  case RNVER_EMIS: err("incomplete content"); break;
+  case RNVER_AMIS: err("missing attributes of '%s^%s'"); break;
+  case RNVER_UFIN: err("unfinished content"); break;
+  case RNVER_TEXT: err("invalid text or data"); break;
+  case RNVER_MIXT: err("text not allowed"); break;
+  default: assert(0);
+  }                
+  va_end(ap);
   if(explain) {
     rnx_expected(previous);
     if(rnx_n_exp!=0) {
@@ -105,15 +122,15 @@ static void flush_text(void) {
     if(!whitespace()) {
       current=drv_mixed_text(previous=current);
       if(current==rn_notAllowed) {
-	error(TEXT_NOT_ALLOWED);
 	current=drv_mixed_text_recover(previous);
+	error(RNVER_MIXT);
       }
     }
   } else {
     current=drv_text(previous=current,text,n_t);
     if(current==rn_notAllowed) {
-      error(TEXT_NOT_ALLOWED);
       current=drv_text_recover(previous,text,n_t);
+      error(RNVER_TEXT);
     }
   }
   text[n_t=0]='\0';
@@ -128,11 +145,8 @@ static void start_element(void *userData,const char *name,const char **attrs) {
     qname((char*)name);
     current=drv_start_tag_open(previous=current,suri,sname);
     if(current==rn_notAllowed) {
-      int len=strlen(ELEMENT_NOT_ALLOWED)+strlen(suri)+strlen(sname);
-      if(len>len_msg) {len_msg=len; free(msg); msg=(char*)calloc(len_msg,sizeof(char));}
-      msg[sprintf(msg,ELEMENT_NOT_ALLOWED,suri,sname)]='\0';
-      error(msg);
       current=drv_start_tag_open_recover(previous,suri,sname);
+      error(current==rn_notAllowed?RNVER_ELEM:RNVER_EMIS,suri,sname); 
     }
     while(current!=rn_notAllowed) {
       if(!(*attrs)) break;
@@ -140,19 +154,13 @@ static void start_element(void *userData,const char *name,const char **attrs) {
       current=drv_attribute_open(previous=current,suri,sname);
       ++attrs;
       if(current==rn_notAllowed) {
-	int len=strlen(ATTRIBUTE_NOT_ALLOWED)+strlen(suri)+strlen(sname);
-	if(len>len_msg) {len_msg=len; free(msg); msg=(char*)calloc(len_msg,sizeof(char));}
-	msg[sprintf(msg,ATTRIBUTE_NOT_ALLOWED,suri,sname)]='\0';
-	error(msg);
 	current=drv_attribute_open_recover(previous,suri,sname);
+	error(RNVER_AKEY,suri,name);
       } else {
 	current=drv_text(previous=current,(char*)*attrs,strlen(*attrs));
 	if(current==rn_notAllowed || (current=drv_attribute_close(previous=current))==rn_notAllowed) {
-	  int len=strlen(VALUE_NOT_ALLOWED)+strlen(suri)+strlen(sname)+strlen(*attrs);
-	  if(len>len_msg) {len_msg=len; free(msg); msg=(char*)calloc(len_msg,sizeof(char));}
-	  msg[sprintf(msg,VALUE_NOT_ALLOWED,suri,sname,*attrs)]='\0';
-	  error(msg);
 	  current=drv_attribute_close_recover(previous);
+	  error(RNVER_AVAL,suri,sname,*attrs);
 	}
       }
       ++attrs;
@@ -160,13 +168,9 @@ static void start_element(void *userData,const char *name,const char **attrs) {
     if(current!=rn_notAllowed) {
       current=drv_start_tag_close(previous=current);
       if(current==rn_notAllowed) {
-	int len;
-	qname((char*)name);
-	len=strlen(ATTRIBUTES_MISSING)+strlen(suri)+strlen(sname);
-	if(len>len_msg) {len_msg=len; free(msg); msg=(char*)calloc(len_msg,sizeof(char));}
-	msg[sprintf(msg,ATTRIBUTES_MISSING,suri,sname)]='\0';
-	error(msg);
 	current=drv_start_tag_close_recover(previous);
+	qname((char*)name);
+	error(RNVER_AMIS,suri,sname);
       }
     }
     mixed=0;
@@ -180,7 +184,7 @@ static void end_element(void *userData,const char *name) {
     flush_text(); 
     current=drv_end_tag(previous=current);
     if(current==rn_notAllowed) {
-      error(ELEMENTS_MISSING);
+      error(RNVER_UFIN);
       current=drv_end_tag_recover(previous);
     }
     mixed=1;
