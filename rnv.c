@@ -187,7 +187,7 @@ static void end_element(void *userData,const char *name) {
 
 static void characters(void *userData,const char *s,int len) {
   if(current!=rn_notAllowed) {
-    int newlen_t=n_t+len;
+    int newlen_t=n_t+len+1;
     if(newlen_t<=LIM_T&&LIM_T<len_t) newlen_t=LIM_T; 
     else if(newlen_t<len_t) newlen_t=len_t;
     if(len_t!=newlen_t) {
@@ -195,7 +195,7 @@ static void characters(void *userData,const char *s,int len) {
       memcpy(newtext,text,n_t*sizeof(char)); free(text); 
       text=newtext;
     }
-    strncpy(text+n_t,s,len); n_t+=len;
+    strncpy(text+n_t,s,len); n_t+=len; text[n_t]='\0'; /* '\0' guarantees that the text is bounded, and strto[ld] work for data */
   }
 }
 

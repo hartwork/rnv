@@ -15,6 +15,7 @@ extern int u_put(char *s,int u);
 
 /* number of unicode characters in the string; -1 means error */
 extern int u_strlen(char *s);
+extern int u_strnlen(char *s,int n);
 
 /* checks whether a character falls within one of sorted ranges */
 extern int u_in_ranges(int u,int r[][2],int len);

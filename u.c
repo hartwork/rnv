@@ -48,19 +48,19 @@ int u_put(char *s,int u) {
   return 0;
 }
 
-int u_strlen(char *s) {
-  int i,n=0,u;
-  char *end=s; 
-  while(*end) ++end;
+int u_strlen(char *s) {int n=0; while(*(s+n)) ++n; return u_strnlen(s,n);}
+int u_strnlen(char *s,int n) {
+  int i,len=0,u;
+  char *end=s+n; 
   for(;;) {
     if(s==end) break;
     i=u_get(&u,s);
-    if(i==0) {n=-1; break;}
+    if(i==0) {len=-1; break;}
     s+=i;
-    if(s>end) {n=-1; break;}
-    ++n;
+    if(s>end) {len=-1; break;}
+    ++len;
   }
-  return n;
+  return len;
 }
 
 int u_in_ranges(int u,int r[][2],int len) {

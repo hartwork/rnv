@@ -477,12 +477,10 @@ static void advance(struct rnc_source *sp) {
 	    if(sp->v==':') prefixed=1;
           }
 	  if(!(escaped||prefixed)) {
-	    int n=0,m=NKWD-1,i,cmp;
-	    for(;;) {
-	      if(n>m) break;
-	      i=(n+m)/2;
-	      cmp=strcmp(NXT(sp).s,kwdtab[i]);
-	      if(cmp==0) {NXT(sp).sym=i; return;} else if(cmp<0) m=i-1; else n=i+1;
+	    int kwd;
+	    if((kwd=strtab(NXT(sp).s,kwdtab,NKWD))!=NKWD) {
+	      NXT(sp).sym=kwd;
+	      return;
 	    }
 	  }
 	  if(prefixed) {

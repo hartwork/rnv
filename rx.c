@@ -218,13 +218,7 @@ static int chclass(void) {
   for(;;) {
     if(regex[rj]=='\0') {ri=rj; error(); return 0;}
     if(regex[rj]=='}') {
-      int n=0,m=NUM_CLS_U-1,i,cmp;
-      for(;;) {
-	if(n>m) {error(); cl=0; break;}
-	i=(n+m)/2;
-	cmp=strncmp(regex+ri,clstab[i],rj-ri);
-	if(cmp==0) {cl=i; break;} else if(cmp<0) m=i-1; else n=i+1;
-      }
+      if((cl=strntab(regex+ri,rj-ri,clstab,NUM_CLS_U))==NUM_CLS_U) {error(); cl=0;}
       ri=rj+1;
       return cl;
     }
@@ -362,6 +356,7 @@ static int number(void) {
     default: goto END_OF_DIGITS;
     }
     n=n*10+m;
+    getsym();
   }
   END_OF_DIGITS:;
   return n;
@@ -587,36 +582,83 @@ static int in_class(int c,int cn) {
   return 0;
 }
 
-
 static int drv(int p,int c) {
   int p1,p2,cf,cl,cn;
   assert(!P_IS(p,ERROR));
   switch(P_TYP(p)) {
-  case  P_EMPTY: case  P_NOT_ALLOWED: p=notAllowed; break;
-  case  P_CHOICE: Choice(p,p1,p2); p=choice(drv(p1,c),drv(p2,c)); break;
-  case  P_GROUP: Group(p,p1,p2); {int p11=group(drv(p1,c),p2); p=nullable(p1)?choice(p11,drv(p2,c)):p11;} break;
-  case  P_ONE_OR_MORE: OneOreMore(p,p1); p=group(drv(p1,c),choice(empty,p)); break;
-  case  P_EXCEPT: Except(p,p1,p2); p=nullable(drv(p1,c))&&!nullable(drv(p2,c))?empty:notAllowed; break;
-  case  P_RANGE: Range(p,cf,cl); p=cf<=c&&c<=cl?empty:notAllowed; break;
-  case  P_CLASS: Class(p,cn); p=(cn>0?in_class(c,cn):!in_class(c,-cn))?empty:notAllowed; break;
-  case  P_ANY: p=empty; break;
-  case  P_CHAR: Char(p,cf); p=c==cf?empty:notAllowed; break;
+  case P_EMPTY: case P_NOT_ALLOWED: p=notAllowed; break;
+  case P_CHOICE: Choice(p,p1,p2); p=choice(drv(p1,c),drv(p2,c)); break;
+  case P_GROUP: Group(p,p1,p2); {int p11=group(drv(p1,c),p2); p=nullable(p1)?choice(p11,drv(p2,c)):p11;} break;
+  case P_ONE_OR_MORE: OneOreMore(p,p1); p=group(drv(p1,c),choice(empty,p)); break;
+  case P_EXCEPT: Except(p,p1,p2); p=nullable(drv(p1,c))&&!nullable(drv(p2,c))?empty:notAllowed; break;
+  case P_RANGE: Range(p,cf,cl); p=cf<=c&&c<=cl?empty:notAllowed; break;
+  case P_CLASS: Class(p,cn); p=(cn>0?in_class(c,cn):!in_class(c,-cn))?empty:notAllowed; break;
+  case P_ANY: p=empty; break;
+  case P_CHAR: Char(p,cf); p=c==cf?empty:notAllowed; break;
   default: assert(0);
   }
   return p;
 }
 
-static int match(int p,char *s,int n) {
-  int u,l;
-  while(n!=0) {l=u_get(&u,s); n-=l; s+=l; p=drv(p,u);}
-  return nullable(p);
-}
-
 int rx_match(char *rx,char *s,int n) {
   int p=compile(rx);
-  return !errors&&match(p,s,n);
+  if(!errors) {
+    char *end=s+n;
+    int u;
+    for(;;) {
+      if(p==notAllowed) return 0;
+      if(s==end) return nullable(p);
+      s+=u_get(&u,s);
+      p=drv(p,u);
+    }
+  } else return 0;
 }
 
+int rx_rmatch(char *rx,char *s,int n) {
+  int p=compile(rx);
+  if(!errors) {
+    char *end=s+n;
+    int u;
+    for(;;) {
+      if(p==notAllowed) return 0;
+      if(s==end) return nullable(p);
+      s+=u_get(&u,s);
+      if(xmlc_white_space(u)) u=' ';
+      p=drv(p,u);
+    }
+  } else return 0;
+}
+
+int rx_cmatch(char *rx,char *s,int n) {
+  int p=compile(rx);
+  if(!errors) {
+    char *end=s+n;
+    int u;
+    SKIP_SPACE: for(;;) {
+      if(s==end) return nullable(p);
+      s+=u_get(&u,s); 
+      if(!xmlc_white_space(u)) break; 
+    }
+    for(;;) {
+      if(p==notAllowed) return 0;
+      if(xmlc_white_space(u)) { u=' ';
+	p=drv(p,u);
+	if(p==notAllowed) {
+	  for(;;) {
+	    if(s==end) return 1;
+	    s+=u_get(&u,s); 
+	    if(!xmlc_white_space(u)) return 0;
+	  } 
+	} else goto SKIP_SPACE;
+      }
+      p=drv(p,u);
+      if(s==end) goto SKIP_SPACE;
+      s+=u_get(&u,s); 
+    }
+  } else return 0;
+}
+
+#ifdef TEST_RX
 void rx_dump(void) {
   int i;
   for(i=0;i!=i_p;++i) {
@@ -638,3 +680,4 @@ void rx_dump(void) {
     printf("\n");
   }
 }
+#endif
