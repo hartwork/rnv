@@ -9,7 +9,7 @@ UNISTD_H="<unistd.h>"
 INC=-I/usr/local/include
 LBL=-L/usr/local/lib
 
-DEF=-DEXPAT_H=${EXPAT_H} -DUNISTD_H=${UNISTD_H} -DRNV_VERSION="\"${VERSION}\""
+DEF=-DEXPAT_H=${EXPAT_H} -DUNISTD_H=${UNISTD_H} -DRNV_VERSION="\"${VERSION}\"" -DARX_VERSION="\"${VERSION}\""
 WARN=-Wall -Wstrict-prototypes  -Wmissing-prototypes -Wcast-align
 OPT=-O -g
 
@@ -72,8 +72,11 @@ all: rnv
 rnv: xcl.o ${LIBRNV}
 	${CC} ${LFLAGS} -o rnv xcl.o ${LIBRNV} ${LIB}
 
-rnd_test: ${OBJ} rnd_test.o
-	${CC} ${LFLAGS} -o rnd_test rnd_test.o ${OBJ} ${LIB}
+arx: arx.o ${LIBRNV}
+	${CC} ${LFLAGS} -o arx arx.o ${LIBRNV} ${LIB}
+
+rnd_test: ${LIBRNV} tst/c/rnd_test.c
+	${CC} ${LFLAGS} -I. -o rnd_test tst/c/rnd_test.c ${LIBRNV} ${LIB}
 
 ${LIBRNVA}: ${OBJ}
 	ar rc $@ ${OBJ}
@@ -85,7 +88,7 @@ depend: ${SRC}
 	makedepend -Y ${DEF} ${SRC}
 
 clean:
-	-rm -f *.o  *.a *.so rnv rnd_test *_test *.core *.gmon *.gprof rnv*.zip rnv.txt rnv.pdf rnv.html rnv.xml
+	-rm -f *.o tst/c/*.o  *.a *.so rnv arx rnd_test *_test *.core *.gmon *.gprof rnv*.zip rnv.txt rnv.pdf rnv.html rnv.xml
 
 DISTFILES=license.txt ${SRC} Makefile readme.txt changes.txt src.txt
 DISTWIN32=rnv.exe compile.bat

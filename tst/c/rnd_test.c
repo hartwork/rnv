@@ -17,17 +17,11 @@ static int parse(struct rnc_source *sp) {
   start=rnc_parse(sp);
   rnc_close(sp); if(rnc_errors(sp)) return 0;
 
-  fprintf(stderr,"dereferencing\n");
-  rnd_deref(start); if(rnd_errors()) return 0;
-
-  fprintf(stderr,"checking restrictions\n");
-  rnd_restrictions(); if(rnd_errors()) return 0;
-
-  fprintf(stderr,"computing auxiliary traits\n");
-  rnd_traits();
-  start=rnd_release();
+  fprintf(stderr,"fixing\n");
+  start=rnd_fixup(start);
 
 #if 0
+  fprintf(stderr,"collecting garbage\n");
   start=rn_compress_last(start);
 #endif
 
@@ -38,43 +32,28 @@ static int parse(struct rnc_source *sp) {
   return 1;
 }
 
-static void dump(void) {
-  int p=1; char *s;
-  while(P_TYP(p)) {
-    if(!P_IS(p,VOID)) {
-      fprintf(stderr,"%c%4i: %s\n",marked(p)?'+':' ',p,s=rnx_p2str(p));
-      free(s);
-    }
-    ++p;
-  }
-}
-
 int main(int argc,char **argv) {
-  struct rnc_source *sp;
+  struct rnc_source src;
 
   rnc_init();
   rnd_init();
   rnx_init();
 
 
-  sp=rnc_alloc();
   if(*(++argv)) {
     do {
       fprintf(stderr,"\n*** processing '%s'\n",*argv);
-      if(rnc_open(sp,*argv)!=-1) if(!parse(sp)) goto ERRORS;
-      rnc_close(sp);
+      if(rnc_open(&src,*argv)!=-1) if(!parse(&src)) goto ERRORS;
+      rnc_close(&src);
     } while(*(++argv));
   } else {
-    rnc_bind(sp,"stdin",0);
-    if(!parse(sp)) goto ERRORS;
+    rnc_bind(&src,"stdin",0);
+    if(!parse(&src)) goto ERRORS;
   }
-  rnc_free(sp);
 
   rn_compress(starts,n_st);
 
   while(n_st--) printf("start=%i\n",starts[n_st]);
-
-  dump();
 
   return 0;
 

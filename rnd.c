@@ -442,7 +442,7 @@ static int release(void) {
 }
 
 int rnd_fixup(int start) {
-  errors=0;
-  deref(start); if(!errors) {restrictions(); if(!errors) traits();}
+  errors=0; deref(start); 
+  if(!errors) {restrictions(); if(!errors) traits();}
   start=release(); return errors?0:start;
 }

@@ -96,3 +96,4 @@ extern int xsd_tmcmp(struct xsd_tm *tmp1, struct xsd_tm *tmp2) {
     return 2;
   } else return -xsd_tmcmp(tmp2,tmp1);
 }
+

@@ -6,7 +6,7 @@ usage summary:
 arx grammar:
 
 arx = grammars route*
-grammars = "grammars" [baseURI] "(" type2string+ ")"
+grammars = "grammars"  "{" type2string+ "}"
 baseURI = literal
 type2string =  type "=" literal
 type = ident
@@ -25,6 +25,8 @@ delimiters in regexp and literal must be quoted by \ inside strings
 #include <fcntl.h>
 #include <string.h>
 #include <stdio.h>
+#include <stdarg.h>
+#include <errno.h>
 #include EXPAT_H
 #include "memops.h"
 #include "strops.h"
@@ -49,14 +51,14 @@ delimiters in regexp and literal must be quoted by \ inside strings
 
 #define LEN_V 64
 
+static char *xml;
 static int len_t,len_r,len_s,i_t,i_r,i_s;
 static int (*t2s)[2],(*rules)[3];
 static char *string; static struct hashtable ht_s;
-static int errors;
 
 /* parser */
 static char *arxfn;
-static int arxfd,i_b,len_b,cc,line,col,sym,len_v;
+static int arxfd, i_b,len_b, cc, line,col,prevline, sym,len_v, errors;
 static char buf[BUFSIZ];
 static char *value;
 
@@ -76,7 +78,6 @@ static int equal_s(int s1,int s2) {return strcmp(string+s1,string+s2)==0;}
 
 static void silent_verror_handler(int erno,va_list ap) {
   if(erno&ERBIT_DRV) rnv_default_verror_handler(erno,ap); /* low-level diagnostics */
-  ++errors;
 }
 
 static void windup(void);
@@ -85,6 +86,9 @@ static void init(void) {
   if(!initialized) {initialized=1;
     rn_init(); rnc_init(); rnd_init(); rnv_init();
     rnv_verror_handler=&silent_verror_handler;
+    string=(char*)memalloc(len_v=LEN_S*S_AVG_SIZE,sizeof(char));
+    t2s=(int(*)[2])memalloc(len_t=LEN_T,sizeof(int[2]));
+    rules=(int(*)[3])memalloc(len_r=LEN_R,sizeof(int[3]));
     ht_init(&ht_s,LEN_S,&hash_s,&equal_s);
     value=(char*)memalloc(len_v=LEN_V,sizeof(char));
     windup();
@@ -97,7 +101,7 @@ static void clear(void) {
 }
 
 static void windup(void) {
-  i_t=i_r=i_s=0;
+  i_t=1; i_r=i_s=0;
 }
 
 /* parser */
@@ -115,19 +119,64 @@ static void windup(void) {
 #define SYM_RCUR 11
 #define SYM_ASGN 12
 
+static char *sym2str(int sym) {
+  switch(sym) {
+  case SYM_EOF: return "end of file";
+  case SYM_GRMS: return "'grammars'";
+  case SYM_IDNT: return "identifier";
+  case SYM_LTRL: return "literal";
+  case SYM_RGXP: return "regular expression";
+  case SYM_RENG: return "Relax NG";
+  case SYM_MTCH: return "'=~'";
+  case SYM_NMTC: return "'!~'";
+  case SYM_VALD: return "'valid'";
+  case SYM_NVAL: return "'!valid'";
+  case SYM_LCUR: return "'{'";
+  case SYM_RCUR: return "'}'";
+  case SYM_ASGN: return "'='";
+  default: assert(0);
+  }
+  return NULL;
+}
+
+#define ARX_ER_SYN 0
+#define ARX_ER_EXP 1
+#define ARX_ER_REX 2
+#define ARX_ER_RNG 3
+#define ARX_ER_NOQ 4
+#define ARX_ER_TYP 5
+
 /* there is nothing in the grammar I need utf-8 processing for */
-static void error(void) {
-  fprintf(stderr,"error (%s,%i,%i):\n",arxfn,line,col);
+#define err(msg) vfprintf(stderr,msg"\n",ap)
+static void verror_handler(int erno,va_list ap) {
+  fprintf(stderr,"error (%s,%i,%i): ",arxfn,line,col);
+  switch(erno) {
+  case ARX_ER_SYN: err("syntax error"); break;
+  case ARX_ER_EXP: err("%s expected, %s found"); break;
+  case ARX_ER_REX: err("incorrect regular expression"); break;
+  case ARX_ER_RNG: err("incorrect Relax NG grammar"); break;
+  case ARX_ER_NOQ: err("unterminated literal or regular expression"); break;
+  case ARX_ER_TYP: err("undeclared type '%s'"); break;
+  }
+}
+
+static void error(int erno,...) {
+  if(line!=prevline) {
+    va_list ap; va_start(ap,erno); verror_handler(erno,ap); va_end(ap);
+    prevline=line;
+  }
+  ++errors;
 }
 
 static void getcc(void) {
-  int cc0=cc;
-  if(i_b==len_b) {i_b=0; len_b=read(arxfd,buf,BUFSIZ);}
-  cc=i_b==len_b?-1:((unsigned char*)buf)[i_b++];
-  for(;;) {
+  for(;;) { int cc0=cc;
+    if(i_b==len_b) {i_b=0; len_b=read(arxfd,buf,BUFSIZ);}
+    cc=i_b==len_b?-1:((unsigned char*)buf)[i_b++];
+    if(cc==-1) {if(cc0=='\n') break; else cc='\n';}
     if(cc=='\n' && cc0=='\r') continue;
     if(cc0=='\n' || cc0=='\r') {++line; col=0;}
     if(cc>=' ') ++col;
+    break;
   }
 }
 
@@ -135,7 +184,7 @@ static void getid(void) {
   int i=0;
   while(cc>' '&&!strchr("#=!\"{",cc)) {
     value[i++]=cc;
-    if(i==len_v) value=memstretch(value,len_v=2*i,i,sizeof(char));
+    if(i==len_v) value=(char*)memstretch(value,len_v=2*i,i,sizeof(char));
     getcc();
   }
   value[i]='\0';
@@ -148,9 +197,9 @@ static void getq(void) {
     getcc();
     if(cc==cq) {
       if(i!=0&&value[i-1]=='\\') --i; else {getcc(); break;}
-    } else if(cc==-1) {error(); break;}
+    } else if(cc<' ') {error(ARX_ER_NOQ); break;}
     value[i++]=cc;
-    if(i==len_v) value=memstretch(value,len_v=2*i,i,sizeof(char));
+    if(i==len_v) value=(char*)memstretch(value,len_v=2*i,i,sizeof(char));
   }
   value[i]='\0';
 }
@@ -162,17 +211,17 @@ static void getrng(void) {
     cc0=cc; getcc();
     if(cc=='}') ircur=i;
     else if(cc=='>') {if(cc0=='=') {getcc(); break;}} /* use => as terminator */
-    else if(cc==-1) {error(); break;}
+    else if(cc==-1) {error(ARX_ER_EXP,"=>",sym2str(SYM_EOF)); break;}
     value[i++]=cc;
-    if(i==len_v) value=memstretch(value,len_v=2*i,i,sizeof(char));
+    if(i==len_v) value=(char*)memstretch(value,len_v=2*i,i,sizeof(char));
   }
-  if(ircur==-1) {error(); ircur=0;}
+  if(ircur==-1) {error(ARX_ER_EXP,sym2str(SYM_RCUR),sym2str(SYM_EOF)); ircur=0;}
   value[ircur]='\0';
 }
 
 static void getsym(void) {
   for(;;) {
-    if(cc<=' ') {getcc(); continue;}
+    if(0<=cc&&cc<=' ') {getcc(); continue;}
     switch(cc) {
     case -1: sym=SYM_EOF; return;
     case '#': do getcc(); while(cc!='\n'&&cc!='\r'); getcc(); continue;
@@ -188,19 +237,19 @@ static void getsym(void) {
       if(cc=='~') {
 	getcc(); sym=SYM_NMTC;
       } else {
-        getid(); if(strcmp("valid",value)!=0) error(); sym=SYM_NVAL;
+        getid(); if(strcmp("valid",value)!=0) error(ARX_ER_EXP,sym2str(SYM_NVAL),value); sym=SYM_NVAL;
       }
       return;
     case '=': getcc();
       switch(cc) {
       case '~': getcc(); sym=SYM_MTCH; return;
-      case '>': getcc(); if(sym!=SYM_RGXP) error(); continue;
+      case '>': getcc(); if(sym!=SYM_RGXP) error(ARX_ER_SYN); continue;
       default: sym=SYM_ASGN; return;
       }
     case '"': getq(); sym=SYM_LTRL; return;
     case '/': getq(); sym=SYM_RGXP; return;
     default: getid();
-      sym==strcmp("grammars",value)==0?SYM_GRMS
+      sym=strcmp("grammars",value)==0?SYM_GRMS
          : strcmp("valid",value)==0?SYM_VALD:SYM_IDNT;
       return;
     }
@@ -209,7 +258,7 @@ static void getsym(void) {
 }
 
 static int chksym(int x) {
-  if(sym!=x) {error(); return 0;}
+  if(sym!=x) {error(ARX_ER_EXP,sym2str(x),sym2str(sym)); return 0;}
   return 1;
 }
 
@@ -217,31 +266,49 @@ static void chk_get(int x) {
   (void)chksym(x); getsym();
 }
 
-static void arx(char *fn) {
-  if((arxfd=open(fn,O_RDONLY))==-1) error(); else {
-    i_b=len_b=0; line=1; col=0; cc=-1;
-    len_v=0; value=NULL;
-    getsym();
+static int typ2str(void) {
+  int i=i_t,typ=add_s(value); 
+  t2s[0][0]=typ; for(;;) if(t2s[--i][0]==typ) break;
+  if(i==0) error(ARX_ER_TYP,value);
+  return t2s[i][1];
+}
+
+static int arx(char *fn) {
+  if((arxfd=open(arxfn=fn,O_RDONLY))==-1) {
+    fprintf(stderr,"error (%s): %s",arxfn,strerror(errno));
+    return 0;
+  } else {
+    errors=0;
+    i_b=len_b=0; 
+    prevline=-1; line=1; col=0; 
+    cc=' '; getsym();
     chk_get(SYM_GRMS); chk_get(SYM_LCUR);
     do {
       if(i_t==len_t) t2s=(int(*)[2])memstretch(t2s,len_t=i_t*2,i_t,sizeof(int[2]));
-      if(chksym(SYM_IDNT)) t2s[i_t][0]=add_s(value); getsym();
+      if(chksym(SYM_IDNT)) t2s[i_t][0]=add_s(value); 
+      getsym();
       chk_get(SYM_ASGN);
-      if(chksym(SYM_LTRL)) t2s[i_t][1]=add_s(value); getsym();
+      if(chksym(SYM_LTRL)) {
+	int len=strlen(arxfn)+strlen(value)+1;
+	if(len>len_v) {value=(char*)memstretch(value,len,len_v,sizeof(char)); len_v=len;}
+	abspath(value,arxfn); t2s[i_t][1]=add_s(value); 
+      }
+      getsym();
       ++i_t;
     } while(sym==SYM_IDNT);
     chk_get(SYM_RCUR);
     for(;;) {
-      if(i_r==len_r) rules=(int(*)[3])memstretch(rules,i_r*2,i_r,sizeof(int[3]));
+      if(i_r==len_r) rules=(int(*)[3])memstretch(rules,len_r=i_r*2,i_r,sizeof(int[3]));
       switch(sym) {
       case SYM_MTCH: rules[i_r][0]=MATCH; goto REGEXP;
       case SYM_NMTC: rules[i_r][0]=NOMAT; goto REGEXP;
       REGEXP: getsym();
 	if(chksym(SYM_RGXP)) {
-	  if(!rx_check(value)) error();
+	  if(!rx_check(value)) error(ARX_ER_REX);
 	  rules[i_r][1]=add_s(value);
 	}
-	if(chksym(SYM_IDNT)) rules[i_r][2]=add_s(value);
+	getsym();
+	if(chksym(SYM_IDNT)) rules[i_r][2]=typ2str();
 	goto NEXT;
       case SYM_VALD: rules[i_r][0]=VALID; goto RNG;
       case SYM_NVAL: rules[i_r][0]=INVAL; goto RNG;
@@ -252,9 +319,10 @@ static void arx(char *fn) {
 	  start=rnc_parse(&src); rnc_close(&src); 
 	  if(!rnc_errors(&src)&&(start=rnd_fixup(start))) {
 	    rules[i_r][1]=rn_compress_last(start); 
-	  } else ++errors;
+	  } else error(ARX_ER_RNG);
 	}
-	if(chksym(SYM_IDNT)) rules[i_r][2]=add_s(value);
+	getsym();
+	if(chksym(SYM_IDNT)) rules[i_r][2]=typ2str();
 	goto NEXT;
       default: goto LAST;
       }
@@ -262,5 +330,33 @@ static void arx(char *fn) {
     }
     LAST: chk_get(SYM_EOF);
     close(arxfd);
+    return !errors;
   }
+}
+
+static void version(void) {fprintf(stderr,"arx version %s\n",ARX_VERSION);}
+static void usage(void) {fprintf(stderr,"usage: arx {-[vh?]} document.xml arx.conf {arx.conf}\n");}
+
+int main(int argc,char **argv) {
+  init();
+
+  while(*(++argv)&&**argv=='-') {
+    int i=1;
+    for(;;) {
+      switch(*(*argv+i)) {
+      case '\0': goto END_OF_OPTIONS;
+      case 'h': case '?': usage(); return 1;
+      case 'v': version(); break;
+      default: fprintf(stderr,"unknown option '-%c'\n",*(*argv+i)); break;
+      }
+      ++i;
+    }
+    END_OF_OPTIONS:;
+  }
+
+  if(!(*(argv)&&*(argv+1))) {usage(); return 1;}
+
+  xml=*(argv);
+  arx(*(argv+1));
+  return 0;
 }
