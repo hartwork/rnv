@@ -18,7 +18,8 @@
 #define LIM_T 65536
 
 #define ELEMENT_NOT_ALLOWED "element '%s^%s' not allowed"
-#define ATTRIBUTE_NOT_ALLOWED "attribute '%s^%s=\"%s\"' not allowed"
+#define ATTRIBUTE_NOT_ALLOWED "attribute '%s^%s' not allowed"
+#define VALUE_NOT_ALLOWED "attribute '%s^%s=\"%s\"' not allowed"
 #define ELEMENTS_MISSING "required elements missing"
 #define ATTRIBUTES_MISSING "required attributes of element '%s^%s' missing"
 #define TEXT_NOT_ALLOWED "text not allowed"
@@ -132,14 +133,23 @@ static void start_element(void *userData,const char *name,const char **attrs) {
     while(current!=rn_notAllowed) {
       if(!(*attrs)) break;
       qname((char*)*attrs);
+      current=drv_attribute_open(previous=current,suri,sname);
       ++attrs;
-      current=drv_attribute(previous=current,suri,sname,(char*)*attrs);
       if(current==rn_notAllowed) {
-	int len=strlen(ATTRIBUTE_NOT_ALLOWED)+strlen(suri)+strlen(sname)+strlen(*attrs);
+	int len=strlen(ATTRIBUTE_NOT_ALLOWED)+strlen(suri)+strlen(sname);
 	if(len>len_msg) {len_msg=len; free(msg); msg=(char*)calloc(len_msg,sizeof(char));}
-	msg[sprintf(msg,ATTRIBUTE_NOT_ALLOWED,suri,sname,*attrs)]='\0';
+	msg[sprintf(msg,ATTRIBUTE_NOT_ALLOWED,suri,sname)]='\0';
 	error(msg);
-	current=drv_attribute_recover(previous,suri,sname,(char*)*attrs);
+	current=drv_attribute_open_recover(previous,suri,sname);
+      } else {
+	current=drv_text(previous=current,(char*)*attrs,strlen(*attrs));
+	if(current==rn_notAllowed || (current=drv_attribute_close(previous=current))==rn_notAllowed) {
+	  int len=strlen(VALUE_NOT_ALLOWED)+strlen(suri)+strlen(sname)+strlen(*attrs);
+	  if(len>len_msg) {len_msg=len; free(msg); msg=(char*)calloc(len_msg,sizeof(char));}
+	  msg[sprintf(msg,VALUE_NOT_ALLOWED,suri,sname,*attrs)]='\0';
+	  error(msg);
+	  current=drv_attribute_close_recover(previous);
+	}
       }
       ++attrs;
     }

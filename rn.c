@@ -8,7 +8,9 @@
 #include "rn.h"
 
 #define LEN_P 1024
-#define LEN_NC 1024
+#define PRIME_P 0x3fd
+#define LEN_NC 256
+#define PRIME_NC 0xfb
 #define LEN_S 16384
 #define LEN_PS 1024
 
@@ -386,11 +388,11 @@ static void windup(void) {
 
 static int hash_p(int p) {
   int *pp=rn_pattern[p];
-  return (pp[0]&0xF)|((pp[1]^pp[2])<<4);
+  return ((pp[0]&0xF)|((pp[1]^pp[2])<<4))*PRIME_P;
 }
 static int hash_nc(int nc) {
   int *ncp=rn_nameclass[nc];
-  return (ncp[0]&0x7)|((ncp[1]^ncp[2])<<3);
+  return ((ncp[0]&0x7)|((ncp[1]^ncp[2])<<3))*PRIME_NC;
 }
 static int hash_s(int i) {return strhash(rn_string+i);}
 

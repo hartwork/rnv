@@ -1,6 +1,6 @@
 # $Id$
 #
-VERSION=1.0.9
+VERSION=1.1.0
 CC=cc
 EXPAT_H="<expat.h>"
 UNISTD_H="<unistd.h>"
@@ -47,7 +47,7 @@ util.o
 .c.o:
 	${CC} ${INC} ${OPT} ${CFLAGS} -c -o $@ $<
 
-all: rnv ${LIBRNV} zip
+all: rnv
 
 rnv: rnv.o ${LIBRNV}
 	${CC} ${OPT} ${LFLAGS} ${LBL} -o rnv rnv.o ${LIBRNV} ${LIB} 

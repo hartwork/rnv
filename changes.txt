@@ -1,5 +1,8 @@
 /* $Id$ */
-
+1.1.0 Thu Dec 18 05:05:33 AMT 2003
+dvd: drv_start_attribute and memoization implemented; hash values are 
+     multiplied by large primes - helps with current hashing algorithms.
+     
 1.0.9 Wed Dec 17 23:36:05 AMT 2003
 dvd: drv_mixed_text added, results memoized; code cleanups to compile easier;
      added targets for static and shared libraries to the Makefile, many small
