@@ -1,6 +1,9 @@
 /* $Id$ */
 
-1.6.4
+1.6.4 Fri Mar 12 13:15:33 AMT 2004
+dvd: looked again at the code in rn.c and rnl.c, streamlined and simplified
+     many things
+
 Fri Mar 12 04:44:17 AMT 2004
 dvd: better logics in mark_p
 

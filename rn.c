@@ -1,6 +1,5 @@
 /* $Id$ */
 
-#include <stdio.h>
 #include <string.h> /* strcmp,strlen,strcpy*/
 
 #include "m.h"
@@ -370,7 +369,9 @@ static int equal_nc(int nc1,int nc2) {
 static int equal_s(int s1,int s2) {return strcmp(rn_string+s1,rn_string+s2)==0;}
 
 /* marks patterns reachable from start, assumes that the references are resolved */
-#define pick_p(p) if(p>=since && !rn_marked(p)) {flat[n_f++]=p; rn_mark(p);}
+#define pick_p(p) do { \
+  if(p>=since && !rn_marked(p)) {flat[n_f++]=p; rn_mark(p);}  \
+} while(0)
 static void mark_p(int start,int since) {
   int p,p1,p2,nc,i,n_f;
   int *flat=(int*)m_alloc(i_p,sizeof(int));
@@ -402,6 +403,14 @@ static void mark_p(int start,int since) {
 }
 
 /* assumes that used patterns are marked */
+#define redir_p() do { \
+  if(xlat[q-since]!=-1) { \
+    rn_unmark(p); xlat[p-since]=q; \
+    changed=1; \
+  } else { \
+    ht_deli(&ht_p,q); ht_put(&ht_p,p); \
+  } \
+} while(0)
 static void sweep_p(int *starts,int n_st,int since) {
   int p,p1,p2,nc,q,changed,touched;
   int *xlat;
@@ -411,14 +420,7 @@ static void sweep_p(int *starts,int n_st,int since) {
     if(rn_marked(p)) xlat[p-since]=p; else xlat[p-since]=-1;
   }
   for(p=since;p!=i_p;p+=p_size[RN_P_TYP(p)]) {
-    if(xlat[p-since]!=-1 && (q=ht_get(&ht_p,p))!=p) {
-      if(xlat[q-since]!=-1) {
-        rn_unmark(p); xlat[p-since]=q;
-        changed=1;
-      } else {
-	ht_deli(&ht_p,q); ht_put(&ht_p,p);
-      }
-    }
+    if(xlat[p-since]!=-1 && (q=ht_get(&ht_p,p))!=p) redir_p();
   }
   while(changed) {
     changed=0;
@@ -458,12 +460,11 @@ static void sweep_p(int *starts,int n_st,int since) {
 	  assert(0);
 	}
 	if(touched) {
-	  changed=1;
+	  changed=1; /* recursion through redirection */
 	  if((q=ht_get(&ht_p,p))==-1) {
 	    ht_put(&ht_p,p);
 	  } else {
-	    rn_unmark(p);
-	    xlat[p-since]=q;
+	    redir_p();
 	  }
 	}
       }
@@ -478,14 +479,14 @@ static void sweep_p(int *starts,int n_st,int since) {
 
 static void unmark_p(int since) {
   int p;
-  for(p=0;p!=since;p+=p_size[RN_P_TYP(p)]) rn_unmark(p);
+  for(p=0;p!=since;p+=p_size[RN_P_TYP(p)]) assert(!rn_marked(p));
   for(p=since;p!=i_p;p+=p_size[RN_P_TYP(p)]) {
     if(rn_marked(p)) rn_unmark(p); else {ht_deli(&ht_p,p); erase(p);}
   }
 }
 
 static void compress_p(int *starts,int n_st,int since) {
-  int p,psiz, p1,p2,nc, q,i_q;
+  int p,psiz, p1,p2,nc, q,i_q,len_q;
   int *xlat=(int*)m_alloc(i_p-since,sizeof(int));
   p=q=since;
   while(p!=i_p) { psiz=p_size[RN_P_TYP(p)];
@@ -536,11 +537,12 @@ static void compress_p(int *starts,int n_st,int since) {
     if(*starts>=since) *starts=xlat[*starts-since];
     ++starts;
   }
-  if(i_q!=i_p) { int len_q=i_q*2;
-    if(len_p>P_AVG_SIZE*LIM_P&&len_q<len_p)
+  if(i_q!=i_p) { i_p=i_q; len_q=i_q*2;
+    if(len_p>P_AVG_SIZE*LIM_P&&len_q<len_p) {
       rn_pattern=(int*)m_stretch(rn_pattern,
 	len_p=len_q>P_AVG_SIZE*LEN_P?len_q:P_AVG_SIZE*LEN_P,
-	i_p=i_q,sizeof(int));
+	i_p,sizeof(int));
+    }
   }
 }
 

@@ -10,10 +10,11 @@ do
 	rnv ${FLAGS} ${RNVDIR}/tst/dt/test${a}-compiled.rnc ${RNVDIR}/tst/dt/test${a}.xml
 done
 
-for a in ${RNDIR}/*.rnc
+for a in docbook fo fo/main rddl rdfxml relaxng xhtml xmlschema xslt 
 do
-	echo $a
-	rnv ${FLAGS} -c $a
+	r=${RNDIR}/${a}.rnc
+	echo $r
+	rnv ${FLAGS} -c $r
 done
 
 rnv ${FLAGS} -c tst/g/paths.rnc
@@ -24,4 +25,5 @@ rnv ${FLAGS} ${RNDIR}/docbook.rnc ${HOME}/work/XEP/doc/docbook/*.dbx
 rnv ${FLAGS} ${RNDIR}/xslt.rnc ${HOME}/work/docbook/xsl/*/*.xsl
 rnv ${FLAGS} ${RNDIR}/xmlschema.rnc `find ${HOME}/Docu/mathml2 -name '*.xsd' -print`
 rnv ${FLAGS} ${RNDIR}/fo.rnc ${HOME}/work/XEP/Tests/*/*.fo
+rnv ${FLAGS} ${RNDIR}/fo/main.rnc ${HOME}/work/XEP/Tests/*/*.fo
 rnv ${FLAGS} ${HOME}/work/TEI/P5/p5odds.rnc ${HOME}/work/TEI/P5/P5-driver.xml
