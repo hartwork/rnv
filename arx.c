@@ -56,7 +56,7 @@ delimiters in regexp and literal must be quoted by \ inside strings
 #define LIM_T 65536
 
 static char *xml;
-static int len_t,len_r,len_s,i_t,i_r,i_s;
+static int len_2,len_r,len_s,i_2,i_r,i_s;
 static int (*t2s)[2],(*rules)[3];
 static char *string; static struct hashtable ht_s;
 
@@ -100,7 +100,7 @@ static void init(void) {
     rn_init(); rnc_init(); rnd_init(); rnv_init();
     rnv_verror_handler=&silent_verror_handler;
     string=(char*)memalloc(len_v=LEN_S*S_AVG_SIZE,sizeof(char));
-    t2s=(int(*)[2])memalloc(len_t=LEN_2,sizeof(int[2]));
+    t2s=(int(*)[2])memalloc(len_2=LEN_2,sizeof(int[2]));
     rules=(int(*)[3])memalloc(len_r=LEN_R,sizeof(int[3]));
     ht_init(&ht_s,LEN_S,&hash_s,&equal_s);
     value=(char*)memalloc(len_v=LEN_V,sizeof(char));
@@ -117,7 +117,7 @@ static void clear(void) {
 
 static void windup(void) {
   text[n_t=0]='\0';
-  i_t=1; i_r=i_s=0;
+  i_2=1; i_r=i_s=0;
 }
 
 /* parser */
@@ -282,7 +282,7 @@ static void chk_get(int x) {
 }
 
 static int typ2str(void) {
-  int i=i_t,typ=add_s(value); 
+  int i=i_2,typ=add_s(value); 
   t2s[0][0]=typ; for(;;) if(t2s[--i][0]==typ) break;
   if(i==0) error(ARX_ER_TYP,value);
   return t2s[i][1];
@@ -299,17 +299,17 @@ static int arx(char *fn) {
     cc=' '; getsym();
     chk_get(SYM_GRMS); chk_get(SYM_LCUR);
     do {
-      if(i_t==len_t) t2s=(int(*)[2])memstretch(t2s,len_t=i_t*2,i_t,sizeof(int[2]));
-      if(chksym(SYM_IDNT)) t2s[i_t][0]=add_s(value); 
+      if(i_2==len_2) t2s=(int(*)[2])memstretch(t2s,len_2=i_2*2,i_2,sizeof(int[2]));
+      if(chksym(SYM_IDNT)) t2s[i_2][0]=add_s(value); 
       getsym();
       chk_get(SYM_ASGN);
       if(chksym(SYM_LTRL)) {
 	int len=strlen(arxfn)+strlen(value)+1;
 	if(len>len_v) {value=(char*)memstretch(value,len,len_v,sizeof(char)); len_v=len;}
-	abspath(value,arxfn); t2s[i_t][1]=add_s(value); 
+	abspath(value,arxfn); t2s[i_2][1]=add_s(value); 
       }
       getsym();
-      ++i_t;
+      ++i_2;
     } while(sym==SYM_IDNT);
     chk_get(SYM_RCUR);
     for(;;) {
