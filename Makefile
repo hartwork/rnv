@@ -56,13 +56,13 @@ rnd_test: ${OBJ} rnd_test.o
 	${CC} ${OPT} ${LFLAGS} ${LBL} -o rnd_test rnd_test.o ${OBJ} ${LIB} 
 
 ${LIBRNVA}: ${OBJ}
-	ar rc $@ $>
+	ar rc $@ ${OBJ}
 
 ${LIBRNVSO}: ${OBJ}
-	gcc -shared -o $@ $>
+	gcc -shared -o $@ ${OBJ}
 
 clean: 
-	-rm -f *.o rnv rnd_test *_test *.core *.gmon *.gprof rnv*.zip rnv.txt rnv.pdf rnv.html rnv.xml
+	-rm -f *.o  *.a *.so rnv rnd_test *_test *.core *.gmon *.gprof rnv*.zip rnv.txt rnv.pdf rnv.html rnv.xml
 
 DISTFILES=license.txt ${SRC} Makefile compile.bat rnv.exe readme.txt changes.txt
 zip: rnv-${VERSION}.zip
@@ -74,4 +74,4 @@ rnv-${VERSION}.zip: ${DISTFILES}
 	-rm -rf rnv-${VERSION}
 
 install: rnv-${VERSION}.zip readme.txt changes.txt
-	-cp -f $> ${DISTDIR}
+	-cp -f rnv-${VERSION}.zip readme.txt changes.txt ${DISTDIR}

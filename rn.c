@@ -2,7 +2,6 @@
 
 #include <stdlib.h> /* calloc */
 #include <string.h> /* strcmp,memcmp,strlen,strcpy,strclone,memcpy,memset */
-#include <stdio.h> /* debugging*/
 
 #include "util.h"
 #include "ht.h"

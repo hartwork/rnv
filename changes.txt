@@ -1,5 +1,10 @@
 /* $Id$ */
 
+1.0.9 Wed Dec 17 23:36:05 AMT 2003
+dvd: drv_mixed_text added, results memoized; code cleanups to compile easier;
+     added targets for static and shared libraries to the Makefile, many small
+     touch-ups
+
 1.0.8; Tue Dec 16 14:05:16 AMT 2003
 dvd: memory for error message in rnv.c is allocated properly
 

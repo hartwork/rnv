@@ -2,7 +2,6 @@
 
 #include <string.h> /*strcmp*/
 #include <stdlib.h> /*calloc,free*/
-#include <stdio.h> /*debugging*/
 #include "util.h" /*tokncmp,xml_white_space*/
 #include "ht.h"
 #include "rn.h"

@@ -36,7 +36,7 @@ int strhash(char *s) {
 }
 
 char *strclone(char *s) {
-  return strcpy((char*)calloc(strlen(s),sizeof(char)),s);
+  return strcpy((char*)calloc(strlen(s)+1,sizeof(char)),s);
 }
 
 extern char *abspath(char *r,char *b) {
@@ -47,7 +47,7 @@ extern char *abspath(char *r,char *b) {
       char *p,*q;
       p=r; while(*p++); q=p+(sep-b);
       do *(--q)=*(--p); while(p!=r);
-      while(b!=sep) *r++=*b++;
+      p=r; while(b!=sep) *p++=*b++;
     }
   }
   return r;

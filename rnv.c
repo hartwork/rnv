@@ -180,7 +180,6 @@ static void characters(void *userData,const char *s,int len) {
       char *newtext=(char*)calloc(len_t=newlen_t,sizeof(char)); 
       memcpy(newtext,text,n_t*sizeof(char)); free(text); 
       text=newtext;
-      fprintf(stderr,"len_t=%i\n",len_t);
     }
     strncpy(text+n_t,s,len); n_t+=len;
   }

@@ -4,7 +4,6 @@
 #include UNISTD_H /* open,read,close */
 #include <string.h> /* memcpy,strlen,strcpy,strcat,strclone */
 #include <stdlib.h> /* calloc,malloc,free */
-#include <stdio.h> /*stderr*/
 #include <stdarg.h> /*va_list,va_arg,va_end*/
 #include <assert.h> /*assert*/
 
@@ -888,7 +887,7 @@ static int relpath(struct rnc_source *sp) {
   int ret;
   if((ret=chksym(sp,SYM_LITERAL))) {
     int len=strlen(sp->fn)+strlen(CUR(sp).s)+1;
-    if(len>len_p) {free(path); len_p=len; path=(char*)calloc(len_p,sizeof(char));}
+    if(len>len_p) {free(path); path=(char*)calloc(len_p=len,sizeof(char));}
     strcpy(path,CUR(sp).s); abspath(path,sp->fn);
   }
   getsym(sp);
