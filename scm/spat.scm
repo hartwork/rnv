@@ -4,30 +4,30 @@
   (letrec (
       (l (string->list spat))
       (errors #f)
-      (error! 
-        (lambda msg
+      (error!
+	(lambda msg
 	  (set! errors #t)
 	  (for-each display `("bad s-pattern '" ,spat "': " ,@msg))
 	  (newline)))
-      (nextc 
-        (lambda ()
+      (nextc
+	(lambda ()
 	  (and (pair? l) (let ((c (car l))) (set! l (cdr l)) c))))
       (nextsym
 	(let (
-	    (literal 
+	    (literal
 	      (lambda ()
-	        (let ch ((ll '()) (c (nextc)))
-	          (case c ((#f) (error!) "")
+		(let ch ((ll '()) (c (nextc)))
+		  (case c ((#f) (error!) "")
 		    ((#\") (list->string (reverse ll)))
 		    ((#\\) (let ((d (nextc)))
-		        (ch (if (eqv? d #\")
-			    (cons d ll)  
+			(ch (if (eqv? d #\")
+			    (cons d ll)
 			    (cons d (cons c ll)))
 			  (nextc))))
-	            (else (ch (cons c ll) (nextc)))))))
+		    (else (ch (cons c ll) (nextc)))))))
 	    (ident
 	      (lambda (c)
-		(string->symbol (list->string (reverse 
+		(string->symbol (list->string (reverse
 		  (let ch ((il (list c)) (c (nextc)))
 		    (cond
 		      ((or (not c) (char-whitespace? c)) il)
@@ -42,24 +42,24 @@
 		  ((char-whitespace? c) (nextsym))
 		  (else `(id . ,(ident c)))))))))
       (code
-        (lambda ()
+	(lambda ()
 	  (let tok ((prog '()) (ding '(=)) (sym (nextsym)))
 	    (if sym
 	      (case (car sym)
-	        ((lit) (tok prog (cons (cdr sym) ding) (nextsym)))
-		((id) 
+		((lit) (tok prog (cons (cdr sym) ding) (nextsym)))
+		((id)
 		  (let ((sym2 (nextsym)))
-		    (if (and sym2 (eqv? (car sym2) '=)) 
+		    (if (and sym2 (eqv? (car sym2) '=))
 		      (tok (cons (reverse ding) prog) (list (cdr sym)) (nextsym))
 		      (tok prog (cons (cdr sym) ding) sym2))))
 		(else (error! sym " unexpected") #f))
 	      (cons (reverse ding) prog)))))
        (splice
-         (lambda (code)
+	 (lambda (code)
 	   (letrec (
 	       (resolve
-	         (lambda (piece)
-		   (cond 
+		 (lambda (piece)
+		   (cond
 		     ((string? piece) piece)
 		     ((symbol? piece)
 		       (let ((entry (assv piece code)))
@@ -69,7 +69,3 @@
 	     (resolve 'start)))))
     (let ((regex (splice (code))))
       (and (not errors) regex))))
-	    
-
-	      
-	   

@@ -1,5 +1,9 @@
 /* $Id$ */
 
+1.5.4
+Fri Jan 30 00:10:32 AMT 2004
+dvd: implemented structured regexps for scheme-datatypes
+
 1.5.3 Thu Jan 29 03:19:29 AMT 2004
 dvd: made it compile on SunOS 5.8 (name clashes)
 
