@@ -372,7 +372,7 @@ static int equal_s(int s1,int s2) {return strcmp(rn_string+s1,rn_string+s2)==0;}
 
 /* marks patterns reachable from start, assumes that the references are resolved */
 #define pick_p(p) do { \
-  if(p>=since && !rn_marked(p)) {flat[n_f++]=p; assert(n_f<=i_p-since); rn_mark(p);}  \
+  if(p>=since && !rn_marked(p)) {flat[n_f++]=p; rn_mark(p);}  \
 } while(0)
 static void mark_p(int start,int since) {
   int p,p1,p2,nc,i,n_f;
@@ -548,8 +548,6 @@ static void compress_p(int *starts,int n_st,int since) {
 	i_p,sizeof(int));
     }
   }
-
-  printf("i_p=%i\n",i_p);
 }
 
 void rn_compress(int *starts,int n_st) {
