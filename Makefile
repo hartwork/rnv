@@ -25,6 +25,7 @@ LIBRNV=${LIBRNVA}
 
 SRC=\
 ll.h \
+erbit.h \
 rnv.c \
 rn.c rn.h \
 rnc.c rnc.h \
@@ -97,13 +98,13 @@ install: rnv-${VERSION}.zip readme.txt changes.txt
 
 # DO NOT DELETE
 
-rnv.o: xmlc.h rn.h rnc.h rnd.h rnx.h drv.h rx.h ll.h
+rnv.o: xmlc.h erbit.h rn.h rnc.h rnd.h rnx.h drv.h xsd.h ll.h
 rn.o: strops.h ht.h ll.h rn.h
 rnc.o: u.h xmlc.h strops.h er.h rn.h sc.h rnc.h
 rnd.o: er.h rn.h rnx.h rnd.h
 rnx.o: strops.h rn.h ll.h rnx.h
 drv.o: xmlc.h strops.h ht.h rn.h er.h xsd.h ll.h drv.h
-xsd.o: u.h xmlc.h strops.h rx.h xsd.h
+xsd.o: u.h xmlc.h strops.h erbit.h rx.h xsd_tm.h xsd.h
 xsd_tm.o: xsd_tm.h
 er.o: er.h
 sc.o: ll.h sc.h

@@ -1,9 +1,14 @@
 /* $Id$ */
 
 1.2.1 
+
+Fri Dec 26 15:50:49 AMT 2003
+dvd: error reporting redone; errors for xsd and rx are routed through validation
+     errors' handler
+
 Fri Dec 26 01:55:37 AMT 2003
 dvd: debugged on NIST tests; the only tests which don't pass when they should
-     are those with doubles due to overflow.
+     are those with doubles due to overflow and underflow.
 
 Thu Dec 25 19:30:55 AMT 2003
 dvd: added puorg_nr to implement attribute_open correctly;
