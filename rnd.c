@@ -100,7 +100,6 @@ void rnd_deref(int start) {
       break;
 
     default: 
-      printf("p=%i typ=%i\n",p,P_TYP(p));
       assert(0);
     }
   } while(i!=n_f);
@@ -426,13 +425,16 @@ void rnd_traits() {
 }
 
 int rnd_release() {
-  int start=rn_end_schema(flat,n_f);
+  int start=flat[0];
   free(flat); flat=NULL;
   return start;
 }
 
 /*
  * $Log$
+ * Revision 1.10  2003/12/10 09:38:43  dvd
+ * rn_end_schema is removed again, but the result is good -- bugs debugged
+ *
  * Revision 1.9  2003/12/10 01:08:04  dvd
  * compressing schema, work in progress
  *
