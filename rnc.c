@@ -582,6 +582,19 @@ static void chk_skip_get(struct rnc_source *sp,int sym) {
 /* a grammar without stop symbols provides weak capabilities for recovery. when
   in doubt, always move forward */
 
+static int nsurl(struct rnc_source *sp) {
+  int url=-1;
+  switch(CUR(sp).sym) {
+  case SYM_LITERAL: url=rn_accept_s(CUR(sp).s); break;
+  case SYM_INHERIT: url=sc_tab[(sc_find(SC_INHR,SC_NS))][1]; break;
+  default:
+    error(sp,ER_SEXP,"literal or 'inherit'",sp->fn,CUR(sp).line,CUR(sp).col);	  
+    break;
+  }
+  getsym(sp);
+  return url;
+}
+
 static void addns(struct rnc_source *sp,int pfx,int url) {
   int i;
   printf("namespace '%s' = '%s'\n",rn_string+pfx,rn_string+url);
@@ -603,16 +616,9 @@ static int decl(struct rnc_source *sp) {
   switch(CUR(sp).sym) {
   case SYM_NAMESPACE:
     getsym(sp);
-    if(chkwd(sp)) {pfx=rn_accept_s(CUR(sp).s); getsym(sp);}
+    if(chkwd(sp)) pfx=rn_accept_s(CUR(sp).s); getsym(sp);
     chk_get(sp,SYM_ASGN);
-    switch(CUR(sp).sym) {
-    case SYM_LITERAL: url=rn_accept_s(CUR(sp).s); break;
-    case SYM_INHERIT: url=sc_tab[(sc_find(SC_INHR,SC_NS))][1]; break;
-    default:
-      error(sp,ER_SEXP,"literal or 'inherit'",sp->fn,CUR(sp).line,CUR(sp).col);	  
-      break;
-    }
-    getsym(sp);
+    url=nsurl(sp);
     if(url!=-1&&pfx!=-1) addns(sp,pfx,url);
     return 1;
   case SYM_DEFAULT:
@@ -620,11 +626,8 @@ static int decl(struct rnc_source *sp) {
     chk_get(sp,SYM_NAMESPACE);
     if(0<=CUR(sp).sym&&CUR(sp).sym<=SYM_IDENT) {pfx=rn_accept_s(CUR(sp).s); getsym(sp);}
     chk_get(sp,SYM_ASGN);
-    if(chksym(sp,SYM_LITERAL)) url=rn_accept_s(CUR(sp).s); getsym(sp);
-    if(url!=-1) {
-      if(pfx!=-1) addns(sp,pfx,url);
-      addns(sp,0,url);
-    }
+    url=nsurl(sp);
+    if(url!=-1) {if(pfx!=-1) addns(sp,pfx,url); addns(sp,SC_DFLT,url);}
     return 1;
   case SYM_DATATYPES:
     getsym(sp);
@@ -638,14 +641,16 @@ static int decl(struct rnc_source *sp) {
 }
 
 static int inherit(struct rnc_source *sp) {
-  int i=-1;
+  int i=0;
   if(CUR(sp).sym==SYM_INHERIT) {
     getsym(sp); chk_get(sp,SYM_ASGN);
-    if(chkwd(sp)) i=sc_find(rn_accept_s(CUR(sp).s),SC_NS);
-    if(!i) error(sp,ER_NONS,CUR(sp).s,sp->fn,CUR(sp).line,CUR(sp).col);
+    if(chkwd(sp)) {
+      i=sc_find(rn_accept_s(CUR(sp).s),SC_NS);
+      if(!i) error(sp,ER_NONS,CUR(sp).s,sp->fn,CUR(sp).line,CUR(sp).col);
+    }
     getsym(sp);
-  } else i=sc_find(0,SC_NS);
-  return i;
+  }
+  return sc_tab[i?i:sc_find(SC_DFLT,SC_NS)][1];
 }
 
 static int nameclass(struct rnc_source *sp);
@@ -780,19 +785,16 @@ static int topLevel(struct rnc_source *sp);
 
 static int file(struct rnc_source *sp) {
   if(chksym(sp,SYM_LITERAL)) {
-    struct rnc_source src; int start=0,inh;
+    struct rnc_source src; int start=0,nsuri;
 
     char *path=(char*)calloc(strlen(sp->fn)+strlen(CUR(sp).s)+1,sizeof(char));
     strcpy(path,CUR(sp).s); abspath(path,sp->fn);
 
     getsym(sp);
-    inh=inherit(sp);
+    nsuri=inherit(sp);
 
     sc_open();
-    if(inh) {
-      sc_tab[sc_find(SC_DFLT,SC_NS)][1]=
-      sc_tab[sc_find(SC_INHR,SC_NS)][1]=sc_tab[inh][1];
-    }
+    sc_tab[sc_find(SC_DFLT,SC_NS)][1]=sc_tab[sc_find(SC_INHR,SC_NS)][1]=nsuri;
     rnc_source_init(&src);
     if(rnc_open(&src,path)!=-1) {
       start=topLevel(&src);
@@ -975,6 +977,9 @@ int main(int argc,char **argv) {
 
 /*
  * $Log$
+ * Revision 1.18  2003/11/29 18:06:02  dvd
+ * fixes
+ *
  * Revision 1.17  2003/11/29 17:47:48  dvd
  * decl
  *
