@@ -707,7 +707,7 @@ static int nrmcmpn(char *s1,char *s2,int n) {
   for(;;++s1,++s2) {
     if(s2==end) return *s1;
     if(!*s1) return -*s2;
-    if(!(*s1==*s2&&xmlc_white_space(*s1)&&xmlc_white_space(*s2))) 
+    if(!(*s1==*s2||(xmlc_white_space(*s1)&&xmlc_white_space(*s2))))
       return *s1-*s2;
   }
 }
@@ -825,6 +825,7 @@ void xsd_test() {
   assert(b64cmpn("ABC123","abc123",6)<0);
 
   assert(nrmcmpn("A B","A B",3)==0);
+  assert(nrmcmpn("A B","A C",3)<0);
   assert(nrmcmpn("A B","A\nB",3)==0);
   assert(nrmcmpn(" A","A ",2)<0);
 }

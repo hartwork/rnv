@@ -1,5 +1,8 @@
 /* $Id$ */
 
+1.7.5 Thu Jan  6 02:18:51 AMT 2005
+dvd: build error fixed
+
 1.7.4 Wed Jan  5 13:55:41 AMT 2005
 dvd: unit tests for s.c and xsd.c. 
 
