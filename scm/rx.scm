@@ -28,9 +28,9 @@
 	    (case (car p1)
 	      ((none empty any) #t)
 	      ((choice group except range)
-	        (and (eqv? (cadr p1) (cadr p2)) (eqv? (cddr p1) (cddr p2))))
+		(and (eqv? (cadr p1) (cadr p2)) (eqv? (cddr p1) (cddr p2))))
 	      ((more class char)
-	        (eqv? (cdr p1) (cdr p2)))))))  
+		(eqv? (cdr p1) (cdr p2)))))))
       (old
 	(lambda (p cache)
 	  (and (pair? cache)
@@ -159,31 +159,31 @@
 		  (and (= c 46) '(ncl . NL)))
 	       `(chr . ,c))))))
       (chgroup
-        (let (
+	(let (
 	    (check-range
 	      (lambda ()
-	        (and (eqv? (cdr sym) 'chr) (memv (cdr sym) '(45 91 93))
+		(and (eqv? (cdr sym) 'chr) (memv (cdr sym) '(45 91 93))
 		  (error! "illegal range") #t))))
-          (lambda()
+	  (lambda()
 	    (let range ((p rx-none))
 	      (if
-	         (and (not (eqv? (car p) 'none))
-	           (and (or (equal? sym '(chr . 45)) (equal? sym '(chr . 93)))))
-	         p
+		 (and (not (eqv? (car p) 'none))
+		   (and (or (equal? sym '(chr . 45)) (equal? sym '(chr . 93)))))
+		 p
 	      (case (car sym)
-	        ((chr esc)
+		((chr esc)
 		  (check-range)
 		  (let ((c (cdr sym))) (getsym)
 		    (if (equal? sym '(chr . 45))
 		      (if (and (pair? rxll) (eqv? (car rxll) 91))
-		        (rx-choice p `(char . ,c))
+			(rx-choice p `(char . ,c))
 			(begin (getsym)
 			  (case (car sym)
 			    ((chr esc) (check-range)
 			      (let ((p (rx-choice p `(range ,c . ,(cdr sym)))))
 				(getsym)
 				(range p)))
-		            (else (error! "illegal range") (getsym)
+			    (else (error! "illegal range") (getsym)
 			      (range p)))))
 		      (range (rx-choice p `(char . ,c))))))
 	      ((cls) (range (rx-choice p `(class . (cdr sym)))))
@@ -197,11 +197,11 @@
 		  (chgroup))))
 	    (if (equal? sym '(chr . 45))
 	      (begin (getsym)
-	        (or (equal? sym '(chr . 91)) (error! "[ expected"))
+		(or (equal? sym '(chr . 91)) (error! "[ expected"))
 		(getsym)
 		(let ((p (rx-newpat `(except ,p . ,(chgroup)))))
 		  (getsym)
-	          (or (equal? sym '(chr . 93)) (error! "] expected"))
+		  (or (equal? sym '(chr . 93)) (error! "] expected"))
 		  p))
 	      p))))
       (atom
@@ -239,7 +239,7 @@
 	  (let digit ((n 0))
 	    (or
 	      (and (eqv? (car sym) 'chr)
-	        (let ((d (cdr sym)))
+		(let ((d (cdr sym)))
 		  (and (<= d 57) (>= d 48)
 		    (begin (getsym) (digit (+ (* n 10) (- d 48)))))))
 	       n))))
@@ -269,28 +269,28 @@
 	  (let ((p (atom)))
 	    (if (eqv? (car sym) 'chr)
 	      (case (cdr sym)
-	        ((63) ; ?
-	  	  (getsym) (rx-choice p rx-empty))
-	        ((42) ; *
+		((63) ; ?
+		  (getsym) (rx-choice p rx-empty))
+		((42) ; *
 		  (getsym) (rx-choice (rx-more p) rx-empty))
-	        ((43) ; +
+		((43) ; +
 		  (getsym) (rx-more p))
-	        ((123) ; {
+		((123) ; {
 		  (getsym)
 		    (let ((p (quantifier p)))
 		      (or (equal? sym '(chr . 125)) (error! "missing }"))
 		      (getsym)
 		      p))
-	        (else p))
+		(else p))
 	      p))))
       (branch
 	(lambda ()
 	  (let loop ((p rx-empty))
-            (if(or (eqv? (car sym) 'end)
-              (and (eqv? (car sym) 'chr)
-                (or (eqv? (cdr sym) 124) (eqv? (cdr sym) 41))))
-              p
-              (loop (rx-group p (piece)))))))
+	    (if(or (eqv? (car sym) 'end)
+	      (and (eqv? (car sym) 'chr)
+		(or (eqv? (cdr sym) 124) (eqv? (cdr sym) 41))))
+	      p
+	      (loop (rx-group p (piece)))))))
       (expr
 	(lambda ()
 	  (let loop ((p (branch)))
@@ -308,30 +308,30 @@
 (define (rx-deriv p c)
   (letrec (
       (in-class?
-        (letrec (
-	    (orf 
-	      (lambda list 
-	        (and (pair? list) 
+	(letrec (
+	    (orf
+	      (lambda list
+		(and (pair? list)
 		  (or (car list) (apply orf (cdr list))))))
-            (in-xml-ranges (lambda (i) (u-in-ranges c (cdr (assv i xml-ranges)))))
-            (in-rx-ranges (lambda (i) (u-in-ranges c (cdr (assv i rx-ranges))))))
-          (lambda (c id)
+	    (in-xml-ranges (lambda (i) (u-in-ranges c (cdr (assv i xml-ranges)))))
+	    (in-rx-ranges (lambda (i) (u-in-ranges c (cdr (assv i rx-ranges))))))
+	  (lambda (c id)
 	    (case id
 	      ((NL) (or (= c 13) (= c 10)))
 	      ((S) (or (= c 13) (= c 10) (= c 9) (= c 32)))
-	      ((I) (or (= c 58) (= c 95) 
-	             (apply orf (map in-xml-ranges '(base-char ideographic)))))
+	      ((I) (or (= c 58) (= c 95)
+		     (apply orf (map in-xml-ranges '(base-char ideographic)))))
 	      ((C) (or (in-class? c 'I) (= c 45) (= c 46)
-	             (apply orf (map in-xml-ranges '(digit combining-char extender)))))
-	      ((W) (not 
-	             (or (in-class? c 'U-P) (in-class? c 'U-Z) (in-class? c 'U-C))))
-              ((U-C) (apply orf (map in-rx-ranges '(U-Cc U-Cf U-Co))))
-              ((U-L) (apply orf (map in-rx-ranges '(U-Lu U-Ll U-Lt U-Lm U-Lo))))
-              ((U-M) (apply orf (map in-rx-ranges '(U-Mn U-Mc U-Me))))
-              ((U-N) (apply orf (map in-rx-ranges '(U-Nd U-Nl U-No))))
-              ((U-P) (apply orf (map in-rx-ranges '(U-Pc U-Pd U-Ps U-Pe))))
-              ((U-S) (apply orf (map in-rx-ranges '(U-Sm U-Sc U-Sk U-So))))
-              ((U-Z) (apply orf (map in-rx-ranges '(U-Zl U-Zs U-Zp))))
+		     (apply orf (map in-xml-ranges '(digit combining-char extender)))))
+	      ((W) (not
+		     (or (in-class? c 'U-P) (in-class? c 'U-Z) (in-class? c 'U-C))))
+	      ((U-C) (apply orf (map in-rx-ranges '(U-Cc U-Cf U-Co))))
+	      ((U-L) (apply orf (map in-rx-ranges '(U-Lu U-Ll U-Lt U-Lm U-Lo))))
+	      ((U-M) (apply orf (map in-rx-ranges '(U-Mn U-Mc U-Me))))
+	      ((U-N) (apply orf (map in-rx-ranges '(U-Nd U-Nl U-No))))
+	      ((U-P) (apply orf (map in-rx-ranges '(U-Pc U-Pd U-Ps U-Pe))))
+	      ((U-S) (apply orf (map in-rx-ranges '(U-Sm U-Sc U-Sk U-So))))
+	      ((U-Z) (apply orf (map in-rx-ranges '(U-Zl U-Zs U-Zp))))
 	      (else (in-rx-ranges id)))))))
     (case (car p)
       ((none empty) rx-none)
@@ -354,9 +354,9 @@
   (and r
     (let ((sll (utf8->lazy-list s)))
       (let delta ((p r) (sll sll))
-        (if (null? sll) (rx-null? p)
+	(if (null? sll) (rx-null? p)
 	  (let* (
-  	      (c (car sll))
+	      (c (car sll))
 	      (p (rx-deriv p c)))
 	    (and (not (eq? p rx-none))
-	      (delta p (force (cdr sll)))))))))) 
+	      (delta p (force (cdr sll))))))))))

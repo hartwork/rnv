@@ -21,7 +21,7 @@ static char *dsl_scm=NULL;
 /* simple rules better */
 static char *implpath(void) {
   char *path=getenv("SCM_INIT_PATH");
-  return path&&access(path,R_OK)!=-1?path:IMPLINIT;
+  return path&&access(path,R_OK)!=-1?path:(char*)IMPLINIT;
 }
 
 static void init_user_scm_dsl(void) {}

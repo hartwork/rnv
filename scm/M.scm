@@ -11,7 +11,7 @@
   (lambda (p f)
     (lambda (inp)
       (let ((rl (p inp)))
-        (apply
+	(apply
 	  append
 	  (map
 	    (lambda (l) (if (pair? l) ((f (car l)) (cdr l)) '()))
@@ -35,16 +35,16 @@
 
 (define lower
   (sat (lambda (y) (char-lower-case? (integer->char y)))))
-  
+
 (define letter (plus lower upper))
 (define alnum (plus letter digit))
 
 (define (many o)
   (let (
       (some
-        (bind o (lambda (x) 
-        (bind (many o) (lambda (xs) 
-          (result (cons x xs))))))))
+	(bind o (lambda (x)
+	(bind (many o) (lambda (xs)
+	  (result (cons x xs))))))))
     (plus some (result '()))))
 	
 

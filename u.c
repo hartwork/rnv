@@ -29,7 +29,7 @@
 #define BOMLEN 3
 
 int u_bom(char *s,int n) {
-  char *bom=BOM+BOMLEN;
+  char *bom=(char*)(BOM+BOMLEN);
   if(n>=BOMLEN) {
     n=BOMLEN; s+=n;
     while(n--!=0) if(*(--s)!=*(--bom)) return 0;

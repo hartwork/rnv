@@ -130,7 +130,7 @@ static int endtok(int i) {
 static void resp(int ok,int patno,int prevno) {
   int len,ofs;
   static char buf[LEN_B];
-  char *f=ok?OK:explain?ERROR:ER;
+  char *f=(char*)(ok?OK:explain?ERROR:ER);
   len=sprintf(buf,f,patno); assert(len<LEN_B);
   write(1,buf,len);
   if(!ok) {
