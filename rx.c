@@ -5,6 +5,7 @@
 #include <stdio.h> /*stderr for error_handler*/
 #include <assert.h>
 #include "u.h" /*u_get,u_strlen*/
+#include "xmlc.h"
 #include "strops.h"
 #include "ht.h"
 #include "ll.h"
@@ -443,6 +444,150 @@ static int compile(char *rx) {
   return p;
 }
 
+#include "rx_cls_ranges.c"
+
+static int in_class(int c,int cn) {
+  switch(cn) {
+  case 0: return 0;
+  case CLS_U_C: return in_class(c,CLS_U_Cc)||in_class(c,CLS_U_Cf)||in_class(c,CLS_U_Co);
+  case CLS_U_Cc: return u_in_ranges(c,CcRanges,sizeof(CcRanges)/sizeof(int[2]));
+  case CLS_U_Cf: return u_in_ranges(c,CfRanges,sizeof(CfRanges)/sizeof(int[2]));
+  case CLS_U_Co: return u_in_ranges(c,CoRanges,sizeof(CoRanges)/sizeof(int[2]));
+  case CLS_U_IsAlphabeticPresentationForms: return u_in_ranges(c,IsAlphabeticPresentationFormsRanges,sizeof(IsAlphabeticPresentationFormsRanges)/sizeof(int[2]));
+  case CLS_U_IsArabic: return u_in_ranges(c,IsArabicRanges,sizeof(IsArabicRanges)/sizeof(int[2]));
+  case CLS_U_IsArabicPresentationForms_A: return u_in_ranges(c,IsArabicPresentationForms_ARanges,sizeof(IsArabicPresentationForms_ARanges)/sizeof(int[2]));
+  case CLS_U_IsArabicPresentationForms_B: return u_in_ranges(c,IsArabicPresentationForms_BRanges,sizeof(IsArabicPresentationForms_BRanges)/sizeof(int[2]));
+  case CLS_U_IsArmenian: return u_in_ranges(c,IsArmenianRanges,sizeof(IsArmenianRanges)/sizeof(int[2]));
+  case CLS_U_IsArrows: return u_in_ranges(c,IsArrowsRanges,sizeof(IsArrowsRanges)/sizeof(int[2]));
+  case CLS_U_IsBasicLatin: return u_in_ranges(c,IsBasicLatinRanges,sizeof(IsBasicLatinRanges)/sizeof(int[2]));
+  case CLS_U_IsBengali: return u_in_ranges(c,IsBengaliRanges,sizeof(IsBengaliRanges)/sizeof(int[2]));
+  case CLS_U_IsBlockElements: return u_in_ranges(c,IsBlockElementsRanges,sizeof(IsBlockElementsRanges)/sizeof(int[2]));
+  case CLS_U_IsBopomofo: return u_in_ranges(c,IsBopomofoRanges,sizeof(IsBopomofoRanges)/sizeof(int[2]));
+  case CLS_U_IsBopomofoExtended: return u_in_ranges(c,IsBopomofoExtendedRanges,sizeof(IsBopomofoExtendedRanges)/sizeof(int[2]));
+  case CLS_U_IsBoxDrawing: return u_in_ranges(c,IsBoxDrawingRanges,sizeof(IsBoxDrawingRanges)/sizeof(int[2]));
+  case CLS_U_IsBraillePatterns: return u_in_ranges(c,IsBraillePatternsRanges,sizeof(IsBraillePatternsRanges)/sizeof(int[2]));
+  case CLS_U_IsByzantineMusicalSymbols: return u_in_ranges(c,IsByzantineMusicalSymbolsRanges,sizeof(IsByzantineMusicalSymbolsRanges)/sizeof(int[2]));
+  case CLS_U_IsCJKCompatibility: return u_in_ranges(c,IsCJKCompatibilityRanges,sizeof(IsCJKCompatibilityRanges)/sizeof(int[2]));
+  case CLS_U_IsCJKCompatibilityForms: return u_in_ranges(c,IsCJKCompatibilityFormsRanges,sizeof(IsCJKCompatibilityFormsRanges)/sizeof(int[2]));
+  case CLS_U_IsCJKCompatibilityIdeographs: return u_in_ranges(c,IsCJKCompatibilityIdeographsRanges,sizeof(IsCJKCompatibilityIdeographsRanges)/sizeof(int[2]));
+  case CLS_U_IsCJKCompatibilityIdeographsSupplement: return u_in_ranges(c,IsCJKCompatibilityIdeographsSupplementRanges,sizeof(IsCJKCompatibilityIdeographsSupplementRanges)/sizeof(int[2]));
+  case CLS_U_IsCJKRadicalsSupplement: return u_in_ranges(c,IsCJKRadicalsSupplementRanges,sizeof(IsCJKRadicalsSupplementRanges)/sizeof(int[2]));
+  case CLS_U_IsCJKSymbolsandPunctuation: return u_in_ranges(c,IsCJKSymbolsandPunctuationRanges,sizeof(IsCJKSymbolsandPunctuationRanges)/sizeof(int[2]));
+  case CLS_U_IsCJKUnifiedIdeographs: return u_in_ranges(c,IsCJKUnifiedIdeographsRanges,sizeof(IsCJKUnifiedIdeographsRanges)/sizeof(int[2]));
+  case CLS_U_IsCJKUnifiedIdeographsExtensionA: return u_in_ranges(c,IsCJKUnifiedIdeographsExtensionARanges,sizeof(IsCJKUnifiedIdeographsExtensionARanges)/sizeof(int[2]));
+  case CLS_U_IsCJKUnifiedIdeographsExtensionB: return u_in_ranges(c,IsCJKUnifiedIdeographsExtensionBRanges,sizeof(IsCJKUnifiedIdeographsExtensionBRanges)/sizeof(int[2]));
+  case CLS_U_IsCherokee: return u_in_ranges(c,IsCherokeeRanges,sizeof(IsCherokeeRanges)/sizeof(int[2]));
+  case CLS_U_IsCombiningDiacriticalMarks: return u_in_ranges(c,IsCombiningDiacriticalMarksRanges,sizeof(IsCombiningDiacriticalMarksRanges)/sizeof(int[2]));
+  case CLS_U_IsCombiningHalfMarks: return u_in_ranges(c,IsCombiningHalfMarksRanges,sizeof(IsCombiningHalfMarksRanges)/sizeof(int[2]));
+  case CLS_U_IsCombiningMarksforSymbols: return u_in_ranges(c,IsCombiningMarksforSymbolsRanges,sizeof(IsCombiningMarksforSymbolsRanges)/sizeof(int[2]));
+  case CLS_U_IsControlPictures: return u_in_ranges(c,IsControlPicturesRanges,sizeof(IsControlPicturesRanges)/sizeof(int[2]));
+  case CLS_U_IsCurrencySymbols: return u_in_ranges(c,IsCurrencySymbolsRanges,sizeof(IsCurrencySymbolsRanges)/sizeof(int[2]));
+  case CLS_U_IsCyrillic: return u_in_ranges(c,IsCyrillicRanges,sizeof(IsCyrillicRanges)/sizeof(int[2]));
+  case CLS_U_IsDeseret: return u_in_ranges(c,IsDeseretRanges,sizeof(IsDeseretRanges)/sizeof(int[2]));
+  case CLS_U_IsDevanagari: return u_in_ranges(c,IsDevanagariRanges,sizeof(IsDevanagariRanges)/sizeof(int[2]));
+  case CLS_U_IsDingbats: return u_in_ranges(c,IsDingbatsRanges,sizeof(IsDingbatsRanges)/sizeof(int[2]));
+  case CLS_U_IsEnclosedAlphanumerics: return u_in_ranges(c,IsEnclosedAlphanumericsRanges,sizeof(IsEnclosedAlphanumericsRanges)/sizeof(int[2]));
+  case CLS_U_IsEnclosedCJKLettersandMonths: return u_in_ranges(c,IsEnclosedCJKLettersandMonthsRanges,sizeof(IsEnclosedCJKLettersandMonthsRanges)/sizeof(int[2]));
+  case CLS_U_IsEthiopic: return u_in_ranges(c,IsEthiopicRanges,sizeof(IsEthiopicRanges)/sizeof(int[2]));
+  case CLS_U_IsGeneralPunctuation: return u_in_ranges(c,IsGeneralPunctuationRanges,sizeof(IsGeneralPunctuationRanges)/sizeof(int[2]));
+  case CLS_U_IsGeometricShapes: return u_in_ranges(c,IsGeometricShapesRanges,sizeof(IsGeometricShapesRanges)/sizeof(int[2]));
+  case CLS_U_IsGeorgian: return u_in_ranges(c,IsGeorgianRanges,sizeof(IsGeorgianRanges)/sizeof(int[2]));
+  case CLS_U_IsGothic: return u_in_ranges(c,IsGothicRanges,sizeof(IsGothicRanges)/sizeof(int[2]));
+  case CLS_U_IsGreek: return u_in_ranges(c,IsGreekRanges,sizeof(IsGreekRanges)/sizeof(int[2]));
+  case CLS_U_IsGreekExtended: return u_in_ranges(c,IsGreekExtendedRanges,sizeof(IsGreekExtendedRanges)/sizeof(int[2]));
+  case CLS_U_IsGujarati: return u_in_ranges(c,IsGujaratiRanges,sizeof(IsGujaratiRanges)/sizeof(int[2]));
+  case CLS_U_IsGurmukhi: return u_in_ranges(c,IsGurmukhiRanges,sizeof(IsGurmukhiRanges)/sizeof(int[2]));
+  case CLS_U_IsHalfwidthandFullwidthForms: return u_in_ranges(c,IsHalfwidthandFullwidthFormsRanges,sizeof(IsHalfwidthandFullwidthFormsRanges)/sizeof(int[2]));
+  case CLS_U_IsHangulCompatibilityJamo: return u_in_ranges(c,IsHangulCompatibilityJamoRanges,sizeof(IsHangulCompatibilityJamoRanges)/sizeof(int[2]));
+  case CLS_U_IsHangulJamo: return u_in_ranges(c,IsHangulJamoRanges,sizeof(IsHangulJamoRanges)/sizeof(int[2]));
+  case CLS_U_IsHangulSyllables: return u_in_ranges(c,IsHangulSyllablesRanges,sizeof(IsHangulSyllablesRanges)/sizeof(int[2]));
+  case CLS_U_IsHebrew: return u_in_ranges(c,IsHebrewRanges,sizeof(IsHebrewRanges)/sizeof(int[2]));
+  case CLS_U_IsHiragana: return u_in_ranges(c,IsHiraganaRanges,sizeof(IsHiraganaRanges)/sizeof(int[2]));
+  case CLS_U_IsIPAExtensions: return u_in_ranges(c,IsIPAExtensionsRanges,sizeof(IsIPAExtensionsRanges)/sizeof(int[2]));
+  case CLS_U_IsIdeographicDescriptionCharacters: return u_in_ranges(c,IsIdeographicDescriptionCharactersRanges,sizeof(IsIdeographicDescriptionCharactersRanges)/sizeof(int[2]));
+  case CLS_U_IsKanbun: return u_in_ranges(c,IsKanbunRanges,sizeof(IsKanbunRanges)/sizeof(int[2]));
+  case CLS_U_IsKangxiRadicals: return u_in_ranges(c,IsKangxiRadicalsRanges,sizeof(IsKangxiRadicalsRanges)/sizeof(int[2]));
+  case CLS_U_IsKannada: return u_in_ranges(c,IsKannadaRanges,sizeof(IsKannadaRanges)/sizeof(int[2]));
+  case CLS_U_IsKatakana: return u_in_ranges(c,IsKatakanaRanges,sizeof(IsKatakanaRanges)/sizeof(int[2]));
+  case CLS_U_IsKhmer: return u_in_ranges(c,IsKhmerRanges,sizeof(IsKhmerRanges)/sizeof(int[2]));
+  case CLS_U_IsLao: return u_in_ranges(c,IsLaoRanges,sizeof(IsLaoRanges)/sizeof(int[2]));
+  case CLS_U_IsLatin_1Supplement: return u_in_ranges(c,IsLatin_1SupplementRanges,sizeof(IsLatin_1SupplementRanges)/sizeof(int[2]));
+  case CLS_U_IsLatinExtended_A: return u_in_ranges(c,IsLatinExtended_ARanges,sizeof(IsLatinExtended_ARanges)/sizeof(int[2]));
+  case CLS_U_IsLatinExtended_B: return u_in_ranges(c,IsLatinExtended_BRanges,sizeof(IsLatinExtended_BRanges)/sizeof(int[2]));
+  case CLS_U_IsLatinExtendedAdditional: return u_in_ranges(c,IsLatinExtendedAdditionalRanges,sizeof(IsLatinExtendedAdditionalRanges)/sizeof(int[2]));
+  case CLS_U_IsLetterlikeSymbols: return u_in_ranges(c,IsLetterlikeSymbolsRanges,sizeof(IsLetterlikeSymbolsRanges)/sizeof(int[2]));
+  case CLS_U_IsMalayalam: return u_in_ranges(c,IsMalayalamRanges,sizeof(IsMalayalamRanges)/sizeof(int[2]));
+  case CLS_U_IsMathematicalAlphanumericSymbols: return u_in_ranges(c,IsMathematicalAlphanumericSymbolsRanges,sizeof(IsMathematicalAlphanumericSymbolsRanges)/sizeof(int[2]));
+  case CLS_U_IsMathematicalOperators: return u_in_ranges(c,IsMathematicalOperatorsRanges,sizeof(IsMathematicalOperatorsRanges)/sizeof(int[2]));
+  case CLS_U_IsMiscellaneousSymbols: return u_in_ranges(c,IsMiscellaneousSymbolsRanges,sizeof(IsMiscellaneousSymbolsRanges)/sizeof(int[2]));
+  case CLS_U_IsMiscellaneousTechnical: return u_in_ranges(c,IsMiscellaneousTechnicalRanges,sizeof(IsMiscellaneousTechnicalRanges)/sizeof(int[2]));
+  case CLS_U_IsMongolian: return u_in_ranges(c,IsMongolianRanges,sizeof(IsMongolianRanges)/sizeof(int[2]));
+  case CLS_U_IsMusicalSymbols: return u_in_ranges(c,IsMusicalSymbolsRanges,sizeof(IsMusicalSymbolsRanges)/sizeof(int[2]));
+  case CLS_U_IsMyanmar: return u_in_ranges(c,IsMyanmarRanges,sizeof(IsMyanmarRanges)/sizeof(int[2]));
+  case CLS_U_IsNumberForms: return u_in_ranges(c,IsNumberFormsRanges,sizeof(IsNumberFormsRanges)/sizeof(int[2]));
+  case CLS_U_IsOgham: return u_in_ranges(c,IsOghamRanges,sizeof(IsOghamRanges)/sizeof(int[2]));
+  case CLS_U_IsOldItalic: return u_in_ranges(c,IsOldItalicRanges,sizeof(IsOldItalicRanges)/sizeof(int[2]));
+  case CLS_U_IsOpticalCharacterRecognition: return u_in_ranges(c,IsOpticalCharacterRecognitionRanges,sizeof(IsOpticalCharacterRecognitionRanges)/sizeof(int[2]));
+  case CLS_U_IsOriya: return u_in_ranges(c,IsOriyaRanges,sizeof(IsOriyaRanges)/sizeof(int[2]));
+  case CLS_U_IsPrivateUse: return u_in_ranges(c,IsPrivateUseRanges,sizeof(IsPrivateUseRanges)/sizeof(int[2]));
+  case CLS_U_IsRunic: return u_in_ranges(c,IsRunicRanges,sizeof(IsRunicRanges)/sizeof(int[2]));
+  case CLS_U_IsSinhala: return u_in_ranges(c,IsSinhalaRanges,sizeof(IsSinhalaRanges)/sizeof(int[2]));
+  case CLS_U_IsSmallFormVariants: return u_in_ranges(c,IsSmallFormVariantsRanges,sizeof(IsSmallFormVariantsRanges)/sizeof(int[2]));
+  case CLS_U_IsSpacingModifierLetters: return u_in_ranges(c,IsSpacingModifierLettersRanges,sizeof(IsSpacingModifierLettersRanges)/sizeof(int[2]));
+  case CLS_U_IsSpecials: return u_in_ranges(c,IsSpecialsRanges,sizeof(IsSpecialsRanges)/sizeof(int[2]));
+  case CLS_U_IsSuperscriptsandSubscripts: return u_in_ranges(c,IsSuperscriptsandSubscriptsRanges,sizeof(IsSuperscriptsandSubscriptsRanges)/sizeof(int[2]));
+  case CLS_U_IsSyriac: return u_in_ranges(c,IsSyriacRanges,sizeof(IsSyriacRanges)/sizeof(int[2]));
+  case CLS_U_IsTags: return u_in_ranges(c,IsTagsRanges,sizeof(IsTagsRanges)/sizeof(int[2]));
+  case CLS_U_IsTamil: return u_in_ranges(c,IsTamilRanges,sizeof(IsTamilRanges)/sizeof(int[2]));
+  case CLS_U_IsTelugu: return u_in_ranges(c,IsTeluguRanges,sizeof(IsTeluguRanges)/sizeof(int[2]));
+  case CLS_U_IsThaana: return u_in_ranges(c,IsThaanaRanges,sizeof(IsThaanaRanges)/sizeof(int[2]));
+  case CLS_U_IsThai: return u_in_ranges(c,IsThaiRanges,sizeof(IsThaiRanges)/sizeof(int[2]));
+  case CLS_U_IsTibetan: return u_in_ranges(c,IsTibetanRanges,sizeof(IsTibetanRanges)/sizeof(int[2]));
+  case CLS_U_IsUnifiedCanadianAboriginalSyllabics: return u_in_ranges(c,IsUnifiedCanadianAboriginalSyllabicsRanges,sizeof(IsUnifiedCanadianAboriginalSyllabicsRanges)/sizeof(int[2]));
+  case CLS_U_IsYiRadicals: return u_in_ranges(c,IsYiRadicalsRanges,sizeof(IsYiRadicalsRanges)/sizeof(int[2]));
+  case CLS_U_IsYiSyllables: return u_in_ranges(c,IsYiSyllablesRanges,sizeof(IsYiSyllablesRanges)/sizeof(int[2]));
+  case CLS_U_L: return in_class(c,CLS_U_Ll)||in_class(c,CLS_U_Lm)||in_class(c,CLS_U_Lo)||in_class(c,CLS_U_Lt)||in_class(c,CLS_U_Lu);
+  case CLS_U_Ll: return u_in_ranges(c,LlRanges,sizeof(LlRanges)/sizeof(int[2]));
+  case CLS_U_Lm: return u_in_ranges(c,LmRanges,sizeof(LmRanges)/sizeof(int[2]));
+  case CLS_U_Lo: return u_in_ranges(c,LoRanges,sizeof(LoRanges)/sizeof(int[2]));
+  case CLS_U_Lt: return u_in_ranges(c,LtRanges,sizeof(LtRanges)/sizeof(int[2]));
+  case CLS_U_Lu: return u_in_ranges(c,LuRanges,sizeof(LuRanges)/sizeof(int[2]));
+  case CLS_U_M: return in_class(c,CLS_U_Mc)||in_class(c,CLS_U_Me)||in_class(c,CLS_U_Mn);
+  case CLS_U_Mc: return u_in_ranges(c,McRanges,sizeof(McRanges)/sizeof(int[2]));
+  case CLS_U_Me: return u_in_ranges(c,MeRanges,sizeof(MeRanges)/sizeof(int[2]));
+  case CLS_U_Mn: return u_in_ranges(c,MnRanges,sizeof(MnRanges)/sizeof(int[2]));
+  case CLS_U_N: return in_class(c,CLS_U_Nd)||in_class(c,CLS_U_Nl)||in_class(c,CLS_U_No);
+  case CLS_U_Nd: return u_in_ranges(c,NdRanges,sizeof(NdRanges)/sizeof(int[2]));
+  case CLS_U_Nl: return u_in_ranges(c,NlRanges,sizeof(NlRanges)/sizeof(int[2]));
+  case CLS_U_No: return u_in_ranges(c,NoRanges,sizeof(NoRanges)/sizeof(int[2]));
+  case CLS_U_P: return in_class(c,CLS_U_Pc)||in_class(c,CLS_U_Pd)||in_class(c,CLS_U_Pe)||in_class(c,CLS_U_Pf)||in_class(c,CLS_U_Pi)||in_class(c,CLS_U_Po)||in_class(c,CLS_U_Ps);
+  case CLS_U_Pc: return u_in_ranges(c,PcRanges,sizeof(PcRanges)/sizeof(int[2]));
+  case CLS_U_Pd: return u_in_ranges(c,PdRanges,sizeof(PdRanges)/sizeof(int[2]));
+  case CLS_U_Pe: return u_in_ranges(c,PeRanges,sizeof(PeRanges)/sizeof(int[2]));
+  case CLS_U_Pf: return u_in_ranges(c,PfRanges,sizeof(PfRanges)/sizeof(int[2]));
+  case CLS_U_Pi: return u_in_ranges(c,PiRanges,sizeof(PiRanges)/sizeof(int[2]));
+  case CLS_U_Po: return u_in_ranges(c,PoRanges,sizeof(PoRanges)/sizeof(int[2]));
+  case CLS_U_Ps: return u_in_ranges(c,PsRanges,sizeof(PsRanges)/sizeof(int[2]));
+  case CLS_U_S: return in_class(c,CLS_U_Sc)||in_class(c,CLS_U_Sk)||in_class(c,CLS_U_Sm)||in_class(c,CLS_U_So);
+  case CLS_U_Sc: return u_in_ranges(c,ScRanges,sizeof(ScRanges)/sizeof(int[2]));
+  case CLS_U_Sk: return u_in_ranges(c,SkRanges,sizeof(SkRanges)/sizeof(int[2]));
+  case CLS_U_Sm: return u_in_ranges(c,SmRanges,sizeof(SmRanges)/sizeof(int[2]));
+  case CLS_U_So: return u_in_ranges(c,SoRanges,sizeof(SoRanges)/sizeof(int[2]));
+  case CLS_U_Z: return in_class(c,CLS_U_Zl)||in_class(c,CLS_U_Zp)||in_class(c,CLS_U_Zs);
+  case CLS_U_Zl: return u_in_ranges(c,ZlRanges,sizeof(ZlRanges)/sizeof(int[2]));
+  case CLS_U_Zp: return u_in_ranges(c,ZpRanges,sizeof(ZpRanges)/sizeof(int[2]));
+  case CLS_U_Zs: return u_in_ranges(c,ZsRanges,sizeof(ZsRanges)/sizeof(int[2]));
+  case CLS_NL: return c=='\n'||c=='\r';
+  case CLS_S: return xmlc_white_space(c);
+  case CLS_I: return xmlc_base_char(c)||xmlc_ideographic(c)||c=='_'||c==':';
+  case CLS_C: return in_class(c,CLS_I)||xmlc_digit(c)||xmlc_combining_char(c)||xmlc_extender(c)||c=='.'||c=='-';
+  case CLS_W: return !(in_class(c,CLS_U_P)||in_class(c,CLS_U_Z)||in_class(c,CLS_U_C));
+  default: assert(0);
+  }
+  return 0;
+}
+
+
 static int drv(int p,int c) {
   int p1,p2,cf,cl,cn;
   assert(!P_IS(p,ERROR));
@@ -453,7 +598,7 @@ static int drv(int p,int c) {
   case  P_ONE_OR_MORE: OneOreMore(p,p1); p=group(drv(p1,c),choice(empty,p)); break;
   case  P_EXCEPT: Except(p,p1,p2); p=nullable(drv(p1,c))&&!nullable(drv(p2,c))?empty:notAllowed; break;
   case  P_RANGE: Range(p,cf,cl); p=cf<=c&&c<=cl?empty:notAllowed; break;
-  case  P_CLASS: Class(p,cn); p=empty; break;
+  case  P_CLASS: Class(p,cn); p=in_class(c,cn)?empty:notAllowed; break;
   case  P_ANY: p=empty; break;
   case  P_CHAR: Char(p,cf); p=c==cf?empty:notAllowed; break;
   default: assert(0);
