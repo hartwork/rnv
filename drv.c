@@ -48,7 +48,7 @@ void drv_default_verror_handler(int erno,va_list ap) {
     switch(erno) {
     case DRV_ER_NODTL: err("no datatype library for URI '%s'"); break;
     default: assert(0);
-    }                
+    }
   }
 }
 
@@ -61,7 +61,7 @@ static void error_handler(int erno,...) {
 static void verror_handler_xsd(int erno,va_list ap) {(*drv_verror_handler)(erno|ERBIT_XSD,ap);}
 
 static void new_memo(int typ) {
-  if(drv_compact) ht_deli(&ht_m,i_m); 
+  if(drv_compact) ht_deli(&ht_m,i_m);
   memo[i_m][0]=typ;
 }
 
@@ -74,14 +74,14 @@ static int hash_m(int m) {
   return ((me[0]&0x7)|((me[1]^me[2]^me[3])<<3))*PRIME_M;
 }
 
-static int newStartTagOpen(int p,int uri,int name) { 
+static int newStartTagOpen(int p,int uri,int name) {
   int *me=memo[i_m];
   new_memo(M_STO);
   me[1]=p; me[2]=uri; me[3]=name;
   return ht_get(&ht_m,i_m);
 }
 
-static int newAttributeOpen(int p,int uri,int name) { 
+static int newAttributeOpen(int p,int uri,int name) {
   int *me=memo[i_m];
   new_memo(M_ATT);
   me[1]=p; me[2]=uri; me[3]=name;
@@ -136,7 +136,7 @@ static void windup(void);
 static int initialized=0;
 void drv_init(void) {
   if(!initialized) { initialized=1;
-    rn_init(); 
+    rn_init();
     xsd_init(); xsd_verror_handler=&verror_handler_xsd;
     memo=(int (*)[M_SIZE])memalloc(len_m=LEN_M,sizeof(int[M_SIZE]));
     dtl=(struct dtl*)memalloc(len_dtl=LEN_DTL,sizeof(struct dtl));
@@ -208,7 +208,7 @@ static int start_tag_open(int p,int uri,int name,int recover) {
     if(m!=-1) return M_RET(m);
   }
   switch(RN_P_TYP(p)) {
-  case RN_P_NOT_ALLOWED: case RN_P_EMPTY: case RN_P_TEXT: 
+  case RN_P_NOT_ALLOWED: case RN_P_EMPTY: case RN_P_TEXT:
   case RN_P_LIST: case RN_P_DATA: case RN_P_DATA_EXCEPT: case RN_P_VALUE:
   case RN_P_ATTRIBUTE:
     ret=rn_notAllowed;
@@ -216,15 +216,15 @@ static int start_tag_open(int p,int uri,int name,int recover) {
   case RN_P_CHOICE: rn_Choice(p,p1,p2);
     ret=rn_choice(start_tag_open(p1,uri,name,recover),start_tag_open(p2,uri,name,recover));
     break;
-  case RN_P_ELEMENT: rn_Element(p,nc,p1); 
-    ret=ncof(nc,uri,name)?rn_after(p1,rn_empty):rn_notAllowed; 
+  case RN_P_ELEMENT: rn_Element(p,nc,p1);
+    ret=ncof(nc,uri,name)?rn_after(p1,rn_empty):rn_notAllowed;
     break;
-  case RN_P_INTERLEAVE: rn_Interleave(p,p1,p2); 
+  case RN_P_INTERLEAVE: rn_Interleave(p,p1,p2);
     ret=rn_choice(
       apply_after(&rn_ileave,start_tag_open(p1,uri,name,recover),p2),
       apply_after(&rn_ileave,start_tag_open(p2,uri,name,recover),p1));
     break;
-  case RN_P_GROUP: rn_Group(p,p1,p2); 
+  case RN_P_GROUP: rn_Group(p,p1,p2);
     { int p11=apply_after(&rn_group,start_tag_open(p1,uri,name,recover),p2);
       ret=(rn_nullable(p1)||recover)?rn_choice(p11,start_tag_open(p2,uri,name,recover)):p11;
     } break;
@@ -237,7 +237,7 @@ static int start_tag_open(int p,int uri,int name,int recover) {
   default: assert(0);
   }
   if(!recover) {
-    newStartTagOpen(p,uri,name); M_SET(ret); 
+    newStartTagOpen(p,uri,name); M_SET(ret);
     accept_m();
   }
   return ret;
@@ -253,7 +253,7 @@ static int attribute_open(int p,int uri,int name) {
   m=newAttributeOpen(p,uri,name);
   if(m!=-1) return M_RET(m);
   switch(RN_P_TYP(p)) {
-  case RN_P_NOT_ALLOWED: case RN_P_EMPTY: case RN_P_TEXT: 
+  case RN_P_NOT_ALLOWED: case RN_P_EMPTY: case RN_P_TEXT:
   case RN_P_LIST: case RN_P_DATA: case RN_P_DATA_EXCEPT: case RN_P_VALUE:
   case RN_P_ELEMENT:
     ret=rn_notAllowed;
@@ -262,14 +262,14 @@ static int attribute_open(int p,int uri,int name) {
     ret=rn_choice(attribute_open(p1,uri,name),attribute_open(p2,uri,name));
     break;
   case RN_P_ATTRIBUTE: rn_Attribute(p,nc,p1);
-    ret=ncof(nc,uri,name)?rn_after(p1,rn_empty):rn_notAllowed; 
+    ret=ncof(nc,uri,name)?rn_after(p1,rn_empty):rn_notAllowed;
     break;
-  case RN_P_INTERLEAVE: rn_Interleave(p,p1,p2); 
+  case RN_P_INTERLEAVE: rn_Interleave(p,p1,p2);
     ret=rn_choice(
       apply_after(&rn_ileave,attribute_open(p1,uri,name),p2),
       apply_after(&rn_ileave,attribute_open(p2,uri,name),p1));
     break;
-  case RN_P_GROUP: rn_Group(p,p1,p2); 
+  case RN_P_GROUP: rn_Group(p,p1,p2);
     ret=rn_choice(
       apply_after(&rn_group,attribute_open(p1,uri,name),p2),
       apply_after(&puorg_rn,attribute_open(p2,uri,name),p1));
@@ -282,7 +282,7 @@ static int attribute_open(int p,int uri,int name) {
     break;
   default: assert(0);
   }
-  newAttributeOpen(p,uri,name); M_SET(ret); 
+  newAttributeOpen(p,uri,name); M_SET(ret);
   accept_m();
   return ret;
 }
@@ -317,7 +317,7 @@ static int start_tag_close(int p,int recover) {
   case RN_P_ONE_OR_MORE: rn_OneOrMore(p,p1);
     ret=rn_one_or_more(start_tag_close(p1,recover));
     break;
-  case RN_P_ATTRIBUTE: 
+  case RN_P_ATTRIBUTE:
     ret=recover?rn_empty:rn_notAllowed;
     break;
   case RN_P_AFTER: rn_After(p,p1,p2);
@@ -326,7 +326,7 @@ static int start_tag_close(int p,int recover) {
   default: assert(0);
   }
   if(!recover) {
-    newStartTagClose(p); M_SET(ret); 
+    newStartTagClose(p); M_SET(ret);
     accept_m();
   }
   return ret;
@@ -358,7 +358,7 @@ static int text(int p,char *s,int n) { /* matches text, including whitespace */
   case RN_P_TEXT:
     ret=p;
     break;
-  case RN_P_AFTER: rn_After(p,p1,p2); 
+  case RN_P_AFTER: rn_After(p,p1,p2);
     ret=rn_after(text(p1,s,n),p2);
     break;
   case RN_P_CHOICE: rn_Choice(p,p1,p2);
@@ -389,7 +389,7 @@ static int text(int p,char *s,int n) { /* matches text, including whitespace */
   default: assert(0);
   }
   return ret;
-} 
+}
 
 static int textws(int p,char *s,int n) {
   int p1=text(p,s,n),ws=1;
@@ -413,7 +413,7 @@ static int mixed_text(int p) { /* matches text in mixed context */
   case RN_P_TEXT:
     ret=p;
     break;
-  case RN_P_AFTER: rn_After(p,p1,p2); 
+  case RN_P_AFTER: rn_After(p,p1,p2);
     ret=rn_after(mixed_text(p1),p2);
     break;
   case RN_P_CHOICE: rn_Choice(p,p1,p2);
@@ -434,7 +434,7 @@ static int mixed_text(int p) { /* matches text in mixed context */
   newMixedText(p); M_SET(ret);
   accept_m();
   return ret;
-} 
+}
 int drv_mixed_text(int p) {return mixed_text(p);}
 int drv_mixed_text_recover(int p) {return p;}
 

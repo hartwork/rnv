@@ -26,7 +26,7 @@ void rnv_default_verror_handler(int erno,va_list ap) {
     case RNV_ER_TEXT: err("invalid data or text not allowed"); break;
     case RNV_ER_NOTX: err("text not allowed"); break;
     default: assert(0);
-    }                
+    }
   }
 }
 
@@ -99,7 +99,7 @@ int rnv_start_tag_open(int *curp,int *prevp,char *name) {
   *curp=drv_start_tag_open(*prevp=*curp,suri,sname);
   if(*curp==rn_notAllowed) { ok=0;
     *curp=drv_start_tag_open_recover(*prevp,suri,sname);
-    error_handler(*curp==rn_notAllowed?RNV_ER_ELEM:RNV_ER_EMIS,suri,sname); 
+    error_handler(*curp==rn_notAllowed?RNV_ER_ELEM:RNV_ER_EMIS,suri,sname);
   }
   return ok;
 }
