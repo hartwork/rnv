@@ -22,7 +22,7 @@
 		    ((#\\) (let ((d (nextc)))
 		        (ch (if (eqv? d #\")
 			    (cons d ll)  
-			    (cons (d (cons c ll)))) 
+			    (cons d (cons c ll)))
 			  (nextc))))
 	            (else (ch (cons c ll) (nextc)))))))
 	    (ident
@@ -56,8 +56,6 @@
 	      (cons (reverse ding) prog)))))
        (splice
          (lambda (code)
-	   (display code)
-	   (newline)
 	   (letrec (
 	       (resolve
 	         (lambda (piece)

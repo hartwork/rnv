@@ -168,6 +168,7 @@ scm/u.scm \
 scm/xml-ranges.scm \
 scm/rx-ranges.scm \
 scm/rx.scm \
+scm/spat.scm \
 scm/dsl.scm
 
 zip: ${DIST}-${VERSION}.zip

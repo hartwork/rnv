@@ -2,6 +2,7 @@
 ; sample scheme datatype library for RNV
 
 (load (in-vicinity (program-vicinity) "rx.scm"))
+(load (in-vicinity (program-vicinity) "spat.scm"))
 
 (define scheme-regex #t)
 (define dsl-debug #f)
@@ -47,6 +48,9 @@
 		     (rx-match (rx-compile (cdr p)) s)
 		     (regmatch (cdr p) s))
 		  (params (cdr ps))))
+	      ((s-pattern)
+	        (let ((regex (spat->regex (cdr p))))
+	          (and regex (params (cons `("pattern" . ,regex) (cdr ps))))))
 	      (else #f)))
 	  #t)))
     ((token) (dsl-allows? "string" ps (dsl-string->token s)))
