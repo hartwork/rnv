@@ -560,7 +560,7 @@ static void getsym(struct rnc_source *sp) {
       if(NXT(sp).sym==SYM_CONCAT) {
 	sp->cur=!sp->cur; advance(sp);
 	if(NXT(sp).sym!=SYM_LITERAL) {
-	  error(0,sp,RNC_ER_SEXP,sp->fn,NXT(sp).line,NXT(sp).col,sym2str(SYM_LITERAL),sym2str(CUR(sp).sym));
+	  error(0,sp,RNC_ER_SEXP,sp->fn,NXT(sp).line,NXT(sp).col,sym2str(SYM_LITERAL),sym2str(NXT(sp).sym));
 	  break;
 	}
 	{ int newslen=strlen(CUR(sp).s)+strlen(NXT(sp).s)+1;

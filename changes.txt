@@ -1,9 +1,15 @@
 /* $Id$ */
 
 1.4.2
-dvd: add -d command to rvp to load external type checker; dxl.c dxl.h implement
-     http://davidashen.net/relaxng/pluggable-datatypes datatype; xsdck makes
-     xsd: pluggable.
+
+Mon Jan 19 13:43:57 AMT 2004
+dvd: fixed typo in diagnostics when literal is missing after ~
+
+Thu Jan 15 18:10:02 AMT 2004
+dvd: added -d command to rvp to load external type checker;
+     dxl.c dxl.h implement
+     http://davidashen.net/relaxng/pluggable-datatypes datatype;
+     xsdck makes xsd: pluggable.
 
 1.4.1 Tue Jan 13 14:29:08 AMT 2004
 dvd: added sys/types.h where appropriate; fixed Makefile.bcc
@@ -18,7 +24,7 @@ dvd: rvp is implemented; reads validation events from input, sends diagnostics
 
 Sat Jan 10 03:18:12 AMT 2004
 dvd: factored out loading of rnc into rnl; now, instead of calling rnc
-     and rnd separately, rnl_(fn|fd|s) is called. 
+     and rnd separately, rnl_(fn|fd|s) is called.
 
 1.3.5 Tue Jan  6 11:56:06 AMT 2004
 dvd: learned that UTF-8 BOM is reality, added processing; fixed check for name
@@ -26,24 +32,24 @@ dvd: learned that UTF-8 BOM is reality, added processing; fixed check for name
      added end-of-line to error messages from Expat
 
 1.3.4 Mon Jan  5 22:43:05 AMT 2004
-dvd: grammar samples added to the distribution, entries for other grammars 
+dvd: grammar samples added to the distribution, entries for other grammars
      commented out in tools/arx.conf
-     
+
 Mon Jan  5 17:00:57 AMT 2004
 dvd: isany is now ary_isany (ary is helpers for arx)
 
 Mon Jan  5 00:56:25 AMT 2004
 dvd: rnx_isany is added. It is used by arx and checks for a pattern that matches any element;
-     should be written as 
-              any = (element * {any}|attribute * {text}|text)* 
+     should be written as
+              any = (element * {any}|attribute * {text}|text)*
      (triple choice, elements in any order)
 
 Sun Jan  4 03:38:10 AMT 2004
 dvd: Renamings
 
 1.3.3 Sat Jan  3 18:58:36 AMT 2004
-dvd: arx, a grammar (and not just grammar) association utility has been added; 
-     performance improvements, Makefile.bcc to compile the binaries under 
+dvd: arx, a grammar (and not just grammar) association utility has been added;
+     performance improvements, Makefile.bcc to compile the binaries under
      win32+Borland C/C++ builder
 
 1.3.2 Fri Jan  2 04:30:30 AMT 2004
@@ -57,7 +63,7 @@ Tue Dec 30 17:24:05 AMT 2003
 dvd: added warning about include in includeContent
 
 Tue Dec 30 04:19:22 AMT 2003
-dvd: expected now correctly returns attributes behind elements 
+dvd: expected now correctly returns attributes behind elements
 
 Mon Dec 29 20:26:01 AMT 2003
 dvd: error handling refactored, validation logic separated from command-line interface
@@ -94,13 +100,13 @@ Fri Dec 19 22:19:05 AMT 2003
 dvd: rn_params joined with rn_string
 
 1.1.0 Fri Dec 19 03:56:46 AMT 2003
-dvd: drv_attribute_open|drv_attribute_close and memoization implemented; 
+dvd: drv_attribute_open|drv_attribute_close and memoization implemented;
      hash values are multiplied by large primes - helps with current hashing
      algorithms; garbage collection added to rn (rn_compress,
      rn_compress_last); compact mode implemented for validation, the buffer for
      memoized patterns does not exceed a limit when the validator runs in
      compact mode.
-     
+
 1.0.9 Wed Dec 17 23:36:05 AMT 2003
 dvd: drv_mixed_text added, results memoized; code cleanups to compile easier;
      added targets for static and shared libraries to the Makefile, many small
