@@ -32,6 +32,8 @@ extern int rn_notAllowed,rx_compact,drv_compact;
 
 #define XCL_ER_IO 0
 #define XCL_ER_XML 1
+#define XCL_ER_NOXENT 2
+#define XCL_ER_NOSID 3
 
 static int peipe,explain,rnck;
 static char *xml;
@@ -41,7 +43,7 @@ static int mixed=0;
 static int lastline,lastcol,level;
 static int ok;
 
-/* Expat does not normalize strings on input unless the whole file is loaded into the buffer */
+/* Expat does not normalize strings on input */
 static char *text; static int len_t;
 static int n_t;
 
@@ -71,6 +73,8 @@ static void verror_handler(int erno,va_list ap) {
 	switch(erno) {
 	case XCL_ER_IO: err("%s"); break;
 	case XCL_ER_XML: err("%s"); break;
+	case XCL_ER_NOXENT: err("cannot open external entity '%s': %s"); break;
+	case XCL_ER_NOSID: err("cannot process external entity without systemId"); break;
 	default: assert(0);
 	}
       }
@@ -153,37 +157,67 @@ static int pipeout(void *buf,int len) {
   }
 }
 
-static void validate(int fd) {
+static int process(int fd) {
   void *buf; int len;
-  previous=current=start;
-
-  expat=XML_ParserCreateNS(NULL,':');
-  XML_SetElementHandler(expat,&start_element,&end_element);
-  XML_SetCharacterDataHandler(expat,&characters);
   for(;;) {
     buf=XML_GetBuffer(expat,BUFSIZE);
     len=read(fd,buf,BUFSIZE);
     if(len<0) {
-      error_handler(XCL_ER_IO,strerror(errno));
+      error_handler(XCL_ER_IO,xml,strerror(errno));
       goto ERROR;
     }
     if(peipe) peipe=peipe&&pipeout(buf,len);
     if(!XML_ParseBuffer(expat,len,len==0)) goto PARSE_ERROR;
     if(len==0) break;
   }
-  XML_ParserFree(expat);
-  return;
+  return 1;
 
 PARSE_ERROR:
   error_handler(XCL_ER_XML,XML_ErrorString(XML_GetErrorCode(expat)));
   while(peipe&&(len=read(fd,buf,BUFSIZE))!=0) peipe=peipe&&pipeout(buf,len);
 ERROR:
-  XML_ParserFree(expat);
+  return 0;
+}
+
+static int externalEntityRef(XML_Parser p,const char *context, const char *base,const char *systemId,const char *publicId) {
+  int fd;
   ok=0;
+  if(systemId) {
+    if((fd=open(systemId,O_RDONLY))==-1) {
+      error_handler(XCL_ER_NOXENT,systemId,strerror(errno));
+    } else { 
+      char *xml0=xml; XML_Parser expat0=expat;
+      xml=(char*)systemId;
+      expat=XML_ExternalEntityParserCreate(expat0,context,NULL);
+      ok=process(fd);
+      XML_ParserFree(expat);
+      expat=expat0; xml=xml0;
+    }
+  } else {
+    error_handler(XCL_ER_NOSID);
+  }
+  return XML_STATUS_OK;
+}
+
+static void validate(int fd) {
+  previous=current=start;
+  expat=XML_ParserCreateNS(NULL,':');
+  XML_SetElementHandler(expat,&start_element,&end_element);
+  XML_SetCharacterDataHandler(expat,&characters);
+  XML_SetExternalEntityRefHandler(expat,&externalEntityRef);
+  ok=process(fd);
+  XML_ParserFree(expat);
 }
 
 static void version(void) {(*er_printf)("rnv version %s\n",RNV_VERSION);}
-static void usage(void) {(*er_printf)("usage: rnv {-[qpscdevh?]} schema.rnc {document.xml}\n");}
+static void usage(void) {(*er_printf)("usage: rnv {-[qpsc"
+#if DXL_EXC
+"d"
+#endif
+#if DSL_SCM
+"e"
+#endif
+"vh?]} schema.rnc {document.xml}\n");}
 
 int main(int argc,char **argv) {
   init();
@@ -199,8 +233,12 @@ int main(int argc,char **argv) {
       case 's': drv_compact=1; rx_compact=1; break;
       case 'p': peipe=1; break;
       case 'c': rnck=1; break;
+#if DXL_EXC
       case 'd': dxl_cmd=*(argv+1); if(*(argv+1)) ++argv; goto END_OF_OPTIONS;
+#endif
+#if DSL_SCM
       case 'e': dsl_ld(*(argv+1)); if(*(argv+1)) ++argv; goto END_OF_OPTIONS;
+#endif
       case 'q': explain=0; break;
       default: (*er_printf)("unknown option '-%c'\n",*(*argv+i)); break;
       }
@@ -228,10 +266,10 @@ int main(int argc,char **argv) {
       if(!ok&&explain) (*er_printf)("error: some documents are invalid\n");
     } else {
       if(!rnck) {
-        xml="stdin";
-        validate(0);
-        clear();
-        if(!ok&&explain) (*er_printf)("error: invalid input\n");
+	xml="stdin";
+	validate(0);
+	clear();
+	if(!ok&&explain) (*er_printf)("error: invalid input\n");
       }
     }
   }

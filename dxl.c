@@ -5,10 +5,6 @@
 
 char *dxl_cmd=NULL;
 
-#ifndef DXL_EXC
-#define DXL_EXC 0
-#endif
-
 #if DXL_EXC
 
 #include <string.h>

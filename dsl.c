@@ -5,10 +5,6 @@
 
 static char *dsl_scm=NULL;
 
-#ifndef DSL_SCM
-#define DSL_SCM 0
-#endif
-
 #if DSL_SCM
 
 #include <string.h>

@@ -210,7 +210,14 @@ static int query(void) {
 }
 
 static void version(void) {(*er_printf)("rvp version %s\n",RVP_VERSION);}
-static void usage(void) {(*er_printf)("usage: rvp {-[qsdevh?]} {schema.rnc}\n");}
+static void usage(void) {(*er_printf)("usage: rvp {-[qs"
+#if DXL_EXC
+"d"
+#endif
+#if DSL_SCM
+"e"
+#endif
+"vh?]} {schema.rnc}\n");}
 
 int main(int argc,char **argv) {
   int i, ok;
@@ -225,8 +232,12 @@ int main(int argc,char **argv) {
       case 'h': case '?': usage(); return 0;
       case 'v': version(); break;
       case 's': drv_compact=1; rx_compact=1; break;
+#if DXL_EXC
       case 'd': dxl_cmd=*(argv+1); if(*(argv+1)) ++argv; goto END_OF_OPTIONS;
+#endif
+#if DSL_SCM
       case 'e': dsl_ld(*(argv+1)); if(*(argv+1)) ++argv; goto END_OF_OPTIONS;
+#endif
       case 'q': explain=0; break;
       default: (*er_printf)("unknown option '-%c'\n",*(*argv+i)); break;
       }
