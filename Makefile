@@ -29,9 +29,12 @@ rnd_test: ${OBJ} rnd_test.o
 	${CC} ${OPT} ${LBL} -o rnd_test rnd_test.o ${OBJ} ${LIB} 
 
 clean: 
-	-rm -f *.o rnv rnd_test
+	-rm -f *.o rnv rnd_test *_test *.core *.gmon
 
 # $Log$
+# Revision 1.16  2003/12/13 22:34:45  dvd
+# cleanups
+#
 # Revision 1.15  2003/12/13 22:31:54  dvd
 # a few bugfixes
 #
