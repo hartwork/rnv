@@ -61,6 +61,7 @@ xcl.c \
 arx.c \
 rvp.c \
 xsdck.c \
+test.c \
 ary.c ary.h \
 rn.c rn.h \
 rnc.c rnc.h \
