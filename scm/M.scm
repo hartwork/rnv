@@ -19,6 +19,8 @@
 
 (define (plus p q) (lambda (inp) (append (p inp) (q inp))))
 
+; the rest is experiments
+
 (define (sat p)
   (bind unit (lambda (x) (if (p x) (result x) zero))))
 
