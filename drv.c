@@ -40,7 +40,7 @@ static int (*memo)[M_SIZE];
 static int i_m,len_m;
 static struct hashtable ht_m;
 
-#define err(msg) er_vprintf(msg"\n",ap);
+#define err(msg) (*er_vprintf)(msg"\n",ap);
 void drv_default_verror_handler(int erno,va_list ap) {
   if(erno&ERBIT_XSD) {
     xsd_default_verror_handler(erno&~ERBIT_XSD,ap);

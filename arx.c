@@ -174,9 +174,9 @@ static char *sym2str(int sym) {
 #define ARX_ER_TYP 6
 
 /* there is nothing in the grammar I need utf-8 processing for */
-#define err(msg) er_vprintf(msg"\n",ap)
+#define err(msg) (*er_vprintf)(msg"\n",ap)
 static void verror_handler(int erno,va_list ap) {
-  er_printf("error (%s,%i,%i): ",arxfn,line,col);
+  (*er_printf)("error (%s,%i,%i): ",arxfn,line,col);
   switch(erno) {
   case ARX_ER_IO: err("I/O error: %s"); break;
   case ARX_ER_SYN: err("syntax error"); break;
@@ -309,7 +309,7 @@ static int typ2str(void) {
 
 static int arx(char *fn) {
   if((arxfd=open(arxfn=fn,O_RDONLY))==-1) {
-    er_printf("error (%s): %s\n",arxfn,strerror(errno));
+    (*er_printf)("error (%s): %s\n",arxfn,strerror(errno));
     return 0;
   } else {
     errors=0;
@@ -413,7 +413,7 @@ static void validate(int start,int fd) {
     buf=XML_GetBuffer(expat,BUFSIZE);
     len=read(fd,buf,BUFSIZE);
     if(len<0) {
-      er_printf("error (%s): %s\n",xml,strerror(errno));
+      (*er_printf)("error (%s): %s\n",xml,strerror(errno));
       wf=ok=0; break;
     }
     if(!XML_ParseBuffer(expat,len,len==0)) wf=ok=0;
@@ -423,8 +423,8 @@ static void validate(int start,int fd) {
   return;
 }
 
-static void version(void) {er_printf("arx version %s\n",ARX_VERSION);}
-static void usage(void) {er_printf("usage: arx {-[nvh?]} document.xml arx.conf {arx.conf}\n");}
+static void version(void) {(*er_printf)("arx version %s\n",ARX_VERSION);}
+static void usage(void) {(*er_printf)("usage: arx {-[nvh?]} document.xml arx.conf {arx.conf}\n");}
 
 int main(int argc,char **argv) {
   int fd;
@@ -439,7 +439,7 @@ int main(int argc,char **argv) {
       case 'h': case '?': usage(); return 1;
       case 'n': path2abs=0; break;
       case 'v': version(); break;
-      default: er_printf("unknown option '-%c'\n",*(*argv+i)); break;
+      default: (*er_printf)("unknown option '-%c'\n",*(*argv+i)); break;
       }
       ++i;
     }

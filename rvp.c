@@ -200,7 +200,7 @@ static int query(void) {
     }
     break;
 
-  case NKWD: PROTER: er_printf("protocol error\n"); lasterr=0; patno=0; ok=0; break;
+  case NKWD: PROTER: (*er_printf)("protocol error\n"); lasterr=0; patno=0; ok=0; break;
   default: assert(0);
   }
   resp(ok,patno,prevno);
@@ -209,8 +209,8 @@ static int query(void) {
   return 1;
 }
 
-static void version(void) {er_printf("rvp version %s\n",RVP_VERSION);}
-static void usage(void) {er_printf("usage: rvp {-[qdsvh?]} {schema.rnc}\n");}
+static void version(void) {(*er_printf)("rvp version %s\n",RVP_VERSION);}
+static void usage(void) {(*er_printf)("usage: rvp {-[qdsvh?]} {schema.rnc}\n");}
 
 int main(int argc,char **argv) {
   int i, ok;
@@ -228,7 +228,7 @@ int main(int argc,char **argv) {
       case 'd': dxl_cmd=*(argv+1); if(dxl_cmd) ++argv; goto END_OF_OPTIONS;
       case 'e': dsl_scm=*(argv+1); if(dsl_scm) ++argv; goto END_OF_OPTIONS;
       case 'q': explain=0; break;
-      default: er_printf("unknown option '-%c'\n",*(*argv+i)); break;
+      default: (*er_printf)("unknown option '-%c'\n",*(*argv+i)); break;
       }
       ++i;
     }

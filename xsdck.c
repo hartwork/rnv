@@ -24,6 +24,6 @@ int main(int argc,char **argv) {
     return !xsd_allows(*(argv+1),ps,*(argv+argc-1),strlen(*(argv+argc-1)));
   }
 USAGE:
-  er_printf("xsdck: invalid arguments\n");
+  (*er_printf)("xsdck: invalid arguments\n");
   return 255;
 }

@@ -179,9 +179,9 @@ static int add_r(char *rx) {
 
 #define ERRPOS
 
-#define err(msg) er_vprintf(msg" in \"%s\" at offset %i\n",ap)
+#define err(msg) (*er_vprintf)(msg" in \"%s\" at offset %i\n",ap)
 void rx_default_verror_handler(int erno,va_list ap) {
-  er_printf("regular expressions: ");
+  (*er_printf)("regular expressions: ");
   switch(erno) {
   case RX_ER_BADCH: err("bad character"); break;
   case RX_ER_UNFIN: err("unfinished expression"); break;

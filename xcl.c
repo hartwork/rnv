@@ -42,7 +42,7 @@ static int ok;
 static char *text; static int len_t;
 static int n_t;
 
-#define err(msg) er_vprintf(msg"\n",ap);
+#define err(msg) (*er_vprintf)(msg"\n",ap);
 static void verror_handler(int erno,va_list ap) {
   if(erno&ERBIT_RNL) {
     rnl_default_verror_handler(erno&~ERBIT_RNL,ap);
@@ -50,16 +50,16 @@ static void verror_handler(int erno,va_list ap) {
     int line=XML_GetCurrentLineNumber(expat),col=XML_GetCurrentColumnNumber(expat);
     if(line!=lastline||col!=lastcol) {
       char *s;
-      er_printf("error (%s,%i,%i): ",xml,lastline=line,lastcol=col);
+      (*er_printf)("error (%s,%i,%i): ",xml,lastline=line,lastcol=col);
       if(erno&ERBIT_RNV) {
 	rnv_default_verror_handler(erno&~ERBIT_RNV,ap);
 	if(explain) {
 	  rnx_expected(previous);
 	  if(rnx_n_exp!=0 && rnx_n_exp<=NEXP) {
 	    int i;
-	    er_printf("expected:\n");
+	    (*er_printf)("expected:\n");
 	    for(i=0;i!=rnx_n_exp;++i) {
-	      er_printf("\t%s\n",s=rnx_p2str(rnx_exp[i]));
+	      (*er_printf)("\t%s\n",s=rnx_p2str(rnx_exp[i]));
 	      m_free(s);
 	    }
 	  }
@@ -177,8 +177,8 @@ ERROR:
   ok=0;
 }
 
-static void version(void) {er_printf("rnv version %s\n",RNV_VERSION);}
-static void usage(void) {er_printf("usage: rnv {-[qpsvh?]} schema.rnc {document.xml}\n");}
+static void version(void) {(*er_printf)("rnv version %s\n",RNV_VERSION);}
+static void usage(void) {(*er_printf)("usage: rnv {-[qpsvh?]} schema.rnc {document.xml}\n");}
 
 int main(int argc,char **argv) {
   init();
@@ -194,7 +194,7 @@ int main(int argc,char **argv) {
       case 's': drv_compact=1; rx_compact=1; break;
       case 'p': peipe=1; break;
       case 'q': explain=0; break;
-      default: er_printf("unknown option '-%c'\n",*(*argv+i)); break;
+      default: (*er_printf)("unknown option '-%c'\n",*(*argv+i)); break;
       }
       ++i;
     }
@@ -208,21 +208,21 @@ int main(int argc,char **argv) {
       do {
 	int fd; xml=*argv;
 	if((fd=open(xml,O_RDONLY))==-1) {
-	  er_printf("I/O error (%s): %s\n",xml,strerror(errno));
+	  (*er_printf)("I/O error (%s): %s\n",xml,strerror(errno));
 	  ok=0;
 	  continue;
 	}
-	if(explain) er_printf("%s\n",xml);
+	if(explain) (*er_printf)("%s\n",xml);
 	validate(fd);
 	close(fd);
 	clear();
       } while(*(++argv));
-      if(!ok&&explain) er_printf("error: some documents are invalid\n");
+      if(!ok&&explain) (*er_printf)("error: some documents are invalid\n");
     } else { /* stdin */
       xml="stdin";
       validate(0);
       clear();
-      if(!ok&&explain) er_printf("error: invalid input\n");
+      if(!ok&&explain) (*er_printf)("error: invalid input\n");
     }
   }
 

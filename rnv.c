@@ -11,7 +11,7 @@
 
 extern int rn_notAllowed;
 
-#define err(msg) er_vprintf(msg"\n",ap);
+#define err(msg) (*er_vprintf)(msg"\n",ap);
 void rnv_default_verror_handler(int erno,va_list ap) {
   if(erno&ERBIT_DRV) {
     drv_default_verror_handler(erno&~ERBIT_DRV,ap);

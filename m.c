@@ -12,7 +12,7 @@ void m_free(void *p) {
 extern void *m_alloc(int length,int size) {
   void *p=calloc(length,size);
   if(p==NULL) {
-    er_printf("failed to allocate %i bytes of memory\n",length*size);
+    (*er_printf)("failed to allocate %i bytes of memory\n",length*size);
     exit(1);
   }
   return p;

@@ -40,12 +40,12 @@ int dxl_allows(char *typ,char *ps,char *s,int n) {
       }
     }
     execv(dxl_cmd,argv);
-    er_printf("dxl: cannot execute %s: %s\n",dxl_cmd,strerror(errno));
+    (*er_printf)("dxl: cannot execute %s: %s\n",dxl_cmd,strerror(errno));
  } else if(pid>0) {
     wait(&status);
     return !WEXITSTATUS(status);
   }
-  er_printf("dxl: %s\n",strerror(errno));
+  (*er_printf)("dxl: %s\n",strerror(errno));
   return 0;
 }
 
@@ -58,11 +58,11 @@ int dxl_equal(char *typ,char *val,char *s,int n) {
 
     argv[4]=(char*)malloc(n+1); argv[4][n]='\0'; strncpy(argv[4],s,n);
     execvp(dxl_cmd,argv);
-    er_printf("dxl: cannot execute %s\n",dxl_cmd,strerror(errno));
+    (*er_printf)("dxl: cannot execute %s\n",dxl_cmd,strerror(errno));
   } else if(pid>0) {
     wait(&status);
     return !WEXITSTATUS(status);
   }
-  er_printf("dxl: %s\n",strerror(errno));
+  (*er_printf)("dxl: %s\n",strerror(errno));
   return 0;
 }
