@@ -21,10 +21,6 @@ extern void rnd_default_verror_handler(int erno,va_list ap);
 extern void rnd_init(void);
 extern void rnd_clear(void);
 
-extern void rnd_deref(int start);
-extern void rnd_restrictions(void);
-extern void rnd_traits(void);
-extern int rnd_release(void);
-extern int rnd_errors(void);
+extern int rnd_fixup(int start);
 
 #endif

@@ -104,22 +104,12 @@ static void windup(void) {
 }
 
 static int load_rnc(char *fn) {
-  struct rnc_source *sp=rnc_alloc();
-  if(rnc_open(sp,fn)!=-1) start=rnc_parse(sp); rnc_close(sp); 
-
-  if(rnc_errors(sp)) rnc_free(sp); else { rnc_free(sp);
-    rnd_deref(start); 
-    if(rnd_errors()) rnd_release(); else {
-      rnd_restrictions(); 
-      if(rnd_errors()) rnd_release(); else {
-	rnd_traits();
-	start=rnd_release();
-	start=rn_compress_last(start);
-	return 1;
-      }
-    }
-  }
-  return 0;
+  struct rnc_source src;
+  if(rnc_open(&src,fn)!=-1) start=rnc_parse(&src); rnc_close(&src); 
+  if(!rnc_errors(&src)&&(start=rnd_fixup(start))) {
+    start=rn_compress_last(start); 
+  } else start=0;
+  return start;
 }
 
 static void error_handler(int erno,...) {

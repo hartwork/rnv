@@ -22,8 +22,10 @@ delimiters in regexp and literal must be quoted by \ inside strings
 */
 
 #include UNISTD_H
-#include <stdio.h>
+#include <fcntl.h>
 #include <string.h>
+#include <stdio.h>
+#include EXPAT_H
 #include "memops.h"
 #include "strops.h"
 #include "ht.h"
@@ -35,10 +37,10 @@ delimiters in regexp and literal must be quoted by \ inside strings
 #include "rx.h"
 
 /* rules */
-#define VALID 0
-#define INVAL 1
-#define MATCH 2
-#define INMAT 3
+#define VALID 1
+#define INVAL 2
+#define MATCH 3
+#define NOMAT 4
 
 #define LEN_T 16 
 #define LEN_R 64
@@ -114,13 +116,8 @@ static void windup(void) {
 #define SYM_ASGN 12
 
 /* there is nothing in the grammar I need utf-8 processing for */
-static void parse_error(void) {
+static void error(void) {
   fprintf(stderr,"error (%s,%i,%i):\n",arxfn,line,col);
-}
-
-static void init_parser(int _fd) {
-  arxfd=_fd; i_b=len_b=0; line=1; col=0; cc=-1;
-  len_v=0; value=NULL;
 }
 
 static void getcc(void) {
@@ -151,7 +148,7 @@ static void getq(void) {
     getcc();
     if(cc==cq) {
       if(i!=0&&value[i-1]=='\\') --i; else {getcc(); break;}
-    } else if(cc==-1) {parse_error(); break;}
+    } else if(cc==-1) {error(); break;}
     value[i++]=cc;
     if(i==len_v) value=memstretch(value,len_v=2*i,i,sizeof(char));
   }
@@ -165,11 +162,11 @@ static void getrng(void) {
     cc0=cc; getcc();
     if(cc=='}') ircur=i;
     else if(cc=='>') {if(cc0=='=') {getcc(); break;}} /* use => as terminator */
-    else if(cc==-1) {parse_error(); break;}
+    else if(cc==-1) {error(); break;}
     value[i++]=cc;
     if(i==len_v) value=memstretch(value,len_v=2*i,i,sizeof(char));
   }
-  if(ircur==-1) {parse_error(); ircur=0;}
+  if(ircur==-1) {error(); ircur=0;}
   value[ircur]='\0';
 }
 
@@ -191,13 +188,13 @@ static void getsym(void) {
       if(cc=='~') {
 	getcc(); sym=SYM_NMTC;
       } else {
-        getid(); if(strcmp("valid",value)!=0) parse_error(); sym=SYM_NVAL;
+        getid(); if(strcmp("valid",value)!=0) error(); sym=SYM_NVAL;
       }
       return;
     case '=': getcc();
       switch(cc) {
       case '~': getcc(); sym=SYM_MTCH; return;
-      case '>': getcc(); if(sym!=SYM_RGXP) parse_error(); continue;
+      case '>': getcc(); if(sym!=SYM_RGXP) error(); continue;
       default: sym=SYM_ASGN; return;
       }
     case '"': getq(); sym=SYM_LTRL; return;
@@ -212,7 +209,7 @@ static void getsym(void) {
 }
 
 static int chksym(int x) {
-  if(sym!=x) {parse_error(); return 0;}
+  if(sym!=x) {error(); return 0;}
   return 1;
 }
 
@@ -220,19 +217,50 @@ static void chk_get(int x) {
   (void)chksym(x); getsym();
 }
 
-static void grammars(void) {
-}
-
-static void relaxng(void) {
-}
-
-static void regexp(void) {
-}
-
-static void route(void) {
-}
-
-static void arx(void) {
-  grammars();
-  while(sym!=SYM_EOF) route();
+static void arx(char *fn) {
+  if((arxfd=open(fn,O_RDONLY))==-1) error(); else {
+    i_b=len_b=0; line=1; col=0; cc=-1;
+    len_v=0; value=NULL;
+    getsym();
+    chk_get(SYM_GRMS); chk_get(SYM_LCUR);
+    do {
+      if(i_t==len_t) t2s=(int(*)[2])memstretch(t2s,len_t=i_t*2,i_t,sizeof(int[2]));
+      if(chksym(SYM_IDNT)) t2s[i_t][0]=add_s(value); getsym();
+      chk_get(SYM_ASGN);
+      if(chksym(SYM_LTRL)) t2s[i_t][1]=add_s(value); getsym();
+      ++i_t;
+    } while(sym==SYM_IDNT);
+    chk_get(SYM_RCUR);
+    for(;;) {
+      if(i_r==len_r) rules=(int(*)[3])memstretch(rules,i_r*2,i_r,sizeof(int[3]));
+      switch(sym) {
+      case SYM_MTCH: rules[i_r][0]=MATCH; goto REGEXP;
+      case SYM_NMTC: rules[i_r][0]=NOMAT; goto REGEXP;
+      REGEXP: getsym();
+	if(chksym(SYM_RGXP)) {
+	  if(!rx_check(value)) error();
+	  rules[i_r][1]=add_s(value);
+	}
+	if(chksym(SYM_IDNT)) rules[i_r][2]=add_s(value);
+	goto NEXT;
+      case SYM_VALD: rules[i_r][0]=VALID; goto RNG;
+      case SYM_NVAL: rules[i_r][0]=INVAL; goto RNG;
+      RNG: getsym();
+	if(chksym(SYM_RENG)) {
+	  struct rnc_source src; int start;
+	  rnc_stropen(&src,"embedded",value,strlen(value));
+	  start=rnc_parse(&src); rnc_close(&src); 
+	  if(!rnc_errors(&src)&&(start=rnd_fixup(start))) {
+	    rules[i_r][1]=rn_compress_last(start); 
+	  } else ++errors;
+	}
+	if(chksym(SYM_IDNT)) rules[i_r][2]=add_s(value);
+	goto NEXT;
+      default: goto LAST;
+      }
+      NEXT: ++i_r; getsym();
+    }
+    LAST: chk_get(SYM_EOF);
+    close(arxfd);
+  }
 }

@@ -117,31 +117,6 @@ void (*rnc_verror_handler)(int er_no,va_list ap)=&rnc_default_verror_handler;
 
 #define LEN_P 128
 
-struct cym {
-  char *s; int slen;
-  int line,col;
-  int sym;
-};
-
-struct rnc_source {
-  int flags;
-  char *fn; int fd;
-  char *buf; int i,n;
-  int complete;
-  int line,col,prevline/*when error reported*/;
-  int u,v,w; int nx;
-  int cur;
-  struct cym sym[2];
-};
-
-struct rnc_source *rnc_alloc(void) {
-  return (struct rnc_source *)memalloc(1,sizeof(struct rnc_source));
-}
-void rnc_free(struct rnc_source *sp) {
-  memset(sp,0xff,sizeof(struct rnc_source));
-  memfree(sp);
-}
-
 static int len_p;
 static char *path;
 
@@ -360,7 +335,7 @@ static void getv(struct rnc_source *sp) {
 #define name_char(v) (name_start(v)||xmlc_digit(v)||xmlc_combining_char(v)||xmlc_extender(v)||(v)=='.'||(v)=='-'||(v)==':')
 #define skip_comment(sp) while(!newline(sp->v)) getv(sp); getv(sp)
 
-static void realloc_s(struct cym *symp,int newslen) {
+static void realloc_s(struct rnc_cym *symp,int newslen) {
   symp->s=(char*)memstretch(symp->s,newslen,symp->slen,sizeof(char));
   symp->slen=newslen;
 }

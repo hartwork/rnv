@@ -43,17 +43,12 @@ void rnd_init(void) {
 
 void rnd_clear(void) {}
 
-
-int rnd_errors(void) {
-  return errors!=0;
-}
-
 static void error(int er_no,...) {
   va_list ap; va_start(ap,er_no); (*rnd_verror_handler)(er_no,ap); va_end(ap);
   ++errors;
 }
 
-static int deref(int p) {
+static int de(int p) {
   int p0=p,p1;
   P_CHK(p,REF);
   for(;;) {
@@ -71,14 +66,13 @@ static int deref(int p) {
 
 static void flatten(int p) { if(!marked(p)) {flat[n_f++]=p; mark(p);}}
 
-void rnd_deref(int start) {
+static void deref(int start) {
   int p,p1,p2,nc,i,changed;
 
   flat=(int*)memalloc(len_f=LEN_F,sizeof(int)); n_f=0;
   refs=(int*)memalloc(len_r=LEN_R,sizeof(int)); n_r=0;
-  errors=0;
 
-  if(P_IS(start,REF)) start=deref(start);
+  if(P_IS(start,REF)) start=de(start);
   flatten(start);
 
   i=0;
@@ -94,8 +88,8 @@ void rnd_deref(int start) {
     case P_DATA_EXCEPT: DataExcept(p,p1,p2); goto BINARY;
     BINARY:
       changed=0;
-      if(P_IS(p1,REF)) {p1=deref(p1); changed=1;}
-      if(P_IS(p2,REF)) {p2=deref(p2); changed=1;}
+      if(P_IS(p1,REF)) {p1=de(p1); changed=1;}
+      if(P_IS(p2,REF)) {p2=de(p2); changed=1;}
       if(changed) {rn_del_p(p); rn_pattern[p+1]=p1; rn_pattern[p+2]=p2; rn_add_p(p);}
       if(n_f+2>len_f) flat=(int*)memstretch(flat,len_f=2*(n_f+2),n_f,sizeof(int));
       flatten(p1); flatten(p2);
@@ -107,7 +101,7 @@ void rnd_deref(int start) {
     case P_ELEMENT: Element(p,nc,p1); goto UNARY;
     UNARY:
       changed=0;
-      if(P_IS(p1,REF)) {p1=deref(p1); changed=1;}
+      if(P_IS(p1,REF)) {p1=de(p1); changed=1;}
       if(changed) {rn_del_p(p); rn_pattern[p+1]=p1; rn_add_p(p);}
       if(n_f+1>len_f) flat=(int*)memstretch(flat,len_f=2*(n_f+1),n_f,sizeof(int));
       flatten(p1);
@@ -116,7 +110,7 @@ void rnd_deref(int start) {
     case P_REF: /* because of a loop, but will be handled in rnd_loops */
       break;
 
-    default: 
+    default:
       assert(0);
     }
   } while(i!=n_f);
@@ -319,9 +313,9 @@ static int bad_attribute(int p) {
   case P_CHOICE: Choice(p,p1,p2); goto BINARY;
   case P_INTERLEAVE: Interleave(p,p1,p2); goto BINARY;
   case P_GROUP: Group(p,p1,p2); goto BINARY;
-  case P_DATA_EXCEPT: DataExcept(p,p1,p2); goto BINARY; 
+  case P_DATA_EXCEPT: DataExcept(p,p1,p2); goto BINARY;
   BINARY: return bad_attribute(p1)||bad_attribute(p2);
-  
+
 
   case P_ONE_OR_MORE: OneOrMore(p,p1); goto UNARY;
   case P_LIST: List(p,p1); goto UNARY;
@@ -345,21 +339,21 @@ static void path(int p,int nc) {
   case P_CHOICE: Choice(p,p1,p2); goto BINARY;
   case P_INTERLEAVE: Interleave(p,p1,p2); goto BINARY;
   case P_GROUP: Group(p,p1,p2); goto BINARY;
-  case P_DATA_EXCEPT: DataExcept(p,p1,p2); 
+  case P_DATA_EXCEPT: DataExcept(p,p1,p2);
     if(bad_data_except(p2)) {char *s=rnx_nc2str(nc); error(RND_ER_BADEXPT,s); memfree(s);}
     goto BINARY;
   BINARY: path(p1,nc); path(p2,nc); break;
 
-  case P_ONE_OR_MORE: OneOrMore(p,p1); 
+  case P_ONE_OR_MORE: OneOrMore(p,p1);
     if(bad_one_or_more(p1,0)) {char *s=rnx_nc2str(nc); error(RND_ER_BADMORE,s); memfree(s);}
     goto UNARY;
-  case P_LIST: List(p,p1); 
+  case P_LIST: List(p,p1);
     if(bad_list(p1)) {char *s=rnx_nc2str(nc); error(RND_ER_BADLIST,s); memfree(s);}
     goto UNARY;
-  case P_ATTRIBUTE: Attribute(p,nc1,p1); 
+  case P_ATTRIBUTE: Attribute(p,nc1,p1);
     if(bad_attribute(p1)) {char *s=rnx_nc2str(nc),*s1=rnx_nc2str(nc1); error(RND_ER_BADATTR,s1,s); memfree(s1); memfree(s);}
     goto UNARY;
-  UNARY: path(p1,nc); break; 
+  UNARY: path(p1,nc); break;
 
   default: assert(0);
   }
@@ -377,7 +371,7 @@ static void paths(void) {
   }
 }
 
-void rnd_restrictions(void) {
+static void restrictions(void) {
   loops(); if(errors) return; /* loops can cause endless loops in subsequent calls */
   ctypes();
   paths();
@@ -436,13 +430,19 @@ static void cdatas(void) {
   } while(changed);
 }
 
-void rnd_traits(void) {
+static void traits(void) {
   nullables();
   cdatas();
 }
 
-int rnd_release(void) {
+static int release(void) {
   int start=flat[0];
   memfree(flat); flat=NULL;
   return start;
+}
+
+int rnd_fixup(int start) {
+  errors=0;
+  deref(start); if(!errors) {restrictions(); if(!errors) traits();}
+  start=release(); return errors?0:start;
 }

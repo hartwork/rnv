@@ -30,11 +30,24 @@
 #define RNC_ER_NOSTART 70
 #define RNC_ER_UNDEF 71
 
-extern void (*rnc_verror_handler)(int er_no,va_list ap);
+struct rnc_cym {
+  char *s; int slen;
+  int line,col;
+  int sym;
+};
 
-struct rnc_source;
-extern struct rnc_source *rnc_alloc(void);
-extern void rnc_free(struct rnc_source *sp);
+struct rnc_source {
+  int flags;
+  char *fn; int fd;
+  char *buf; int i,n;
+  int complete;
+  int line,col,prevline/*when error reported*/;
+  int u,v,w; int nx;
+  int cur;
+  struct rnc_cym sym[2];
+};
+
+extern void (*rnc_verror_handler)(int er_no,va_list ap);
 
 extern void rnc_default_verror_handler(int erno,va_list ap);
 
