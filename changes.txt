@@ -1,5 +1,7 @@
 /* $Id$ */
 
+Fri Jan  7 01:07:37 AMT 2005
+dvd: base64: I hope I got it right this time.
 
 Thu Jan  6 15:46:55 AMT 2005
 dvd: base64 regular expression checks full syntax of RFC2045.
