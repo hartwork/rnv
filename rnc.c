@@ -120,21 +120,22 @@ void (*rnc_verror_handler)(int er_no,va_list ap)=&rnc_default_verror_handler;
 static int len_p;
 static char *path;
 
-static void rnc_source_init(struct rnc_source *sp);
+static void rnc_source_init(struct rnc_source *sp,char *fn);
 static int rnc_read(struct rnc_source *sp);
 
 int rnc_stropen(struct rnc_source *sp,char *fn,char *s,int len) {
-  rnc_source_init(sp);
-  sp->fn=strclone(fn);
-  sp->buf=s; sp->n=len; sp->complete=1;
+  rnc_source_init(sp,fn);
+  sp->buf=s; 
+  sp->n=len; sp->complete=1; sp->i=u_bom(s,len);
   return 0;
 }
 
 int rnc_bind(struct rnc_source *sp,char *fn,int fd) {
-  rnc_source_init(sp);
-  sp->fn=strclone(fn); sp->fd=fd;
-  sp->buf=(char*)memalloc(BUFSIZE,sizeof(char)); sp->flags=SRC_FREE;
-  if(!(sp->complete=sp->fd==-1)) rnc_read(sp);
+  rnc_source_init(sp,fn);
+  if((sp->fd=fd)!=-1) {
+    sp->buf=(char*)memalloc(BUFSIZE,sizeof(char)); sp->flags=SRC_FREE;
+    sp->n=sp->i=0; sp->complete=0; rnc_read(sp); sp->i=u_bom(sp->buf,sp->n);
+  }
   return sp->fd;
 }
 
@@ -149,9 +150,7 @@ int rnc_open(struct rnc_source *sp,char *fn) {
 int rnc_close(struct rnc_source *sp) {
   int ret=0,i;
   for(i=0;i!=2;++i) {memfree(sp->sym[i].s); sp->sym[i].s=NULL;}
-  if(sp->flags&SRC_FREE) {
-    sp->flags&=~SRC_FREE; memfree(sp->buf);
-  } 
+  if(sp->flags&SRC_FREE) {sp->flags&=~SRC_FREE; memfree(sp->buf);} 
   sp->buf=NULL;
   sp->complete=-1;
   if(sp->flags&SRC_CLOSE) {
@@ -162,11 +161,11 @@ int rnc_close(struct rnc_source *sp) {
   return ret;
 }
 
-static void rnc_source_init(struct rnc_source *sp) {
+static void rnc_source_init(struct rnc_source *sp,char *fn) {
   int i;
+  sp->fn=strclone(fn);
   sp->flags=0;
-  sp->fn=sp->buf=NULL;
-  sp->i=sp->n=0;
+  sp->buf=NULL;
   sp->complete=sp->fd=-1;
   sp->line=1; sp->col=1; sp->prevline=-1;
   sp->u=-1; sp->v=0;  sp->nx=-1;
@@ -907,7 +906,6 @@ static int file(struct rnc_source *sp,int nsuri) {
   int ret=0;
   struct rnc_source src;
   add_well_known_nss(nsuri);
-  rnc_source_init(&src);
   if(rnc_open(&src,path)!=-1) {
     ret=topLevel(&src);
     sp->flags|=src.flags&SRC_ERRORS;

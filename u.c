@@ -25,6 +25,19 @@
 #define B5 0xFC000000
 #define B6 0x80000000
 
+#define BOM "\xEF\xBB\xBF"
+#define BOMLEN 3
+
+int u_bom(char *s,int n) {
+  char *bom=BOM+BOMLEN;
+  if(n>=BOMLEN) {
+    n=BOMLEN; s+=n;
+    while(n--!=0) if(*(--s)!=*(--bom)) return 0;
+    return BOMLEN;
+  }
+  return 0;
+}
+
 int u_get(int *up,char *s) {
   unsigned char *t=(unsigned char*)s;
   if(*t<0x80) {*up=u1(t); return 1;}

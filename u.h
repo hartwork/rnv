@@ -5,6 +5,9 @@
 
 #define U_MAXLEN 6
 
+/* returns BOM length if the string starts with BOM */
+extern int u_bom(char *s,int n);
+
 /* computes a unicode character u off the head of s; 
  returns number of bytes read. 0 means error.
  */

@@ -29,6 +29,7 @@ comments start with # and continue till end of line
 #include <errno.h>
 #include <assert.h>
 #include EXPAT_H
+#include "u.h"
 #include "memops.h"
 #include "strops.h"
 #include "xmlc.h"
@@ -204,7 +205,7 @@ static void getcc(void) {
   }
 }
 
-static int nmtoken(int cc) {return xmlc_base_char(cc)||xmlc_ideographic(cc)||(cc)=='_'||xmlc_digit(cc)||xmlc_combining_char(cc)||xmlc_extender(cc)||(cc)=='.'||(cc)=='-'||(cc)==':';}
+static int nmtoken(int cc) {return cc>0x7F||xmlc_base_char(cc)||xmlc_digit(cc)||cc=='_'||cc=='.'||cc=='-'||cc==':';}
 static int getid(void) {
   if(nmtoken(cc)) {
     int i=0;
@@ -310,7 +311,7 @@ static int arx(char *fn) {
     return 0;
   } else {
     errors=0;
-    i_b=len_b=0; 
+    len_b=read(arxfd,buf,BUFSIZ); i_b=u_bom(buf,len_b);
     prevline=-1; line=1; col=0; rnc=0;
     cc=' '; getsym();
     chk_get(SYM_GRMS); chk_get(SYM_LCUR);
