@@ -1,5 +1,6 @@
 /* $Id$ */
 
+#include <stdlib.h>
 #include <stdarg.h>
 #include <fcntl.h>  /*open,close*/
 #include UNISTD_H   /*open,read,close*/
@@ -106,14 +107,11 @@ static int load_rnc(char *fn) {
   struct rnc_source *sp=rnc_alloc();
   if(rnc_open(sp,fn)!=-1) start=rnc_parse(sp); rnc_close(sp); 
 
-  if(rnc_errors(sp)) {
-    rnc_free(sp);
-  } else {
-    rnc_free(sp);
+  if(rnc_errors(sp)) rnc_free(sp); else { rnc_free(sp);
     rnd_deref(start); 
-    if(!rnd_errors()) {
+    if(rnd_errors()) rnd_release(); else {
       rnd_restrictions(); 
-      if(!rnd_errors()) {
+      if(rnd_errors()) rnd_release(); else {
 	rnd_traits();
 	start=rnd_release();
 	start=rn_compress_last(start);
@@ -249,5 +247,5 @@ int main(int argc,char **argv) {
     }
   }
 
-  return !ok;
+  return ok?EXIT_SUCCESS:EXIT_FAILURE;
 }

@@ -40,7 +40,7 @@ static int adding_ps;
 
 void rn_new_schema(void) {base_p=i_p; i_ref=0;}
 
-void rn_del_p(int i) {if(ht_get(&ht_p,i)==i) ht_del(&ht_p,i);}
+void rn_del_p(int i) {ht_deli(&ht_p,i);}
 void rn_add_p(int i) {if(ht_get(&ht_p,i)==-1) ht_put(&ht_p,i);}
 
 void setNullable(int i,int x) {if(x) rn_pattern[i]|=P_FLG_NUL;}

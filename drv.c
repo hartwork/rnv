@@ -61,7 +61,7 @@ static void error_handler(int erno,...) {
 static void verror_handler_xsd(int erno,va_list ap) {(*drv_verror_handler)(erno|ERBIT_XSD,ap);}
 
 static void new_memo(int typ) {
-  if(drv_compact && ht_get(&ht_m,i_m)==i_m) ht_del(&ht_m,i_m); 
+  if(drv_compact) ht_deli(&ht_m,i_m); 
   memo[i_m][0]=typ;
 }
 

@@ -61,13 +61,13 @@ void ht_put(struct hashtable *ht,int i) {
   ++ht->used;
 }
 
-int ht_del(struct hashtable *ht,int i) {
+static int del(struct hashtable *ht,int i,int eq) {
   if(ht->used!=0) {
     int hv=ht->hash(i),j;
     for(j=first(ht,hv);;j=next(ht,j)) {
       int tj=ht->table[j];
       if(tj==-1) break;
-      if(ht->equal(i,tj)) {
+      if(eq?i==tj:ht->equal(i,tj)) {
 	do {
 	  int k=j,j0;
 	  ht->table[j]=-1;
@@ -86,3 +86,5 @@ int ht_del(struct hashtable *ht,int i) {
   }
   return -1;
 }
+int ht_del(struct hashtable *ht,int i) {return del(ht,i,0);}
+int ht_deli(struct hashtable *ht,int i) {return del(ht,i,1);}

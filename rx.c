@@ -218,7 +218,7 @@ static struct hashtable ht_m;
 
 static int new_memo(int p,int c) {
   int *me=memo[i_m];
-  if(ht_get(&ht_m,i_m)==i_m) ht_del(&ht_m,i_m);
+  ht_deli(&ht_m,i_m);
   me[0]=p; me[1]=c;
   return ht_get(&ht_m,i_m);
 }
