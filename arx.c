@@ -269,7 +269,6 @@ static void getsym(void) {
          : strcmp("valid",value)==0?SYM_VALD:SYM_IDNT;
       return;
     }
-    assert(0);
   }
 }
 
