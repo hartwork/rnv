@@ -286,7 +286,12 @@ struct facets {
 #define PAT_FLOATING PAT_FIXED"([Ee]"PAT_INTEGER")?|INF|-INF|NaN"
 
 #define PAT_HEX_BINARY "[0-9a-fA-F]+"
-#define PAT_BASE64_BINARY "[A-Za-z0-9+/ ]+(=( ?=)?)?"
+
+#define PAT_BASE64 "([A-Za-z0-9+/] ?)"
+#define PAT_BASE64_BINARY \
+   "("PAT_BASE64"{4})*" \
+   "("PAT_BASE64 "[A-H] ?= ?=" \
+   "|"PAT_BASE64 PAT_BASE64 "[A-P] ?=)?"
 
 #define PAT_ANY_URI "(([a-zA-Z][0-9a-zA-Z+\\-\\.]*:)?/{0,2}[0-9a-zA-Z;/?:@&=+$\\.\\-_!~*'()%]+)?(#[0-9a-zA-Z;/?:@&=+$\\.\\-_!~*'()%]+)?"
 
@@ -782,6 +787,8 @@ int xsd_equal(char *typ,char *val,char *s,int n) {
 }
 
 void xsd_test() {
+  rx_init();
+
   assert(toklenn("",0)==0);
   assert(toklenn("A",1)==1);
   assert(toklenn(" A  ",4)==1);
@@ -817,6 +824,18 @@ void xsd_test() {
   assert(hexcmpn("aBCd","AbCd",4)==0);
   assert(hexcmpn("ABC 123"," ABC123",7)==0);
   assert(hexcmpn("ABC124","ABC123",6)>0);
+
+  assert(rx_match(PAT_BASE64_BINARY,"",0));
+  assert(rx_match(PAT_BASE64_BINARY,"YmFz",4));
+  assert(rx_match(PAT_BASE64_BINARY,"YF==",4));
+  assert(rx_match(PAT_BASE64_BINARY,"Y F = =",7));
+  assert(rx_match(PAT_BASE64_BINARY,"YFO=",4));
+
+  assert(!rx_match(PAT_BASE64_BINARY,"YmF@",4));
+  assert(!rx_match(PAT_BASE64_BINARY,"YmFgH",5));
+  assert(!rx_match(PAT_BASE64_BINARY,"Y===",4));
+  assert(!rx_match(PAT_BASE64_BINARY,"YF=O",4));
+  assert(!rx_match(PAT_BASE64_BINARY,"YFZ=",4));
 
   assert(b64cmpn("","",0)==0);
   assert(b64cmpn("ABC123","ABC123",6)==0);
