@@ -1,27 +1,35 @@
 #!/usr/local/bin/perl
 # $Id$
 
+# embedding sample for RVP, a part of RNV, http://davidashen.net/rnv.html
+# code kept simple to show the technique, not to provide a general purpose
+# module.
+#
+# details of the protocol are in a long comment near the start of rvp.c
+#
+
 use FileHandle; use IPC::Open2;
 use XML::Parser::Expat;
 
 use strict;
 
-my $RVP="rvp";
-my $parser=new XML::Parser::Expat(Namespaces=>1);
+my @RVP=("rvp","-s");
+
+my ($parser,$errors); # declared here for use in resp()
 
 # rvp wrapper
 $|=1;  # using pipes
-$/="\0"; # zero byte is separator
+$/="\0"; # the zero byte is separator
 
-# write to queries RVPIN, get responses from RVPOUT
-open2(\*RVPOUT,\*RVPIN,$RVP,shift @ARGV);
+# write queries to RVPIN, get responses from RVPOUT
+open2(\*RVPOUT,\*RVPIN,@RVP,shift @ARGV);
 
 sub resp {
   $_=<RVPOUT>;
   chop;
   /^ok (\d+).*/ and return $1;
   /^error (\d+) (\d+) (.*)/ and do {
-      my ($pat,$msg)=($1,$3); 
+      my ($pat,$msg)=($1,$3);
 
      # if the message is empty, don't print the message, 
      # the error has occured in already erroneous state 
@@ -29,6 +37,7 @@ sub resp {
         $parser->current_line(),
         $parser->current_column(),
         $msg;
+      $errors=1;
       return $pat;
     };
   die "protocol error, stopped ";
@@ -82,12 +91,16 @@ sub quit {
 
 my ($current,$text,$mixed)=(0,"",0);
 
-# expat handlers
+# Expat handlers
+
+# Expat does not merge cdata into one text node;
+# application has to do it explicitely (see characters())
 sub flush_text {
   $current=$mixed?mixed($current,$text):text($current,$text);
   $text="";
 }
 
+# last colon in a name separates the local name from the URI
 sub qname {
    my ($p,$name)=@_;
    return join(':',$p->namespace($name),$name);
@@ -118,13 +131,19 @@ sub characters {
   $text=$text.$chars;
 }
 
+# Main
+
+$errors=0;
+$parser=new XML::Parser::Expat(
+  Namespaces=>1);
+
 $parser->setHandlers(
   Start=>\&start_element,
   End=>\&end_element,
   Char=>\&characters);
 
 $current=start();
-
 $parser->parse(*STDIN);
-
 quit();
+
+exit($errors);
