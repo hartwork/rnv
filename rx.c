@@ -168,20 +168,22 @@ static int add_r(char *rx) {
   return len+1;
 }
 
-#define ERRPOS " in \"%s\" at offset %i\n"
+#define ERRPOS 
+
+#define err(msg) vfprintf(stderr,msg" in \"%s\" at offset %i\n",ap)
 
 static void default_verror_handler(int erno,va_list ap) {
   switch(erno) {
-  case RXER_BADCH: vfprintf(stderr,"bad character"ERRPOS,ap); break;
-  case RXER_UNFIN: vfprintf(stderr,"unfinished expression"ERRPOS,ap); break;
-  case RXER_NOLSQ: vfprintf(stderr,"'[' expected"ERRPOS,ap); break;
-  case RXER_NORSQ: vfprintf(stderr,"']' expected"ERRPOS,ap); break;
-  case RXER_NOLCU: vfprintf(stderr,"'{' expected"ERRPOS,ap); break;
-  case RXER_NORCU: vfprintf(stderr,"'}' expected"ERRPOS,ap); break;
-  case RXER_NOLPA: vfprintf(stderr,"'(' expected"ERRPOS,ap); break;
-  case RXER_NORPA: vfprintf(stderr,"')' expected"ERRPOS,ap); break;
-  case RXER_BADCL: vfprintf(stderr,"unknown class"ERRPOS,ap); break;
-  case RXER_NODGT: vfprintf(stderr,"digit expected"ERRPOS,ap); break;
+  case RXER_BADCH: err("bad character"); break;
+  case RXER_UNFIN: err("unfinished expression"); break;
+  case RXER_NOLSQ: err("'[' expected"); break;
+  case RXER_NORSQ: err("']' expected"); break;
+  case RXER_NOLCU: err("'{' expected"); break;
+  case RXER_NORCU: err("'}' expected"); break;
+  case RXER_NOLPA: err("'(' expected"); break;
+  case RXER_NORPA: err("')' expected"); break;
+  case RXER_BADCL: err("unknown class"); break;
+  case RXER_NODGT: err("digit expected"); break;
   default: assert(0);
   }
 }

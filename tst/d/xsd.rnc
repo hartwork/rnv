@@ -6,6 +6,14 @@ types = element types { empty
   , attribute double { xsd:double } ?
   , attribute decimal { xsd:decimal } ?
   , attribute dateTime { xsd:dateTime } ?
+  , attribute dateTimeMinMax { 
+      xsd:dateTime {
+	minExclusive="0001-01-01T00:00:00Z" 
+	minInclusive="1969-04-30T00:00:00-14:00" 
+	maxInclusive="1969-04-30T23:59:60+14:00" 
+	maxExclusive="2033-01-01T00:00:00Z" 
+      }
+    } ?
   , attribute duration { xsd:duration } ?
   , attribute hexBinary { xsd:hexBinary } ?
   , attribute base64Binary { xsd:base64Binary } ?

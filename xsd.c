@@ -13,8 +13,28 @@
 #include "xsd_tm.h"
 #include "xsd.h"
 
-static void default_error_handler(char *msg) {fprintf(stderr,"%s\n",msg);}
-void (*xsd_error_handler)(char *msg)=&default_error_handler;
+#define err(msg) vfprintf(stderr,"XML Schema datatypes: "msg"\n",ap)
+
+static void default_verror_handler(int erno,va_list ap) {
+  switch(erno) {
+  case XSDER_TYP: err("unknown type %s"); break;
+  case XSDER_PAR: err("unknown parameter %s"); break;
+  case XSDER_PARVAL: err("invalid parameter value %s=\"%s\""); break;
+  case XSDER_VAL: err("invalid typed value \"%s\" for type %s"); break;
+  case XSDER_NPAT: err("no more than 16 patterns per type are supported"); break;
+  case XSDER_WS: err("the builtin derived datatype that specifies the desired value for the whiteSpace facet should be used instead of 'whiteSpace'"); break;
+  case XSDER_ENUM: err("'value' should be used instead of 'enumeration'"); break;
+  default: assert(0);
+  }
+}
+void (*xsd_verror_handler)(int erno,va_list ap)=&default_verror_handler;
+
+static void error_handler(int erno,...) {
+  va_list ap;
+  va_start(ap,erno);
+  (*xsd_verror_handler)(erno,ap);
+  va_end(ap);
+}
 
 static int initialized=0;
 void xsd_init(void) {
@@ -332,6 +352,26 @@ static int chkd(struct facets *fp,char *s,int n) {
   return ok;
 }
 
+static int chktmlim(char *typ,char *fmt,char *val,int cmpmin,int cmpmax,struct xsd_tm *tmp) {
+  struct xsd_tm tmf; int cmp;
+  if(!xsd_allows(typ,"",val,strlen(val))) {(*error_handler)(XSDER_PARVAL); return 0;}
+  xsd_mktm(&tmf,fmt,val);
+  cmp=xsd_tmcmp(tmp,&tmf);
+  return cmpmin<=cmp&&cmp<=cmpmax;
+}
+
+static int chktm(char *typ,char *fmt,struct facets *fp,char *s,int n) {
+  int ok=1;
+  struct xsd_tm tms; 
+  if(!xsd_allows(typ,"",s,n)) return 0;
+  xsd_mktmn(&tms,fmt,s,n);
+  if(fp->set&(1<<FCT_MIN_EXCLUSIVE)) ok=ok&&chktmlim(typ,fmt,fp->minExclusive,1,1,&tms);
+  if(fp->set&(1<<FCT_MIN_INCLUSIVE)) ok=ok&&chktmlim(typ,fmt,fp->minInclusive,0,1,&tms);
+  if(fp->set&(1<<FCT_MAX_INCLUSIVE)) ok=ok&&chktmlim(typ,fmt,fp->maxInclusive,-1,0,&tms);
+  if(fp->set&(1<<FCT_MAX_EXCLUSIVE)) ok=ok&&chktmlim(typ,fmt,fp->maxExclusive,-1,-1,&tms);
+  return ok;
+}
+
 int xsd_allows(char *typ,char *ps,char *s,int n) {
   int ok=1,length;
   int dt=strtab(typ,typtab,NTYP);
@@ -407,27 +447,22 @@ int xsd_allows(char *typ,char *ps,char *s,int n) {
     while((n=strlen(ps))) {
       char *key=ps,*val=key+n+1,*end,i; 
       switch(i=strtab(key,fcttab,NFCT)) {
-      case FCT_LENGTH: fct.length=(int)strtol(val,&end,10); if(!*val||*end) (*xsd_error_handler)("invalid value of 'Length'"); break;
-      case FCT_MAX_LENGTH: fct.maxLength=(int)strtol(val,&end,10); if(!*val||*end) (*xsd_error_handler)("invalid value of 'maxLength'"); break;
-      case FCT_MIN_LENGTH: fct.minLength=(int)strtol(val,&end,10); if(!*val||*end) (*xsd_error_handler)("invalid value of 'minLength'"); break;
-      case FCT_FRACTION_DIGITS: fct.fractionDigits=(int)strtol(val,&end,10); if(!*val||*end) (*xsd_error_handler)("invalid value of 'fractionDigits'"); break;
-      case FCT_TOTAL_DIGITS: fct.totalDigits=(int)strtol(val,&end,10); if(!*val||*end) (*xsd_error_handler)("invalid value of 'totalDigits'"); break;
+      case FCT_LENGTH: fct.length=(int)strtol(val,&end,10); if(!*val||*end) (*error_handler)(XSDER_PARVAL,key,val); break;
+      case FCT_MAX_LENGTH: fct.maxLength=(int)strtol(val,&end,10); if(!*val||*end) (*error_handler)(XSDER_PARVAL,key,val); break;
+      case FCT_MIN_LENGTH: fct.minLength=(int)strtol(val,&end,10); if(!*val||*end) (*error_handler)(XSDER_PARVAL,key,val); break;
+      case FCT_FRACTION_DIGITS: fct.fractionDigits=(int)strtol(val,&end,10); if(!*val||*end) (*error_handler)(XSDER_PARVAL,key,val); break;
+      case FCT_TOTAL_DIGITS: fct.totalDigits=(int)strtol(val,&end,10); if(!*val||*end) (*error_handler)(XSDER_PARVAL,key,val); break;
       case FCT_PATTERN: 
-	if(fct.npat==NPAT) (*xsd_error_handler)("no more than 16 patterns per datatype are supported"); else {
+	if(fct.npat==NPAT) (*error_handler)(XSDER_NPAT); else {
 	  fct.pattern[fct.npat++]=val;
 	} break;
       case FCT_MAX_EXCLUSIVE: fct.maxExclusive=val; break;
       case FCT_MAX_INCLUSIVE: fct.maxInclusive=val; break;
       case FCT_MIN_EXCLUSIVE: fct.minExclusive=val; break;
       case FCT_MIN_INCLUSIVE: fct.minInclusive=val; break;
-      case FCT_WHITE_SPACE: (*xsd_error_handler)("'the builtin derived datatype that specifies the desired value for the whiteSpace facet should be used instead of 'whiteSpace'"); break;
-      case FCT_ENUMERATION: (*xsd_error_handler)("'value' should be used instead of 'enumeration'"); break;
-      case NFCT: 
-	{ char *buf=(char*)calloc(strlen(ERR_PARAMETER)+strlen(val)+1,sizeof(char));
-	  sprintf(buf,ERR_PARAMETER,val);
-	  (*xsd_error_handler)(buf);
-	  free(buf);
-	} break;
+      case FCT_WHITE_SPACE: (*error_handler)(XSDER_WS); break;
+      case FCT_ENUMERATION: (*error_handler)(XSDER_ENUM); break;
+      case NFCT: (*error_handler)(XSDER_PAR,key); break;
       default: assert(0);
       }
       fct.set|=1<<i;
@@ -460,27 +495,35 @@ int xsd_allows(char *typ,char *ps,char *s,int n) {
     break;
   case TYP_DATE_TIME: 
     fct.pattern[fct.npat++]=PAT_DATE_TIME;
+    if(fct.set&FCT_BOUNDS) ok=ok&chktm(typ,"ymdtz",&fct,s,n);
     break;
   case TYP_DATE:
     fct.pattern[fct.npat++]=PAT_DATE;
+    if(fct.set&FCT_BOUNDS) ok=ok&chktm(typ,"ymdz",&fct,s,n);
     break;
   case TYP_TIME:
     fct.pattern[fct.npat++]=PAT_TIME;
+    if(fct.set&FCT_BOUNDS) ok=ok&chktm(typ,"tz",&fct,s,n);
     break;
   case TYP_G_YEAR_MONTH:
     fct.pattern[fct.npat++]=PAT_YEAR_MONTH;
+    if(fct.set&FCT_BOUNDS) ok=ok&chktm(typ,"ymz",&fct,s,n);
     break;
   case TYP_G_YEAR:
     fct.pattern[fct.npat++]=PAT_YEAR;
+    if(fct.set&FCT_BOUNDS) ok=ok&chktm(typ,"yz",&fct,s,n);
     break;
   case TYP_G_MONTH_DAY:
     fct.pattern[fct.npat++]=PAT_MONTH_DAY;
+    if(fct.set&FCT_BOUNDS) ok=ok&chktm(typ,"mdz",&fct,s,n);
     break;
   case TYP_G_DAY:
     fct.pattern[fct.npat++]=PAT_DAY;
+    if(fct.set&FCT_BOUNDS) ok=ok&chktm(typ,"dz",&fct,s,n);
     break;
   case TYP_G_MONTH:
     fct.pattern[fct.npat++]=PAT_MONTH;
+    if(fct.set&FCT_BOUNDS) ok=ok&chktm(typ,"mz",&fct,s,n);
     break;
   case TYP_HEX_BINARY: 
     fct.pattern[fct.npat++]=PAT_HEX_BINARY;
@@ -553,12 +596,7 @@ int xsd_allows(char *typ,char *ps,char *s,int n) {
     if(fct.set&(1<<FCT_TOTAL_DIGITS)) ok=ok&&diglenn(s,n)<=fct.totalDigits;
     if(fct.set&FCT_BOUNDS) ok=ok&&chki(&fct,s,n);
     break;
-  case NTYP:
-    { char *buf=(char*)calloc(strlen(ERR_DATATYPE)+strlen(typ)+1,sizeof(char));
-      sprintf(buf,ERR_DATATYPE,typ);
-      (*xsd_error_handler)(buf);
-      free(buf);
-    } break;
+  case NTYP: (*error_handler)(XSDER_TYP,typ); break;
   default: assert(0);
   }
 
@@ -633,10 +671,7 @@ static int qncmpn(char *s1,char *s2,int n2) { /* context is not passed over; com
 
 int xsd_equal(char *typ,char *val,char *s,int n) {
   if(!xsd_allows(typ,"",val,strlen(val))) {
-    char *buf=(char*)calloc(strlen(ERR_VALUE)+strlen(val)+strlen(typ)+1,sizeof(char));
-    sprintf(buf,ERR_VALUE,val,typ);
-    (*xsd_error_handler)(buf);
-    free(buf);
+    (*error_handler)(XSDER_VAL,val);
     return 0;
   }
   if(!xsd_allows(typ,"",s,n)) return 0;
@@ -686,13 +721,8 @@ int xsd_equal(char *typ,char *val,char *s,int n) {
   case TYP_UNSIGNED_INT:
   case TYP_LONG:
   case TYP_UNSIGNED_LONG: return atol(val)==atol(s);
-  case NTYP:
-    { char *buf=(char*)calloc(strlen(ERR_DATATYPE)+strlen(typ)+1,sizeof(char));
-      sprintf(buf,ERR_DATATYPE,typ);
-      (*xsd_error_handler)(buf);
-      free(buf);
-    } return 0;
+  case NTYP: (*error_handler)(XSDER_TYP,typ); return 0;
+  default: assert(0);
   }
-  assert(0);
   return 0;
 }

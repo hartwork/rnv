@@ -1,0 +1,16 @@
+<typetest>
+<!--
+  <types  dateTimeMinMax="1969-04-30T14:00:11Z"/>
+  <values dateTime="1969-04-30T14:00:11"/>
+  <values dateTimeZ="1969-04-30T14:00:11Z"/>
+  <values dateTimeAMT="1969-04-30T14:00:11-04:00"/>
+  <values dateTime="1969-04-30T14:00:11Z"/>
+  <values dateTimeZ="1969-05-01T00:00:11+10:00"/>
+  <values dateTimeAMT="1969-04-30T15:00:11-03:00"/>
+  -->
+  <values time="14:00:11Z"/>
+  <!--
+  <values timeZ="00:00:11+10:00"/>
+  <values timeAMT="15:00:11-03:00"/>
+  -->
+</typetest>

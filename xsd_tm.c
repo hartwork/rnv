@@ -81,8 +81,8 @@ void xsd_mktmn(struct xsd_tm *tmp,char *fmt,char *s,int n) {
 void xsd_mktm(struct xsd_tm *tmp,char *fmt,char *val) {xsd_mktmn(tmp,fmt,val,strlen(val));}
 
 static int tmcmp(struct xsd_tm *tmp1, struct xsd_tm *tmp2) {
-  int dd=tmp1->days-tmp2->days, ds=tmp1->secs-tmp2->secs;
-  return dd<0?-1:dd>1?1:ds<0?-1:ds>0?1:0;
+  int dd=tmp1->days-tmp2->days, ds=tmp1->secs-tmp2->secs, dm=tmp1->mics-tmp2->mics;
+  return dd<0?-1:dd>0?1:ds<0?-1:ds>0?1:dm<0?-1:dm>0?1:0;
 }
 
 extern int xsd_tmcmp(struct xsd_tm *tmp1, struct xsd_tm *tmp2) {
