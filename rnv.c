@@ -173,7 +173,7 @@ int main(int argc,char **argv) {
   if(*(++argv)&&strcmp(*argv,"-q")==0) {explain=0; ++argv;}
 
   if(!*argv) {
-    fprintf(stderr,"rnv version  %s\nusage: rnv schema.rnc {document.xml}\n",RNV_VERSION);
+    fprintf(stderr,"rnv version  %s\nusage: rnv [-q] schema.rnc {document.xml}\n",RNV_VERSION);
     goto ERRORS;
   }
 
