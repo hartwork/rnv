@@ -3,6 +3,11 @@
 
 (load (in-vicinity (program-vicinity) "rx.scm"))
 
+(require 'regex)
+
+(define scheme-regex #t)
+(define dsl-debug #f)
+
 (define (dsl-string->token s)
   (let loop ((tl '()) (sl (string->list s)) (state #f))
     (if (null? sl) (list->string (reverse tl))
@@ -36,7 +41,11 @@
 		(and (<= (string-length s) (string->number (cdr p)))
 		  (params (cdr ps))))
 	      ((pattern)
-		(and (rx-match (rx-compile (cdr p)) s)
+	        (and dsl-debug (map display `("pattern=" ,(cdr p) #\newline)))
+		(and 
+		  (if scheme-regex
+		     (rx-match (rx-compile (cdr p)) s)
+		     (regmatch (cdr p) s))
 		  (params (cdr ps))))
 	      (else #f)))
 	  #t)))

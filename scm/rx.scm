@@ -1,5 +1,26 @@
 ; $Id$
+
 ; XML Schema Datatypes Regular Expressions
+; this is a full conformant implementation of the regular expressions
+; syntax in Scheme; the only implementation-dependant feature I am aware of
+; is integer<->char conversions. Normal people (including SCM) use byte value;
+; and everything works. scheme48 adds 1000 to the byte value to make the code
+; general. To make it work with scheme48, redefine char->integer,integer->char
+; to char->ascii,ascii->char.
+
+; Synopsis:
+;   (rx-compile "string")
+;     if the computed value is true, it is a pattern suitable for passing to
+;   (rx-match pattern "string")
+;     the returned value is true if the string matches the pattern
+
+; Example
+;   (rx-match (rx-compile "\\c\\i+") "fo:block")
+
+; Performance:
+;   it is approximately three times slower than 'regex. It memoizes patterns
+;   to speed up processing, however, all non-core algorithms are as simple as
+;   possible. 
 
 (load  (in-vicinity (program-vicinity) "u.scm"))
 (load  (in-vicinity (program-vicinity) "xml-ranges.scm"))
@@ -28,7 +49,7 @@
   (let digit ((v 0) (l (string->list regex)))
     (if (null? l) v
       (digit (+ (* v 31) (char->integer (car l))) (cdr l)))))
-      
+
 (define rx-memo-cache (make-vector rx-memo-cache-size #f))
 
 (define rx-newpat ; #f flushes
@@ -117,7 +138,7 @@
 	      (if (pair? msg)
 		(begin (display ":")
 		  (map (lambda (x) (display " ") (display x)) msg)))
-	      (display "\n")
+	      (newline)
 	      (set! errors #t)))))
       (chclass
 	(lambda ()
@@ -190,18 +211,23 @@
 		  (let ((c (cdr sym))) (getsym)
 		    (if (equal? sym '(chr . 45))
 		      (if (and (pair? rxll) (eqv? (car rxll) 91))
-			(rx-choice p `(char . ,c))
+			(rx-choice p (rx-newpat `(char . ,c)))
 			(begin (getsym)
 			  (case (car sym)
 			    ((chr esc) (check-range)
-			      (let ((p (rx-choice p `(range ,c . ,(cdr sym)))))
-				(getsym)
-				(range p)))
-			    (else (error! "illegal range") (getsym)
-			      (range p)))))
-		      (range (rx-choice p `(char . ,c))))))
-	      ((cls) (range (rx-choice p `(class . (cdr sym)))))
-	      (else (error! "missing ]") (getsym) p)))))))
+			      (let ((p (rx-choice p (rx-newpat `(range ,c . ,(cdr sym))))))
+				(getsym) (range p)))
+			    (else (error! "illegal range") (getsym) (range p)))))
+		      (range (rx-choice p (rx-newpat `(char . ,c)))))))
+	        ((cls)
+	          (let ((c (cdr sym)))
+		    (getsym) (range (rx-choice p (rx-newpat `(class . ,c))))))
+	        ((ncl)
+	          (let ((c (cdr sym)))
+		    (getsym)
+		    (range (rx-choice p
+		      (rx-newpat `(except ,rx-any . ,(rx-newpat `(class . ,c))))))))
+	        (else (error! "missing ]") (getsym) p)))))))
       (chexpr
 	(lambda()
 	  (let (
@@ -327,10 +353,10 @@
   (letrec (
       (in-class?
 	(letrec (
-	    (-or-
+	    (or*
 	      (lambda list
 		(and (pair? list)
-		  (or (car list) (apply -or- (cdr list))))))
+		  (or (car list) (apply or* (cdr list))))))
 	    (in-xml-ranges (lambda (i) (u-in-ranges c (cdr (assv i xml-ranges)))))
 	    (in-rx-ranges (lambda (i) (u-in-ranges c (cdr (assv i rx-ranges))))))
 	  (lambda (c id)
@@ -338,21 +364,21 @@
 	      ((NL) (or (= c 13) (= c 10)))
 	      ((S) (or (= c 13) (= c 10) (= c 9) (= c 32)))
 	      ((I) (or (= c 58) (= c 95)
-		     (apply -or- (map in-xml-ranges '(base-char ideographic)))))
+		     (apply or* (map in-xml-ranges '(base-char ideographic)))))
 	      ((C) (or (in-class? c 'I) (= c 45) (= c 46)
-		     (apply -or- (map in-xml-ranges '(digit combining-char extender)))))
+		     (apply or* (map in-xml-ranges '(digit combining-char extender)))))
 	      ((W) (not
 		     (or (in-class? c 'U-P) (in-class? c 'U-Z) (in-class? c 'U-C))))
-	      ((U-C) (apply -or- (map in-rx-ranges '(U-Cc U-Cf U-Co))))
-	      ((U-L) (apply -or- (map in-rx-ranges '(U-Lu U-Ll U-Lt U-Lm U-Lo))))
-	      ((U-M) (apply -or- (map in-rx-ranges '(U-Mn U-Mc U-Me))))
-	      ((U-N) (apply -or- (map in-rx-ranges '(U-Nd U-Nl U-No))))
-	      ((U-P) (apply -or- (map in-rx-ranges '(U-Pc U-Pd U-Ps U-Pe))))
-	      ((U-S) (apply -or- (map in-rx-ranges '(U-Sm U-Sc U-Sk U-So))))
-	      ((U-Z) (apply -or- (map in-rx-ranges '(U-Zl U-Zs U-Zp))))
+	      ((U-C) (apply or* (map in-rx-ranges '(U-Cc U-Cf U-Co))))
+	      ((U-L) (apply or* (map in-rx-ranges '(U-Lu U-Ll U-Lt U-Lm U-Lo))))
+	      ((U-M) (apply or* (map in-rx-ranges '(U-Mn U-Mc U-Me))))
+	      ((U-N) (apply or* (map in-rx-ranges '(U-Nd U-Nl U-No))))
+	      ((U-P) (apply or* (map in-rx-ranges '(U-Pc U-Pd U-Ps U-Pe))))
+	      ((U-S) (apply or* (map in-rx-ranges '(U-Sm U-Sc U-Sk U-So))))
+	      ((U-Z) (apply or* (map in-rx-ranges '(U-Zl U-Zs U-Zp))))
 	      (else (in-rx-ranges id)))))))
     (let* (
-        (n 
+        (n
 	  (remainder (+ (* c (length rx-patterns)) (length (memv (car p) rx-patterns)))
 	    (vector-length rx-memo-cache)))
 	(cell (vector-ref rx-memo-cache n)))

@@ -3,7 +3,7 @@
 
 #PUBLIC
 
-VERSION=1.5.0
+VERSION=1.5.1
 CC=cc
 
 # optional features
@@ -149,7 +149,7 @@ Makefile.bsd: Makefile
 	cat > $@
 
 DIST=rnv
-DISTFILES=license.txt ${SRC} Makefile.gnu Makefile.bsd Makefile.bcc readme.txt changes.txt src.txt
+DISTFILES=license.txt ${SRC} Makefile.gnu Makefile.bsd readme.txt changes.txt src.txt
 DISTWIN32=rnv.exe arx.exe readme32.txt license.txt
 DISTTOOLS=\
 tools/xck tools/rnv.vim tools/arx.conf \
@@ -157,14 +157,22 @@ tools/rvp.pl tools/rvp.py \
 /usr/local/share/rng-c/xslt.rnc \
 /usr/local/share/rng-c/fo.rnc \
 /usr/local/share/rng-c/none.rnc \
-/usr/local/share/rng-c/relaxng.rnc
+/usr/local/share/rng-c/relaxng.rnc \
+tools/addr-spec.rnc tools/xslt-dsl.rnc
+DISTSCM=\
+scm/u.scm \
+scm/xml-ranges.scm \
+scm/rx-ranges.scm \
+scm/rx.scm \
+scm/dsl.scm
 
 zip: ${DIST}-${VERSION}.zip
-${DIST}-${VERSION}.zip: ${DISTFILES} ${DISTWIN32} ${DISTTOOLS}
+${DIST}-${VERSION}.zip: ${DISTFILES} ${DISTWIN32} ${DISTTOOLS} ${DISTSCM}
 	-rm -rf rnv.zip ${DIST}-[0-9]*.[0-9]*.[0-9]*
-	mkdir ${DIST}-${VERSION} ${DIST}-${VERSION}/tools
+	mkdir ${DIST}-${VERSION} ${DIST}-${VERSION}/tools ${DIST}-${VERSION}/scm
 	cp ${DISTFILES} ${DIST}-${VERSION}/.
 	cp ${DISTTOOLS} ${DIST}-${VERSION}/tools/.
+	cp ${DISTSCM} ${DIST}-${VERSION}/scm/.
 	zip -9 -r ${DIST}-${VERSION}.zip ${DIST}-${VERSION}
 	-rm -rf ${DIST}-${VERSION}
 	zip -9 -r ${DIST}-${VERSION}-win32bin.zip ${DISTWIN32}
