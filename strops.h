@@ -3,8 +3,11 @@
 #ifndef STROPS_H
 #define STROPS_H 1
 
-/* compares two tokens, s1 is null terminated, s2 is not */
-extern int tokncmp(char *s1,char *s2,int n2);
+/* compares two string, s1 is null terminated, s2 is n characters long */
+extern int strcmpn(char *s1,char *s2,int n2);
+
+/* compares two tokens, s1 is null terminated, s2 is n characters long */
+extern int tokcmpn(char *s1,char *s2,int n2);
 
 /* hash value for a zero-terminated string */
 extern int strhash(char *s);

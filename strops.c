@@ -5,7 +5,17 @@
 #include "xmlc.h"
 #include "strops.h"
 
-int tokncmp(char *s1,char *s2,int n2) {
+int strcmpn(char *s1,char *s2,int n2) {
+  char *end=s2+n2;
+  for(;;) {
+    if(s2==end) return *s1;
+    if(*s1=='\0') return -*s2;
+    if(*s1!=*s2) return *s1-*s2;
+    ++s1; ++s2;
+  }
+}
+
+int tokcmpn(char *s1,char *s2,int n2) {
   char *end2=s2+n2;
  /* all white space characters are one byte long */
   while(xmlc_white_space(*s1)) ++s1; 
@@ -59,6 +69,6 @@ int strntab(char *s,int len,char *tab[],int size) {
   for(;;) {
     if(n>m) return size;
     i=(n+m)/2;
-    if((cmp=strncmp(s,tab[i],len))==0) return i; else {if(cmp<0) m=i-1; else n=i+1;}
+    if((cmp=strcmpn(tab[i],s,len))==0) return i; else {if(cmp>0) m=i-1; else n=i+1;}
   }
 }

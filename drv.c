@@ -3,7 +3,7 @@
 #include <string.h> /*strcmp*/
 #include <stdlib.h> /*calloc,free*/
 #include "xmlc.h" /*xmlc_white_space*/
-#include "strops.h" /*tokncmp*/
+#include "strops.h" /*tokcmpn*/
 #include "ht.h"
 #include "rn.h"
 #include "er.h"
@@ -108,8 +108,8 @@ static int fallback_allows(char *typ,char *ps,char *s,int n) {return 1;}
 
 static int builtin_equal(char *typ,char *val,char *s,int n) {
   int dt=newDatatype(0,typ-rn_string);
-  if(dt==rn_dt_string) return strncmp(val,s,n)==0;
-  else if(dt==rn_dt_token) return tokncmp(val,s,n)==0;
+  if(dt==rn_dt_string) return strcmpn(val,s,n)==0;
+  else if(dt==rn_dt_token) return tokcmpn(val,s,n)==0;
   else assert(0);
   return 0;
 }

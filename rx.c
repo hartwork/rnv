@@ -1,7 +1,7 @@
 /* $Id$ */
 
 #include <stdlib.h> /*calloc,free*/
-#include <string.h> /*strncmp*/
+#include <string.h> /*strlen,strcpy,strcmp*/
 #include <stdio.h> /*stderr for error_handler*/
 #include <assert.h>
 #include "u.h" /*u_get,u_strlen*/
@@ -45,7 +45,7 @@
 #define Any(p) P_CHK(p,Empty)
 #define Choice(p,p1,p2) P_binop(CHOICE,p,p1,p2)
 #define Group(p,p1,p2) P_binop(GROUP,p,p1,p2)
-#define OneOreMore(p,p1) P_unop(ONE_OR_MORE,p,p1)
+#define OneOrMore(p,p1) P_unop(ONE_OR_MORE,p,p1)
 #define Except(p,p1,p2) P_binop(EXCEPT,p,p1,p2)
 #define Range(p,cf,cl) P_binop(RANGE,p,cf,cl)
 #define Class(p,cn) P_unop(CLASS,p,cn)
@@ -634,7 +634,7 @@ static int drv(int p,int c) {
   case P_EMPTY: case P_NOT_ALLOWED: ret=notAllowed; break;
   case P_CHOICE: Choice(p,p1,p2); ret=choice(drv(p1,c),drv(p2,c)); break;
   case P_GROUP: Group(p,p1,p2); {int p11=group(drv(p1,c),p2); ret=nullable(p1)?choice(p11,drv(p2,c)):p11;} break;
-  case P_ONE_OR_MORE: OneOreMore(p,p1); ret=group(drv(p1,c),choice(empty,p)); break;
+  case P_ONE_OR_MORE: OneOrMore(p,p1); ret=group(drv(p1,c),choice(empty,p)); break;
   case P_EXCEPT: Except(p,p1,p2); ret=nullable(drv(p1,c))&&!nullable(drv(p2,c))?empty:notAllowed; break;
   case P_RANGE: Range(p,cf,cl); ret=cf<=c&&c<=cl?empty:notAllowed; break;
   case P_CLASS: Class(p,cn); ret=(cn>0?in_class(c,cn):!in_class(c,-cn))?empty:notAllowed; break;

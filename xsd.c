@@ -1,7 +1,7 @@
 /* $Id$ */
 
 #include <stdlib.h> /*calloc,free*/
-#include <string.h> /*strncmp*/
+#include <string.h> /*strchr*/
 #include <stdio.h> /*stdio*/
 #include <assert.h>
 #include "u.h"
@@ -352,8 +352,8 @@ static int nrmncmp(char *s1,char *s2,int n) {
 int xsd_equal(char *typ,char *val,char *s,int n) {
   switch(strtab(typ,typtab,NTYP)) {
  /*primitive*/
-  case TYP_STRING: return strncmp(val,s,n)==0;
-  case TYP_BOOLEAN: return (tokncmp("true",val,strlen(val))||tokncmp("1",val,strlen(val)))==(tokncmp("true",s,n)||tokncmp("1",s,n));
+  case TYP_STRING: return strcmpn(val,s,n)==0;
+  case TYP_BOOLEAN: return (tokcmpn("true",val,strlen(val))||tokcmpn("1",val,strlen(val)))==(tokcmpn("true",s,n)||tokcmpn("1",s,n));
   case TYP_DECIMAL:
   case TYP_FLOAT:
   case TYP_DOUBLE: return atof(val)==atof(s);
@@ -370,10 +370,10 @@ int xsd_equal(char *typ,char *val,char *s,int n) {
   case TYP_HEX_BINARY:
   case TYP_BASE64BINARY:
     return 1;
-  case TYP_ANY_URI: return tokncmp(val,s,n);
+  case TYP_ANY_URI: return tokcmpn(val,s,n);
   case TYP_QNAME: case TYP_NOTATION: /* context is not passed over; compare local parts */  
     { char *ln=strchr(val,':'),m=val-ln+1; 
-      return ln?m<n?tokncmp(ln+1,s,n-m):0:tokncmp(val,s,n);
+      return ln?m<n?tokcmpn(ln+1,s,n-m):0:tokcmpn(val,s,n);
     }
  /*derived*/
   case TYP_NORMALIZED_STRING: return nrmncmp(val,s,n);
@@ -387,7 +387,7 @@ int xsd_equal(char *typ,char *val,char *s,int n) {
   case TYP_IDREF:
   case TYP_IDREFS: 
   case TYP_ENTITY:
-  case TYP_ENTITIES: return tokncmp(val,s,n);
+  case TYP_ENTITIES: return tokcmpn(val,s,n);
   case TYP_INTEGER:
   case TYP_POSITIVE_INTEGER:
   case TYP_NON_NEGATIVE_INTEGER:
