@@ -1,6 +1,6 @@
 # $Id$
 #
-VERSION=1.1.0
+VERSION=1.1.1
 CC=cc
 EXPAT_H="<expat.h>"
 UNISTD_H="<unistd.h>"
@@ -75,3 +75,4 @@ rnv-${VERSION}.zip: ${DISTFILES}
 
 install: rnv-${VERSION}.zip readme.txt changes.txt
 	-cp -f rnv-${VERSION}.zip readme.txt changes.txt ${DISTDIR}
+	(cd ${DISTDIR}; rm -f RNV.ZIP ; ln -s rnv-${VERSION}.zip RNV.ZIP)

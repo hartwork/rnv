@@ -981,8 +981,9 @@ static int datatype(struct rnc_source *sp) {
 }
 
 static int params(struct rnc_source *sp) {
-  int ret=rn_i_ps();
+  int ret=0;
   if(CUR(sp).sym==SYM_LCUR) {
+    ret=rn_i_ps();
     getsym(sp);
     while(param(sp));
     chk_skip_get(sp,SYM_RCUR);
