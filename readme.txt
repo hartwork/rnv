@@ -47,11 +47,11 @@ Invocation
 
    The command-line syntax is
 
-      rnv [-q] grammar.rnc {document1.xml}
+     rnv {-q|-v} grammar.rnc {document1.xml}
 
    If no documents are specified, RNV attempts to read the XML document
    from the standard input. When -q is specified, expected elements and
-   attributes are not listed.
+   attributes are not listed. -v prints version of the program.
 
 Limitations
 
@@ -70,8 +70,8 @@ Limitations
        relative paths to work. For example, under Windows, rnv that uses
        ..\schema\docbook.rnc to validate userguide.dbx should be invoked
        as:
-         
-         rnv.exe ../schema/docbook.rnc userguide.dbx
+
+     rnv.exe ../schema/docbook.rnc userguide.dbx
 
 New versions
 

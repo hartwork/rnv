@@ -167,16 +167,22 @@ ERROR:
   return 0;
 }
 
+static void version() {fprintf(stderr,"rnv version %s\n",RNV_VERSION);}
+static void usage() {fprintf(stderr,"usage: rnv {-q|-v} schema.rnc {document.xml}\n");}
+
 int main(int argc,char **argv) {
+  int ok;
+
   init();
 
   while(*(++argv)&&**argv=='-') {
     int i=1;
     for(;;) {
       switch(*(*argv+i)) {
-      case 'q': explain=0; break;
-      case 'h': case '?': *(argv+1)=NULL; break;
       case '\0': goto END_OF_OPTIONS;
+      case 'h': case '?': usage(); return 1;
+      case 'v': version(); break;
+      case 'q': explain=0; break;
       default: fprintf(stderr,"unknown option '-%c'\n",*(*argv+i)); break;
       }
       ++i;
@@ -184,13 +190,13 @@ int main(int argc,char **argv) {
     END_OF_OPTIONS:
   }
 
-  if(!*argv) {
-    fprintf(stderr,"rnv version  %s\nusage: rnv [-q] schema.rnc {document.xml}\n",RNV_VERSION);
-    goto ERRORS;
+  if(!*(argv)) {
+    usage();
+    return 1;
   }
 
-  if(load_rnc(*(argv++))) {
-    int ok=1;
+  ok=0;
+  if((ok=load_rnc(*(argv++)))) {
     if(*argv) {
       do {
 	int fd; xml=*argv;
@@ -206,11 +212,7 @@ int main(int argc,char **argv) {
       xml="stdin";
       ok=validate(0)&&ok;
     }
-
-    return !ok;
   }
 
-ERRORS:
-  fprintf(stderr,"exiting on errors\n");
-  return 1;
+  return !ok;
 }
