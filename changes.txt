@@ -3,6 +3,7 @@
 1.5.2
 Wed Jan 28 15:35:38 AMT 2004
 dvd: added handler for external system entities
+     Makefile.bcc is back; people still need win32, and cygwin is bulky.
 
 Wed Jan 28 01:43:42 AMT 2004
 dvd: removed static pointers from rnv and qualified name passed

@@ -1,12 +1,13 @@
 
 RNV -- Relax NG Compact Syntax Validator in C
 
-Version 1.4 
+Version 1.5 
 
    Table of Contents
 
+   News since 1.4
    New since 1.3 
-   News since 1.2 
+   Aknowledgements
    Package Contents 
    Installation 
    Invocation 
@@ -15,6 +16,11 @@ Version 1.4
 
         ARX 
         RVP 
+
+   User-Defined Datatype Libraries
+
+        Datatype Library Plug-in
+        Scheme Datatypes
 
    New versions 
 
@@ -30,27 +36,39 @@ Version 1.4
    and shortcomings; however, it validates documents against a number of
    grammars. I use it.
 
+News since 1.4
+
+   Two ways to use extension datatype libraries are implemented for RNV;
+   they allow to extend type-checking capabilities of Relax NG for data
+   far beyond the scope of XML Schema datatypes. RNV now parses external
+   system entities, it was my omission not to implement this earlier, and
+   I am glad it is done now. Memory usage and diagnostics have been
+   improved, and the source code has been rearranged again for better
+   modularity.
+
 New since 1.3
 
    To facilitate the embedding of RNV into heterogeneous environments, I
    have developed RVP, a pipe that expects validation primitives on
    one end and emits validation diagnostics from the other. Embedding
    examples in Perl and Python are provided; I believe that, on the day
-   of writing it, these are the fastest and most conformant (if not the
+   of writing it, these are the fastest and most conforming (if not the
    only) Relax NG validation solutions for these languages. Several
    changes have been made to the core modules, mostly to provide better
    separation of layers.
 
-News since 1.2
+Aknowledgements
 
-   This release has many performance and convenience enhancements.
-   Pattern pools are now one-dimensional arrays, which conserves space
-   and gives better performance. Pass-through mode has been added to
-   facilitate use of rnv in pipes. ARX, an utility to automatically
-   associate documents and grammars, is included in the distribution;
-   details are below. A simple plug-in for vim, http://www.vim.org/,
-   is provided to use RNV with the editor. The script uses ARX to
-   automatically choose the grammar for a document.
+   I would like to thank those who have helped me develop RNV.
+
+   Dave Pawson has been the first user of the program.
+
+   Alexander Peshkov helps me with testing and I have been able to
+   correct very well hidden errors with his help.
+
+   Sebastian Rahtz encouraged me to continue working on RNV since the
+   first release, and has helped me to improve it on more than one
+   occasion.
 
 Package Contents
 
@@ -67,7 +85,8 @@ Note
      * the license, license.txt;
      * the source code, *.[ch];
      * the source code map, src.txt;
-     * Makefile for unix-like systems;
+     * Makefile.bsd for BSD make;
+     * Makefile.gnu for GNU Make;
      * Makefile.bcc for Win32 and Borland C/C++ Compiler;
      * tools/xck, a simple shell script I am using to validate documents;
      * tools/*.rnc, sample Relax NG grammars;
@@ -88,7 +107,7 @@ Invocation
 
    The command-line syntax is
 
-        rnv {-q|-p|-s|-v|-h} grammar.rnc {document1.xml}
+        rnv {-q|-p|-c|-s|-v|-h} grammar.rnc {document1.xml}
 
    If no documents are specified, RNV attempts to read the XML document
    from the standard input. The options are:
@@ -99,6 +118,10 @@ Invocation
 
    -p
           copies the input to the output;
+
+   -c
+          if the only argument is a grammar, checks the grammar and
+          exits;
 
    -s
           uses less memory and runs slower;
@@ -112,7 +135,7 @@ Invocation
 Limitations
 
      * RNV assumes that the encoding of the syntax file is UTF-8.
-     * Support for XSL Schema Part 2: Datatypes is partial.
+     * Support for XML Schema Part 2: Datatypes is partial.
           + ordering for duration is not implemented;
           + only local parts of QName values are checked for equality,
             ENTITY values are only checked for lexical validity.
@@ -163,7 +186,7 @@ ARX
    -h
           displays usage summary and exits.
 
-   The configuration file must confrom to the following grammar:
+   The configuration file must conform to the following grammar:
 
       arx = grammars route*
       grammars = "grammars"  "{" type2string+ "}"
@@ -214,40 +237,44 @@ RVP
    RVP is abbreviation for Relax NG Validation Pipe. It reads validation
    primitives from the standard input and reports result to the standard
    output; it's main purpose is to ease embedding of a Relax NG validator
-   into various languages and environment. An apllication would launch
+   into various languages and environment. An application would launch
    RVP as a parallel process and use a simple protocol to perform
    validation. The protocol, in BNF, is:
 
-     query ::= (start
-       | start-tag-open
-       | attribute
-       | start-tag-close
-       | text
-       | end-tag) z.
-     start ::= "start" [gramno].
-     start-tag-open ::= "start-tag-open" patno name.
-     attribute ::= "attribute" patno name value.
-     start-tag-close :: = "start-tag-close" patno name.
-     text ::= ("text"|"mixed") patno text.
-     end-tag ::= "end-tag" patno name.
+     query ::= (
+           quit
+         | start
+         | start-tag-open
+         | attribute
+         | start-tag-close
+         | text
+         | end-tag) z.
+       quit ::= "quit".
+       start ::= "start" [gramno].
+       start-tag-open ::= "start-tag-open" patno name.
+       attribute ::= "attribute" patno name value.
+       start-tag-close :: = "start-tag-close" patno name.
+       text ::= ("text"|"mixed") patno text.
+       end-tag ::= "end-tag" patno name.
      response ::= (ok | er | error) z.
-     ok ::= "ok" patno.
-     er ::= "er" patno erno.
-     error ::= "error" patno erno error.
+       ok ::= "ok" patno.
+       er ::= "er" patno erno.
+       error ::= "error" patno erno error.
      z ::= "\0" .
 
      * RVP assumes that the last colon in a name separates the local part
-       from the namespace URI (it is what one gets if specifies ':' as
+       from the namespace URI (it is what one gets if specifies `:' as
        namespace separator to Expat).
      * Error codes can be grabbed from rvp sources by grep _ER_ *.h and
        OR-ing them with corresponding masks from erbit.h. Additionally,
        error 0 is the protocol format error.
-     * Either "er" or "error" responses are returned, not both; -q
-       chooses between concise and verbose forms (invocation syntax
-       described later).
+     * Either er or error responses are returned, not both; -q chooses
+       between concise and verbose forms (invocation syntax described
+       later).
      * start passes the index of a grammar (first grammar in the list of
        command-line arguments has number 0); if the number is omitted, 0
        is assumed.
+     * quit is not opposite of start; instead, it quits RVP.
 
    The command-line syntax is:
 
@@ -282,6 +309,127 @@ RVP
    Programmers using Perl, Python, Ruby and other languages are
    encouraged to implement and share reusable RVP-based components for
    their languages of choice.
+
+User-Defined Datatype Libraries
+
+   Relax NG relies on XML Schema Datatypes to check validity of data in
+   an XML document. The specification allows the implementation to
+   support other datatype libraries, a library is required to provide two
+   services, datatypeAllows and datatypeEqual.
+
+   A powerful and popular technique is the use of string regular
+   expressions to restrict values of attributes and character data.
+   However, XML Schema regular expressions must be written as single
+   strings, without any parameterization; they often grow to several
+   dozens of characters in length and are very hard to read or debug.
+
+   A solution for these problem would be to allow the user to define
+   custom datatypes and to specify them in a high-level programming
+   language. The user can then either use regular expressions as such,
+   employ lex for lexical analysis, or any other technique which is best
+   suited for each particular case (for example XSL FO datatypes would
+   benefit from a custom datatype library). With many datatype libraries
+   eventually implemented, it is likely that a clearer picture of the
+   right language for validation of data will eventually emerge.
+
+   RNV provides two different ways to implement this solution; I believe
+   that they correspond to different tastes and traditions. In both
+   cases, a high-level language can be used to implement a datatype
+   library, the language is not related to the implementation language of
+   RNV, and RNV need not be recompiled to add a new datatype library.
+
+Datatype Library Plug-in
+
+   A datatype plug-in is an executable. RNV invokes it as either
+  program allows type key value ... data
+
+   or
+  program equal type data1 data2
+
+   program is the executable's, name, the rest is the command line; key
+   and value pairs are datatype parameters and can be repeated. The
+   program is executed for each datatype in library
+   http://davidashen.net/relaxng/pluggable-datatypes; if the exit status
+   is 0 for success, non-zero for failure.
+
+   Both RNV and RVP can use pluggable datatypes, and must be compiled
+   with DXL_EXC set to 1 (make DXL_EXC=1) to support them, in which case
+   they accept an additional command-line option -d with the name of the
+   plugin as the argument. An implementation of XML Schema datatypes as a
+   plugin (in C) is included in the distribution, see xsdck.c. For
+   example,
+    rnv -d xsdck xslt-dxl.rnc $HOME/work/docbook/xsl/*/*.xsl
+
+   will validate all DocBook XSL stylesheets on my workstation against a
+   grammar for XSLT 1.0 modified to use RNV Pluggable Datatypes Library
+   instead of XML Schema Datatypes.
+
+Scheme Datatypes
+
+   Another way to add custom datatypes to RNV is to use the built-in
+   Scheme interpeter (SCM,
+   http://www.swiss.ai.mit.edu/~jaffer/SCM.html) to implement the
+   library in Scheme, a dialect of Lisp. This solution more flexible and
+   robust, then the previous one, but requires knowledge of a particular
+   programming language (or at least desire to learn it, and the result
+   is definitely worth the effort).
+
+   To support it, SCM must be installed on the computer, and RNV or RVP
+   must be compiled with DSL_SCM set to 1 (make DSL_SCM=1), in which case
+   they accept an additional option -e with the name of a scheme program
+   as an argument. The datatype library is bound to
+   http://davidashen.net/relaxng/scheme-datatypes; a sample
+   implementation is in scm/dsl.scm. For example,
+    rnv -e scm/dsl.scm xslt-dsl.rnc $HOME/work/docbook/xsl/*/*.xsl
+
+   check the stylesheets against an XSLT 1.0 grammar modified to use an
+   RNV Scheme Datatypes Library implemented in scm/dsl.scm.
+
+   A Datatype Library in Scheme must provide two functions in top-level
+   environment:
+(dsl-equal? string string string)
+
+   and
+(dsl-allows? string '((string . string)*) string)
+
+   To assist development of datatype libraries, a Scheme implementation
+   of XML Schema Regular Expressions is included in the distribution as
+   scm/rx.scm. The Regular Expression library is not just a way to
+   re-implement the built-in datatypes. Owing to flexibility of the
+   language it is much easier to write and debug regular expressions in
+   Scheme, even if they are to be used with built-in XML Schema Datatypes
+   in the end. For example, a regular expression for e-mail address, with
+   insignificant simplifications, is:
+    pattern=
+      "(\(([^\(\)\\]|\\.)*\) )?"
+    ~ "([a-zA-Z0-9!#$%&'*+\-/=?\^_`{|}~]+"
+    ~ "(\.[a-zA-Z0-9!#$%&'*+\-/=?\^_`{|}~]+)*"
+    ~ """|"([^"\\]|\\.)*")"""
+    ~ "@"
+    ~ "([a-zA-Z0-9!#$%&'*+\-/=?\^_`{|}~]+"
+    ~ "(\.[a-zA-Z0-9!#$%&'*+\-/=?\^_`{|}~]+)*"
+    ~ "|\[([^\[\]\\]|\\.)*\])"
+    ~ "( \(([^\(\)\\]|\\.)*\))?"
+
+   which, even split into four lines, is ugly-looking and hard to read.
+   Meanwhile, it consists of a few repeating subexpressions, which could
+   easily be factored out, but the syntax does not have the means for
+   that.
+
+   Using Scheme interpreter, it is as simple as
+(define addr-spec-regex
+  (let* (
+      (atom "[a-zA-Z0-9!#$%&'*+\\-/=?\\^_`{|}~]+")
+      (person "\"([^"\\\\]|\\\\.)\"")
+      (location "\\[([^\\[\\]\\\\]|\\\\.)*\\]")
+      (domain (string-append atom "(\\." atom ")*")))
+    (string-append
+      "(" domain "|" person ")"
+      "@"
+      "(" domain "|" location ")")))
+
+   This code is much simpler to read and debug, and then the parts can be
+   joined and added to the grammar for production use.
 
 New versions
 

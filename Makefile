@@ -37,7 +37,8 @@ LIB=${LIBEXPAT}
 
 .if ${DSL_SCM}
 DEF+=-DDSL_SCM=${DSL_SCM} -DSCM_H=${SCM_H}
-LIB+=-lscm -lm
+LIB_SCM=-lm 
+LIB+=-lscm ${LIB_SCM}
 .endif
 
 .if ${DXL_EXC}
