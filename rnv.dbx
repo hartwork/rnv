@@ -1,0 +1,108 @@
+<article>
+<title>
+RNV -- Relax NG Compact Syntax Validator in C
+</title>
+<subtitle>
+Version 1.0
+</subtitle>
+
+
+<abstract>
+<para>
+<application>RNV</application> is an implementation of <citetitle>Relax NG Compact Syntax</citetitle>, <ulink>http://relaxng.org/compact-20021121.html</ulink>. It is written in ANSI C, the command-line utility uses <application>Expat</application>, <ulink>http://www.jclark.com/xml/expat.html</ulink>. It is distributed under BSD license, see <filename>license.txt</filename> for details.
+</para>
+<para>
+RNV is a part of an on-going work, and the current code can have bugs and shortcomings; however, it is able to validate documents against a number of grammars. I use it.
+</para>
+ </abstract>
+
+<section>
+<title>
+Package Contents
+</title>
+
+<para>
+The package consists of:
+</para>
+<itemizedlist>
+<listitem>
+- the license, <filename>license.txt</filename>;
+</listitem>
+<listitem>
+- the source code, <filename>*.[ch]</filename>;
+</listitem>
+<listitem>
+- <filename>Makefile</filename> for unix-like systems;
+</listitem>
+<listitem>
+- <filename>compile.bat</filename> to compile with <application>Borland C/C++ Compiler</application> on Windows;
+</listitem>
+<listitem>
+- <filename>rnv.exe</filename>, a Win32 executable statically linked with a current version of Expat from <ulink>http://expat.sourceforge.net/</ulink>;
+</listitem>
+<listitem>
+- this file, <filename>readme.txt</filename>.
+</listitem>
+</itemizedlist>
+</section>
+
+<section>
+<title>
+Installation
+</title>
+
+<para>
+On Unix and similar systems, execute <command>make</command>. If you use Expat 1.2, define <varname>EXPAT_H</varname> as <filename>xmlparse.h</filename> (instead of <filename>expat.h</filename>).
+</para>
+
+<para>
+On Windows, use rnv.exe. To recompile from the sources, either use compile.bat with <application>Borland C/C++ Compiler</application> or modify the <filename>Makefile</filename> for your environment.
+</para>
+</section>
+
+<section>
+<title>
+Invocation
+</title>
+
+<para>
+The command-line syntax is
+</para>
+<synopsis>
+rnv grammar.rnc {document1.xml}
+</synopsis>
+
+<para>
+If no documents are specified, <application>RNV</application> attempts to read the XML document from the standard input.
+</para>
+</section>
+
+<section>
+<title>
+Limitations
+</title>
+
+<para>
+XML Schema datatypes are not checked; anything that is not a string is treated as a token. The API has facilities to plug in multiple datatype libraries, but I currently don't need that particular datatype library for my work. 
+</para>
+
+<para>
+RNV for Win32 platforms is a Unix program compiled on WIn32. It expects file paths to be written with normal slashes; if a schema is in a different directory and includes or refers external files, then the schema's path must be written in the Unix way for the relative paths to work. For example, under Windows, rnv that uses <filename>..\schema\docbook.rnc</filename> to validate <filename>userguide.dbx</filename> should be invoked as:
+</para>
+
+<synopsis>
+rnv.exe ../schema/docbook.rnc userguide.dbx 
+</synopsis>
+
+</section>
+
+<section>
+<title>
+New versions
+</title>
+<para>
+Visit <ulink>http://davidashen.net/</ulink> for news and downloads.
+</para>
+</section>
+
+</article>

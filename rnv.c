@@ -13,8 +13,6 @@
 #include "rnx.h"
 #include "drv.h"
 
-#define RNV_VERSION "1.0.0"
-
 static char *xml;
 static XML_Parser expat;
 static int start,current,previous;
