@@ -3,11 +3,6 @@
 VERSION=1.3.2
 CC=cc
 
-# sample entries to validate from vim
-RNV=rnv
-DOCBOOK_RNC=../../RNG-C/docbook.rnc
-DOCBOOK_XSL=../../RNG-C/xslt.rnc
-
 EXPAT_H="<expat.h>"
 UNISTD_H="<unistd.h>"
 
@@ -65,16 +60,10 @@ xmlc.o \
 strops.o \
 rx.o 
 
-.SUFFIXES: .c .o .dbx .xsl .valid
+.SUFFIXES: .c .o
 
 .c.o:
 	${CC} ${CFLAGS} -c -o $@ $<
-
-.dbx.valid:
-	${RNV} ${DOCBOOKRNC} $<
-
-.xsl.valid:
-	${RNV} ${DOCBOOKXSL} $<
 
 all: rnv
 
@@ -96,12 +85,16 @@ depend: ${SRC}
 clean: 
 	-rm -f *.o  *.a *.so rnv rnd_test *_test *.core *.gmon *.gprof rnv*.zip rnv.txt rnv.pdf rnv.html rnv.xml
 
-DISTFILES=license.txt ${SRC} Makefile compile.bat rnv.exe readme.txt changes.txt src.txt
+DISTFILES=license.txt ${SRC} Makefile readme.txt changes.txt src.txt
+DISTWIN32=rnv.exe compile.bat
+DISTTOOLS=tools/rnv.vim tools/uri2rnc.pl
 zip: rnv-${VERSION}.zip
-rnv-${VERSION}.zip: ${DISTFILES}
+rnv-${VERSION}.zip: ${DISTFILES} ${DISTWIN32} ${DISTTOOLS}
 	-rm -rf rnv.zip rnv-[0-9]*.[0-9]*.[0-9]*
-	mkdir rnv-${VERSION}
+	mkdir rnv-${VERSION} rnv-${VERSION}/tools rnv-${VERSION}/win32
 	ln ${DISTFILES} rnv-${VERSION}/.
+	ln ${DISTWIN32} rnv-${VERSION}/win32/.
+	ln ${DISTTOOLS} rnv-${VERSION}/tools/.
 	zip -r rnv-${VERSION}.zip rnv-${VERSION}
 	-rm -rf rnv-${VERSION}
 

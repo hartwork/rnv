@@ -24,6 +24,9 @@ News since 1.2
 <para>
 This release is mostly dedicated to performance and convenience enhancements. Pattern pools are now one-dimensional arrays, which conserves space and gives better performance. Pass-through mode has been added to facilitate use of rnv in pipes.
 </para>
+<para>
+A simple compiler plugin for vim, <ulink url="http://www.vim.org/">http://www.vim.org/</ulink>, augments the utility. A perl script, uri2rnc, automatically associates file names and grammars.
+</para>
 </section>
 
 <section>
@@ -58,10 +61,16 @@ The package consists of:
 - <filename>Makefile</filename> for unix-like systems;
 </listitem>
 <listitem>
-- <filename>compile.bat</filename> to compile with <application>Borland C/C++ Compiler</application> on Windows;
+- <filename>tools/rnv.vim</filename>, a compiler plugin for Vim;
 </listitem>
 <listitem>
-- <filename>rnv.exe</filename>, a Win32 executable statically linked with a current version of Expat from <ulink>http://expat.sourceforge.net/</ulink>;
+- <filename>tools/uri2rnc.pl</filename>, a perl script to associate file names and grammars;
+</listitem>
+<listitem>
+- <filename>win32/compile.bat</filename> to compile with <application>Borland C/C++ Compiler</application> on Windows;
+</listitem>
+<listitem>
+- <filename>win32/rnv.exe</filename>, a Win32 executable statically linked with a current version of Expat from <ulink>http://expat.sourceforge.net/</ulink>;
 </listitem>
 <listitem>
 - the log of changes, <filename>changes.txt</filename>;

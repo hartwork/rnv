@@ -43,13 +43,13 @@ my $type;
 for($ARGV[0]) {
   $type=( 0
   or valid($_,$DOCBOOK) and "docbook"
-  or valid($_,$XSLT) 	and "xslt"
+  or valid($_,$XSLT)	and "xslt"
   or valid($_,$RELAXNG) and "relaxng"
   or /\.x?ht(ml?)?$/	and "xhtml"
   or /\.xsl$/		and "xslt"
   or /\.dbx$/ 		and "docbook"
   or /\.fo$/ 		and "xslfo"
-  or /(.*)\.*$/ and do {my $f=$1.".rnc"; -f $f ? $f : 0; }
+  or /(.*)\.*$/ and do {my $f=$1.".rnc"; -f $f ? $f : 0;}
   or "unknown"
   );
 }
