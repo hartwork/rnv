@@ -134,7 +134,7 @@ static int choice(int p1,int p2) {
   return newChoice(p1,p2);
 }
 
-static int klass(int cn) {
+static int cls(int cn) {
   if(cn<0) return newExcept(any,newClass(-cn));
   if(cn==0) return notAllowed;
   return newClass(cn);
@@ -351,7 +351,7 @@ static int chgroup(void) {
 	p=choice(p,newChar(c));
       }
       break;
-    case SYM_CLS: p=choice(p,klass(val)); getsym(); break;
+    case SYM_CLS: p=choice(p,cls(val)); getsym(); break;
     case SYM_END: error(); goto END_OF_GROUP;
     default: assert(0);
     }
@@ -387,7 +387,7 @@ static int atom(void) {
     }
     break;
   case SYM_ESC: p=newChar(val); getsym(); break;
-  case SYM_CLS: p=klass(val); getsym(); break;
+  case SYM_CLS: p=cls(val); getsym(); break;
   default: error(); getsym(); break;
   }
   return p;
