@@ -137,7 +137,7 @@
 	      (display (string-append "bad regex '" regex "'"))
 	      (if (pair? msg)
 		(begin (display ":")
-		  (map (lambda (x) (display " ") (display x)) msg)))
+		  (for-each (lambda (x) (display " ") (display x)) msg)))
 	      (newline)
 	      (set! errors #t)))))
       (chclass
