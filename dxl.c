@@ -1,6 +1,15 @@
 /* $Id$ */
 
 #include <stdlib.h>
+
+char *dxl_cmd=NULL;
+
+#ifndef DXL_EXC
+#define DXL_EXC 0
+#endif
+
+#if DXL_EXC
+
 #include <string.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -10,8 +19,6 @@
 #include "m.h"
 #include "er.h"
 #include "dxl.h"
-
-char *dxl_cmd=NULL;
 
 int dxl_allows(char *typ,char *ps,char *s,int n) {
   int pid,status;
@@ -66,3 +73,10 @@ int dxl_equal(char *typ,char *val,char *s,int n) {
   (*er_printf)("dxl: %s\n",strerror(errno));
   return 0;
 }
+
+#else
+
+int dxl_allows(char *typ,char *ps,char *s,int n) {return 0;}
+int dxl_equal(char *typ,char *val,char *s,int n) {return 0;}
+
+#endif

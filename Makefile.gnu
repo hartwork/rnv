@@ -4,6 +4,7 @@ CC=cc
 
 # optional features
 DSL_SCM=0
+DXL_EXC=0
 
 EXPAT_H="<expat.h>"
 UNISTD_H="<unistd.h>"
@@ -31,6 +32,10 @@ LIB=${LIBEXPAT}
 ifeq (${DSL_SCM},1)
 DEF+=-DDSL_SCM=${DSL_SCM} -DSCM_H=${SCM_H}
 LIB+=-lscm -lm
+endif
+
+ifeq (${DXL_EXC},1)
+DEF+=-DDXL_EXC=${DXL_EXC}
 endif
 
 LIBRNVA=librnv.a

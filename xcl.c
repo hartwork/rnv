@@ -11,11 +11,14 @@
 #include EXPAT_H
 #include "m.h"
 #include "erbit.h"
+#include "drv.h"
 #include "rnl.h"
 #include "rnv.h"
 #include "rnx.h"
-#include "er.h"
 #include "ll.h"
+#include "dxl.h"
+#include "dsl.h"
+#include "er.h"
 
 extern int rn_notAllowed,rx_compact,drv_compact;
 
@@ -85,6 +88,8 @@ static void init(void) {
     rnl_init(); rnl_verror_handler=&verror_handler_rnl;
     rnv_init(); rnv_verror_handler=&verror_handler_rnv;
     rnx_init();
+    drv_add_dtl(DXL_URL,&dxl_equal,&dxl_allows);
+    drv_add_dtl(DSL_URL,&dsl_equal,&dsl_allows);
     text=(char*)m_alloc(len_t=LEN_T,sizeof(char));
     windup();
   }
@@ -178,7 +183,7 @@ ERROR:
 }
 
 static void version(void) {(*er_printf)("rnv version %s\n",RNV_VERSION);}
-static void usage(void) {(*er_printf)("usage: rnv {-[qpsvh?]} schema.rnc {document.xml}\n");}
+static void usage(void) {(*er_printf)("usage: rnv {-[qpsdevh?]} schema.rnc {document.xml}\n");}
 
 int main(int argc,char **argv) {
   init();
@@ -193,6 +198,8 @@ int main(int argc,char **argv) {
       case 'v': version(); break;
       case 's': drv_compact=1; rx_compact=1; break;
       case 'p': peipe=1; break;
+      case 'd': dxl_cmd=*(argv+1); if(dxl_cmd) ++argv; goto END_OF_OPTIONS;
+      case 'e': dsl_scm=*(argv+1); if(dsl_scm) ++argv; goto END_OF_OPTIONS;
       case 'q': explain=0; break;
       default: (*er_printf)("unknown option '-%c'\n",*(*argv+i)); break;
       }

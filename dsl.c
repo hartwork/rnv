@@ -53,16 +53,38 @@ static int stresc(char *d,char *s) {return strnesc(d,s,strlen(s));}
 #define shere(bp,sp) while(!((*(bp++)=*(sp++))=='%'&&(*(bp++)=*(sp++))=='s')); bp-=2;
 
 int dsl_allows(char *typ,char *ps,char *s,int n) {
+  char *buf,*sp,*bp, *p;
+  int np,lenp;
+  SCM ret=BOOL_F;
+
   if(dsl_scm) {init();
-
-
+    p=ps; np=0;
+    while(*p) {++np; while(*(p++)); while(*(p++));}
+    lenp=p-ps-2*np;
+    buf=(char*)m_alloc(
+      strlen(ALLOWS)+np*strlen(PARAM)+2*(strlen(typ)+lenp+n)+1,
+      sizeof(char));
+    bp=buf; sp=ALLOWS;
+    shere(bp,sp); bp+=stresc(bp,typ);
+    shere(bp,sp); /* parameters */
+    p=ps;
+    while(np--) {
+      char *sp=PARAM;
+      shere(bp,sp); bp+=stresc(bp,p); while(*(p++));
+      shere(bp,sp); bp+=stresc(bp,p); while(*(p++));
+      while(*sp) *(bp++)=*(sp++);
+    }
+    shere(bp,sp); bp+=strnesc(bp,s,n);
+    while((*(bp++)=*(sp++)));
+    ret=scm_evstr(buf);
+    m_free(buf); 
   }
-  return 0;
+  return ret!=BOOL_F;
 }
 
 int dsl_equal(char *typ,char *val,char *s,int n) {
   char *buf,*sp,*bp;
-  int ret=0;
+  SCM ret=BOOL_F;
 
   if(dsl_scm) {init();
     buf=(char*)m_alloc(
