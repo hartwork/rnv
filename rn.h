@@ -104,9 +104,9 @@ extern int (*rn_nameclass)[NC_SIZE];
 extern void rn_del_p(int i);
 extern void rn_add_p(int i);
 
-extern void setNullable(int x);
-extern void setCdata(int x);
-extern void setContentType(int t1,int t2);
+extern void setNullable(int i,int x);
+extern void setCdata(int i,int x);
+extern void setContentType(int i,int t1,int t2);
 
 extern int newString(char *s);
 
@@ -149,6 +149,9 @@ extern void rn_clear();
 
 /*
  * $Log$
+ * Revision 1.14  2003/12/07 20:41:42  dvd
+ * bugfixes, loops, traits
+ *
  * Revision 1.13  2003/12/07 16:50:55  dvd
  * stage D, dereferencing and checking for loops
  *

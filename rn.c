@@ -40,9 +40,9 @@ int newString(char *s) {
 void rn_del_p(int i) {ht_del(&ht_p,i);}
 void rn_add_p(int i) {ht_put(&ht_p,i);}
 
-void setNullable(int x) {if(x) rn_pattern[i_p][0]|=P_FLG_NUL;}
-void setCdata(int x) {if(x) rn_pattern[i_p][0]|=P_FLG_TXT;}
-void setContentType(int t1,int t2) {rn_pattern[i_p][0]|=(t1>t2?t1:t2);}
+void setNullable(int i,int x) {if(x) rn_pattern[i][0]|=P_FLG_NUL;}
+void setCdata(int i,int x) {if(x) rn_pattern[i][0]|=P_FLG_TXT;}
+void setContentType(int i,int t1,int t2) {rn_pattern[i][0]|=(t1>t2?t1:t2);}
 
 #define accept(name,n,N)  \
 static int accept_##n() { \
@@ -63,7 +63,7 @@ accept(pattern,p,P)
 accept(nameclass,nc,NC)
 
 int newEmpty() { P_NEW(EMPTY);
-  setNullable(1);
+  setNullable(i_p,1);
   return accept_p();
 }
 
@@ -72,56 +72,61 @@ int newNotAllowed() { P_NEW(NOT_ALLOWED);
 }
 
 int newText() { P_NEW(TEXT);
-  setNullable(1); setCdata(1);
+  setNullable(i_p,1); 
+  setCdata(i_p,1);
   return accept_p();
 }
 
 int newChoice(int p1,int p2) { P_NEW(CHOICE);
   rn_pattern[i_p][1]=p1; rn_pattern[i_p][2]=p2;
-  setNullable(nullable(p1)||nullable(p2));
+  setNullable(i_p,nullable(p1)||nullable(p2)); 
+  setCdata(i_p,cdata(p1)||cdata(p2)); 
   return accept_p();
 }
 
 int newInterleave(int p1,int p2) { P_NEW(INTERLEAVE);
   rn_pattern[i_p][1]=p1; rn_pattern[i_p][2]=p2;
-  setNullable(nullable(p1)&&nullable(p2));
+  setNullable(i_p,nullable(p1)&&nullable(p2));
+  setCdata(i_p,cdata(p1)||cdata(p2)); 
   return accept_p();
 }
 
 int newGroup(int p1,int p2) { P_NEW(GROUP);
   rn_pattern[i_p][1]=p1; rn_pattern[i_p][2]=p2;
-  setNullable(nullable(p1)&&nullable(p2));
+  setNullable(i_p,nullable(p1)&&nullable(p2));
+  setCdata(i_p,cdata(p1)||cdata(p2)); 
   return accept_p();
 }
 
 int newOneOrMore(int p1) { P_NEW(ONE_OR_MORE);
   rn_pattern[i_p][1]=p1;
-  setNullable(nullable(p1));
+  setNullable(i_p,nullable(p1));
+  setCdata(i_p,cdata(p1));
   return accept_p();
 }
 
 int newList(int p1) { P_NEW(LIST);
   rn_pattern[i_p][1]=p1;
-  setCdata(1);
+  setCdata(i_p,1);
   return accept_p();
 }
 
 int newData(int dt,int ps) { P_NEW(DATA);
   rn_pattern[i_p][1]=dt;
   rn_pattern[i_p][2]=ps;
-  setCdata(1);
+  setCdata(i_p,1);
   return accept_p();
 }
 
 int newDataExcept(int p1,int p2) { P_NEW(DATA_EXCEPT);
   rn_pattern[i_p][1]=p1; rn_pattern[i_p][2]=p2;
-  setCdata(1);
+  setCdata(i_p,1);
   return accept_p();
 }
 
 int newValue(int dt,int s) { P_NEW(VALUE);
   rn_pattern[i_p][1]=dt; rn_pattern[i_p][2]=s;
-  setCdata(1);
+  setCdata(i_p,1);
   return accept_p();
 }
 
@@ -137,6 +142,7 @@ int newElement(int nc,int p1) { P_NEW(ELEMENT);
 
 int newAfter(int p1,int p2) { P_NEW(AFTER);
   rn_pattern[i_p][1]=p1; rn_pattern[i_p][2]=p2;
+  setCdata(i_p,cdata(p1));
   return accept_p();
 }
 
@@ -319,11 +325,8 @@ static int hash_ary(int i,int *ary,int size) {
   int j;
   int *a=ary+i*size;
   int h=0,s=sizeof(int)*8/size;
-  for(j=0;;++j) {
-    h=h+a[j];
-    if(j==P_SIZE) break;
-    h<<=s;
-  }
+  j=0;
+  for(;;) {h=h+a[j++]; if(j==size) break; h<<=s;}
   return h;
 }
 
@@ -331,12 +334,15 @@ static int hash_p(int i) {return hash_ary(i,(int*)rn_pattern,P_SIZE);}
 static int hash_nc(int i) {return hash_ary(i,(int*)rn_nameclass,NC_SIZE);}
 static int hash_s(int i) {return strhash(rn_string+i);}
 
-static int equal_p(int p1,int p2) {return memcmp(rn_pattern[p1],rn_pattern[p2],P_SIZE*sizeof(int))==0;}
-static int equal_nc(int nc1,int nc2) {return memcmp(rn_nameclass[nc1],rn_pattern[nc2],NC_SIZE*sizeof(int))==0;}
+static int equal_p(int p1,int p2) {return memcmp(&rn_pattern[p1],&rn_pattern[p2],P_SIZE*sizeof(int))==0;}
+static int equal_nc(int nc1,int nc2)  {return memcmp(&rn_nameclass[nc1],&rn_nameclass[nc2],NC_SIZE*sizeof(int))==0;}
 static int equal_s(int s1,int s2) {return strcmp(rn_string+s1,rn_string+s2)==0;}
 
 /* 
  * $Log$
+ * Revision 1.12  2003/12/07 20:41:42  dvd
+ * bugfixes, loops, traits
+ *
  * Revision 1.11  2003/12/07 16:50:55  dvd
  * stage D, dereferencing and checking for loops
  *

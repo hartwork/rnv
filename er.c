@@ -45,7 +45,6 @@ static void default_ver_handler(int er_no,va_list ap) {
   case ER_EXPT: cerr("first argument for '-' is not data"); break;
   case ER_NOSTART: cerr("missing start"); break;
   case ER_UNDEF: cerr("undefined reference to '%s'"); break;
-  case ER_LOOPREF: derr("reference '%s' points to itself"); break;
   case ER_LOOPST: derr("loop in start pattern"); break;
   case ER_LOOPEL: derr("loop in pattern for element '%s'"); break;
   default: assert(0);
@@ -54,6 +53,9 @@ static void default_ver_handler(int er_no,va_list ap) {
 
 /*
  * $Log$
+ * Revision 1.15  2003/12/07 20:41:42  dvd
+ * bugfixes, loops, traits
+ *
  * Revision 1.14  2003/12/07 16:50:55  dvd
  * stage D, dereferencing and checking for loops
  *

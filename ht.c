@@ -55,7 +55,7 @@ void ht_put(struct hashtable *ht,int i) {
 
     free(table);
   }
-  for(j=first(ht,hv);ht->table[j]!=-1;j=next(ht,j)) assert(ht->table[j]!=i);
+  for(j=first(ht,hv);ht->table[j]!=-1;j=next(ht,j));
   ht->table[j]=i;
   ht->table[ht->tablen|j]=hv;
   ++ht->used;
@@ -89,6 +89,9 @@ int ht_del(struct hashtable *ht,int i) {
 
 /*
  * $Log$
+ * Revision 1.4  2003/12/07 20:41:42  dvd
+ * bugfixes, loops, traits
+ *
  * Revision 1.3  2003/12/04 22:02:20  dvd
  * refactoring
  *

@@ -43,7 +43,7 @@ static int deref(int p) {
 static void flatten(p) { if(!marked(p)) {flat[n_f++]=p; mark(p);}}
 
 void rnd_deref(int start) {
-  int p,p1,p2,nc,name,i,changed;
+  int p,p1,p2,nc,i,changed;
 
   flat=(int*)calloc(len_f=LEN_F,sizeof(int)); n_f=0;
   errors=0;
@@ -83,13 +83,10 @@ void rnd_deref(int start) {
       flatten(p1);
       break;
 
-    case P_REF:
-      Ref(p,p1,name);
-      error(ER_LOOPREF,rn_string+name);
+    case P_REF: /* because of a loop, but will be handled in rnd_loops */
       break;
 
-    default:
-      assert(0);
+    default: assert(0);
     }
   } while(i!=n_f);
   for(i=0;i!=n_f;++i) unmark(flat[i]);
@@ -116,14 +113,15 @@ static int loop(int p) {
   UNARY:
     ret=loop(p1); break;
 
-  default:
-    assert(0);
+  case P_REF: ret=1; break;
+
+  default: assert(0);
   }
   unmark(p);
   return ret;
 }
 
-void rnd_loops() {
+static void loops() {
   int i=0,p=flat[i],nc=-1,p1;
   for(;;) {
     if(loop(p)) {
@@ -144,6 +142,68 @@ void rnd_loops() {
     }
   }
 }
+
+void rnd_restrictions() {
+  loops();
+}
+
+static void nullables() {
+  int i,p,p1,p2,changed;
+  do {
+    changed=0;
+    for(i=0;i!=n_f;++i) {
+      p=flat[i];
+      if(!nullable(p)) {
+	switch(P_TYP(p)) {
+	case P_NOT_ALLOWED: 
+	case P_DATA: case P_DATA_EXCEPT: case P_VALUE: case P_LIST:
+	case P_ATTRIBUTE: case P_ELEMENT:
+	  break;
+
+	case P_CHOICE: Choice(p,p1,p2); setNullable(p,nullable(p1)||nullable(p2)); break;
+	case P_INTERLEAVE: Interleave(p,p1,p2); setNullable(p,nullable(p1)&&nullable(p2)); break;
+	case P_GROUP: Group(p,p1,p2);  setNullable(p,nullable(p1)&&nullable(p2)); break;
+
+	case P_ONE_OR_MORE: OneOrMore(p,p1); setNullable(p,nullable(p1)); break;
+
+	default: assert(0);
+	}
+	changed=changed||nullable(p);
+      }
+    }
+  } while(changed);
+}
+    
+static void cdatas() {
+  int i,p,p1,p2,changed;
+  do {
+    changed=0;
+    for(i=0;i!=n_f;++i) {
+      p=flat[i];
+      if(!cdata(p)) {
+	switch(P_TYP(p)) {
+	case P_NOT_ALLOWED: case P_EMPTY:
+	case P_ATTRIBUTE: case P_ELEMENT:
+	  break;
+
+	case P_CHOICE: Choice(p,p1,p2); setCdata(p,cdata(p1)||cdata(p2)); break;
+	case P_INTERLEAVE: Interleave(p,p1,p2); setCdata(p,cdata(p1)||cdata(p2)); break;
+	case P_GROUP: Group(p,p1,p2);  setCdata(p,cdata(p1)||cdata(p2)); break;
+
+	case P_ONE_OR_MORE: OneOrMore(p,p1); setCdata(p,cdata(p1)); break;
+
+	default: assert(0);
+	}
+	changed=changed||cdata(p);
+      }
+    }
+  } while(changed);
+}
+
+void rnd_traits() {
+  nullables();
+  cdatas();
+}
     
 void rnd_release() {
   free(flat); flat=NULL;
@@ -151,6 +211,9 @@ void rnd_release() {
 
 /* 
  * $Log$
+ * Revision 1.3  2003/12/07 20:41:42  dvd
+ * bugfixes, loops, traits
+ *
  * Revision 1.2  2003/12/07 16:50:55  dvd
  * stage D, dereferencing and checking for loops
  *

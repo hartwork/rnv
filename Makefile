@@ -2,7 +2,7 @@
 #
 CC=cc
 INC=-I.
-OPT=-g -O -Wall -Wno-parentheses
+OPT=-g -pg -O -Wall -Wno-parentheses
 LIB=
 LBL=
 OBJ=\
@@ -23,6 +23,9 @@ rnv: ${OBJ}
 	${CC} ${OPT} ${LBL} -o rnv ${OBJ} ${LIB} 
 
 # $Log$
+# Revision 1.8  2003/12/07 20:41:42  dvd
+# bugfixes, loops, traits
+#
 # Revision 1.7  2003/12/07 16:50:55  dvd
 # stage D, dereferencing and checking for loops
 #
