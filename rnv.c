@@ -220,7 +220,6 @@ int main(int argc,char **argv) {
     return 1;
   }
 
-  ok=0;
   if((ok=load_rnc(*(argv++)))) {
     if(*argv) {
       do {
