@@ -21,6 +21,7 @@ void er_handler(int er_no,...) {
     
 #define cerr(msg) vfprintf(stderr,msg" (%s,%u,%u)\n",ap)
 #define derr(msg) vfprintf(stderr,msg"\n",ap)
+#define verr(msg) vfprintf(stderr,msg"\n",ap)
 
 static void default_ver_handler(int er_no,va_list ap) {
   switch(er_no) {
@@ -55,12 +56,16 @@ static void default_ver_handler(int er_no,va_list ap) {
   case ER_BADEXPT: derr("bad path after '-' in element '%s'"); break;
   case ER_BADLIST: derr("bad path after 'list' in element '%s'"); break;
   case ER_BADATTR: derr("bad path in attribute '%s' of element '%s'"); break;
+  case ER_NODTL: verr("no datatype library for URI '%s'"); break;
   default: assert(0);
   }
 }
 
 /*
  * $Log$
+ * Revision 1.18  2003/12/12 22:21:06  dvd
+ * drv written, compiled, not yet debugged
+ *
  * Revision 1.17  2003/12/08 21:23:47  dvd
  * +path restrictions
  *

@@ -36,6 +36,7 @@
 #define ER_BADEXPT 85
 #define ER_BADLIST 86
 #define ER_BADATTR 87
+#define ER_NODTL 100
 
 extern void er_handler(int er_no,...);
 extern void (*ver_handler_p)(int er_no,va_list ap);
@@ -44,6 +45,9 @@ extern void (*ver_handler_p)(int er_no,va_list ap);
 
 /*
  * $Log$
+ * Revision 1.17  2003/12/12 22:21:06  dvd
+ * drv written, compiled, not yet debugged
+ *
  * Revision 1.16  2003/12/08 21:23:47  dvd
  * +path restrictions
  *

@@ -14,7 +14,7 @@
 
 int (*rn_pattern)[P_SIZE];
 int (*rn_nameclass)[NC_SIZE];
-char *rn_string;
+char *rn_string,*rn_params;
 int rn_empty,rn_text,rn_notAllowed,rn_dt_string,rn_dt_token,rn_xsd_uri;
 
 static struct hashtable ht_p, ht_nc, ht_s;
@@ -238,8 +238,8 @@ int newNameClassChoice(int nc1,int nc2) { NC_NEW(CHOICE);
   return accept_nc();
 }
 
-int newDatatype(int lib,int dt) { NC_NEW(DATATYPE);
-  rn_nameclass[i_nc][1]=lib; rn_nameclass[i_nc][2]=dt;
+int newDatatype(int lib,int typ) { NC_NEW(DATATYPE);
+  rn_nameclass[i_nc][1]=lib; rn_nameclass[i_nc][2]=typ;
   return accept_nc();
 }
 
@@ -307,6 +307,7 @@ void rn_init() {
     rn_pattern=(int (*)[])calloc(len_p,sizeof(int[P_SIZE]));
     rn_nameclass=(int (*)[])calloc(len_nc,sizeof(int[NC_SIZE]));
     rn_string=(char*)calloc(len_s,sizeof(char));
+    rn_params="\0"; /* parameters are not supported */
 
     ht_init(&ht_p,len_p,&hash_p,&equal_p);
     ht_init(&ht_nc,len_nc,&hash_nc,&equal_nc);
@@ -355,6 +356,9 @@ static int equal_s(int s1,int s2) {return strcmp(rn_string+s1,rn_string+s2)==0;}
 
 /* 
  * $Log$
+ * Revision 1.20  2003/12/12 22:21:06  dvd
+ * drv written, compiled, not yet debugged
+ *
  * Revision 1.19  2003/12/11 23:37:58  dvd
  * derivative in progress
  *

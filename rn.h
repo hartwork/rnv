@@ -22,7 +22,6 @@
 #define P_ELEMENT 13
 #define P_REF 14
 #define P_AFTER 15
-#define P_VOID 255
 
 /*
 Patterns and nameclasses are stored in arrays of arrays of integers.
@@ -90,7 +89,7 @@ them to variables in the local scope, and a creator.
 #define AnyName(i) NC_CHK(i,ANY_NAME) 
 #define NameClassExcept(i,nc1,nc2) NC_CHK(i,EXCEPT); nc1=rn_nameclass[i][1]; nc2=rn_nameclass[i][2]
 #define NameClassChoice(i,nc1,nc2) NC_CHK(i,CHOICE); nc1=rn_nameclass[i][1]; nc2=rn_nameclass[i][2]
-#define Datatype(i,lib,dt) NC_CHK(i,DATATYPE); lib=rn_nameclass[i][1]; dt=rn_nameclass[i][2]
+#define Datatype(i,lib,typ) NC_CHK(i,DATATYPE); lib=rn_nameclass[i][1]; typ=rn_nameclass[i][2]
 
 extern int rn_empty,rn_text,rn_notAllowed,rn_dt_string,rn_dt_token,rn_xsd_uri;
 
@@ -101,6 +100,7 @@ extern char *rn_string;
 
 extern int (*rn_pattern)[P_SIZE];
 extern int (*rn_nameclass)[NC_SIZE];
+extern char *rn_params;
 
 extern void rn_new_schema();
 
@@ -142,7 +142,7 @@ extern int newQName(int uri,int name);
 extern int newNsName(int uri);
 extern int newNameClassExcept(int nc1,int nc2);
 extern int newNameClassChoice(int nc1,int nc2);
-extern int newDatatype(int lib,int dt);
+extern int newDatatype(int lib,int typ);
 
 extern char *nc2str(int nc);
 
@@ -153,6 +153,9 @@ extern void rn_clear();
 
 /*
  * $Log$
+ * Revision 1.20  2003/12/12 22:21:06  dvd
+ * drv written, compiled, not yet debugged
+ *
  * Revision 1.19  2003/12/11 23:37:58  dvd
  * derivative in progress
  *

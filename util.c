@@ -2,24 +2,24 @@
 
 #include "util.h"
 
-#define whitespace(v) ((v)==' '||(v)=='\t')
+int xml_white_space(int v) {return v=='\t'||v=='\n'||v=='\r'||v==' ';}
 
 int tokncmp(char *s1,char *s2,int n2) {
   char *end2=s2+n2;
-  while(whitespace(*s1)) ++s1;
-  while(s2!=end2&&whitespace(*s2)) ++s2;
+  while(xml_white_space(*s1)) ++s1;
+  while(s2!=end2&&xml_white_space(*s2)) ++s2;
   for(;;) {
     if(s2==end2) {
-      while(whitespace(*s1)) ++s1;
+      while(xml_white_space(*s1)) ++s1;
       return *s1;
     }
     if(*s1=='\0') {
-      while(s2!=end2&&whitespace(*s2)) ++s2;
+      while(s2!=end2&&xml_white_space(*s2)) ++s2;
       return s2==end2?0:-*s2;
     }
-    if(whitespace(*s1)&&whitespace(*s2)) {
-      do ++s1; while(whitespace(*s1));
-      do ++s2; while(s2!=end2&&whitespace(*s2));
+    if(xml_white_space(*s1)&&xml_white_space(*s2)) {
+      do ++s1; while(xml_white_space(*s1));
+      do ++s2; while(s2!=end2&&xml_white_space(*s2));
     } else {
       if(*s1!=*s2) return *s1-*s2;
       ++s1; ++s2;
@@ -49,6 +49,9 @@ extern char *abspath(char *r,char *b) {
 
 /*
  * $Log$
+ * Revision 1.3  2003/12/12 22:21:06  dvd
+ * drv written, compiled, not yet debugged
+ *
  * Revision 1.2  2003/12/11 23:37:58  dvd
  * derivative in progress
  *
