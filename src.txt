@@ -15,6 +15,7 @@ ht.c ht.h -- hash table
 strops.c strops.h  -- common string operations
 xmlc.c xmlc.h -- xml character classifiers
 u.c u.h  -- utf-8 
+rx.c rx.h -- regular expressions engine
 
 # hierarchy
 
