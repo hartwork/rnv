@@ -61,5 +61,5 @@ rnv-${VERSION}.zip: ${DISTFILES}
 	zip -r rnv-${VERSION}.zip rnv-${VERSION}
 	-rm -rf rnv-${VERSION}
 
-install: rnv-${VERSION} readme.txt changes.txt
+install: rnv-${VERSION}.zip readme.txt changes.txt
 	-cp -f $> ${DISTDIR}
