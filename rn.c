@@ -1,7 +1,7 @@
 /* $Id$ */
 
 #include <stdlib.h> /* calloc */
-#include <string.h> /* strcmp,memcmp,strlen,strcpy,memcpy,memset */
+#include <string.h> /* strcmp,memcmp,strlen,strcpy,strdup,memcpy,memset */
 #include <stdio.h> /* debugging*/
 
 #include "util.h"
@@ -36,7 +36,7 @@ int newString(char *s) {
   int len=strlen(s)+1, j;
   if(i_s+len>len_s) {
     char *string=(char*)calloc(len_s=(i_s+len)*2,sizeof(char));
-    memcpy(string,rn_string,i_s); free(rn_string); rn_string=string;
+    memcpy(string,rn_string,i_s*sizeof(char)); free(rn_string); rn_string=string;
   }
   strcpy(rn_string+i_s,s);
   if((j=ht_get(&ht_s,i_s))==-1) {
@@ -159,6 +159,49 @@ int newRef() { P_NEW(REF);
   return accept_p();
 }
 
+char *p2str(int p) {
+  char *s=NULL,*s1;
+  int dt,ps,val,nc,p1;
+  switch(P_TYP(p)) {
+  case P_ERROR: s=strdup("error"); break;
+  case P_EMPTY: s=strdup("empty"); break;
+  case P_NOT_ALLOWED: s=strdup("notAllowed"); break;
+  case P_TEXT: s=strdup("text"); break;
+  case P_CHOICE: s=strdup("choice (|)"); break;
+  case P_INTERLEAVE: s=strdup("interleave (&)"); break;
+  case P_GROUP: s=strdup("group (,)"); break;
+  case P_ONE_OR_MORE: s=strdup("one or more (+)"); break;
+  case P_LIST: s=strdup("list"); break;
+  case P_DATA: Data(p,dt,ps);
+    s1=nc2str(dt);
+    s=(char*)calloc(strlen("data ")+1+strlen(s1),sizeof(char));
+    strcpy(s,"data "); strcat(s,s1);
+    free(s1);
+    break;
+  case P_DATA_EXCEPT: s=strdup("dataExcept (-)");  break;
+  case P_VALUE: Value(p,dt,val);
+    s=(char*)calloc(strlen("value \"\"")+1+strlen(rn_string+val),sizeof(char));
+    strcpy(s,"value \""); strcat(s,rn_string+val); strcat(s,"\"");
+    break;
+  case P_ATTRIBUTE: Attribute(p,nc,p1);
+    s1=nc2str(nc);
+    s=(char*)calloc(strlen("attribute ")+1+strlen(s1),sizeof(char));
+    strcpy(s,"attribute "); strcat(s,s1);
+    free(s1);
+    break;
+  case P_ELEMENT: Element(p,nc,p1);
+    s1=nc2str(nc);
+    s=(char*)calloc(strlen("element ")+1+strlen(s1),sizeof(char));
+    strcpy(s,"element "); strcat(s,s1);
+    free(s1);
+    break;
+  case P_REF: s=strdup("ref"); break;
+  case P_AFTER: s=strdup("after"); break;
+  default: assert(0);
+  }
+  return s;
+}
+
 int rn_groupable(int p1,int p2) {
   int ct1=contentType(p1),ct2=contentType(p2);
   return ((ct1&ct2&P_FLG_CTC)||((ct1|ct2)&P_FLG_CTE));
@@ -245,49 +288,43 @@ int newDatatype(int lib,int typ) { NC_NEW(DATATYPE);
 }
 
 char *nc2str(int nc) {
-  char *s,*s1,*s2;
+  char *s=NULL,*s1,*s2;
   int nc1,nc2,uri,name;
   switch(NC_TYP(nc)) {
-  case NC_ERROR: return strdup("?");
+  case NC_ERROR: s=strdup("?"); break;
   case NC_NSNAME:
     NsName(nc,uri);
     s=calloc(strlen(rn_string+uri)+3,sizeof(char));
     strcpy(s,rn_string+uri); strcat(s,":*");
-    return s;
-
+    break;
   case NC_QNAME:
     QName(nc,uri,name); 
     s=calloc(strlen(rn_string+uri)+strlen(rn_string+name)+2,sizeof(char));
     strcpy(s,rn_string+uri); strcat(s,"^"); strcat(s,rn_string+name);
-    return s;
-
-  case NC_ANY_NAME: return strdup("*");
-
+    break;
+  case NC_ANY_NAME: s=strdup("*"); break;
   case NC_EXCEPT:
     NameClassExcept(nc,nc1,nc2);
     s1=nc2str(nc1); s2=nc2str(nc2);
     s=calloc(strlen(s1)+strlen(s2)+2,sizeof(char));
     strcpy(s,s1); strcat(s,"-"); strcat(s,s2);
     free(s1); free(s2);
-    return s;
-    
+    break;
   case NC_CHOICE:
     NameClassChoice(nc,nc1,nc2);
     s1=nc2str(nc1); s2=nc2str(nc2);
     s=calloc(strlen(s1)+strlen(s2)+2,sizeof(char));
     strcpy(s,s1); strcat(s,"|"); strcat(s,s2);
     free(s1); free(s2);
-    return s;
-    
+    break;
   case NC_DATATYPE:
     Datatype(nc,uri,name); 
     s=calloc(strlen(rn_string+uri)+strlen(rn_string+name)+2,sizeof(char));
     strcpy(s,rn_string+uri); strcat(s,"^"); strcat(s,rn_string+name);
-    return s;
-  default: 
-    assert(0);
+    break;
+  default: assert(0);
   }
-  return NULL;
+  return s;
 }
 
 int rn_i_ps() {return i_ps;}
@@ -371,6 +408,9 @@ static int equal_s(int s1,int s2) {return strcmp(rn_string+s1,rn_string+s2)==0;}
 
 /* 
  * $Log$
+ * Revision 1.22  2003/12/13 22:03:30  dvd
+ * rnv works
+ *
  * Revision 1.21  2003/12/12 22:48:27  dvd
  * datatype parameters are supported
  *

@@ -129,6 +129,8 @@ extern int newElement(int nc,int p1);
 extern int newAfter(int p1,int p2);
 extern int newRef();
 
+extern char *p2str(int nc);
+
 extern int rn_groupable(int p1,int p2);
 extern int rn_one_or_more(int p);
 extern int rn_group(int p1,int p2);
@@ -158,6 +160,9 @@ extern void rn_clear();
 
 /*
  * $Log$
+ * Revision 1.22  2003/12/13 22:03:30  dvd
+ * rnv works
+ *
  * Revision 1.21  2003/12/12 22:48:27  dvd
  * datatype parameters are supported
  *

@@ -16,10 +16,16 @@ extern int drv_start_tag_close(int p);
 extern int drv_text(int p,char *s,int n);
 extern int drv_end_tag(int p);
 
+extern int drv_n_exp, *drv_exp;
+extern void drv_expected(int p);
+
 #endif
 
 /*
  * $Log$
+ * Revision 1.6  2003/12/13 22:03:30  dvd
+ * rnv works
+ *
  * Revision 1.5  2003/12/12 22:21:06  dvd
  * drv written, compiled, not yet debugged
  *

@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include "rnc.h"
 #include "rnd.h"
+#include "rn.h"
+#include "drv.h"
 
 static int parse(struct rnc_source *sp) {
   int start;
@@ -27,11 +29,31 @@ static int parse(struct rnc_source *sp) {
   return 1;
 }
 
+void dump() {
+  int p=1,q; char *s;
+  while(P_TYP(p)) {
+    fprintf(stderr,"%s\n",s=p2str(p));
+    free(s);
+    drv_expected(p);
+    if(drv_n_exp!=0) {
+      int i;
+      fprintf(stderr,">\n");
+      for(i=0;i!=drv_n_exp;++i) {
+	fprintf(stderr,"\t%s\n",s=p2str(drv_exp[i]));
+	free(s);
+      }
+    }
+    ++p;
+  }
+}
+
 int main(int argc,char **argv) {
   struct rnc_source *sp;
 
   rnc_init();
   rnd_init();
+  drv_init();
+
 
   sp=rnc_alloc();
   if(*(++argv)) {
@@ -46,6 +68,8 @@ int main(int argc,char **argv) {
   }
   rnc_free(sp);
 
+  dump();
+
   return 0;
 
 ERRORS:
@@ -55,6 +79,9 @@ ERRORS:
 
 /* 
  * $Log$
+ * Revision 1.3  2003/12/13 22:03:31  dvd
+ * rnv works
+ *
  * Revision 1.2  2003/12/11 23:37:58  dvd
  * derivative in progress
  *

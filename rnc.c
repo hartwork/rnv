@@ -165,9 +165,8 @@ static void rnc_source_init(struct rnc_source *sp) {
 }
 
 static int rnc_read(struct rnc_source *sp) {
-  int ni;
-  memcpy(sp->buf,sp->buf+sp->i,sp->n-=sp->i);
-  sp->i=0;
+  int ni,i;
+  sp->n-=sp->i; for(i=0;i!=sp->n;++i) sp->buf[i]=sp->buf[i+sp->i]; sp->i=0;
   for(;;) {
     ni=read(sp->fd,sp->buf+sp->n,BUFSIZE-sp->n);
     if(ni>0) {
@@ -329,7 +328,7 @@ static void getv(struct rnc_source *sp) {
 static void realloc_s(struct sym *symp) {
   char *s; int slen=symp->slen*2;
   s=(char*)calloc(slen,sizeof(char));
-  memcpy(s,symp->s,symp->slen); free(symp->s);
+  memcpy(s,symp->s,symp->slen*sizeof(char)); free(symp->s);
   symp->s=s; symp->slen=slen;
 }
 
@@ -1197,6 +1196,9 @@ int rnc_parse(struct rnc_source *sp) {
 
 /*
  * $Log$
+ * Revision 1.38  2003/12/13 22:03:30  dvd
+ * rnv works
+ *
  * Revision 1.37  2003/12/12 22:48:27  dvd
  * datatype parameters are supported
  *

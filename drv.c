@@ -2,6 +2,7 @@
 
 #include <string.h> /*strcmp*/
 #include <stdlib.h> /*calloc,free*/
+#include <stdio.h> /*debugging*/
 #include "util.h" /*tokncmp,xml_white_space*/
 #include "rn.h"
 #include "er.h"
@@ -15,9 +16,12 @@ struct dtl {
 };
 
 #define LEN_DTL 4
+#define LEN_EXP 16
 
-static struct dtl *dtls;
-static int len_dtl,n_dtl;
+static struct dtl *dtl;
+int *drv_exp;
+int drv_n_exp;
+static int len_dtl,len_exp,n_dtl;
 
 static int fallback_equal(char *typ,char *val,char *s,int n) {return 1;}
 static int fallback_allows(char *typ,char *ps,char *s,int n) {return 1;}
@@ -37,7 +41,9 @@ static void windup();
 static int initialized=0;
 void drv_init() {
   if(!initialized) { initialized=1;
-    dtls=(struct dtl*)calloc(len_dtl=LEN_DTL,sizeof(struct dtl));
+    dtl=(struct dtl*)calloc(len_dtl=LEN_DTL,sizeof(struct dtl));
+    drv_exp=(int*)calloc(len_exp=LEN_EXP,sizeof(int));
+
     windup();
   }
 }
@@ -55,22 +61,22 @@ void drv_clear() {
 
 void drv_add_dtl(char *suri,int (*equal)(char *typ,char *val,char *s,int n),int (*allows)(char *typ,char *ps,char *s,int n)) {
   if(n_dtl==len_dtl) {
-    struct dtl *newdtls=(struct dtl*)calloc(len_dtl*=2,sizeof(struct dtl)); 
-    memcpy(newdtls,dtls,n_dtl*sizeof(struct dtl)); free(dtls);
-    dtls=newdtls;
+    struct dtl *newdtl=(struct dtl*)calloc(len_dtl*=2,sizeof(struct dtl)); 
+    memcpy(newdtl,dtl,n_dtl*sizeof(struct dtl)); free(dtl);
+    dtl=newdtl;
   }
-  dtls[n_dtl].uri=newString(suri);
-  dtls[n_dtl].equal=equal;
-  dtls[n_dtl].allows=allows;
+  dtl[n_dtl].uri=newString(suri);
+  dtl[n_dtl].equal=equal;
+  dtl[n_dtl].allows=allows;
   ++n_dtl;
 }
 
 static struct dtl *getdtl(int uri) {
   int i;
-  dtls[0].uri=uri; i=n_dtl;
-  while(dtls[--i].uri!=uri);
+  dtl[0].uri=uri; i=n_dtl;
+  while(dtl[--i].uri!=uri);
   if(i==0) er_handler(ER_NODTL,rn_string+uri);
-  return dtls+i;
+  return dtl+i;
 }
 
 static int ncof(int nc,int uri,int name) {
@@ -202,7 +208,9 @@ static int start_tag_close(int p) {
   case P_ATTRIBUTE: 
     ret=rn_notAllowed;
     break;
-  case P_AFTER:
+  case P_AFTER: After(p,p1,p2);
+    ret=rn_after(start_tag_close(p1),p2);
+    break;
   default: assert(0);
   }
   return ret;
@@ -228,6 +236,8 @@ static int text(int p,char *s,int n) { /* matches text, including whitespace */
   case P_EMPTY: case P_NOT_ALLOWED:
   case P_ATTRIBUTE: case P_ELEMENT:
     ret=rn_notAllowed;
+    break;
+  case P_TEXT:
     ret=p;
     break;
   case P_AFTER: After(p,p1,p2); 
@@ -290,11 +300,53 @@ static int end_tag(int p) {
   }
   return ret;
 }
-
 int drv_end_tag(int p) {return end_tag(p);}
+
+static void expected(int p) {
+  int p1,p2,px=0,i;
+  switch(P_TYP(p)) {
+  case P_ERROR: break;
+  case P_EMPTY: break;
+  case P_NOT_ALLOWED: break;
+  case P_TEXT: px=p; break;
+  case P_CHOICE: Choice(p,p1,p2); expected(p1); expected(p2); break;
+  case P_INTERLEAVE: Interleave(p,p1,p2); expected(p1); expected(p2); break;
+  case P_GROUP: Group(p,p1,p2); expected(p1); if(nullable(p1)) expected(p2); break;
+  case P_ONE_OR_MORE: OneOrMore(p,p1); expected(p1); break;
+  case P_LIST: List(p,p1); expected(p1); break;
+  case P_DATA: px=p; break;
+  case P_DATA_EXCEPT: DataExcept(p,p1,p2); expected(p1); break;
+  case P_VALUE: px=p; break;
+  case P_ATTRIBUTE: px=p; break;
+  case P_ELEMENT: px=p; break;
+  case P_AFTER: After(p,p1,p2); expected(p1); px=p; break;
+  case P_REF: break;
+  default: assert(0);
+  }
+  if(px) {
+    for(i=0;i!=drv_n_exp;++i) {
+      if(drv_exp[i]==px) {px=0; break;}
+    }
+    if(px) {
+      if(drv_n_exp==len_exp) {
+	int *newexp=(int*)calloc(len_exp*=2,sizeof(int));
+	memcpy(newexp,drv_exp,drv_n_exp*sizeof(int)); free(drv_exp);
+	drv_exp=newexp;
+      }
+      drv_exp[drv_n_exp++]=px;
+    }
+  }
+}
+void drv_expected(int p) {
+  drv_n_exp=0;
+  expected(p);
+}
 
 /*
  * $Log$
+ * Revision 1.6  2003/12/13 22:03:30  dvd
+ * rnv works
+ *
  * Revision 1.5  2003/12/12 22:48:27  dvd
  * datatype parameters are supported
  *
