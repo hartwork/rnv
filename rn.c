@@ -399,7 +399,7 @@ static void sweep_p(int *starts,int n_st,int since) {
   changed=0;
   for(p=since;p!=i_p;p+=p_size[P_TYP(p)]) {
     if(!marked(p)) {
-      rn_del_p(p);
+      ht_deli(&ht_p,p);
       xlat[p-since]=-1;
     } else if((q=ht_get(&ht_p,p))!=p) {
       unmark(p);
