@@ -1,1 +1,1 @@
-bcc32 -O2 -w-pia- -w-par- -w-aus- -DRNV_VERSION="\"1.2.0\"" -DEXPAT_H="<expat.h>" -DUNISTD_H="<io.h>" -I.;c:\expat\source\lib;c:\borland\bcc55\include -L.;c:\borland\bcc55\lib -ernv.exe *.c libexpats_mtd.lib 
+bcc32 -O2 -w-pia- -w-par- -w-aus- -DRNV_VERSION="\"1.2.1\"" -DEXPAT_H="<expat.h>" -DUNISTD_H="<io.h>" -I.;c:\expat\source\lib;c:\borland\bcc55\include -L.;c:\borland\bcc55\lib -ernv.exe *.c libexpats_mtd.lib 

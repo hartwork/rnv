@@ -81,8 +81,6 @@ Limitations
      * RNV assumes that the encoding of the syntax file is UTF-8.
      * Support for XSL Schema Part 2: Datatypes is partial.
           + ordering for duration is not implemented;
-          + value equality for dateTime and derived types is not
-            implemented (any two dates are equal);
           + only local parts of QName values are checked for equality,
             ENTITY values are only checked for lexical validity.
      * The schema parser does not check that all restrictions are obeyed,

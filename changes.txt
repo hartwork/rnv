@@ -1,4 +1,9 @@
 /* $Id$ */
+
+1.2.1 четверг, 25 декабря 2003 г. 16:50:27 (AMT)
+dvd: equality and ordering for dateTime (and its partial variants) implemented;
+     rx,xsd use overloadable error handlers with variable lists.
+
 1.2.0 Wed Dec 24 04:40:25 AMT 2003
 dvd: XML Schema Part 2: regular expressions and datatypes. many things are
      implemented, with exception of context-dependent checks and a calendar
