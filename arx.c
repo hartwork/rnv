@@ -1,23 +1,23 @@
 /* $Id$ */ 
 /* Regular Associations for XML 
-usage summary: 
-  arx [-x document.xml] {*.arx}
 
 arx grammar:
 
 arx = grammars route*
 grammars = "grammars"  "{" type2string+ "}"
-baseURI = literal
 type2string =  type "=" literal
-type = ident
+type = nmtoken
 route = match|nomatch|valid|invalid
 match = "=~" regexp "=>" type
 nomatch = "!~" regexp "=>" type
 valid = "valid" "{" rng "}" "=>" type
 invalid = "!valid" "{" rng "}" "=>" type
 
-comments start with # and continue till the end of line
-delimiters of regexp and literal must be quoted by \ inside the tokens
+literal=string in '"', '"' inside quoted by '\'
+regexp=string in '/', '/' inside quoted by '\'
+rng=relax ng compact syntax
+
+comments start with # and continue till end of line
 
 */
 
