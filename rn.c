@@ -32,27 +32,35 @@ static int equal_p(int p1,int p2);
 static int equal_nc(int nc1,int nc2); 
 static int equal_s(int s1,int s2);
 
+static int initialized=0;
 void rn_init() {
-  len_s=LEN_S; len_f=LEN_F; len_p=LEN_P; len_nc=LEN_NC;
-  rn_i_p=0; rn_i_nc=0; rn_i_s=0;
+  if(!initialized) {
+    len_p=LEN_P; len_nc=LEN_NC; len_s=LEN_S; len_f=LEN_F;
+    rn_i_p=0; rn_i_nc=0; rn_i_s=0;
 
-  rn_pattern=(int (*)[])calloc(len_p,sizeof(int[P_SIZE]));
-  rn_nameclass=(int (*)[])calloc(len_nc,sizeof(int[NC_SIZE]));
-  rn_string=(char*)calloc(len_s,sizeof(char));
+    rn_pattern=(int (*)[])calloc(len_p,sizeof(int[P_SIZE]));
+    rn_nameclass=(int (*)[])calloc(len_nc,sizeof(int[NC_SIZE]));
+    rn_string=(char*)calloc(len_s,sizeof(char));
 
-  memset(rn_pattern[0],0,sizeof(int[P_SIZE]));
-  memset(rn_nameclass[0],0,sizeof(int[NC_SIZE]));
+    ht_init(&ht_p,len_p,&hash_p,&equal_p);
+    ht_init(&ht_nc,len_nc,&hash_nc,&equal_nc);
+    ht_init(&ht_s,len_s,&hash_s,&equal_s);
 
-  ht_init(&ht_p,len_p,&hash_p,&equal_p);
-  ht_init(&ht_nc,len_nc,&hash_nc,&equal_nc);
-  ht_init(&ht_s,len_s,&hash_s,&equal_s);
+    memset(rn_pattern[0],0,sizeof(int[P_SIZE]));
+    memset(rn_nameclass[0],0,sizeof(int[NC_SIZE]));
+    rn_pattern[0][0]=P_ERROR;  rn_accept_p();
+    rn_nameclass[0][0]=NC_ERROR; rn_accept_nc();
+    rn_accept_s("");
 
-  rn_first=(int*)calloc(len_p,sizeof(int));
-  rn_first_a=(int*)calloc(len_p,sizeof(int));
-  rn_first_c=(int*)calloc(len_p,sizeof(int));
-  rn_first_to=(int*)calloc(len_p,sizeof(int));
+    rn_first=(int*)calloc(len_p,sizeof(int));
+    rn_first_a=(int*)calloc(len_p,sizeof(int));
+    rn_first_c=(int*)calloc(len_p,sizeof(int));
+    rn_first_to=(int*)calloc(len_p,sizeof(int));
 
-  rn_firsts=(int*)calloc(len_f,sizeof(int));
+    rn_firsts=(int*)calloc(len_f,sizeof(int));
+
+    initialized=1;
+  }
 }
 
 /* hash function for int[] */
@@ -78,8 +86,9 @@ static int equal_s(int s1,int s2) {return strcmp(rn_string+s1,rn_string+s2)==0;}
 
 #define accept(name,n,N)  \
 int rn_accept_##n() { \
-  int j=ht_get(&ht_##n,rn_i_##n); \
-  if(j==rn_i_##n) { \
+  int j; \
+  if((j=ht_get(&ht_##n,rn_i_##n))==-1) { \
+    ht_put(&ht_##n,j=rn_i_##n); \
     ++rn_i_##n; \
     if(rn_i_##n==len_##n) { \
       int (*name)[N##_SIZE]=(int (*)[])calloc(len_##n*=2,sizeof(int[N##_SIZE])); \
@@ -101,13 +110,18 @@ int rn_accept_s(char *s) {
     memcpy(string,rn_string,rn_i_s); free(rn_string); rn_string=string;
   }
   strcpy(rn_string+rn_i_s,s);
-  j=ht_get(&ht_s,rn_i_s);
-  if(j==rn_i_s) rn_i_s+=len;
+  if((j=ht_get(&ht_s,rn_i_s))==-1) {
+    ht_put(&ht_s,j=rn_i_s);
+    rn_i_s+=len;
+  }
   return j;
 }
 
 /* 
  * $Log$
+ * Revision 1.4  2003/11/29 17:47:48  dvd
+ * decl
+ *
  * Revision 1.3  2003/11/27 21:00:23  dvd
  * abspath,strhash
  *

@@ -30,13 +30,11 @@ void ht_clear(struct hashtable *ht) {
 #define next(ht,i) (i==0?ht->tablen-1:i-1)
 
 int ht_get(struct hashtable *ht,int i) {
-  if(ht->used!=0) {
-    int hv=ht->hash(i),j;
-    for(j=first(ht,hv);;j=next(ht,j)) {
-      int tj=ht->table[j];
-      if(tj==-1) break;
-      if(ht->equal(i,tj)) return tj;
-    }
+  int hv=ht->hash(i),j;
+  for(j=first(ht,hv);;j=next(ht,j)) {
+    int tj=ht->table[j];
+    if(tj==-1) break;
+    if(ht->equal(i,tj)) return tj;
   }
   return -1;
 }
@@ -92,6 +90,9 @@ int ht_del(struct hashtable *ht,int i) {
 
 /*
  * $Log$
+ * Revision 1.2  2003/11/29 17:47:48  dvd
+ * decl
+ *
  * Revision 1.1  2003/11/17 21:33:28  dvd
  * +cimpl
  *

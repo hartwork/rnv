@@ -13,9 +13,11 @@
 #define ER_LILL 32
 #define ER_SEXP 40
 #define ER_SILL 41
-#define ER_UNAN 42
-#define ER_INC 50
-#define ER_EXT 51
+#define ER_EXT 50
+#define ER_DUPNS 51
+#define ER_DUPDT 52
+#define ER_NONS 53
+#define ER_NODT 54
 
 extern void er_handler(int er_no,...);
 extern void (*ver_handler_p)(int er_no,va_list ap);
@@ -24,6 +26,9 @@ extern void (*ver_handler_p)(int er_no,va_list ap);
 
 /*
  * $Log$
+ * Revision 1.9  2003/11/29 17:47:48  dvd
+ * decl
+ *
  * Revision 1.8  2003/11/27 23:05:49  dvd
  * syntax and external files
  *

@@ -6,20 +6,21 @@
 #include <assert.h>
 
 /* Patterns */
-#define P_EMPTY 0
-#define P_NOT_ALLOWED 1
-#define P_TEXT 2
-#define P_CHOICE 3
-#define P_INTERLEAVE 4
-#define P_GROUP 5
-#define P_ONE_OR_MORE 6
-#define P_LIST 7
-#define P_DATA 8
-#define P_DATA_EXCEPT 9
-#define P_VALUE 10
-#define P_ATTRIBUTE 11
-#define P_ELEMENT 12
-#define P_AFTER 13
+#define P_ERROR 0
+#define P_EMPTY 1
+#define P_NOT_ALLOWED 2
+#define P_TEXT 3
+#define P_CHOICE 4
+#define P_INTERLEAVE 5
+#define P_GROUP 6
+#define P_ONE_OR_MORE 7
+#define P_LIST 8
+#define P_DATA 9
+#define P_DATA_EXCEPT 10
+#define P_VALUE 11
+#define P_ATTRIBUTE 12
+#define P_ELEMENT 13
+#define P_AFTER 14
 
 /* 
 Patterns and nameclasses are stored in arrays of arrays of integers.
@@ -52,7 +53,7 @@ them to variables in the local scope, and a creator.
 #define newNotAllowed() P_NEW(NOT_ALLOWED)
 
 #define Text(i) P_IS(i,TEXT)
-#define newText(rn_i_p) P_NEW(TEXT); \
+#define newText() P_NEW(TEXT); \
   setNullable(1); setCdata(1)
 
 #define Choice(i,p1,p2) P_IS(i,CHOICE) \
@@ -123,12 +124,14 @@ them to variables in the local scope, and a creator.
   setCdata(cdata(p1))
 
 /* Name Classes */
-#define NC_ANY_NAME 0
-#define NC_ANY_NAME_EXCEPT 1
-#define NC_NAME 2
-#define NC_NSNAME 3
-#define NC_NSNAME_EXCEPT 4
-#define NC_CHOICE 5
+#define NC_ERROR 0
+#define NC_ANY_NAME 1
+#define NC_ANY_NAME_EXCEPT 2
+#define NC_NAME 3
+#define NC_NSNAME 4
+#define NC_NSNAME_EXCEPT 5
+#define NC_CHOICE 6
+#define NC_DATATYPE 7
 
 /* Name Class Bindings  */
 #define NC_TYP(i) (rn_nameclass[i][0]&0x7)
@@ -168,14 +171,10 @@ them to variables in the local scope, and a creator.
 #define newQName(uri,localname) NC_NEW(NAME); \
   rn_nameclass[rn_i_nc][1]=uri; rn_nameclass[rn_i_nc][2]=localname
 
-/* Built-in Datatypes */
-#define DT_TOKEN 0
-#define DT_STRING 1
-
-/* Element Roles */
-#define R_INLINE 1
-#define R_BLOCK 2
-#define R_SECTION 4
+#define Datatype(i,lib,dt) NC_IS(i,DATATYPE); \
+  lib=rn_string+rn_nameclass[i][1]; dt=rn_string+rn_nameclass[i][2]
+#define newDatatype(lib,dt) NC_NEW(DATATYPE); \
+  rn_nameclass[rn_i_nc][1]=lib-rn_string; rn_nameclass[rn_i_nc][2]=dt-rn_string
 
 extern int rn_i_p,rn_i_nc,rn_i_s; /* current index, a new element is created at this index */
 extern int rn_accept_p(); /* the pattern at i_p is either new and i_p is incremented, or the same pattern is in the table */
@@ -187,6 +186,7 @@ extern int rn_accept_s(char *s); /* accept a string, store it in the string pool
 
 extern int (*rn_pattern)[P_SIZE];
 extern int (*rn_nameclass)[NC_SIZE];
+
 extern char *rn_string; /* string pool */
 extern int *rn_first, *rn_first_a, *rn_first_c, *rn_first_to; /* -1 if not computed, otherwise index in firsts */
 extern int *rn_firsts; /* -1 terminates a list */
@@ -197,6 +197,9 @@ extern void rn_init();
 
 /*
  * $Log$
+ * Revision 1.6  2003/11/29 17:47:48  dvd
+ * decl
+ *
  * Revision 1.5  2003/11/26 00:37:47  dvd
  * parser in progress, documentation handling removed
  *

@@ -5,17 +5,22 @@
 
 struct rnc_source;
 
+extern void rnc_init();
+
 extern int rnc_open(struct rnc_source *sp,char *fn);
 extern int rnc_stropen(struct rnc_source *sp,char *fn,char *s,int len);
 extern int rnc_bind(struct rnc_source *sp,char *fn,int fd);
 extern int rnc_close(struct rnc_source *sp);
 
-extern void rnc_parse(struct rnc_source *sp);
+extern int rnc_parse(struct rnc_source *sp);
 
 #endif
 
 /*
  * $Log$
+ * Revision 1.5  2003/11/29 17:47:48  dvd
+ * decl
+ *
  * Revision 1.4  2003/11/26 00:37:47  dvd
  * parser in progress, documentation handling removed
  *
