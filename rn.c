@@ -170,49 +170,6 @@ int newRef(void) { P_NEW(REF);
   return accept_p();
 }
 
-char *p2str(int p) {
-  char *s=NULL,*s1;
-  int dt,ps,val,nc,p1;
-  switch(P_TYP(p)) {
-  case P_ERROR: s=strclone("error"); break;
-  case P_EMPTY: s=strclone("empty"); break;
-  case P_NOT_ALLOWED: s=strclone("notAllowed"); break;
-  case P_TEXT: s=strclone("text"); break;
-  case P_CHOICE: s=strclone("choice (|)"); break;
-  case P_INTERLEAVE: s=strclone("interleave (&)"); break;
-  case P_GROUP: s=strclone("group (,)"); break;
-  case P_ONE_OR_MORE: s=strclone("one or more (+)"); break;
-  case P_LIST: s=strclone("list"); break;
-  case P_DATA: Data(p,dt,ps);
-    s1=nc2str(dt);
-    s=(char*)calloc(strlen("data ")+1+strlen(s1),sizeof(char));
-    strcpy(s,"data "); strcat(s,s1);
-    free(s1);
-    break;
-  case P_DATA_EXCEPT: s=strclone("dataExcept (-)");  break;
-  case P_VALUE: Value(p,dt,val);
-    s=(char*)calloc(strlen("value \"\"")+1+strlen(rn_string+val),sizeof(char));
-    strcpy(s,"value \""); strcat(s,rn_string+val); strcat(s,"\"");
-    break;
-  case P_ATTRIBUTE: Attribute(p,nc,p1);
-    s1=nc2str(nc);
-    s=(char*)calloc(strlen("attribute ")+1+strlen(s1),sizeof(char));
-    strcpy(s,"attribute "); strcat(s,s1);
-    free(s1);
-    break;
-  case P_ELEMENT: Element(p,nc,p1);
-    s1=nc2str(nc);
-    s=(char*)calloc(strlen("element ")+1+strlen(s1),sizeof(char));
-    strcpy(s,"element "); strcat(s,s1);
-    free(s1);
-    break;
-  case P_REF: s=strclone("ref"); break;
-  case P_AFTER: s=strclone("after"); break;
-  default: assert(0);
-  }
-  return s;
-}
-
 int rn_groupable(int p1,int p2) {
   int ct1=contentType(p1),ct2=contentType(p2);
   return ((ct1&ct2&P_FLG_CTC)||((ct1|ct2)&P_FLG_CTE));
@@ -296,46 +253,6 @@ int newNameClassChoice(int nc1,int nc2) { NC_NEW(CHOICE);
 int newDatatype(int lib,int typ) { NC_NEW(DATATYPE);
   rn_nameclass[i_nc][1]=lib; rn_nameclass[i_nc][2]=typ;
   return accept_nc();
-}
-
-char *nc2str(int nc) {
-  char *s=NULL,*s1,*s2;
-  int nc1,nc2,uri,name;
-  switch(NC_TYP(nc)) {
-  case NC_ERROR: s=strclone("?"); break;
-  case NC_NSNAME:
-    NsName(nc,uri);
-    s=(char*)calloc(strlen(rn_string+uri)+3,sizeof(char));
-    strcpy(s,rn_string+uri); strcat(s,":*");
-    break;
-  case NC_QNAME:
-    QName(nc,uri,name); 
-    s=(char*)calloc(strlen(rn_string+uri)+strlen(rn_string+name)+2,sizeof(char));
-    strcpy(s,rn_string+uri); strcat(s,"^"); strcat(s,rn_string+name);
-    break;
-  case NC_ANY_NAME: s=strclone("*"); break;
-  case NC_EXCEPT:
-    NameClassExcept(nc,nc1,nc2);
-    s1=nc2str(nc1); s2=nc2str(nc2);
-    s=(char*)calloc(strlen(s1)+strlen(s2)+2,sizeof(char));
-    strcpy(s,s1); strcat(s,"-"); strcat(s,s2);
-    free(s1); free(s2);
-    break;
-  case NC_CHOICE:
-    NameClassChoice(nc,nc1,nc2);
-    s1=nc2str(nc1); s2=nc2str(nc2);
-    s=(char*)calloc(strlen(s1)+strlen(s2)+2,sizeof(char));
-    strcpy(s,s1); strcat(s,"|"); strcat(s,s2);
-    free(s1); free(s2);
-    break;
-  case NC_DATATYPE:
-    Datatype(nc,uri,name); 
-    s=(char*)calloc(strlen(rn_string+uri)+strlen(rn_string+name)+2,sizeof(char));
-    strcpy(s,rn_string+uri); strcat(s,"^"); strcat(s,rn_string+name);
-    break;
-  default: assert(0);
-  }
-  return s;
 }
 
 int rn_i_ps(void) {adding_ps=1; return i_s;}

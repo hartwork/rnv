@@ -1,5 +1,6 @@
 /* $Id$ */
 
+#include <limits.h> /*INT_MAX*/
 #include <stdlib.h> /*calloc,free*/
 #include <string.h> /*strchr*/
 #include <stdio.h> /*stdio*/
@@ -37,7 +38,9 @@ static char *fcttab[NFCT]={
   "enumeration", "fractionDigits", "length", "maxExclusive", "maxInclusive", "maxLength",
   "minExclusive", "minInclusive", "minLength", "pattern", "totalDigits", "whiteSpace"};
 
-#define FCT_SET(x) (fct.set&(1<<FCT_##x))
+#define FCT_IBOUNDS (1<<FCT_MIN_INCLUSIVE|1<<FCT_MAX_INCLUSIVE)
+#define FCT_EBOUNDS (1<<FCT_MIN_EXCLUSIVE|1<<FCT_MAX_EXCLUSIVE)
+#define FCT_BOUNDS (FCT_IBOUNDS|FCT_EBOUNDS)
 
 #define WS_PRESERVE 0
 #define WS_REPLACE 1
@@ -138,6 +141,38 @@ static int b64lenn(char *s,int n) {
   return len;
 }
 
+static int fdiglenn(char *s,int n) {
+  char *end=s+n; int len=0;
+  for(;;) {
+    if(end==s) break;
+    --end;
+    if(*end!='0'&&!xmlc_white_space(*end)) {++end; break;}
+  }
+  for(;;) {
+    if(s==end) break;
+    if(*(s++)=='.') {
+      while(s++!=end) ++len; 
+      break;
+    }
+  }
+  return len;
+}
+
+static int diglenn(char *s,int n) {
+  char *end=s+n; int len=0;
+  for(;;) {
+    if(s==end) break;
+    if(!xmlc_white_space(*s)&&*s!='+'&&*s!='-'&&*s!='0') break;
+    ++s;
+  }
+  for(;;) {
+    if(s==end||*s=='.'||xmlc_white_space(*s)) break;
+    ++len; ++s;
+  }
+  if(*s=='.') len+=fdiglenn(s,end-s);
+  return len;
+}
+
 static int tokcntn(char *s,int n) {
   char *end=s+n;
   int u,cnt=0;
@@ -223,10 +258,96 @@ struct facets {
 #define PAT_TIME "-?"PAT_TIME0 PAT_ZONE"?"
 #define PAT_DATE_TIME "-?"PAT_DATE0"T"PAT_TIME0 PAT_ZONE"?"
 
+static int chki(struct facets *fp,char *s,int n) {
+  int ok=1; long val=atol(s);
+  if(fp->set&(1<<FCT_MIN_EXCLUSIVE)) ok=ok&&val>atol(fp->minExclusive);
+  if(fp->set&(1<<FCT_MIN_INCLUSIVE)) ok=ok&&val>=atol(fp->minInclusive);
+  if(fp->set&(1<<FCT_MAX_INCLUSIVE)) ok=ok&&val<=atol(fp->maxInclusive);
+  if(fp->set&(1<<FCT_MAX_EXCLUSIVE)) ok=ok&&val<atol(fp->maxExclusive);
+  return ok;
+}
+
+static int chkd(struct facets *fp,char *s,int n) {
+  int ok=1; double val=atof(s);
+  if(fp->set&(1<<FCT_MIN_EXCLUSIVE)) ok=ok&&val>atof(fp->minExclusive);
+  if(fp->set&(1<<FCT_MIN_INCLUSIVE)) ok=ok&&val>=atof(fp->minInclusive);
+  if(fp->set&(1<<FCT_MAX_INCLUSIVE)) ok=ok&&val<=atof(fp->maxInclusive);
+  if(fp->set&(1<<FCT_MAX_EXCLUSIVE)) ok=ok&&val<atof(fp->maxExclusive);
+  return ok;
+}
+
 int xsd_allows(char *typ,char *ps,char *s,int n) {
   int ok=1,length;
-  struct facets fct;
-  fct.set=0; fct.npat=0;
+  int dt=strtab(typ,typtab,NTYP);
+  struct facets fct; fct.set=0; fct.npat=0;
+
+  switch(dt) {
+  case TYP_INTEGER:
+    fct.pattern[fct.npat++]=PAT_INTEGER;
+    break;
+  case TYP_POSITIVE_INTEGER: 
+    fct.pattern[fct.npat++]=PAT_POSITIVE;
+    dt=TYP_INTEGER; fct.set|=1<<FCT_MIN_INCLUSIVE;
+    fct.minInclusive="1"; 
+    break;
+  case TYP_NON_NEGATIVE_INTEGER: 
+    fct.pattern[fct.npat++]=PAT_NON_NEGATIVE;
+    dt=TYP_INTEGER; fct.set|=1<<FCT_MIN_INCLUSIVE;
+    fct.minInclusive="0";
+    break;
+  case TYP_NON_POSITIVE_INTEGER: 
+    fct.pattern[fct.npat++]=PAT_NON_POSITIVE;
+    dt=TYP_INTEGER; fct.set|=1<<FCT_MAX_INCLUSIVE;
+    fct.maxInclusive="0";
+    break;
+  case TYP_NEGATIVE_INTEGER: 
+    fct.pattern[fct.npat++]=PAT_NEGATIVE;
+    dt=TYP_INTEGER; fct.set|=FCT_IBOUNDS;
+    dt=TYP_INTEGER; fct.set|=1<<FCT_MAX_INCLUSIVE;
+    fct.maxInclusive="-1";
+    break;
+  case TYP_BYTE: 
+    fct.pattern[fct.npat++]=PAT_INTEGER;
+    dt=TYP_INTEGER; fct.set|=FCT_IBOUNDS;
+    fct.minInclusive="-128"; fct.maxInclusive="127";
+    break;
+  case TYP_UNSIGNED_BYTE: 
+    fct.pattern[fct.npat++]=PAT_NON_NEGATIVE;
+    dt=TYP_INTEGER; fct.set|=FCT_IBOUNDS;
+    fct.minInclusive="0"; fct.maxInclusive="255";
+    break;
+  case TYP_SHORT: 
+    fct.pattern[fct.npat++]=PAT_INTEGER;
+    dt=TYP_INTEGER; fct.set|=FCT_IBOUNDS;
+    fct.minInclusive="-32768"; fct.maxInclusive="32767";
+    break;
+  case TYP_UNSIGNED_SHORT: 
+    fct.pattern[fct.npat++]=PAT_NON_NEGATIVE;
+    dt=TYP_INTEGER; fct.set|=FCT_IBOUNDS;
+    fct.minInclusive="0"; fct.maxInclusive="65535";
+    break;
+  case TYP_INT: 
+    fct.pattern[fct.npat++]=PAT_INTEGER;
+    dt=TYP_INTEGER; fct.set|=FCT_IBOUNDS;
+    fct.minInclusive="-2147483648"; fct.maxInclusive="2147483647";
+    break;
+  case TYP_UNSIGNED_INT: 
+    fct.pattern[fct.npat++]=PAT_NON_NEGATIVE;
+    dt=TYP_INTEGER; fct.set|=FCT_IBOUNDS;
+    fct.minInclusive="0"; fct.maxInclusive="4294967295";
+    break;
+  case TYP_LONG: 
+    fct.pattern[fct.npat++]=PAT_INTEGER;
+    dt=TYP_INTEGER; fct.set|=FCT_IBOUNDS;
+    fct.minInclusive="-9223372036854775808"; fct.maxInclusive="9223372036854775807";
+    break;
+  case TYP_UNSIGNED_LONG: 
+    fct.pattern[fct.npat++]=PAT_NON_NEGATIVE;
+    dt=TYP_INTEGER; fct.set|=FCT_IBOUNDS;
+    fct.minInclusive="0"; fct.maxInclusive="18446744073709551615";
+    break;
+  }
+
   { int n;
     while((n=strlen(ps))) {
       char *key=ps,*val=key+n+1,*end,i; 
@@ -259,24 +380,30 @@ int xsd_allows(char *typ,char *ps,char *s,int n) {
     }
   }
 
+
   fct.whiteSpace=WS_COLLAPSE; 
-  length=-1;
-  switch(strtab(typ,typtab,NTYP)) {
+  length=INT_MAX;
+  switch(dt) {
  /*primitive*/
   case TYP_STRING: fct.whiteSpace=WS_PRESERVE;
     length=u_strnlen(s,n); 
     break;
-  case TYP_BOOLEAN: length=-1;
+  case TYP_BOOLEAN:
     fct.pattern[fct.npat++]="true|false|1|0";
     break;
   case TYP_DECIMAL: 
     fct.pattern[fct.npat++]=PAT_DECIMAL;
+    if(fct.set&(1<<FCT_FRACTION_DIGITS)) ok=ok&&fdiglenn(s,n)<=fct.fractionDigits;
+    if(fct.set&(1<<FCT_TOTAL_DIGITS)) ok=ok&&diglenn(s,n)<=fct.totalDigits;
+    if(fct.set&FCT_BOUNDS) ok=ok&chkd(&fct,s,n);
     break;
   case TYP_FLOAT: 
     fct.pattern[fct.npat++]=PAT_FLOATING;
+    if(fct.set&FCT_BOUNDS) ok=ok&chkd(&fct,s,n);
     break;
   case TYP_DOUBLE:
     fct.pattern[fct.npat++]=PAT_FLOATING;
+    if(fct.set&FCT_BOUNDS) ok=ok&chkd(&fct,s,n);
     break;
   case TYP_DURATION: 
     fct.pattern[fct.npat++]=PAT_DURATION;
@@ -373,43 +500,8 @@ int xsd_allows(char *typ,char *ps,char *s,int n) {
     length=tokcntn(s,n);
     break;
   case TYP_INTEGER:
-    fct.pattern[fct.npat++]=PAT_INTEGER;
-    break;
-  case TYP_POSITIVE_INTEGER: 
-    fct.pattern[fct.npat++]=PAT_POSITIVE;
-    break;
-  case TYP_NON_NEGATIVE_INTEGER: 
-    fct.pattern[fct.npat++]=PAT_NON_NEGATIVE;
-    break;
-  case TYP_NON_POSITIVE_INTEGER: 
-    fct.pattern[fct.npat++]=PAT_NON_POSITIVE;
-    break;
-  case TYP_NEGATIVE_INTEGER: 
-    fct.pattern[fct.npat++]=PAT_NEGATIVE;
-    break;
-  case TYP_BYTE: 
-    fct.pattern[fct.npat++]=PAT_INTEGER;
-    break;
-  case TYP_UNSIGNED_BYTE: 
-    fct.pattern[fct.npat++]=PAT_NON_NEGATIVE;
-    break;
-  case TYP_SHORT: 
-    fct.pattern[fct.npat++]=PAT_INTEGER;
-    break;
-  case TYP_UNSIGNED_SHORT: 
-    fct.pattern[fct.npat++]=PAT_NON_NEGATIVE;
-    break;
-  case TYP_INT: 
-    fct.pattern[fct.npat++]=PAT_INTEGER;
-    break;
-  case TYP_UNSIGNED_INT: 
-    fct.pattern[fct.npat++]=PAT_NON_NEGATIVE;
-    break;
-  case TYP_LONG: 
-    fct.pattern[fct.npat++]=PAT_INTEGER;
-    break;
-  case TYP_UNSIGNED_LONG: 
-    fct.pattern[fct.npat++]=PAT_NON_NEGATIVE;
+    if(fct.set&(1<<FCT_TOTAL_DIGITS)) ok=ok&&diglenn(s,n)<=fct.totalDigits;
+    if(fct.set&FCT_BOUNDS) ok=ok&&chki(&fct,s,n);
     break;
   case NTYP:
     { char *buf=(char*)calloc(strlen(ERR_INVALID_DATATYPE)+strlen(typ)+1,sizeof(char));
@@ -422,9 +514,9 @@ int xsd_allows(char *typ,char *ps,char *s,int n) {
 
   while(fct.npat--) ok=ok&&match[fct.whiteSpace](fct.pattern[fct.npat],s,n);
 
-  if(FCT_SET(LENGTH)) ok=ok&&length==fct.length;
-  if(FCT_SET(MAX_LENGTH)) ok=ok&&length<=fct.maxLength;
-  if(FCT_SET(MIN_LENGTH)) ok=ok&&length>=fct.minLength;
+  if(fct.set&(1<<FCT_LENGTH)) ok=ok&&length==fct.length;
+  if(fct.set&(1<<FCT_MAX_LENGTH)) ok=ok&&length<=fct.maxLength;
+  if(fct.set&(1<<FCT_MIN_LENGTH)) ok=ok&&length>=fct.minLength;
 
   return ok;
 }

@@ -1,6 +1,8 @@
 start = element typetest {(types|values)*}
 types = element types { 
-    attribute datetime { xsd:dateTime } ?
+    empty
+  , attribute decimal { xsd:decimal {fractionDigits="2" totalDigits="7"} } ?
+  , attribute datetime { xsd:dateTime } ?
   , attribute date { xsd:date } ?
   , attribute time { xsd:time } ?
   , attribute year { xsd:gYear } ?
@@ -10,9 +12,11 @@ types = element types {
   , attribute monthday { xsd:gMonthDay } ?
   , attribute duration { xsd:duration } ?
   , attribute base64binary { xsd:base64Binary {length="4" } } ?
+  , attribute int { xsd:int {minInclusive="2"} } ?
 }
   
 values = element values {
-  attribute hexbinary { xsd:hexBinary " abc123a " } ?
+  attribute decimal { xsd:decimal " -123.456 " } ?
+  , attribute hexbinary { xsd:hexBinary " abc123a " } ?
   , attribute base64binary { xsd:base64Binary " ABCDEE== " } ?
 }

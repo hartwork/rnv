@@ -75,7 +75,7 @@ static void error(char *msg) {
       int i;
       fprintf(stderr,"\nexpected:");
       for(i=0;i!=rnx_n_exp;++i) {
-	fprintf(stderr,"\n\t%s",s=p2str(rnx_exp[i]));
+	fprintf(stderr,"\n\t%s",s=rnx_p2str(rnx_exp[i]));
 	free(s);
       }
     }

@@ -6,6 +6,7 @@
 #include <stdarg.h> /*va_list,va_start,va_end*/
 #include "er.h"
 #include "rn.h"
+#include "rnx.h"
 #include "rnd.h"
 
 #define LEN_F 1024
@@ -154,7 +155,7 @@ static void loops(void) {
   for(;;) {
     if(loop(p)) {
       if(i==0) error(ER_LOOPST); else {
-	char *s=nc2str(nc);
+	char *s=rnx_nc2str(nc);
 	error(ER_LOOPEL,s);
 	free(s);
       }
@@ -206,7 +207,7 @@ static void ctypes(void) {
       Element(p,nc,p1);
       ctype(p1);
       if(!contentType(p1)) {
-	char *s=nc2str(nc);
+	char *s=rnx_nc2str(nc);
 	error(ER_CTYPE,s);
 	free(s);
       }
@@ -340,18 +341,18 @@ static void path(int p,int nc) {
   case P_INTERLEAVE: Interleave(p,p1,p2); goto BINARY;
   case P_GROUP: Group(p,p1,p2); goto BINARY;
   case P_DATA_EXCEPT: DataExcept(p,p1,p2); 
-    if(bad_data_except(p2)) {char *s=nc2str(nc); error(ER_BADEXPT,s); free(s);}
+    if(bad_data_except(p2)) {char *s=rnx_nc2str(nc); error(ER_BADEXPT,s); free(s);}
     goto BINARY;
   BINARY: path(p1,nc); path(p2,nc); break;
 
   case P_ONE_OR_MORE: OneOrMore(p,p1); 
-    if(bad_one_or_more(p1,0)) {char *s=nc2str(nc); error(ER_BADMORE,s); free(s);}
+    if(bad_one_or_more(p1,0)) {char *s=rnx_nc2str(nc); error(ER_BADMORE,s); free(s);}
     goto UNARY;
   case P_LIST: List(p,p1); 
-    if(bad_list(p1)) {char *s=nc2str(nc); error(ER_BADLIST,s); free(s);}
+    if(bad_list(p1)) {char *s=rnx_nc2str(nc); error(ER_BADLIST,s); free(s);}
     goto UNARY;
   case P_ATTRIBUTE: Attribute(p,nc1,p1); 
-    if(bad_attribute(p1)) {char *s=nc2str(nc),*s1=nc2str(nc1); error(ER_BADATTR,s1,s); free(s1); free(s);}
+    if(bad_attribute(p1)) {char *s=rnx_nc2str(nc),*s1=rnx_nc2str(nc1); error(ER_BADATTR,s1,s); free(s1); free(s);}
     goto UNARY;
   UNARY: path(p1,nc); break; 
 

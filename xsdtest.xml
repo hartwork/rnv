@@ -62,11 +62,31 @@
     />
 
   <types
+    decimal=" 123.4567 "
+    />
+
+  <types
+    decimal="  0000123.4570000   "
+    int="5"
+    />
+
+  <types
+    decimal=" -123.457890 "
+    int="3"
+    />
+
+  <types
     base64binary="ABCDEE=="
     />
 
   <values
     hexbinary=" ABc123A "
     base64binary=" ABCDEE== "
+    />
+
+  <values
+    />
+
+  <values
     />
 </typetest>

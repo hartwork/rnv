@@ -129,8 +129,6 @@ extern int newElement(int nc,int p1);
 extern int newAfter(int p1,int p2);
 extern int newRef(void);
 
-extern char *p2str(int nc);
-
 extern int rn_groupable(int p1,int p2);
 extern int rn_one_or_more(int p);
 extern int rn_group(int p1,int p2);
@@ -145,8 +143,6 @@ extern int newNsName(int uri);
 extern int newNameClassExcept(int nc1,int nc2);
 extern int newNameClassChoice(int nc1,int nc2);
 extern int newDatatype(int lib,int typ);
-
-extern char *nc2str(int nc);
 
 extern int rn_i_ps(void);
 extern void rn_add_pskey(char *s);

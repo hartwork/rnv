@@ -42,7 +42,7 @@ static void dump(void) {
   int p=1; char *s;
   while(P_TYP(p)) {
     if(!P_IS(p,VOID)) {
-      fprintf(stderr,"%c%4i: %s\n",marked(p)?'+':' ',p,s=p2str(p));
+      fprintf(stderr,"%c%4i: %s\n",marked(p)?'+':' ',p,s=rnx_p2str(p));
       free(s);
     }
     ++p;

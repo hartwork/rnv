@@ -9,4 +9,7 @@ extern void rnx_clear(void);
 extern int rnx_n_exp, *rnx_exp;
 extern void rnx_expected(int p);
 
+extern char *rnx_p2str(int p);
+extern char *rnx_nc2str(int nc);
+
 #endif
