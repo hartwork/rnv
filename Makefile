@@ -1,6 +1,6 @@
 # $Id$
 #
-VERSION=1.0.8
+VERSION=1.0.9
 CC=cc
 EXPAT_H="<expat.h>"
 UNISTD_H="<unistd.h>"
