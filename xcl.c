@@ -45,7 +45,7 @@ static int lastline,lastcol,level;
 static int ok;
 
 /* Expat does not normalize strings on input */
-static char *text; static int len_t;
+static char *text; static int len_txt;
 static int n_t;
 
 #define err(msg) (*er_vprintf)(msg"\n",ap);
@@ -95,13 +95,13 @@ static void init(void) {
     rnx_init();
     drv_add_dtl(DXL_URL,&dxl_equal,&dxl_allows);
     drv_add_dtl(DSL_URL,&dsl_equal,&dsl_allows);
-    text=(char*)m_alloc(len_t=LEN_T,sizeof(char));
+    text=(char*)m_alloc(len_txt=LEN_T,sizeof(char));
     windup();
   }
 }
 
 static void clear(void) {
-  if(len_t>LIM_T) {m_free(text); text=(char*)m_alloc(len_t=LEN_T,sizeof(char));}
+  if(len_txt>LIM_T) {m_free(text); text=(char*)m_alloc(len_txt=LEN_T,sizeof(char));}
   windup();
 }
 
@@ -142,10 +142,10 @@ static void end_element(void *userData,const char *name) {
 
 static void characters(void *userData,const char *s,int len) {
   if(current!=rn_notAllowed) {
-    int newlen_t=n_t+len+1;
-    if(newlen_t<=LIM_T&&LIM_T<len_t) newlen_t=LIM_T;
-    else if(newlen_t<len_t) newlen_t=len_t;
-    if(len_t!=newlen_t) text=(char*)m_stretch(text,len_t=newlen_t,n_t,sizeof(char));
+    int newlen_txt=n_t+len+1;
+    if(newlen_txt<=LIM_T&&LIM_T<len_txt) newlen_txt=LIM_T;
+    else if(newlen_txt<len_txt) newlen_txt=len_txt;
+    if(len_txt!=newlen_txt) text=(char*)m_stretch(text,len_txt=newlen_txt,n_t,sizeof(char));
     memcpy(text+n_t,s,len); n_t+=len; text[n_t]='\0'; /* '\0' guarantees that the text is bounded, and strto[ld] work for data */
   }
 }
