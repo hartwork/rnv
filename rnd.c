@@ -54,7 +54,7 @@ static int deref(int p) {
 
 static void flatten(p) { if(!marked(p)) {flat[n_f++]=p; mark(p);}}
 
-void rnd_deref(int start) {
+int rnd_deref(int start) {
   int p,p1,p2,nc,i,changed;
 
   flat=(int*)calloc(len_f=LEN_F,sizeof(int)); n_f=0;
@@ -105,6 +105,7 @@ void rnd_deref(int start) {
   for(i=0;i!=n_f;++i) unmark(flat[i]);
   for(i=0;i!=n_r;++i) {p=refs[i]; rn_pattern[p][1]=0; unmark(p);}
   free(refs);
+  return start;
 }
 
 static int loop(int p) {
@@ -429,6 +430,9 @@ void rnd_release() {
 
 /*
  * $Log$
+ * Revision 1.8  2003/12/09 19:47:35  dvd
+ * start dereferenced
+ *
  * Revision 1.7  2003/12/09 19:38:44  dvd
  * failed to compress grammar
  *

@@ -11,7 +11,7 @@ static int parse(struct rnc_source *sp) {
   rnc_close(sp); if(rnc_errors(sp)) return 0;
 
   fprintf(stderr,"dereferencing\n");
-  rnd_deref(start); if(rnd_errors()) return 0;
+  start=rnd_deref(start); if(rnd_errors()) return 0;
 
   fprintf(stderr,"checking restrictions\n");
   rnd_restrictions(); if(rnd_errors()) return 0;
@@ -33,6 +33,7 @@ int main(int argc,char **argv) {
   sp=rnc_alloc();
   if(*(++argv)) {
     do {
+      fprintf(stderr,"\n*** processing '%s'\n",*argv);
       if(rnc_open(sp,*argv)!=-1) if(!parse(sp)) goto ERRORS;
       rnc_close(sp);
     } while(*(++argv));
