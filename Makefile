@@ -67,7 +67,7 @@ rx.o
 .c.o:
 	${CC} ${CFLAGS} -c -o $@ $<
 
-all: rnv
+all: rnv arx
 
 rnv: xcl.o ${LIBRNV}
 	${CC} ${LFLAGS} -o rnv xcl.o ${LIBRNV} ${LIB}

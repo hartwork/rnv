@@ -70,7 +70,7 @@ static char *value;
 static XML_Parser expat=NULL;
 static int current,previous;
 static int mixed=0;
-static int ok;
+static int ok,valid;
 static char *text; static int len_t;
 static int n_t;
 
@@ -394,9 +394,9 @@ static void validate(int start,int fd) {
     len=read(fd,buf,BUFSIZ);
     if(len<0) {
       fprintf(stderr,"error (%s)\n",xml,strerror(errno));
-      ok=0; break;
+      valid=ok=0; break;
     }
-    if(!XML_ParseBuffer(expat,len,len==0)) ok=0;
+    if(!XML_ParseBuffer(expat,len,len==0)) valid=ok=0;
     if(!ok) break;
     if(len==0) break;
   }
@@ -427,7 +427,7 @@ int main(int argc,char **argv) {
 
   if(!(*(argv)&&*(argv+1))) {usage(); return 1;}
 
-  xml=*(argv++);
+  xml=*(argv++); valid=1;
   if((fd=open(xml,O_RDONLY))==-1) {
     fprintf(stderr,"error (%s): %s\n",xml,strerror(errno));
     return EXIT_FAILURE;
@@ -438,8 +438,8 @@ int main(int argc,char **argv) {
       int i;
       for(i=0;i!=i_r;++i) {
 	switch(rules[i][0]) {
-        case VALID: ok=1; validate(rules[i][1],fd=open(xml,O_RDONLY)); close(fd); break;
-	case INVAL: ok=1; validate(rules[i][1],fd=open(xml,O_RDONLY)); close(fd); ok=!ok; break;
+        case VALID: if((ok=valid)) {ok=1; validate(rules[i][1],fd=open(xml,O_RDONLY)); close(fd);} break;
+	case INVAL: if((ok=valid)) {ok=1; validate(rules[i][1],fd=open(xml,O_RDONLY)); close(fd); ok=valid&&!ok;} break;
 	case MATCH: ok=rx_match(string+rules[i][1],xml,strlen(xml)); break;
 	case NOMAT: ok=!rx_match(string+rules[i][1],xml,strlen(xml)); break;
 	default: assert(0);

@@ -6,7 +6,7 @@ let current_compiler = "rnv"
 let s:cpo_save = &cpo
 set cpo-=C
 
-setlocal makeprg=rnv\ -q\ `uri2rnc.pl\ %`\ %
+setlocal makeprg=rnv\ -q\ `arx\ %\ /home/dvd/work/RNG-C/arx.conf`\ %
 setlocal errorformat=error\ (%f\\,%l\\,%c):\ %m
 
 let &cpo = s:cpo_save
