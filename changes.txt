@@ -2,7 +2,7 @@
 
 1.3.0
 dvd: pattern pools are now one-dimensional, pointer arithmetics is a little more
-     complex, but performance is memory use is better; besides, this makes pattern
+     complex, but performance and memory use are better; besides, this makes pattern
      datatype extensible, which is a good thing
 
 1.2.1 Fri Dec 26 15:50:49 AMT 2003

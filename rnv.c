@@ -39,7 +39,7 @@ extern int rx_compact;
 
 static void (*xsdverror0)(int erno,va_list ap);
 
-static int explain=1;
+static int peipe,explain;
 static char *xml;
 static XML_Parser expat=NULL;
 static int start,current,previous;
@@ -247,6 +247,14 @@ static void characters(void *userData,const char *s,int len) {
   }
 }
 
+static int pipeout(void *buf,int len) {
+  int ofs=0,iw,lenw=len;
+  for(;;) {
+    if((iw=write(1,buf+ofs,lenw))==-1) {error(RNVER_IO,strerror(errno)); return 0;}
+    ofs+=iw; lenw-=iw; if(lenw==0) return 1;
+  }
+}
+
 static int validate(int fd) {
   void *buf; int len;
   previous=current=start;
@@ -261,6 +269,7 @@ static int validate(int fd) {
       error(RNVER_IO,strerror(errno));
       goto ERROR;
     }
+    if(peipe) peipe=peipe&&pipeout(buf,len);
     if(len==0) {
       if(!XML_ParseBuffer(expat,len,1)) goto PARSE_ERROR;
       break;
@@ -274,18 +283,20 @@ static int validate(int fd) {
 
 PARSE_ERROR:
   error(RNVER_XML,XML_ErrorString(XML_GetErrorCode(expat)));
+  while(peipe&&(len=read(fd,buf,BUFSIZ))!=0) peipe=peipe&&pipeout(buf,len);
 ERROR:
   return 0;
 }
 
 static void version(void) {fprintf(stderr,"rnv version %s\n",RNV_VERSION);}
-static void usage(void) {fprintf(stderr,"usage: rnv {-[qsvh?]} schema.rnc {document.xml}\n");}
+static void usage(void) {fprintf(stderr,"usage: rnv {-[qpsvh?]} schema.rnc {document.xml}\n");}
 
 int main(int argc,char **argv) {
   int ok;
 
   init();
 
+  peipe=0; explain=1;
   while(*(++argv)&&**argv=='-') {
     int i=1;
     for(;;) {
@@ -294,6 +305,7 @@ int main(int argc,char **argv) {
       case 'h': case '?': usage(); return 1;
       case 'v': version(); break;
       case 's': drv_compact=1; rx_compact=1; break;
+      case 'p': peipe=1; break;
       case 'q': explain=0; break;
       default: fprintf(stderr,"unknown option '-%c'\n",*(*argv+i)); break;
       }
@@ -316,6 +328,7 @@ int main(int argc,char **argv) {
 	  ok=0;
 	  continue;
 	}
+	if(explain) fprintf(stderr,"%s\n",xml);
 	ok=validate(fd)&&ok;
 	close(fd);
 	clear();

@@ -3,7 +3,7 @@
 RNV -- Relax NG Compact Syntax Validator in C
 </title>
 <subtitle>
-Version 1.2
+Version 1.3
 </subtitle>
 
 
@@ -15,6 +15,16 @@ Version 1.2
 RNV is a part of an on-going work, and the current code can have bugs and shortcomings; however, it validates documents against a number of grammars. I use it.
 </para>
  </abstract>
+
+<section>
+<title>
+News since 1.2
+</title>
+
+<para>
+This release is mostly dedicated to performance and convenience enhancements. Pattern pools are now one-dimensional arrays, which conserves space and gives better performance. Pass-through mode has been added to facilitate use of rnv in pipes.
+</para>
+</section>
 
 <section>
 <title>
@@ -86,7 +96,7 @@ The command-line syntax is
 </para>
 <synopsis>
 
-        rnv {-q|-s|-v|-h} grammar.rnc {document1.xml}
+        rnv {-q|-p|-s|-v|-h} grammar.rnc {document1.xml}
 
 </synopsis>
 
@@ -99,7 +109,15 @@ If no documents are specified, <application>RNV</application> attempts to read t
 <option>-q</option>
 </term>
 <listitem>
-in error messages, expected elements and attributes are not listed.
+names of files being processed are not printed; in error messages, expected elements and attributes are not listed;
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<option>-p</option>
+</term>
+<listitem>
+xml input is copied to the output;
 </listitem>
 </varlistentry>
 <varlistentry>
