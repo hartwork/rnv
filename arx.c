@@ -194,8 +194,7 @@ static void getcc(void) {
     cc=i_b==len_b?-1:((unsigned char*)buf)[i_b++];
     if(cc==-1) {if(cc0=='\n') break; else cc='\n';}
     if(cc=='\n' && cc0=='\r') continue;
-    if(cc0=='\n' || cc0=='\r') {++line; col=0;}
-    if(cc>=' ') ++col;
+    if(cc0=='\n' || cc0=='\r') {++line; col=0;} else ++col;
     break;
   }
 }
