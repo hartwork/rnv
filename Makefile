@@ -109,7 +109,7 @@ rx.o
 .SUFFIXES: .c .o
 
 .c.o:
-	${CC} ${CFLAGS} -c -o $@ $<
+	${CC} ${CFLAGS} -x c++ -c -o $@ $<
 
 all: rnv arx rvp xsdck
 

@@ -68,7 +68,7 @@ static void verror_handler(int erno,va_list ap) {
 	    rnx_expected(previous,req);
 	    if(i==rnx_n_exp) continue;
 	    if(rnx_n_exp>nexp) break;
-	    (*er_printf)(req?"required:\n":"allowed:\n");
+	    (*er_printf)((char*)(req?"required:\n":"allowed:\n"));
 	    for(;i!=rnx_n_exp;++i) {
 	      (*er_printf)("\t%s\n",s=rnx_p2str(rnx_exp[i]));
 	      m_free(s);
