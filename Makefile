@@ -17,7 +17,7 @@ CFLAGS=${INC} ${DEF} ${WARN} ${OPT}
 LFLAGS=${OPT} ${LBL}
 
 LIBEXPAT=-lexpat
-LIB=${LIBEXPAT} -lm
+LIB=${LIBEXPAT}
 
 LIBRNVA=librnv.a
 LIBRNVSO=librnv.so

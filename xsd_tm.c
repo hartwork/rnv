@@ -3,7 +3,6 @@
 #include <stdlib.h> /*strtol*/
 #include <limits.h>
 #include <string.h> /*strlen*/
-#include <math.h> /*rint*/
 #include <assert.h>
 #include "xsd_tm.h"
 
@@ -73,8 +72,8 @@ void xsd_mktmn(struct xsd_tm *tmp,char *fmt,char *s,int n) {
     }
     ++s;
   }
-  tmp->mics=(int)rint((se-floor(se))*1000000);
-  tmp->secs=(int)floor(se)+60*(mi+60*hr);
+  tmp->mics=(int)((se-(int)se)*1000000+0.5);
+  tmp->secs=(int)se+60*(mi+60*hr);
   tmp->days=ymd2ds(yr,mo,dy);
   if((tmp->tz=(zh!=15))) addsecs(tmp,60*(zm+60*zh));
 }
