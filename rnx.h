@@ -12,6 +12,4 @@ extern void rnx_expected(int p);
 extern char *rnx_p2str(int p);
 extern char *rnx_nc2str(int nc);
 
-extern int rnx_isany(int p);
-
 #endif

@@ -37,7 +37,7 @@ comments start with # and continue till end of line
 #include "rnc.h"
 #include "rnd.h"
 #include "rnv.h"
-#include "rnx.h"
+#include "rn.h" /* to implement isany */
 #include "rx.h"
 
 extern int rn_notAllowed;
@@ -376,12 +376,84 @@ static void flush_text(void) {
   text[n_t=0]='\0';
 }
 
+/*
+isany::Pattern->Bool
+isany p =
+  let
+    isanycontent
+      p@(OneOrMore
+	  (Choice
+	    (Choice
+	      (Element AnyName p1)
+	      (Attribute AnyName Text))
+	    Text)) = p == p1
+    isanycontent _ = False
+    isanymixed (OneOrMore (Choice (Element AnyName p1) Text)) = isanycontent p1
+    isanymixed _ = False
+  in
+     case p of
+       (After p1 Empty) -> isanymixed p1
+       (After p1 p2) -> isanymixed p1 && isany p2
+       _ -> False
+*/
+
+static int isanycont(int p) {
+  int p0,nc,p1,p2,i,res,flat[3];
+  p0=p; if(!RN_P_IS(p0,ONE_OR_MORE)) return 0;
+  rn_OneOrMore(p0,p1);
+  p0=p1; if(!RN_P_IS(p0,CHOICE)) return 0;
+  rn_Choice(p0,p1,p2); flat[0]=p2;
+  p0=p1; if(!RN_P_IS(p0,CHOICE)) return 0;
+  rn_Choice(p0,p1,p2); flat[1]=p1; flat[2]=p2;
+  res=0;
+  for(i=0;i!=3;++i) {
+    p0=flat[i];
+    switch(RN_P_TYP(p0)) {
+    case RN_P_ELEMENT: rn_Element(p0,nc,p1); 
+      if(!(RN_NC_IS(nc,ANY_NAME)&&p==p1)) return 0;
+      res|=1; break;
+    case RN_P_ATTRIBUTE: rn_Attribute(p0,nc,p1); 
+      if(!(RN_NC_IS(nc,ANY_NAME)&&p1==rn_text)) return 0;
+      res|=2; break;
+    case RN_P_TEXT: break;
+    default: return 0;
+    }
+  }
+  return res==3;
+}
+
+static int isanymix(int p) {
+  int p0,nc,p1,p2,i,res,flat[2];
+  p0=p; if(!RN_P_IS(p0,ONE_OR_MORE)) return 0;
+  rn_OneOrMore(p0,p1);
+  p0=p1; if(!RN_P_IS(p0,CHOICE)) return 0;
+  rn_Choice(p0,p1,p2); flat[0]=p1; flat[1]=p2;
+  res=0;
+  for(i=0;i!=2;++i) {
+    p0=flat[i];
+    switch(RN_P_TYP(p0)) {
+    case RN_P_ELEMENT: rn_Element(p0,nc,p1); 
+      if(!(RN_NC_IS(nc,ANY_NAME)&& isanycont(p1))) return 0;
+      res|=1; break;
+    case RN_P_TEXT: break;
+    default: return 0;
+    }
+  }
+  return res==1;
+}
+
+static int isany(int p) {
+  int p1,p2;
+  if(!RN_P_IS(p,AFTER)) return 0;
+  rn_After(p,p1,p2); return isanymix(p1)&&(p2==rn_empty||isany(p2));
+}
+
 static void start_element(void *userData,const char *name,const char **attrs) {
   if(current!=rn_notAllowed) { 
     mixed=1;
     flush_text();
     ok=rnv_start_tag(&current,&previous,(char*)name,(char**)attrs)&&ok;
-    mixed=0; any=any||rnx_isany(current);
+    mixed=0; any=any||isany(current);
   }
 }
 
