@@ -26,12 +26,12 @@
 #define RNV_LEN_T 1024
 #define RNV_LIM_T 16384
 
-#define RX_LEN_P 1024
-#define RX_PRIME_P 0x3fd
+#define RX_LEN_P 256
+#define RX_PRIME_P 0xfb
 #define RX_LIM_P 4*RX_LEN_P
 #define RX_LEN_R RX_LEN_P
 #define RX_PRIME_R RX_PRIME_P
 #define RX_LEN_2 32
-#define RX_PRIME_2 0xf1
+#define RX_PRIME_2 0x1f
 
 #endif

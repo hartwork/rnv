@@ -94,16 +94,17 @@ install: rnv-${VERSION}.zip readme.txt changes.txt
 
 # DO NOT DELETE
 
-rnv.o: xmlc.h rn.h rnc.h rnd.h rnx.h drv.h ll.h
+rnv.o: xmlc.h rn.h rnc.h rnd.h rnx.h drv.h rx.h ll.h
 rn.o: strops.h ht.h ll.h rn.h
 rnc.o: u.h xmlc.h strops.h er.h rn.h sc.h rnc.h
 rnd.o: er.h rn.h rnd.h
 rnx.o: rn.h ll.h rnx.h
 drv.o: xmlc.h strops.h ht.h rn.h er.h xsd.h ll.h drv.h
-xsd.o: strops.h xsd.h
+xsd.o: strops.h rx.h xsd.h
 er.o: er.h
 sc.o: ll.h sc.h
 ht.o: ht.h
 u.o: u.h
-xmlc.o: xmlc.h
+xmlc.o: u.h xmlc.h
 strops.o: xmlc.h strops.h
+rx.o: u.h xmlc.h strops.h ht.h ll.h rx.h rx_cls_u.c rx_cls_ranges.c

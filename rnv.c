@@ -13,6 +13,7 @@
 #include "rnd.h"
 #include "rnx.h"
 #include "drv.h"
+#include "rx.h"
 #include "ll.h"
 
 #define LEN_T RNV_LEN_T
@@ -245,7 +246,7 @@ int main(int argc,char **argv) {
       case '\0': goto END_OF_OPTIONS;
       case 'h': case '?': usage(); return 1;
       case 'v': version(); break;
-      case 's': drv_compact=1; break;
+      case 's': drv_compact=1; rx_compact=1; break;
       case 'q': explain=0; break;
       default: fprintf(stderr,"unknown option '-%c'\n",*(*argv+i)); break;
       }

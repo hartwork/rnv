@@ -72,7 +72,7 @@ static int accept_p(void) {
     if(i_p==len_p) { 
       int (*newpattern)[P_SIZE]=(int (*)[P_SIZE])calloc(len_p*=2,sizeof(int[P_SIZE])); 
       memcpy(newpattern,pattern,i_p*sizeof(int[P_SIZE])); free(pattern); 
-      newpattern=pattern; 
+      pattern=newpattern;
     } 
   } 
   memset(pattern[i_p],0,sizeof(int[P_SIZE])); 
@@ -146,7 +146,7 @@ static int hash_2(int x) {return r2p[x][0]*PRIME_2;}
 
 static int add_r(char *rx) {
   int len=strlen(rx);
-  if(i_r+len>len_r) {
+  if(i_r+len>=len_r) {
     char *newregex=(char*)calloc(len_r=(i_r+len)*2,sizeof(char));
     memcpy(newregex,regex,i_r*sizeof(char)); free(regex);
     regex=newregex;
@@ -426,7 +426,7 @@ static int compile(char *rx) {
   int r=0,p=0,d_r;
   d_r=add_r(rx);
   if((r=ht_get(&ht_r,i_r))==-1) {
-    if(i_p>=LIM_P) {clear(); d_r=add_r(rx);}
+    if(rx_compact&&i_p>=LIM_P) {clear(); d_r=add_r(rx);}
     ht_put(&ht_r,r=i_r);
     i_r+=d_r;
     bind(r); p=expression(); if(sym!=SYM_END) error();
