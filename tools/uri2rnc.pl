@@ -22,15 +22,20 @@ my $ANY=<<END;
 any = (element * {any}|attribute * {text}|text)*
 END
 
+my $XML=<<END;
+start = element * {any}
+$ANY
+END
+
 my $DOCBOOK=<<END;
 start = element (book|article|part|chapter|section) { any }
 $ANY
 END
 
-my $XSLT=<<END;
+my $NOTXSLT=<<END;
 default namespace xsl = "http://www.w3.org/1999/XSL/Transform"
-start = element (stylesheet|transform) {any}
-$ANY
+start = element *-xsl:* {not-xsl}
+any = (element *-xsl:* {any}|attribute * {text}|text)*
 END
 
 my $RELAXNG=<<END;
@@ -41,10 +46,11 @@ END
 
 my $type;
 for($ARGV[0]) {
-  $type=( 0
-  or valid($_,$DOCBOOK) and "docbook"
-  or valid($_,$XSLT)	and "xslt"
-  or valid($_,$RELAXNG) and "relaxng"
+  $type=(
+  valid($_,$XML) 
+    and (valid($_,$DOCBOOK) and "docbook"
+      or!valid($_,$NOTXSLT) and "xslt"
+      or valid($_,$RELAXNG) and "relaxng")
   or /\.x?ht(ml?)?$/	and "xhtml"
   or /\.xsl$/		and "xslt"
   or /\.dbx$/ 		and "docbook"
