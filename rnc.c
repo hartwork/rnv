@@ -969,13 +969,13 @@ static int param(struct rnc_source *sp) {
 static int datatype(struct rnc_source *sp) {
   int dt=0;
   switch(CUR(sp).sym) {
-  case SYM_TOKEN: dt=rn_newDatatype(0,rn_dt_token); break;
-  case SYM_STRING: dt=rn_newDatatype(0,rn_dt_string); break;
+  case SYM_TOKEN: dt=rn_dt_token; break;
+  case SYM_STRING: dt=rn_dt_string; break;
   case SYM_QNAME:
     { char *s=CUR(sp).s; while(*s!=':') ++s; *(s++)='\0';
       dt=rn_newDatatype(dt2uri(sp,rn_newString(CUR(sp).s)),rn_newString(s));
     } break;
-  case SYM_LITERAL: dt=rn_newDatatype(0,rn_newString("token")); return dt;
+  case SYM_LITERAL: dt=rn_dt_token; return dt;
   }
   getsym(sp);
   return dt;
