@@ -15,8 +15,10 @@ extern void sc_clear(struct sc_stack *stp);
 
 extern void sc_open(struct sc_stack *stp);
 extern void sc_lock(struct sc_stack *stp);
-extern int sc_locked(struct sc_stack *stp);
 extern void sc_close(struct sc_stack *stp);
+
+extern int sc_void(struct sc_stack *sp);
+extern int sc_locked(struct sc_stack *stp);
 
 extern int sc_find(struct sc_stack *stp,int key); /* returns 0 if not found, index in tab otherwise */
 extern int sc_add(struct sc_stack *stp,int key,int val,int aux); /* returns index for the new record */
@@ -25,6 +27,9 @@ extern int sc_add(struct sc_stack *stp,int key,int val,int aux); /* returns inde
 
 /* 
  * $Log$
+ * Revision 1.5  2003/12/06 00:55:14  dvd
+ * parses all grammars from nxml-mode samples
+ *
  * Revision 1.4  2003/12/04 22:02:20  dvd
  * refactoring
  *

@@ -2,7 +2,7 @@
 #
 CC=cc
 INC=-I.
-OPT=-g -O -Wall
+OPT=-g -O -Wall -Wno-parentheses
 LIB=
 LBL=
 OBJ=er.o rnc.o u.o ht.o rn.o util.o sc.o
@@ -14,6 +14,9 @@ rnc: ${OBJ}
 	${CC} ${OPT} ${LBL} -o rnc ${OBJ} ${LIB} 
 
 # $Log$
+# Revision 1.5  2003/12/06 00:55:13  dvd
+# parses all grammars from nxml-mode samples
+#
 # Revision 1.4  2003/11/29 17:47:48  dvd
 # decl
 #

@@ -172,11 +172,12 @@ static int rnc_read(struct rnc_source *sp) {
   return ni;
 }
 
-#define NS_INHERITED 1
+#define PFX_INHERITED 1
+#define PFX_DEFAULT 2
 
-#define DE_HEAD 1
-#define DE_CHOICE 2
-#define DE_ILEAVE 4
+#define DE_HEAD 4
+#define DE_CHOICE 8
+#define DE_ILEAVE 16
 
 #define RE_
 
@@ -632,8 +633,8 @@ static void close_scope(struct rnc_source *sp) {
   }
   sc_close(&defs); sc_close(&refs);
   for(i=prefs.base+1;i!=prefs.top;++i) {
-    if(refs.base==0) error(1,sp,ER_UNDEF,rn_string+prefs.tab[i][0],sp->fn,CUR(sp).line,CUR(sp).col);
-    sc_add(&refs,prefs.tab[i][0],prefs.tab[i][1],prefs.tab[i][2]);
+    if(sc_void(&refs)) error(1,sp,ER_UNDEF,rn_string+prefs.tab[i][0],sp->fn,CUR(sp).line,CUR(sp).col);
+    else sc_add(&refs,prefs.tab[i][0],prefs.tab[i][1],prefs.tab[i][2]);
   }
   sc_close(&prefs);
 }
@@ -669,29 +670,36 @@ static void fold_scope(struct rnc_source *sp) {
 static void addns(struct rnc_source *sp,int pfx,int url) {
   int i;
   if(i=sc_find(&nss,pfx)) {
-    if(nss.tab[i][2]&NS_INHERITED) {
-      nss.tab[i][1]=url; nss.tab[i][2]&=~NS_INHERITED;
+    if(nss.tab[i][2]&(PFX_INHERITED|PFX_DEFAULT)) {
+      nss.tab[i][1]=url; nss.tab[i][2]&=~(PFX_INHERITED|PFX_DEFAULT);
     } else error(1,sp,ER_DUPNS,rn_string+pfx,sp->fn,CUR(sp).line,CUR(sp).col);
   } else sc_add(&nss,pfx,url,0);
 }
 
 static void adddt(struct rnc_source *sp,int pfx,int url) {
-  if(sc_find(&dts,pfx)) {
-    error(1,sp,ER_DUPDT,rn_string+pfx,sp->fn,CUR(sp).line,CUR(sp).col);
+  int i;
+  if(i=sc_find(&dts,pfx)) {
+    if(dts.tab[i][2]&PFX_DEFAULT) {
+      dts.tab[i][1]=url; dts.tab[i][2]&=~PFX_DEFAULT;
+    } else error(1,sp,ER_DUPDT,rn_string+pfx,sp->fn,CUR(sp).line,CUR(sp).col);
   } else sc_add(&dts,pfx,url,0);
 }
 
 static void adddef(struct rnc_source *sp,int name,int pat,int flags) {
   int i;
   if(i=sc_find(&defs,name)) {
-    int old_flags=defs.tab[i][2];
-    if(DE_HEAD&flags&old_flags) error(1,sp,ER_2HEADS,sp->fn,CUR(sp).line,CUR(sp).col);
-    if(((flags|old_flags)&(DE_CHOICE|DE_ILEAVE))==(DE_CHOICE|DE_ILEAVE)) error(1,sp,ER_COMBINE,sp->fn,CUR(sp).line,CUR(sp).col);
-    flags=defs.tab[i][2]=old_flags|flags;
-    if(DE_CHOICE&flags) {
-      defs.tab[i][1]=rn_choice(defs.tab[i][1],pat);
-    } else if(DE_ILEAVE&flags) {
-      defs.tab[i][1]=rn_ileave(defs.tab[i][1],pat);
+    if(sc_locked(&defs)) {
+      defs.tab[i][1]=pat; defs.tab[i][2]=flags;
+    } else {
+      int old_flags=defs.tab[i][2];
+      if(DE_HEAD&flags&old_flags) error(1,sp,ER_2HEADS,sp->fn,CUR(sp).line,CUR(sp).col);
+      if(((flags|old_flags)&(DE_CHOICE|DE_ILEAVE))==(DE_CHOICE|DE_ILEAVE)) error(1,sp,ER_COMBINE,sp->fn,CUR(sp).line,CUR(sp).col);
+      flags=defs.tab[i][2]=old_flags|flags;
+      if(DE_CHOICE&flags) {
+	defs.tab[i][1]=rn_choice(defs.tab[i][1],pat);
+      } else if(DE_ILEAVE&flags) {
+	defs.tab[i][1]=rn_ileave(defs.tab[i][1],pat);
+      }
     }
   } else {
     if(sc_locked(&defs)) error(1,sp,ER_OVRIDE,name!=0?rn_string+name:"start",sp->fn,CUR(sp).line,CUR(sp).col);
@@ -866,15 +874,16 @@ static int relpath(struct rnc_source *sp) {
 
 static int topLevel(struct rnc_source *sp);
 
-static void add_well_known_nss() {
+static void add_well_known_nss(int dflt) {
   sc_add(&nss,newString("xml"),newString("http://www.w3.org/XML/1998/namespace"),0);
   sc_add(&nss,newString("xmlns"),newString("http://www.w3.org/2000/xmlns"),0);
+  sc_add(&nss,0,dflt,PFX_INHERITED); sc_add(&nss,-1,dflt,PFX_INHERITED); 
 }
 
 static int file(struct rnc_source *sp,int nsuri) {
   int ret=0;
   struct rnc_source src;
-  sc_add(&nss,0,nsuri,0); sc_add(&nss,-1,nsuri,0); add_well_known_nss();
+  add_well_known_nss(nsuri);
   rnc_source_init(&src);
   if(rnc_open(&src,path)!=-1) {
     ret=topLevel(&src);
@@ -1120,7 +1129,7 @@ static int grammarContent(struct rnc_source *sp) {
 static int topLevel(struct rnc_source *sp) {
   int ret=-1,is_grammar;
   sc_open(&dts);
-  sc_add(&dts,newString("xsd"),newString("http://www.w3.org/2001/XMLSchema-datatypes"),0);
+  sc_add(&dts,newString("xsd"),newString("http://www.w3.org/2001/XMLSchema-datatypes"),PFX_DEFAULT);
 
   getsym(sp); getsym(sp);
   while(decl(sp));
@@ -1141,9 +1150,8 @@ static int topLevel(struct rnc_source *sp) {
 int rnc_parse(struct rnc_source *sp) {
   int start,i;
 
-  sc_open(&nss);
+  sc_open(&nss); add_well_known_nss(0);
   open_scope(sp);
-  sc_add(&nss,0,0,0); sc_add(&nss,-1,0,0); add_well_known_nss();
 
   start=topLevel(sp); if(start!=-1) sc_add(&defs,0,start,0);
 
@@ -1177,6 +1185,9 @@ int main(int argc,char **argv) {
 
 /*
  * $Log$
+ * Revision 1.27  2003/12/06 00:55:13  dvd
+ * parses all grammars from nxml-mode samples
+ *
  * Revision 1.26  2003/12/06 00:08:49  dvd
  * fixed error reporting
  *

@@ -33,6 +33,10 @@ void sc_open(struct sc_stack *stp) {
   stp->tab[stp->base=stp->top++][1]=BASE; if(stp->top==stp->len) realloc_sc(stp);
 }
 
+int sc_void(struct sc_stack *stp) {
+  return stp->base==0;
+}
+
 void sc_lock(struct sc_stack *stp) {
   stp->tab[stp->base][1]=LOCK;
 }
@@ -61,6 +65,9 @@ int sc_add(struct sc_stack *stp,int key,int val,int aux) {
 
 /*
  * $Log$
+ * Revision 1.6  2003/12/06 00:55:14  dvd
+ * parses all grammars from nxml-mode samples
+ *
  * Revision 1.5  2003/12/05 23:58:44  dvd
  * parses docbook
  *
