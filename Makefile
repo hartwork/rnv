@@ -1,10 +1,10 @@
 # $Id$
 #
 CC=cc
-INC=-I.
+INC=-I/usr/local/include
 OPT=-g -O -pg -Wall -Wno-parentheses
-LIB=
-LBL=
+LIB=-lexpat
+LBL=-L/usr/local/lib
 OBJ=\
 rn.o \
 rnc.o \
@@ -25,6 +25,9 @@ rnv: ${OBJ}
 	${CC} ${OPT} ${LBL} -o rnv ${OBJ} ${LIB} 
 
 # $Log$
+# Revision 1.13  2003/12/11 17:18:09  dvd
+# rnv->rnd_test,rnv will be the command-line validator
+#
 # Revision 1.12  2003/12/11 17:01:31  dvd
 # utf8 is handled properly
 #
