@@ -2,6 +2,7 @@
 ; XML Schema Datatypes Regular Expressions
 
 (load  (in-vicinity (program-vicinity) "u.scm"))
+(load  (in-vicinity (program-vicinity) "xml-ranges.scm"))
 (load  (in-vicinity (program-vicinity) "rx-ranges.scm"))
 
 ; patterns: none empty any choice group more except range class char
@@ -16,22 +17,24 @@
 
 (define rx-none #f)
 (define rx-empty #f)
+(define rx-any #f)
 
 (define rx-newpat ; #f flushes
   (letrec (
       (cache '())
       (pat=?
 	(lambda (p1 p2)
-	  (case (car p1)
-	    ((none empty any) #t)
-	    ((choice group except range)
-	      (and (eqv? (cadr p1) (cadr p2)) (eqv? (cddr p1) (cddr p2))))
-	    ((more class char)
-	      (eqv? (cdr p1) (cdr p2))))))   
+	  (and (equal? (car p1) (car p2))
+	    (case (car p1)
+	      ((none empty any) #t)
+	      ((choice group except range)
+	        (and (eqv? (cadr p1) (cadr p2)) (eqv? (cddr p1) (cddr p2))))
+	      ((more class char)
+	        (eqv? (cdr p1) (cdr p2)))))))  
       (old
 	(lambda (p cache)
 	  (and (pair? cache)
-	    (or (and (pat=? p (car cache)) p)
+	    (or (and (pat=? p (car cache)) (car cache))
 	      (old p (cdr cache)))))))
     (lambda (p)
       (if p
@@ -42,6 +45,7 @@
 	  (set! cache '())
 	  (set! rx-none (rx-newpat '(none)))
 	  (set! rx-empty (rx-newpat '(empty)))
+	  (set! rx-any (rx-newpat '(any)))
 	  #f)))))
 	
 (define (rx-more p)
@@ -189,7 +193,7 @@
 	  (let (
 	      (p
 		(if (equal? sym '(chr . 94))
-		  (begin (getsym) (rx-newpat `(except any . ,(chgroup))))
+		  (begin (getsym) (rx-newpat `(except ,rx-any . ,(chgroup))))
 		  (chgroup))))
 	    (if (equal? sym '(chr . 45))
 	      (begin (getsym)
@@ -227,7 +231,7 @@
 	    ((cls)
 	      (let ((p (rx-newpat `(class . ,(cdr sym))))) (getsym) p))
 	    ((ncl)
-	      (let ((p (rx-newpat `(except any .
+	      (let ((p (rx-newpat `(except ,rx-any .
 		      ,(rx-newpat `(class . ,(cdr sym))))))) (getsym) p))
 	    (else (error! sym) (getsym) rx-none))))
       (number
@@ -299,28 +303,35 @@
     (rx-newpat #f) (getsym) 	
     (let ((p (expr)))
       (or (equal? sym '(end)) (error! "junk after end"))
-      p)))
+      (and (not errors) p))))
 
 (define (rx-deriv p c)
-  (let (
+  (letrec (
       (in-class?
-        (let (
-            (in-rx-ranges (lambda (i) (u-in-ranges c (assv i rx-ranges)))))
+        (letrec (
+	    (orf 
+	      (lambda list 
+	        (and (pair? list) 
+		  (or (car list) (apply orf (cdr list))))))
+            (in-xml-ranges (lambda (i) (u-in-ranges c (cdr (assv i xml-ranges)))))
+            (in-rx-ranges (lambda (i) (u-in-ranges c (cdr (assv i rx-ranges))))))
           (lambda (c id)
-	    (case (id)
+	    (case id
 	      ((NL) (or (= c 13) (= c 10)))
 	      ((S) (or (= c 13) (= c 10) (= c 9) (= c 32)))
-	      ((I) #f)
-	      ((C) #f)
+	      ((I) (or (= c 58) (= c 95) 
+	             (apply orf (map in-xml-ranges '(base-char ideographic)))))
+	      ((C) (or (in-class? c 'I) (= c 45) (= c 46)
+	             (apply orf (map in-xml-ranges '(digit combining-char extender)))))
 	      ((W) (not 
-	             (or (in-class? 'P c) (in-class? 'Z c) (in-class? U c))))
-              ((U-C) (apply or (map in-rx-ranges '(Cc Cf Co))))
-              ((U-L) (apply or (map in-rx-ranges '(Lu Ll Lt Lm Lo))))
-              ((U-M) (apply or (map in-rx-ranges '(Mn Mc Me))))
-              ((U-N) (apply or (map in-rx-ranges '(Nd Nl No))))
-              ((U-P) (apply or (map in-rx-ranges '(Pc Pd Ps Pe))))
-              ((U-S) (apply or (map in-rx-ranges '(Sm Sc Sk So))))
-              ((U-Z) (apply or (map in-rx-ranges '(Zl Zs Zp))))
+	             (or (in-class? c 'U-P) (in-class? c 'U-Z) (in-class? c 'U-C))))
+              ((U-C) (apply orf (map in-rx-ranges '(U-Cc U-Cf U-Co))))
+              ((U-L) (apply orf (map in-rx-ranges '(U-Lu U-Ll U-Lt U-Lm U-Lo))))
+              ((U-M) (apply orf (map in-rx-ranges '(U-Mn U-Mc U-Me))))
+              ((U-N) (apply orf (map in-rx-ranges '(U-Nd U-Nl U-No))))
+              ((U-P) (apply orf (map in-rx-ranges '(U-Pc U-Pd U-Ps U-Pe))))
+              ((U-S) (apply orf (map in-rx-ranges '(U-Sm U-Sc U-Sk U-So))))
+              ((U-Z) (apply orf (map in-rx-ranges '(U-Zl U-Zs U-Zp))))
 	      (else (in-rx-ranges id)))))))
     (case (car p)
       ((none empty) rx-none)
@@ -329,7 +340,7 @@
       ((group)
 	(let ((q (rx-group (rx-deriv (cadr p) c) (cddr p))))
 	  (if (rx-null? (cadr p)) (rx-choice q (rx-deriv (cddr p) c)) q)))
-      ((more) (rx-group (rx-deriv (car p) c) (rx-choice rx-empty p)))
+      ((more) (rx-group (rx-deriv (cdr p) c) (rx-choice rx-empty p)))
       ((except)
 	(if (and (rx-null? (rx-deriv (cadr p) c))
 	    (not (rx-null? (rx-deriv (cddr p) c))))
@@ -338,3 +349,14 @@
       ((range) (if (and (<= (cadr p) c) (<= c (cddr p))) rx-empty rx-none))
       ((class) (if (in-class? c (cdr p)) rx-empty rx-none))
       ((char) (if (= (cdr p) c) rx-empty rx-none)))))
+
+(define (rx-match r s)
+  (and r
+    (let ((sll (utf8->lazy-list s)))
+      (let delta ((p r) (sll sll))
+        (if (null? sll) (rx-null? p)
+	  (let* (
+  	      (c (car sll))
+	      (p (rx-deriv p c)))
+	    (and (not (eq? p rx-none))
+	      (delta p (force (cdr sll)))))))))) 

@@ -1,7 +1,7 @@
 ; $Id$
   
 (define xml-ranges '( 
-  (xml-base-char #((#x41 . #x5a) (#x61 . #x7a) (#xc0 . #xd6) 
+  (base-char . #((#x41 . #x5a) (#x61 . #x7a) (#xc0 . #xd6) 
     (#xd8 . #xf6) (#xf8 . #xff) (#x100 . #x131) (#x134 . #x13e)
     (#x141 . #x148) (#x14a . #x17e) (#x180 . #x1c3) (#x1cd . #x1f0)
     (#x1f4 . #x1f5) (#x1fa . #x217) (#x250 . #x2a8) (#x2bb . #x2c1)
@@ -53,9 +53,9 @@
     (#x212a . #x212b) (#x212e . #x212e) (#x2180 . #x2182) (#x3041 . #x3094)
     (#x30a1 . #x30fa) (#x3105 . #x312c) (#xac00 . #xd7a3)))
   
-  (ideographic #((#x3007 . #x3007) (#x3021 . #x3029) (#x4e00 . #x9fa5)))
+  (ideographic . #((#x3007 . #x3007) (#x3021 . #x3029) (#x4e00 . #x9fa5)))
   
-  (combining-char #((#x300 . #x345) (#x360 . #x361) (#x483 . #x486)
+  (combining-char . #((#x300 . #x345) (#x360 . #x361) (#x483 . #x486)
     (#x591 . #x5a1) (#x5a3 . #x5b9) (#x5bb . #x5bd) (#x5bf . #x5bf)
     (#x5c1 . #x5c2) (#x5c4 . #x5c4) (#x64b . #x652) (#x670 . #x670)
     (#x6d6 . #x6dc) (#x6dd . #x6df) (#x6e0 . #x6e4) (#x6e7 . #x6e8)
@@ -81,11 +81,11 @@
     (#x20e1 . #x20e1) (#x302a . #x302f) (#x3099 . #x3099)
     (#x309a . #x309a)))
   
-  (digit #((#x30 . #x39) (#x660 . #x669) (#x6f0 . #x6f9) (#x966 . #x96f)
+  (digit . #((#x30 . #x39) (#x660 . #x669) (#x6f0 . #x6f9) (#x966 . #x96f)
     (#x9e6 . #x9ef) (#xa66 . #xa6f) (#xae6 . #xaef) (#xb66 . #xb6f)
     (#xbe7 . #xbef) (#xc66 . #xc6f) (#xce6 . #xcef) (#xd66 . #xd6f)
     (#xe50 . #xe59) (#xed0 . #xed9) (#xf20 . #xf29)))
   
-  (extender #((#xb7 . #xb7) (#x2d0 . #x2d1) (#x387 . #x387)
+  (extender . #((#xb7 . #xb7) (#x2d0 . #x2d1) (#x387 . #x387)
     (#x640 . #x640) (#xe46 . #xe46) (#xec6 . #xec6) (#x3005 . #x3005)
     (#x3031 . #x3035) (#x309d . #x309e) (#x30fc . #x30fe)))))
