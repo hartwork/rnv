@@ -109,7 +109,6 @@ values = element values {  empty
   , attribute unsignedLong { xsd:unsignedLong } ?
   , attribute unsignedShort { xsd:unsignedShort } ?
   , attribute date { xsd:date } ?
-  , attribute time { xsd:time } ?
   , attribute gYearMonth { xsd:gYearMonth } ?
   , attribute gYear { xsd:gYear } ?
   , attribute gMonthDay { xsd:gMonthDay } ?
