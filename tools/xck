@@ -1,5 +1,4 @@
 #!/bin/sh
-# $Id$
 
 CONF=/usr/local/share/rng-c/arx.conf
 
@@ -12,6 +11,6 @@ fi
 
 for x in $files
 do
-  rnv -q `arx $x $CONF` $x
+  xx $x | rnv -q `arx $x $CONF`
 done
 rm /tmp/xck.$$ 2>/dev/null
