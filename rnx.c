@@ -182,9 +182,11 @@ static int isanycont(int p) {
   for(i=0;i!=3;++i) {
     p0=flat[i];
     switch(RN_P_TYP(p0)) {
-    case RN_P_ELEMENT: rn_Element(p0,nc,p1); if(!(RN_NC_IS(nc,ANY_NAME)&&p==p1)) return 0;
+    case RN_P_ELEMENT: rn_Element(p0,nc,p1); 
+      if(!(RN_NC_IS(nc,ANY_NAME)&&p==p1)) return 0;
       res|=1; break;
-    case RN_P_ATTRIBUTE: rn_Attribute(p0,nc,p1); if(!(RN_NC_IS(nc,ANY_NAME)&&p1==rn_text)) return 0;
+    case RN_P_ATTRIBUTE: rn_Attribute(p0,nc,p1); 
+      if(!(RN_NC_IS(nc,ANY_NAME)&&p1==rn_text)) return 0;
       res|=2; break;
     case RN_P_TEXT: break;
     default: return 0;
@@ -204,7 +206,8 @@ static int isanymix(int p) {
   for(i=0;i!=2;++i) {
     p0=flat[i];
     switch(RN_P_TYP(p0)) {
-    case RN_P_ELEMENT: rn_Element(p0,nc,p1); if(!(RN_NC_IS(nc,ANY_NAME)&& isanycont(p1))) return 0;
+    case RN_P_ELEMENT: rn_Element(p0,nc,p1); 
+      if(!(RN_NC_IS(nc,ANY_NAME)&& isanycont(p1))) return 0;
       res|=1; break;
     case RN_P_TEXT: break;
     default: return 0;
