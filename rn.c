@@ -59,16 +59,16 @@ static int add_s(char *s) {
   return len;
 }
 
-/* the two functions below are structuraly identical; 
- they used to be expanded from a macro using ##, 
- but then I eliminated all occurences of ## -- 
- it was an obstacle to porting; sam script to turn 
+/* the two functions below are structuraly identical;
+ they used to be expanded from a macro using ##,
+ but then I eliminated all occurences of ## --
+ it was an obstacle to porting; sam script to turn
  the first into the second is
 s/([^a-z])p([^a-z])/\1nc\2/g
 s/([^A-Z])P([^A-Z])/\1NC\2/g
 s/_pattern/_nameclass/g
  */
- 
+
 static int accept_p(void) {
   int j;
   if((j=ht_get(&ht_p,i_p))==-1) {
@@ -370,40 +370,34 @@ static int equal_nc(int nc1,int nc2) {
 static int equal_s(int s1,int s2) {return strcmp(rn_string+s1,rn_string+s2)==0;}
 
 /* marks patterns reachable from start, assumes that the references are resolved */
-static void mark_p(int start) {
-  int p,p1,p2,nc,i;
-  int n_f=0;
+#define pick_p(p) if(p>=since && !rn_marked(p)) {flat[n_f++]=p; rn_mark(p);}
+static void mark_p(int start,int since) {
+  int p,p1,p2,nc,i,n_f;
   int *flat=(int*)m_alloc(i_p,sizeof(int));
 
-  flat[n_f++]=start; rn_mark(start);
-  i=0;
-  do {
-    p=flat[i++];
+  n_f=0; pick_p(start);
+  for(i=0;i!=n_f;++i) {
+    p=flat[i];
     switch(RN_P_TYP(p)) {
     case RN_P_NOT_ALLOWED: case RN_P_EMPTY: case RN_P_TEXT:
-    case RN_P_DATA: case RN_P_VALUE:
-      break;
+    case RN_P_DATA: case RN_P_VALUE: break;
 
     case RN_P_CHOICE: rn_Choice(p,p1,p2); goto BINARY;
     case RN_P_INTERLEAVE: rn_Interleave(p,p1,p2); goto BINARY;
     case RN_P_GROUP: rn_Group(p,p1,p2); goto BINARY;
     case RN_P_DATA_EXCEPT: rn_DataExcept(p,p1,p2); goto BINARY;
-    BINARY:
-      if(!rn_marked(p2)) {flat[n_f++]=p2; rn_mark(p2);}
-      goto UNARY;
+    BINARY: pick_p(p2); goto UNARY;
 
     case RN_P_ONE_OR_MORE: rn_OneOrMore(p,p1); goto UNARY;
     case RN_P_LIST: rn_List(p,p1); goto UNARY;
     case RN_P_ATTRIBUTE: rn_Attribute(p,nc,p1); goto UNARY;
     case RN_P_ELEMENT: rn_Element(p,nc,p1); goto UNARY;
-    UNARY:
-      if(!rn_marked(p1)) {flat[n_f++]=p1; rn_mark(p1);}
-      break;
+    UNARY: pick_p(p1); break;
 
     default:
       assert(0);
     }
-  } while(i!=n_f);
+  }
   m_free(flat);
 }
 
@@ -414,22 +408,15 @@ static void sweep_p(int *starts,int n_st,int since) {
   xlat=(int*)m_alloc(i_p-since,sizeof(int));
   changed=0;
   for(p=since;p!=i_p;p+=p_size[RN_P_TYP(p)]) {
-    if(!rn_marked(p)) xlat[p-since]=-1;
+    if(rn_marked(p)) xlat[p-since]=p; else xlat[p-since]=-1;
   }
   for(p=since;p!=i_p;p+=p_size[RN_P_TYP(p)]) {
-    if(xlat[p-since]!=-1) {
-      if((q=ht_get(&ht_p,p))!=p) {
-        if(xlat[q-since]!=-1) {
-          rn_unmark(p);
-          xlat[p-since]=q;
-          changed=1;
-	} else {
-	  ht_deli(&ht_p,q);
-	  ht_put(&ht_p,p);
-	  xlat[p-since]=p;
-	}
+    if(xlat[p-since]!=-1 && (q=ht_get(&ht_p,p))!=p) {
+      if(xlat[q-since]!=-1) {
+        rn_unmark(p); xlat[p-since]=q;
+        changed=1;
       } else {
-        xlat[p-since]=p;
+	ht_deli(&ht_p,q); ht_put(&ht_p,p);
       }
     }
   }
@@ -559,14 +546,14 @@ static void compress_p(int *starts,int n_st,int since) {
 
 void rn_compress(int *starts,int n_st) {
   int i;
-  for(i=0;i!=n_st;++i) mark_p(starts[i]);
+  for(i=0;i!=n_st;++i) mark_p(starts[i],BASE_P);
   sweep_p(starts,n_st,BASE_P);
   unmark_p(BASE_P);
   compress_p(starts,n_st,BASE_P);
 }
 
 int rn_compress_last(int start) {
-  mark_p(start);
+  mark_p(start,base_p);
   sweep_p(&start,1,base_p);
   unmark_p(base_p);
   compress_p(&start,1,base_p);

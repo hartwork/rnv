@@ -1,5 +1,9 @@
 /* $Id$ */
 
+1.6.4
+Fri Mar 12 04:44:17 AMT 2004
+dvd: better logics in mark_p
+
 1.6.3 Thu Mar 11 22:47:17 AMT 2004
 dvd: Bug fix in mark_p -- no more dangling references to unused patterns.
 
