@@ -1,0 +1,8 @@
+start = e0
+e0 = element e0 { ((e1,a1,e2,a2,e3,a3) & e0) | text }
+e1 = element e1 { text }
+e2 = element e2 { text }
+e3 = element e3 { text }
+a1 = attribute a1 { text }
+a2 = attribute a2 { text }
+a3 = attribute a3 { text }

@@ -4,16 +4,31 @@ types = element types { empty
   , attribute boolean { xsd:boolean } ?
   , attribute float { xsd:float } ?
   , attribute double { xsd:double } ?
+  , attribute doubleMinMax { 
+      xsd:double {
+	minExclusive="-INF" 
+	minInclusive="-4E50"  # times+14 comes before times-14
+	maxInclusive=".231E+52" 
+	maxExclusive="10E100" 
+      }
+    }
   , attribute decimal { xsd:decimal } ?
   , attribute dateTime { xsd:dateTime } ?
   , attribute dateTimeMinMax { 
       xsd:dateTime {
 	minExclusive="0001-01-01T00:00:00Z" 
-	minInclusive="1969-04-30T00:00:00-14:00" 
-	maxInclusive="1969-04-30T23:59:60+14:00" 
+	minInclusive="1969-04-30T00:00:00+14:00"  # times+14 comes before times-14
+	maxInclusive="1969-04-30T23:59:60-14:00" 
 	maxExclusive="2033-01-01T00:00:00Z" 
       }
     } ?
+  , attribute date { xsd:date } ?
+  , attribute time { xsd:time } ?
+  , attribute gYearMonth { xsd:gYearMonth } ?
+  , attribute gYear { xsd:gYear } ?
+  , attribute gMonthDay { xsd:gMonthDay } ?
+  , attribute gDay { xsd:gDay } ?
+  , attribute gMonth { xsd:gMonth } ?
   , attribute duration { xsd:duration } ?
   , attribute hexBinary { xsd:hexBinary } ?
   , attribute base64Binary { xsd:base64Binary } ?
@@ -45,13 +60,6 @@ types = element types { empty
   , attribute unsignedInt { xsd:unsignedInt } ?
   , attribute unsignedLong { xsd:unsignedLong } ?
   , attribute unsignedShort { xsd:unsignedShort } ?
-  , attribute date { xsd:date } ?
-  , attribute time { xsd:time } ?
-  , attribute gYearMonth { xsd:gYearMonth } ?
-  , attribute gYear { xsd:gYear } ?
-  , attribute gMonthDay { xsd:gMonthDay } ?
-  , attribute gDay { xsd:gDay } ?
-  , attribute gMonth { xsd:gMonth } ?
 }
   
 values = element values {  empty
@@ -87,11 +95,13 @@ values = element values {  empty
   , attribute normalizedString { xsd:normalizedString "abc def\x{D}xyz " } ?
   , attribute token { xsd:token " kukuruza   " } ?
   , attribute language { xsd:language " arm-west " } ?
-  , attribute IDREFS { xsd:IDREFS } ?
+  , attribute IDREFS { xsd:IDREFS "a bc d e f  f-g " } ?
   , attribute ENTITIES { xsd:ENTITIES } ?
-  , attribute NMTOKEN { xsd:NMTOKEN } ?
-  , attribute NMTOKENS { xsd:NMTOKENS } ?
-  , attribute Name { xsd:Name } ?
+  , attribute NMTOKEN { xsd:NMTOKEN "-nametokenhere" } ?
+  , attribute NMTOKENS { xsd:NMTOKENS "strange -but :this should 1ce be good" } ?
+  , attribute Name { xsd:Name "rng:schema" } ?
+  , attribute Nameq { xsd:Name ":title" } ?
+  , attribute Nameu { xsd:Name "title" } ?
   , attribute QNameq { xsd:QName " fo:block " } ?
   , attribute QNameu { xsd:QName "block" } ?
   , attribute NCName { xsd:NCName } ?
