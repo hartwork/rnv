@@ -21,8 +21,8 @@ extern void rnv_default_verror_handler(int erno,va_list ap);
 extern void rnv_init(void);
 extern void rnv_clear(void);
 
-extern void rnv_text(int *curp,int *prevp,char *text,int n_t,int mixed);
-extern void rnv_start_tag(int *curp,int *prevp,char *name,char **attrs);
-extern void rnv_end_tag(int *curp,int *prevp,char *name);
+extern int rnv_text(int *curp,int *prevp,char *text,int n_t,int mixed);
+extern int rnv_start_tag(int *curp,int *prevp,char *name,char **attrs);
+extern int rnv_end_tag(int *curp,int *prevp,char *name);
 
 #endif

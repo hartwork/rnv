@@ -40,12 +40,10 @@ static int (*memo)[M_SIZE];
 static int i_m,len_m;
 static struct hashtable ht_m;
 
-static void (*xsdverror0)(int erno,va_list ap);
-
 #define err(msg) vfprintf(stderr,msg"\n",ap);
 void drv_default_verror_handler(int erno,va_list ap) {
   if(erno&ERBIT_XSD) {
-    (*xsdverror0)(erno&~ERBIT_XSD,ap);
+    xsd_default_verror_handler(erno&~ERBIT_XSD,ap);
   } else {
     switch(erno) {
     case DRV_ER_NODTL: err("no datatype library for URI '%s'"); break;
@@ -139,7 +137,7 @@ static int initialized=0;
 void drv_init(void) {
   if(!initialized) { initialized=1;
     rn_init(); 
-    xsd_init(); xsdverror0=xsd_verror_handler; xsd_verror_handler=&verror_handler_xsd;
+    xsd_init(); xsd_verror_handler=&verror_handler_xsd;
     memo=(int (*)[M_SIZE])memalloc(len_m=LEN_M,sizeof(int[M_SIZE]));
     dtl=(struct dtl*)memalloc(len_dtl=LEN_DTL,sizeof(struct dtl));
     ht_init(&ht_m,LEN_M,&hash_m,&equal_m);

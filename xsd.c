@@ -14,13 +14,11 @@
 #include "xsd_tm.h"
 #include "xsd.h"
 
-static void (*rxverror0)(int erno,va_list ap);
-
 #define err(msg) vfprintf(stderr,msg"\n",ap)
 void xsd_default_verror_handler(int erno,va_list ap) {
   fprintf(stderr,"XML Schema datatypes: ");
   if(erno&ERBIT_RX) {
-    rxverror0(erno&~ERBIT_RX,ap);
+    rx_default_verror_handler(erno&~ERBIT_RX,ap);
   } else {
     switch(erno) {
     case XSD_ER_TYP: err("unknown type %s"); break;
@@ -38,10 +36,7 @@ void xsd_default_verror_handler(int erno,va_list ap) {
 void (*xsd_verror_handler)(int erno,va_list ap)=&xsd_default_verror_handler;
 
 static void error_handler(int erno,...) {
-  va_list ap;
-  va_start(ap,erno);
-  (*xsd_verror_handler)(erno,ap);
-  va_end(ap);
+  va_list ap; va_start(ap,erno); (*xsd_verror_handler)(erno,ap); va_end(ap);
 }
 
 static void verror_handler_rx(int erno,va_list ap) {(*xsd_verror_handler)(erno|ERBIT_RX,ap);}
@@ -50,7 +45,7 @@ static void windup(void);
 static int initialized=0;
 void xsd_init(void) {
   if(!initialized) { initialized=1;
-    rx_init(); rxverror0=rx_verror_handler; rx_verror_handler=&verror_handler_rx;
+    rx_init(); rx_verror_handler=&verror_handler_rx;
     windup();
   }
 }

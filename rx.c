@@ -674,6 +674,11 @@ static int drv(int p,int c) {
   return ret;
 }
 
+int rx_check(char *rx) {
+  (void)compile(rx);
+  return !errors;
+}
+
 int rx_match(char *rx,char *s,int n) {
   int p=compile(rx);
   if(!errors) {

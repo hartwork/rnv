@@ -9,12 +9,10 @@
 #include "drv.h"
 #include "rnv.h"
 
-static void (*drvverror0)(int erno,va_list ap);
-
 #define err(msg) vfprintf(stderr,msg"\n",ap);
 void rnv_default_verror_handler(int erno,va_list ap) {
   if(erno&ERBIT_DRV) {
-    (*drvverror0)(erno&~ERBIT_DRV,ap);
+    drv_default_verror_handler(erno&~ERBIT_DRV,ap);
   } else {
     switch(erno) {
     case RNV_ER_ELEM: err("element %s^%s not allowed"); break;
@@ -43,7 +41,7 @@ static int initialized=0;
 void rnv_init(void) {
   if(!initialized) {initialized=1;
     rn_init();
-    drv_init(); drvverror0=drv_verror_handler; drv_verror_handler=&verror_handler_drv;
+    drv_init(); drv_verror_handler=&verror_handler_drv;
     windup();
   }
 }
@@ -74,28 +72,31 @@ static int whitespace(char *text,int n_t) {
   }
 }
 
-void rnv_text(int *curp,int *prevp,char *text,int n_t,int mixed) {
+int rnv_text(int *curp,int *prevp,char *text,int n_t,int mixed) {
+  int ok=1;
   if(mixed) {
     if(!whitespace(text,n_t)) {
       *curp=drv_mixed_text(*prevp=*curp);
-      if(*curp==rn_notAllowed) {
+      if(*curp==rn_notAllowed) { ok=0;
 	*curp=drv_mixed_text_recover(*prevp);
 	error_handler(RNV_ER_NOTX);
       }
     }
   } else {
     *curp=drv_text(*prevp=*curp,text,n_t);
-    if(*curp==rn_notAllowed) {
+    if(*curp==rn_notAllowed) { ok=0;
       *curp=drv_text_recover(*prevp,text,n_t);
       error_handler(cdata(*prevp)?RNV_ER_TEXT:RNV_ER_NOTX);
     }
   }
+  return ok;
 }
 
-void rnv_start_tag(int *curp,int *prevp,char *name,char **attrs) {
+int rnv_start_tag(int *curp,int *prevp,char *name,char **attrs) {
+  int ok=1;
   qname((char*)name);
   *curp=drv_start_tag_open(*prevp=*curp,suri,sname);
-  if(*curp==rn_notAllowed) {
+  if(*curp==rn_notAllowed) { ok=0;
     *curp=drv_start_tag_open_recover(*prevp,suri,sname);
     error_handler(*curp==rn_notAllowed?RNV_ER_ELEM:RNV_ER_EMIS,suri,sname); 
   }
@@ -104,12 +105,12 @@ void rnv_start_tag(int *curp,int *prevp,char *name,char **attrs) {
     qname((char*)*attrs);
     *curp=drv_attribute_open(*prevp=*curp,suri,sname);
     ++attrs;
-    if(*curp==rn_notAllowed) {
+    if(*curp==rn_notAllowed) { ok=0;
       *curp=drv_attribute_open_recover(*prevp,suri,sname);
       error_handler(RNV_ER_AKEY,suri,sname);
     } else {
       *curp=drv_text(*prevp=*curp,(char*)*attrs,strlen(*attrs));
-      if(*curp==rn_notAllowed || (*curp=drv_attribute_close(*prevp=*curp))==rn_notAllowed) {
+      if(*curp==rn_notAllowed || (*curp=drv_attribute_close(*prevp=*curp))==rn_notAllowed) { ok=0;
 	*curp=drv_attribute_close_recover(*prevp);
 	error_handler(RNV_ER_AVAL,suri,sname,*attrs);
       }
@@ -118,19 +119,22 @@ void rnv_start_tag(int *curp,int *prevp,char *name,char **attrs) {
   }
   if(*curp!=rn_notAllowed) {
     *curp=drv_start_tag_close(*prevp=*curp);
-    if(*curp==rn_notAllowed) {
+    if(*curp==rn_notAllowed) { ok=0;
       *curp=drv_start_tag_close_recover(*prevp);
       qname((char*)name);
       error_handler(RNV_ER_AMIS,suri,sname);
     }
   }
+  return ok;
 }
 
-void rnv_end_tag(int *curp,int *prevp,char *name) {
+int rnv_end_tag(int *curp,int *prevp,char *name) {
+  int ok=1;
   *curp=drv_end_tag(*prevp=*curp);
-  if(*curp==rn_notAllowed) {
+  if(*curp==rn_notAllowed) { ok=0;
     qname(name);
     error_handler(RNV_ER_UFIN,suri,sname);
     *curp=drv_end_tag_recover(*prevp);
   }
+  return ok;
 }

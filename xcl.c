@@ -27,18 +27,13 @@ extern int rx_compact,drv_compact;
 #define XCL_ER_IO 0
 #define XCL_ER_XML 1
 
-static void 
-  (*rncverror0)(int erno,va_list ap),
-  (*rndverror0)(int erno,va_list ap),
-  (*rnvverror0)(int erno,va_list ap);
-
 static int peipe,explain;
 static char *xml;
 static XML_Parser expat=NULL;
 static int start,current,previous;
 static int mixed=0;
 static int lastline,lastcol,level;
-static int errors;
+static int ok;
 
 /* Expat does not normalize strings on input unless the whole file is loaded into the buffer */
 static char *text; static int len_t;
@@ -46,18 +41,17 @@ static int n_t;
 
 #define err(msg) vfprintf(stderr,msg,ap);
 static void verror_handler(int erno,va_list ap) {
-  errors++;
   if(erno&ERBIT_RNC) {
-    (*rncverror0)(erno&~ERBIT_RNC,ap);
+    rnc_default_verror_handler(erno&~ERBIT_RNC,ap);
   } else if(erno&ERBIT_RND) {
-    (*rndverror0)(erno&~ERBIT_RND,ap);
+    rnd_default_verror_handler(erno&~ERBIT_RND,ap);
   } else {
     int line=XML_GetCurrentLineNumber(expat),col=XML_GetCurrentColumnNumber(expat);
     if(line!=lastline||col!=lastcol) {
       char *s;
       fprintf(stderr,"error (%s,%i,%i): ",xml,lastline=line,lastcol=col);
       if(erno&ERBIT_RNV) {
-	(*rnvverror0)(erno&~ERBIT_RNV,ap);
+	rnv_default_verror_handler(erno&~ERBIT_RNV,ap);
 	if(explain) {
 	  rnx_expected(previous);
 	  if(rnx_n_exp!=0 && rnx_n_exp<=NEXP) {
@@ -89,9 +83,9 @@ static int initialized=0;
 static void init(void) {
   if(!initialized) {initialized=1;
     rn_init();
-    rnc_init(); rncverror0=rnc_verror_handler; rnc_verror_handler=&verror_handler_rnc;
-    rnd_init(); rndverror0=rnd_verror_handler; rnd_verror_handler=&verror_handler_rnd;
-    rnv_init(); rnvverror0=rnv_verror_handler; rnv_verror_handler=&verror_handler_rnv;
+    rnc_init(); rnc_verror_handler=&verror_handler_rnc;
+    rnd_init(); rnd_verror_handler=&verror_handler_rnd;
+    rnv_init(); rnv_verror_handler=&verror_handler_rnv;
     rnx_init();
     text=(char*)memalloc(len_t=LEN_T,sizeof(char));
     windup();
@@ -105,22 +99,28 @@ static void clear(void) {
 
 static void windup(void) {
   text[n_t=0]='\0';
-  errors=0; level=0; lastline=lastcol=-1;
+  level=0; lastline=lastcol=-1;
 }
 
-static int load_rnc(char *fn) {
+static void load_rnc(char *fn) {
   struct rnc_source *sp=rnc_alloc();
   if(rnc_open(sp,fn)!=-1) start=rnc_parse(sp); rnc_close(sp); 
-  {int errors=rnc_errors(sp); rnc_free(sp); if(errors) return 0;}
-  
-  rnd_deref(start); if(rnd_errors()) return 0;
-  rnd_restrictions(); if(rnd_errors()) return 0;
-  rnd_traits();
-  start=rnd_release(); 
+  ok=!rnc_errors(sp)&&ok;
+  rnc_free(sp);
 
-  start=rn_compress_last(start);
-
-  return 1;
+  if(ok) {
+    rnd_deref(start); 
+    if(!rnd_errors()) {
+      rnd_restrictions(); 
+      if(!rnd_errors()) {
+	rnd_traits();
+	start=rnd_release();
+	start=rn_compress_last(start);
+	return;
+      }
+    }
+    ok=0;
+  }
 }
 
 static void error_handler(int erno,...) {
@@ -128,7 +128,7 @@ static void error_handler(int erno,...) {
 }
 
 static void flush_text(void) {
-  rnv_text(&current,&previous,text,n_t,mixed);
+  ok=rnv_text(&current,&previous,text,n_t,mixed)&&ok;
   text[n_t=0]='\0';
 }
 
@@ -136,7 +136,7 @@ static void start_element(void *userData,const char *name,const char **attrs) {
   if(current!=rn_notAllowed) { 
     mixed=1;
     flush_text();
-    rnv_start_tag(&current,&previous,(char*)name,(char**)attrs);
+    ok=rnv_start_tag(&current,&previous,(char*)name,(char**)attrs)&&ok;
     mixed=0;
   } else {
     ++level;
@@ -146,7 +146,7 @@ static void start_element(void *userData,const char *name,const char **attrs) {
 static void end_element(void *userData,const char *name) {
   if(current!=rn_notAllowed) {
     flush_text(); 
-    rnv_end_tag(&current,&previous,(char*)name);
+    ok=rnv_end_tag(&current,&previous,(char*)name)&&ok;
     mixed=1;
   } else {
     if(level==0) current=previous; else --level;
@@ -171,7 +171,7 @@ static int pipeout(void *buf,int len) {
   }
 }
 
-static int validate(int fd) {
+static void validate(int fd) {
   void *buf; int len;
   previous=current=start;
 
@@ -190,22 +190,21 @@ static int validate(int fd) {
     if(len==0) break;
   }
   XML_ParserFree(expat);
-  return !errors;
+  return;
 
 PARSE_ERROR:
   error_handler(XCL_ER_XML,XML_ErrorString(XML_GetErrorCode(expat)));
   while(peipe&&(len=read(fd,buf,BUFSIZ))!=0) peipe=peipe&&pipeout(buf,len);
 ERROR:
-  return 0;
+  ok=0;
 }
 
 static void version(void) {fprintf(stderr,"rnv version %s\n",RNV_VERSION);}
 static void usage(void) {fprintf(stderr,"usage: rnv {-[qpsvh?]} schema.rnc {document.xml}\n");}
 
 int main(int argc,char **argv) {
-  int ok;
-
   init();
+  ok=1;
 
   peipe=0; explain=1;
   while(*(++argv)&&**argv=='-') {
@@ -225,12 +224,10 @@ int main(int argc,char **argv) {
     END_OF_OPTIONS:;
   }
 
-  if(!*(argv)) {
-    usage();
-    return 1;
-  }
+  if(!*(argv)) {usage(); return 1;}
 
-  if((ok=load_rnc(*(argv++)))) {
+  load_rnc(*(argv++));
+  if(ok) {
     if(*argv) {
       do {
 	int fd; xml=*argv;
@@ -240,14 +237,16 @@ int main(int argc,char **argv) {
 	  continue;
 	}
 	if(explain) fprintf(stderr,"%s\n",xml);
-	ok=validate(fd)&&ok;
+	validate(fd);
 	close(fd);
 	clear();
       } while(*(++argv));
+      if(!ok&&explain) fprintf(stderr,"error: some documents are invalid\n");
     } else { /* stdin */
       xml="stdin";
-      ok=validate(0)&&ok;
+      validate(0);
       clear();
+      if(!ok&&explain) fprintf(stderr,"error: invalid input\n");
     }
   }
 

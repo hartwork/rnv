@@ -106,18 +106,19 @@ install: rnv-${VERSION}.zip readme.txt changes.txt
 
 # DO NOT DELETE
 
-xcl.o: erbit.h rn.h rnc.h rnd.h rnv.h rnx.h ll.h
-rn.o: strops.h ht.h ll.h rn.h
-rnc.o: u.h xmlc.h strops.h rn.h sc.h rnc.h
-rnd.o: rn.h rnx.h ll.h rnd.h
-rnv.o: xmlc.h erbit.h rn.h drv.h rnv.h
-rnx.o: strops.h rn.h ll.h rnx.h
-drv.o: xmlc.h strops.h ht.h rn.h xsd.h ll.h erbit.h drv.h
+xcl.o: memops.h erbit.h rn.h rnc.h rnd.h rnv.h rnx.h ll.h
+rn.o: memops.h strops.h ht.h ll.h rn.h
+rnc.o: u.h xmlc.h memops.h strops.h rn.h sc.h rnc.h
+rnd.o: memops.h rn.h rnx.h ll.h rnd.h
+rnv.o: memops.h xmlc.h erbit.h rn.h drv.h rnv.h
+rnx.o: memops.h strops.h rn.h ll.h rnx.h
+drv.o: xmlc.h memops.h strops.h ht.h rn.h xsd.h ll.h erbit.h drv.h
 xsd.o: u.h xmlc.h strops.h erbit.h rx.h xsd_tm.h xsd.h
 xsd_tm.o: xsd_tm.h
-sc.o: ll.h sc.h
-ht.o: ht.h
+sc.o: memops.h ll.h sc.h
+ht.o: memops.h ht.h
 u.o: u.h
 xmlc.o: u.h xmlc.h
-strops.o: xmlc.h strops.h
-rx.o: u.h xmlc.h strops.h ht.h ll.h rx.h rx_cls_u.c rx_cls_ranges.c
+strops.o: xmlc.h memops.h strops.h
+memops.o: memops.h
+rx.o: u.h xmlc.h memops.h strops.h ht.h ll.h rx.h rx_cls_u.c rx_cls_ranges.c

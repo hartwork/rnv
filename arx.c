@@ -223,6 +223,12 @@ static void chk_get(int x) {
 static void grammars(void) {
 }
 
+static void relaxng(void) {
+}
+
+static void regexp(void) {
+}
+
 static void route(void) {
 }
 

@@ -24,6 +24,9 @@ extern void rx_default_verror_handler(int erno,va_list ap);
 extern void rx_init(void);
 extern void rx_clear(void);
 
+/* just compiles the expression to check the syntax */
+extern int rx_check(char *rx);
+
 /* 
  returns positive value if the s[0..n] ~= rx, 0 if not, -1 on regex error; 
  rx and s are in utf-8, rx is 0-terminated, s is n bytes long;
