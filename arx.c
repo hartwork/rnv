@@ -21,9 +21,10 @@ delimiters in regexp and literal must be quoted by \ inside strings
 
 */
 
+#include <stdlib.h>
+#include <string.h>
 #include UNISTD_H
 #include <fcntl.h>
-#include <string.h>
 #include <stdio.h>
 #include <stdarg.h>
 #include <errno.h>
@@ -44,23 +45,35 @@ delimiters in regexp and literal must be quoted by \ inside strings
 #define MATCH 3
 #define NOMAT 4
 
-#define LEN_T 16 
+#define LEN_2 16 
 #define LEN_R 64
 #define LEN_S 64
 #define S_AVG_SIZE 64
 
 #define LEN_V 64
 
+#define LEN_T 1024
+#define LIM_T 65536
+
 static char *xml;
 static int len_t,len_r,len_s,i_t,i_r,i_s;
 static int (*t2s)[2],(*rules)[3];
 static char *string; static struct hashtable ht_s;
 
-/* parser */
+/* arx parser */
 static char *arxfn;
 static int arxfd, i_b,len_b, cc, line,col,prevline, sym,len_v, errors;
 static char buf[BUFSIZ];
 static char *value;
+
+/* xml validator */
+static XML_Parser expat=NULL;
+static int current,previous;
+static int mixed=0;
+static int ok;
+static char *text; static int len_t;
+static int n_t;
+
 
 static int add_s(char *s) {
   int len=strlen(s)+1,j;
@@ -87,20 +100,23 @@ static void init(void) {
     rn_init(); rnc_init(); rnd_init(); rnv_init();
     rnv_verror_handler=&silent_verror_handler;
     string=(char*)memalloc(len_v=LEN_S*S_AVG_SIZE,sizeof(char));
-    t2s=(int(*)[2])memalloc(len_t=LEN_T,sizeof(int[2]));
+    t2s=(int(*)[2])memalloc(len_t=LEN_2,sizeof(int[2]));
     rules=(int(*)[3])memalloc(len_r=LEN_R,sizeof(int[3]));
     ht_init(&ht_s,LEN_S,&hash_s,&equal_s);
     value=(char*)memalloc(len_v=LEN_V,sizeof(char));
+    text=(char*)memalloc(len_t=LEN_T,sizeof(char));
     windup();
   }
 }
 
 static void clear(void) {
+  if(len_t>LIM_T) {memfree(text); text=(char*)memalloc(len_t=LEN_T,sizeof(char));}
   ht_clear(&ht_s);
   windup();
 }
 
 static void windup(void) {
+  text[n_t=0]='\0';
   i_t=1; i_r=i_s=0;
 }
 
@@ -153,8 +169,8 @@ static void verror_handler(int erno,va_list ap) {
   switch(erno) {
   case ARX_ER_SYN: err("syntax error"); break;
   case ARX_ER_EXP: err("%s expected, %s found"); break;
-  case ARX_ER_REX: err("incorrect regular expression"); break;
-  case ARX_ER_RNG: err("incorrect Relax NG grammar"); break;
+  case ARX_ER_REX: err("invalid regular expression"); break;
+  case ARX_ER_RNG: err("invalid Relax NG grammar"); break;
   case ARX_ER_NOQ: err("unterminated literal or regular expression"); break;
   case ARX_ER_TYP: err("undeclared type '%s'"); break;
   }
@@ -275,7 +291,7 @@ static int typ2str(void) {
 
 static int arx(char *fn) {
   if((arxfd=open(arxfn=fn,O_RDONLY))==-1) {
-    fprintf(stderr,"error (%s): %s",arxfn,strerror(errno));
+    fprintf(stderr,"error (%s): %s\n",arxfn,strerror(errno));
     return 0;
   } else {
     errors=0;
@@ -334,10 +350,65 @@ static int arx(char *fn) {
   }
 }
 
+static void flush_text(void) {
+  ok=rnv_text(&current,&previous,text,n_t,mixed)&&ok;
+  text[n_t=0]='\0';
+}
+
+static void start_element(void *userData,const char *name,const char **attrs) {
+  if(current!=rn_notAllowed) { 
+    mixed=1;
+    flush_text();
+    ok=rnv_start_tag(&current,&previous,(char*)name,(char**)attrs)&&ok;
+    mixed=0;
+  }
+}
+
+static void end_element(void *userData,const char *name) {
+  if(current!=rn_notAllowed) {
+    flush_text(); 
+    ok=rnv_end_tag(&current,&previous,(char*)name)&&ok;
+    mixed=1;
+  }
+}
+
+static void characters(void *userData,const char *s,int len) {
+  if(current!=rn_notAllowed) {
+    int newlen_t=n_t+len+1;
+    if(newlen_t<=LIM_T&&LIM_T<len_t) newlen_t=LIM_T; 
+    else if(newlen_t<len_t) newlen_t=len_t;
+    if(len_t!=newlen_t) text=(char*)memstretch(text,len_t=newlen_t,n_t,sizeof(char));
+    memcpy(text+n_t,s,len); n_t+=len; text[n_t]='\0'; /* '\0' guarantees that the text is bounded, and strto[ld] work for data */
+  }
+}
+
+static void validate(int start,int fd) {
+  void *buf; int len;
+  previous=current=start;
+
+  expat=XML_ParserCreateNS(NULL,':');
+  XML_SetElementHandler(expat,&start_element,&end_element);
+  XML_SetCharacterDataHandler(expat,&characters);
+  for(;;) {
+    buf=XML_GetBuffer(expat,BUFSIZ);
+    len=read(fd,buf,BUFSIZ);
+    if(len<0) {
+      fprintf(stderr,"error (%s)\n",xml,strerror(errno));
+      ok=0; break;
+    }
+    if(!XML_ParseBuffer(expat,len,len==0)) ok=0;
+    if(!ok) break;
+    if(len==0) break;
+  }
+  XML_ParserFree(expat);
+  return;
+}
+
 static void version(void) {fprintf(stderr,"arx version %s\n",ARX_VERSION);}
 static void usage(void) {fprintf(stderr,"usage: arx {-[vh?]} document.xml arx.conf {arx.conf}\n");}
 
 int main(int argc,char **argv) {
+  int fd;
   init();
 
   while(*(++argv)&&**argv=='-') {
@@ -356,7 +427,30 @@ int main(int argc,char **argv) {
 
   if(!(*(argv)&&*(argv+1))) {usage(); return 1;}
 
-  xml=*(argv);
-  arx(*(argv+1));
-  return 0;
+  xml=*(argv++);
+  if((fd=open(xml,O_RDONLY))==-1) {
+    fprintf(stderr,"error (%s): %s\n",xml,strerror(errno));
+    return EXIT_FAILURE;
+  }
+  close(fd);
+  do {
+    if(arx(*(argv++))) {
+      int i;
+      for(i=0;i!=i_r;++i) {
+	switch(rules[i][0]) {
+        case VALID: ok=1; validate(rules[i][1],fd=open(xml,O_RDONLY)); close(fd); break;
+	case INVAL: ok=1; validate(rules[i][1],fd=open(xml,O_RDONLY)); close(fd); ok=!ok; break;
+	case MATCH: ok=rx_match(string+rules[i][1],xml,strlen(xml)); break;
+	case NOMAT: ok=!rx_match(string+rules[i][1],xml,strlen(xml)); break;
+	default: assert(0);
+	}
+	if(ok) {
+	  printf("%s\n",string+rules[i][2]);
+	  return EXIT_SUCCESS;
+	}
+      }
+    }
+    clear();
+  } while(*argv);
+  return EXIT_FAILURE;
 }

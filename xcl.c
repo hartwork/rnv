@@ -185,6 +185,7 @@ PARSE_ERROR:
   error_handler(XCL_ER_XML,XML_ErrorString(XML_GetErrorCode(expat)));
   while(peipe&&(len=read(fd,buf,BUFSIZ))!=0) peipe=peipe&&pipeout(buf,len);
 ERROR:
+  XML_ParserFree(expat);
   ok=0;
 }
 
