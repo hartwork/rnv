@@ -102,10 +102,11 @@ static void windup(void) {
   level=0; lastline=lastcol=-1;
 }
 
-static void load_rnc(char *fn) {
+static int load_rnc(char *fn) {
+  int ok;
   struct rnc_source *sp=rnc_alloc();
   if(rnc_open(sp,fn)!=-1) start=rnc_parse(sp); rnc_close(sp); 
-  ok=!rnc_errors(sp)&&ok;
+  ok=!rnc_errors(sp);
   rnc_free(sp);
 
   if(ok) {
@@ -116,11 +117,11 @@ static void load_rnc(char *fn) {
 	rnd_traits();
 	start=rnd_release();
 	start=rn_compress_last(start);
-	return;
+	return 1;
       }
     }
-    ok=0;
   }
+  return 0;
 }
 
 static void error_handler(int erno,...) {
@@ -204,7 +205,6 @@ static void usage(void) {fprintf(stderr,"usage: rnv {-[qpsvh?]} schema.rnc {docu
 
 int main(int argc,char **argv) {
   init();
-  ok=1;
 
   peipe=0; explain=1;
   while(*(++argv)&&**argv=='-') {
@@ -226,8 +226,7 @@ int main(int argc,char **argv) {
 
   if(!*(argv)) {usage(); return 1;}
 
-  load_rnc(*(argv++));
-  if(ok) {
+  if((ok=load_rnc(*(argv++)))) {
     if(*argv) {
       do {
 	int fd; xml=*argv;
