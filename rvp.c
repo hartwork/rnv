@@ -225,7 +225,6 @@ int main(int argc,char **argv) {
 
   if(*argv==NULL) {usage(); return 1;}
 
-
   starts=(int*)memalloc(argc,sizeof(int));
   ok=1; n_st=0;
   do {

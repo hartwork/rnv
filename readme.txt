@@ -12,6 +12,10 @@ Version 1.3
    Invocation 
    Limitations 
    ARX 
+   Applications
+
+        RVP 
+
    New versions 
 
    Abstract
@@ -33,7 +37,7 @@ News since 1.2
    and gives better performance. Pass-through mode has been added to
    facilitate use of rnv in pipes. ARX, an utility to automatically
    associate documents and grammars, is included in the distribution;
-   details are below. A simple plugin for vim, http://www.vim.org/,
+   details are below. A simple plug-in for vim, http://www.vim.org/,
    is provided to use RNV with the editor. The script uses ARX to
    automatically choose the grammar for a document.
 
@@ -63,11 +67,12 @@ Note
      * Makefile for unix-like systems;
      * Makefile.bcc for Win32 and Borland C/C++ Compiler;
      * tools/xck, a simple shell script I am using to validate documents;
-     * tools/rnv.vim, a plugin for Vim;
+     * tools/rnv.vim, a plug-in for Vim;
      * tools/arx.conf, ARX configuration file;
      * tools/*.rnc, sample Relax NG grammars;
      * the log of changes, changes.txt;
      * this file, readme.txt.
+     * Other scripts, samples and plug-ins appear in tools/ eventually.
 
 Installation
 
@@ -150,7 +155,7 @@ ARX
           prints current version;
 
    -h or -?
-          displays usage summary and exit.
+          displays usage summary and exits.
 
    The configuration file must confrom to the following grammar:
 
@@ -197,6 +202,75 @@ ARX
 
    ARX can also be used to link documents to any type of information or
    processing.
+
+Applications
+
+   The distribution includes several utilities built upon RNV; they are
+   listed and described in the section.
+
+RVP
+
+   RVP is abbreviation for Relax NG Validation Pipe. It reads validation
+   primitives from the standard input and reports result to the standard
+   output; it's main purpose is to ease embedding of a Relax NG validator
+   into various languages and environment. An apllication would launch
+   RVP as a parallel process and use a simple protocol to perform
+   validation. The protocol, in BNF, is:
+
+     query ::= (start | start-tag-open | attribute | start-tag-close | text | e
+nd-tag) z.
+     start ::= "start" [gramno].
+     start-tag-open ::= "start-tag-open" patno name.
+     attribute ::= "attribute" patno name value.
+     start-tag-close :: = "start-tag-close" patno name.
+     text ::= ("text"|"mixed") patno text.
+     end-tag ::= "end-tag" patno name.
+    response ::= (ok | er | error) z.
+     ok ::= "ok" patno.
+     er ::= "er" patno erno.
+     error ::= "error" patno erno error.
+    z ::= "\0" .
+
+     * RVP assumes that the last colon in a name separates the local part
+       from the namespace URI (it is what one gets if specifies ':' as
+       namespace separator to Expat).
+     * Error codes can be grabbed from rvp sources by grep -l _ER_ *.h
+       and OR-ing them with corresponding masks from erbit.h.
+       Additionally, error 0 is the protocol format error.
+     * Either "er" or "error" responses are returned, not both; -q
+       chooses between concise and verbose forms (invocation syntax
+       described later).
+     * start passes the index of grammar (first grammar in the list is
+       number 0); if the number is omitted, 0 is assumed.
+
+   The command-line syntax is:
+
+        rvp {-q|-s|-v|-h} {schema.rnc}
+
+   The options are:
+
+   -q
+          returns only error numbers, suppresses messages;
+
+   -s
+          takes less memory and runs slower;
+
+   -v
+          prints current version;
+
+   -h or -?
+          displays usage summary and exits.
+
+   To assist embedding RVP, a sample in perl is provided, tools/rvp.pl.
+   The script uses XML::Parser::Expat; it takes a Relax NG grammar (in
+   the compact syntax) as the command line argument and reads the XML
+   from the standard input. The script is not designed as a
+   general-purpose module, instead, it is kept simple and unobscured to
+   illustrate the technique.
+
+   Perl (as well as Python, Ruby and other) programmers are encouraged to
+   implement and share general-purpose modules for their languages of
+   choice.
 
 New versions
 

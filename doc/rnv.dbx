@@ -23,7 +23,7 @@ News since 1.2
 </title>
 
 <para>
-This release has many performance and convenience enhancements. Pattern pools are now one-dimensional arrays, which conserves space and gives better performance. Pass-through mode has been added to facilitate use of rnv in pipes. <application>ARX</application>, an utility to automatically associate documents and grammars, is included in the distribution; details are below. A simple plugin for vim, <ulink url="http://www.vim.org/">http://www.vim.org/</ulink>, is provided to use  <varname>RNV</varname> with the editor. The script uses <application>ARX</application> to automatically choose the grammar for a document.
+This release has many performance and convenience enhancements. Pattern pools are now one-dimensional arrays, which conserves space and gives better performance. Pass-through mode has been added to facilitate use of rnv in pipes. <application>ARX</application>, an utility to automatically associate documents and grammars, is included in the distribution; details are below. A simple plug-in for vim, <ulink url="http://www.vim.org/">http://www.vim.org/</ulink>, is provided to use  <varname>RNV</varname> with the editor. The script uses <application>ARX</application> to automatically choose the grammar for a document.
 </para>
 </section>
 
@@ -64,7 +64,7 @@ The package consists of:
 </para></listitem>
 <listitem><para><filename>tools/xck</filename>, a simple shell script I am using to validate documents;
 </para></listitem>
-<listitem><para><filename>tools/rnv.vim</filename>, a plugin for Vim;
+<listitem><para><filename>tools/rnv.vim</filename>, a plug-in for Vim;
 </para></listitem><listitem><para><filename>tools/arx.conf</filename>, <application>ARX</application> configuration file;
 </para></listitem>
 <listitem><para><filename>tools/*.rnc</filename>, sample Relax NG grammars;
@@ -73,6 +73,7 @@ The package consists of:
 </para></listitem>
 <listitem><para>this file, <filename>readme.txt</filename>.
 </para></listitem>
+<listitem><para>Other scripts, samples and plug-ins appear in <filename>tools/</filename> eventually.</para></listitem>
 </itemizedlist>
 </section>
 
@@ -335,6 +336,7 @@ Either "er" or "error" responses are returned, not both; <option>-q</option>
 chooses between concise and verbose forms (invocation syntax described later).
 </para></listitem>
 <listitem><para><command>start</command> passes the index of grammar (first grammar in the list is number 0); if the number is omitted, 0 is assumed.
+</para></listitem>
 </itemizedlist>
 <para>The command-line syntax is:
 </para>
@@ -376,7 +378,11 @@ prints current version;
 displays usage summary and exits.
 </para></listitem>
 </varlistentry>
-</variablelist> 
+</variablelist>
+<para>To assist embedding RVP, a sample in perl is provided, <filename>tools/rvp.pl</filename>. The script uses XML::Parser::Expat; it takes a Relax NG grammar (in the compact syntax) as the command line argument and reads the XML from the standard input. The script is not designed as a general-purpose module, instead, it is kept simple and unobscured to illustrate the technique.
+</para>
+<para>Perl (as well as Python, Ruby and other) programmers are encouraged to implement and share general-purpose modules for their languages of choice.
+</para>
 </section>
 </section>
 <section>

@@ -15,7 +15,7 @@ use strict;
 
 my @RVP=("rvp");
 
-my ($parser,$errors); # declared here for use in resp()
+my ($parser,$errors,$prevline,$prevcol); # declared here for use in resp()
 
 # rvp wrapper
 $|=1;  # using pipes
@@ -33,10 +33,13 @@ sub resp {
 
      # if the message is empty, don't print the message, 
      # the error has occured in already erroneous state 
-      $msg and printf STDERR "%u,%u: %s\n",
-        $parser->current_line(),
-        $parser->current_column(),
-        $msg;
+      if($msg) {
+        my ($line,$col)=($parser->current_line(),$parser->current_column());
+	if($line!=$prevline || $col!=$prevcol) {
+          printf STDERR "%u,%u: %s\n",$line,$col,$msg;
+	  $prevline=$line; $prevcol=$col;
+	}
+      }
       $errors=1;
       return $pat;
     };
@@ -46,31 +49,31 @@ sub resp {
 
 sub start_tag_open {
   my($cur,$name)=@_;
-  print RVPIN "start-tag-open $cur $name\0";
+  syswrite RVPIN,"start-tag-open $cur $name\0";
   return resp();
 }
 
 sub attribute {
   my($cur,$name,$val)=@_;
-  print RVPIN "attribute $cur $name $val\0";
+  syswrite RVPIN,"attribute $cur $name $val\0";
   return resp();
 }
 
 sub start_tag_close {
   my($cur,$name)=@_;
-  print RVPIN "start-tag-close $cur $name\0";
+  syswrite RVPIN,"start-tag-close $cur $name\0";
   return resp();
 }
 
 sub end_tag {
   my($cur,$name)=@_;
-  print RVPIN "end-tag $cur $name\0";
+  syswrite RVPIN,"end-tag $cur $name\0";
   return resp();
 }
 
 sub text {
   my($cur,$text)=@_;
-  print RVPIN "text $cur $text\0";
+  syswrite RVPIN,"text $cur $text\0";
   return resp();
 }
 
@@ -80,7 +83,7 @@ sub text {
 sub mixed {
   my($cur,$text)=@_;
   if($text=~m/[^\t\n ]/s) {
-    print RVPIN "mixed $cur .\0";
+    syswrite RVPIN,"mixed $cur .\0";
     return resp();
   } else {
     return $cur;
@@ -89,12 +92,12 @@ sub mixed {
 
 sub start {
   my $no=shift @_ or 0;
-  print RVPIN "start $no\0";
+  syswrite RVPIN,"start $no\0";
   return resp();
 }
 
 sub quit {
-  print RVPIN "quit\0";
+  syswrite RVPIN,"quit\0";
   return resp();
 }
 

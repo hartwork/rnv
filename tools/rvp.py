@@ -1,126 +1,150 @@
 # $Id$
 
+# embedding sample for RVP, a part of RNV, http://davidashen.net/rnv.html
+# code kept simple to show the technique, not to provide a general purpose
+# module.
+#
+# details of the protocol are in a long comment near the start of rvp.c
+#
+
 import sys, os, fcntl, string, re, xml.parsers.expat
 
-global rvpin,rvpout,pat,errors,parser,text,mixed
+global rvpin,rvpout,pat,errors,parser,text,mixed,prevline,prevcol
 
+# raised by resp if it gets something the module does not understand
 class ProtocolError(Exception):
-	def __init__(self, value):
-		self.value = value
-	def __str__(self):
-		return repr(self.value)
- 
+  def __init__(self, value):
+    self.value = value
+  def __str__(self):
+    return repr(self.value)
+
+# run RVP with grammar specified on the command line 
 def launch():
-	global rvpin,rvpout
-	rvpin,rvpout=os.popen2('rvp '+string.join(sys.argv[1:],' '),0)
+  global rvpin,rvpout
+  rvpin,rvpout=os.popen2('rvp '+string.join(sys.argv[1:],' '))
 
+# terminate string with zero, encode in utf-8 and then send to RVP
 def send(s):
-	rvpin.write(s.encode('UTF-8')+'\0')
-	rvpin.flush()
-	
-def recv():
-	s=''
-	while 1:
-		c=rvpout.read(1)
-		if(c=='\0'): break
-		s=s+c
-	return s
+  rvpin.write(s.encode('UTF-8')+'\0')
+  rvpin.flush()
 
+# receive a zero-terminated response from RVP, zero byte is dropped  
+def recv():
+  s=''
+  while 1:
+    c=rvpout.read(1)
+    if(c=='\0'): break
+    s=s+c
+  return s
+
+# return current pattern value, and print error message on stderr, if any
 def resp():
-	global errors
-	r=string.split(recv(),' ',3)
-	if(r[0]=='ok'):
-		return r[1]
-	if(r[0]=='error'):
-		errors=1
-		if(r[3]!=''):
-			sys.stderr.write(str(parser.lineno)+","+str(parser.offset)+": "+r[3])
-		return r[1]
-	raise ProtocolError,"unexpected response '"+r[0]+"'"
+  global errors,prevline,prevcol
+  r=string.split(recv(),' ',3)
+  if(r[0]=='ok'): return r[1]
+  if(r[0]=='error'):
+    errors=1
+    if(r[3]!=''): # if the error string is empty, then error is occured
+    		  # in erroneous state, don't report
+      line,col=parser.ErrorLineNumber,parser.ErrorColumnNumber
+      if(line!=prevline or col!=prevcol): # one report per file position
+	sys.stderr.write(str(line)+","+str(col)+": "+r[3])
+	prevline,prevcol=line,col
+    return r[1]
+  if(r[0]=='er'):
+    errors=1
+    return r[1]
+  raise ProtocolError,"unexpected response '"+r[0]+"'"
 
 def start_tag_open(cur,name):
-	send('start-tag-open '+cur+' '+name)
-	return resp()
+  send('start-tag-open '+cur+' '+name)
+  return resp()
 
 def attribute(cur,name,val):
-	send('attribute '+cur+' '+name+' '+val)
-	return resp()
-	
+  send('attribute '+cur+' '+name+' '+val)
+  return resp()
+  
 def start_tag_close(cur,name):
-	send('start-tag-close '+cur+' '+name)
-	return resp()
+  send('start-tag-close '+cur+' '+name)
+  return resp()
 
 def end_tag(cur,name):
-	send('end-tag '+cur+' '+name)
-	return resp()
+  send('end-tag '+cur+' '+name)
+  return resp()
 
 def textonly(cur,text):
-	send('text '+cur+' '+text)
-	return resp()
+  send('text '+cur+' '+text)
+  return resp()
 
 # in mixed content, whitespace is simply discarded, and any
 # non-whitespace is equal; but this optimization gives only only
 # 5% increase in speed at most in practical cases
 def mixed(cur,text):
-	if(re.search('[^\t\n ]',text)):
-		send('mixed '+cur+' .')
-		return resp()
-	else:
-		return cur
+  if(re.search('[^\t\n ]',text)):
+    send('mixed '+cur+' .')
+    return resp()
+  else: return cur
 
 def start(g):
-	send('start '+g)
-	return resp()
+  send('start '+g)
+  return resp()
 
 def quit():
-	send('quit')
-	return resp()
+  send('quit')
+  return resp()
 
 # Expat handlers
+
+# If I remember correctly, Expat has the custom not to concatenate
+# text nodes; therefore CharDataHandler just concatenates them into
+# text, and then flush_text passes the text to the validator
 def flush_text():
-	global mixed,pat,text
-	
-	if(pat==mixed):
-		mixed(pat,text)
-	else:
-		textonly(pat,text)
-	text=''
+  global mixed,pat,text
+  
+  if(pat==mixed):
+    mixed(pat,text)
+  else:
+    textonly(pat,text)
+  text=''
 
 def start_element(name,attrs):
-	global mixed,pat
+  global mixed,pat
 
-	mixed=1
-	flush_text()
-	pat=start_tag_open(pat,name)
-	mixed=0
-	for n,v in attrs.items():
-		pat=attribute(pat,n,v)
-	pat=start_tag_close(pat,name)
+  mixed=1
+  flush_text()
+  pat=start_tag_open(pat,name)
+  mixed=0
+  for n,v in attrs.items(): pat=attribute(pat,n,v)
+  pat=start_tag_close(pat,name)
 
 def end_element(name):
-	global mixed,pat
+  global mixed,pat
 
-	flush_text()
-	pat=end_tag(pat,name)
-	mixed=1
+  flush_text()
+  pat=end_tag(pat,name)
+  mixed=1
 
 def characters(data):
-	global text
-	
-	text=text+data
+  global text
+  
+  text=text+data
 
 # Main
 
 errors=0
 launch()
-pat=start('0')
-
-parser=xml.parsers.expat.ParserCreate('UTF-8',':')
+pat=start('0') # that is, start of the first grammar;
+	       # multiple grammars can be passed to rvp
+parser=xml.parsers.expat.ParserCreate('UTF-8',':') # last colon in the name
+                                  # separates local name from namespace URI
 parser.StartElementHandler=start_element
 parser.EndElementHandler=end_element
 parser.CharacterDataHandler=characters
 
 text=''
+prevline,prevcol=-1,-1
 parser.ParseFile(sys.stdin)
 
-quit()
+quit() # this stops RVP; many files can be validated with a single RVP
+       # running, concurrently or sequentially
+sys.exit(errors)
