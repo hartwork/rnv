@@ -3,6 +3,7 @@
 #include <fcntl.h> /* open, read, close */
 #include <string.h> /* memcpy */
 #include <stdlib.h> /* calloc,malloc,free */
+#include <stdio.h> /*stderr*/
 
 #include "u.h"
 #include "rn.h"
@@ -148,154 +149,178 @@ keyword ::= "attribute"
 #define CUFSIZE 1
 #define BUFTAIL 6
 
+#define SRC_FREE 1
+#define SRC_CLOSE 2
+
 struct utf_source {
   char *fn; int fd;
   char *buf; int i,n;
   int complete;
   int line,col;
   int u,v,w; int nx;
+  int flags;
 };
 
-static int rnc_stropen(struct utf_source *src,char *s,int len) {
-  src->fn="";
-  src->buf=s; 
-  src->i=0; src->n=len; 
-  nx=-1;
-  src->complete=1; 
-  src->fd=-1;
+static void rnc_init(struct utf_source *sp);
+static int rnc_read(struct utf_source *sp);
+
+int rnc_stropen(struct utf_source *sp,char *fn,char *s,int len) {
+  rnc_init(sp);
+  sp->buf=s; sp->n=len; sp->complete=1; 
   return 0;
 }
 
-static int rnc_open(struct utf_source *src,char *fn) {
-  src->fn=fn; 
-  src->buf=(char*)calloc(BUFSIZE,sizeof(char));
-  src->fd=open(fn,O_RDONLY);
-  src->i=src->n=0;
-  nx=-1;
-  complete=-1;
-  src->fd==-1;
-  return src->fd;
+int rnc_bind(struct utf_source *sp,char *fn,int fd) {
+  rnc_init(sp);
+  sp->fn=fn; 
+  sp->buf=(char*)calloc(BUFSIZE,sizeof(char));
+  sp->fd=fd;
+  sp->nx=-1;
+  sp->complete=sp->fd==-1;
+  sp->flags=SRC_FREE;
+  rnc_read(sp);
+  return sp->fd;
 }
 
-static int rnc_read(struct utf_source *src) {
+int rnc_open(struct utf_source *sp,char *fn) {
+  sp->flags|=SRC_CLOSE;
+  return rnc_bind(sp,fn,open(fn,O_RDONLY));
+}
+
+int rnc_close(struct utf_source *sp) {
+  int ret=0;
+  if(sp->flags&SRC_FREE) free(sp->buf); 
+  sp->buf=NULL;
+  sp->complete=-1;
+  if(sp->flags&SRC_CLOSE) {
+    if(sp->fd!=-1) {
+      ret=close(sp->fd); sp->fd=-1;
+    }
+  }
+  return ret;
+}
+
+static void rnc_init(struct utf_source *sp) {
+  sp->fn=sp->buf=NULL;
+  sp->i=sp->n=0; 
+  sp->nx=sp->complete=sp->fd=-1;
+  sp->u=sp->v=0;
+  sp->flags=0;
+}
+
+static int rnc_read(struct utf_source *sp) {
   int ni;
-  memcpy(src->buf,src->buf+src->i,src->n-=src->i);
-  src->n=src->i=ni=0;
+  memcpy(sp->buf,sp->buf+sp->i,sp->n-=sp->i);
+  sp->i=0;
   for(;;) {
-    ni=read(src->fd,src->buf+src->n,BUFSIZE);
+    ni=read(sp->fd,sp->buf+sp->n,BUFSIZE-sp->n);
     if(ni>0) {
-      src->n+=ni;
-      if(src->n>=BUFTAIL) break;
+      sp->n+=ni;
+      if(sp->n>=BUFTAIL) break;
     } else {
-      close(src->fd); src->fd=-1;
-      src->complete=1;
+      close(sp->fd); sp->fd=-1;
+      sp->complete=1;
       break;
     }
   }
   return ni;
 }
 
-static int rnc_close(struct utf_source *src) {
-  int ret=0;
-  free(src->buf); src->buf=NULL;
-  src->complete=-1;
-  if(src->fd!=-1) {
-    ret=close(src->fd); src->fd=-1;
-  }
-  return ret;
-}
-
-static void getu(struct utf_source *src) {
-  int n,u0=src->u;
+/* read utf8 */
+static void getu(struct utf_source *sp) {
+  int n,u0=sp->u;
   for(;;) {
-    if(!src->complete&&src->i>BUFSIZE-BUFTAIL) {
-      if(rnc_read(src)==-1) (*er_handler)(ER_IO,src->fn);
+    if(!sp->complete&&sp->i>sp->n-BUFTAIL) {
+      if(rnc_read(sp)==-1) (*er_handler)(ER_IO,sp->fn);
     }
-    if(src->i==src->n) {
-      src->u=u0=='\n'?-1:'\n'; 
+    if(sp->i==sp->n) {
+      sp->u=u0=='\n'?-1:'\n'; 
       return;
     } /* eof */
-    n=u_get(&src->u,src->buf+src->i);
+    n=u_get(&sp->u,sp->buf+sp->i);
     if(n==0) { 
-      (*er_handler)(ER_UTF,src->fn,src->line,src->col);
-      ++src->i;
+      (*er_handler)(ER_UTF,sp->fn,sp->line,sp->col);
+      ++sp->i;
       continue;
-    } else if(n+src->n>sizeof(src->buf)) { 
-      (*er_handler)(ER_UTF,src->fn,src->line,src->col);
-      src->i=src->n;
+    } else if(n+sp->i>sp->n) { 
+      (*er_handler)(ER_UTF,sp->fn,sp->line,sp->col);
+      sp->i=sp->n;
       continue;
     } else {
-      src->i+=n;
-      if(u0=='\r'&&src->u=='\n') continue;
+      sp->i+=n;
+      if(u0=='\r'&&sp->u=='\n') continue;
     }
     return;
   }
 }
 
-static void getv(struct utf_source *src) {
-  if(nx>0) {
-    src->v='x'; --nx;
-  } else if(nx==0) {
-    src->v=src->w;
-    nx=-1;
+/* newlines are replaced with \0; \x{<hex>+} are unescaped.
+the result is in sp->v
+*/
+static void getv(struct utf_source *sp) {
+  if(sp->nx>0) {
+    sp->v='x'; --sp->nx;
+  } else if(sp->nx==0) {
+    sp->v=sp->w;
+    sp->nx=-1;
   } else {
-    getu(src);
-    switch(u) {
-    case '\r': case '\n': src->v=0; break;
+    getu(sp);
+    switch(sp->u) {
+    case '\r': case '\n': sp->v=0; break;
     case '\\':
-      getu(src);
-      if(src->u=='x') {
-	nx=0;
+      getu(sp);
+      if(sp->u=='x') {
+	sp->nx=0;
 	do {
-	  ++nx;
-	  getu(src);
-	} while(src->u=='x');
-	if(src->u=='{') { 
-	  nx=-1;
-	  src->v=0; 
+	  ++sp->nx;
+	  getu(sp);
+	} while(sp->u=='x');
+	if(sp->u=='{') { 
+	  sp->nx=-1;
+	  sp->v=0; 
 	  for(;;) {
-	    getu(src);
-	    if(src->u=='}') goto END_OF_HEX_DIGITS;
-	    src->v<<=4;
-	    switch(src->u) {
+	    getu(sp);
+	    if(sp->u=='}') goto END_OF_HEX_DIGITS;
+	    sp->v<<=4;
+	    switch(sp->u) {
             case '0': break;
-            case '1': src->v+=1; break;
-            case '2': src->v+=2; break;
-            case '3': src->v+=3; break;
-            case '4': src->v+=4; break;
-            case '5': src->v+=5; break;
-            case '6': src->v+=6; break;
-            case '7': src->v+=7; break;
-            case '8': src->v+=8; break;
-            case '9': src->v+=9; break;
-	    case 'A': case 'a': src->v+=10; break;
-	    case 'B': case 'b': src->v+=11; break;
-	    case 'C': case 'c': src->v+=12; break;
-	    case 'D': case 'd': src->v+=13; break;
-	    case 'E': case 'e': src->v+=14; break;
-	    case 'F': case 'f': src->v+=15; break;
+            case '1': sp->v+=1; break;
+            case '2': sp->v+=2; break;
+            case '3': sp->v+=3; break;
+            case '4': sp->v+=4; break;
+            case '5': sp->v+=5; break;
+            case '6': sp->v+=6; break;
+            case '7': sp->v+=7; break;
+            case '8': sp->v+=8; break;
+            case '9': sp->v+=9; break;
+	    case 'A': case 'a': sp->v+=10; break;
+	    case 'B': case 'b': sp->v+=11; break;
+	    case 'C': case 'c': sp->v+=12; break;
+	    case 'D': case 'd': sp->v+=13; break;
+	    case 'E': case 'e': sp->v+=14; break;
+	    case 'F': case 'f': sp->v+=15; break;
             default: 
-	      (*er_handler)(ER_XESC,src->fn,src->line,src->col);
+	      (*er_handler)(ER_XESC,sp->fn,sp->line,sp->col);
 	      goto END_OF_HEX_DIGITS;
             }
 	  } END_OF_HEX_DIGITS:;
 	} else {
-	  src->v='\\'; src->w=src->u;
+	  sp->v='\\'; sp->w=sp->u;
 	}
       } else {
-	nx=0;
-	src->v='\\'; src->w=src->u;
+	sp->nx=0;
+	sp->v='\\'; sp->w=sp->u;
       }
       break;
     default:
-      src->v=src->u;
+      sp->v=sp->u;
       break;
     }
   }
 }
 
-static int sym(struct utf_source *src) {
-  switch(src->v) {
+static int sym(struct utf_source *sp) {
+  switch(sp->v) {
   case -1: return SYM_EOF;
   case '#':
     break;
@@ -339,8 +364,30 @@ static int sym(struct utf_source *src) {
   }
 }
 
+int main(int argc,char **argv) {
+  struct utf_source src;
+  src.line=src.col=1;
+  rnc_bind(&src,"stdin",0);
+  for(;;) {
+    if(src.v==-1) break;
+    if(src.v==0) {
+      printf("\n>> ");
+      src.line++;
+      src.col=1;
+    } else {
+      src.col++;
+      putchar(src.v);
+    }
+    getv(&src);
+  }
+  rnc_close(&src);
+}
+
 /*
  * $Log$
+ * Revision 1.4  2003/11/20 23:28:50  dvd
+ * getu,getv debugged
+ *
  * Revision 1.3  2003/11/20 16:29:08  dvd
  * x escapes sketched
  *
