@@ -33,12 +33,13 @@ void dsl_ld(char *dl) {
   { char *argv[]={NULL,NULL}; argv[0]=dsl_scm; /*Init.scm wants args*/
     scm_init_from_argv(sizeof(argv)/sizeof(char*)-1,argv,0,0,0);
   }
-  if(BOOL_F==equal(MAKINUM(0),scm_top_level(implpath(),&toplvl))) {
+  if(MAKINUM(0)!=scm_top_level(implpath(),&toplvl)) {
     (*er_printf)("dsl: cannot load %s\n",dsl_scm);
     dsl_scm=NULL;
   }
 }
 
+/* these are parsed with shere macro, not used with sprintf */
 #define ALLOWS "(dsl-allows? \"%s\" '(%s) \"%s\")"
 #define PARAM "(\"%s\".\"%s\")"
 #define EQUAL "(dsl-equal? \"%s\" \"%s\" \"%s\")"
