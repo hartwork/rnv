@@ -201,7 +201,7 @@ static int externalEntityRef(XML_Parser p,const char *context, const char *base,
   } else {
     error_handler(XCL_ER_NOSID);
   }
-  return XML_STATUS_OK;
+  return 1;
 }
 
 static void validate(int fd) {

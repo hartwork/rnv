@@ -100,7 +100,7 @@ int dsl_equal(char *typ,char *val,char *s,int n) {
 
 #else
 
-void dsl_ld(char *execpath,char *dl) {}
+void dsl_ld(char *dl) {}
 int dsl_allows(char *typ,char *ps,char *s,int n) {return 0;}
 int dsl_equal(char *typ,char *val,char *s,int n) {return 0;}
 
