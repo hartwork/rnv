@@ -23,9 +23,7 @@ struct dtl {
 
 #define M_STO 0
 #define M_STC 1
-#define M_ATT 2
-#define M_TXT 3
-#define M_END 4
+#define M_END 2
 #define M_TYP(m) memo[m][0]
 #define M_SET(p) memo[i_m][5]=p
 #define M_RET(m) memo[m][5]
@@ -43,7 +41,7 @@ static int equal_m(int m1,int m2) {
 }
 static int hash_m(int m) {
   int *me=memo[m];
-  return (me[0]&0xf)+((me[1]&0x1ff)<<4)+((me[2]&0x1ff)<<13)+((me[3]&0x1ff)<<22)+(me[4]<<31);
+  return (me[0]&0x2)|((me[1]^me[2]^me[3])<<2);
 }
 
 static int accept_m();
@@ -381,6 +379,9 @@ int drv_end_tag_recover(int p) {return end_tag(p,1);}
 
 /*
  * $Log$
+ * Revision 1.11  2003/12/14 15:21:49  dvd
+ * much better hash functions
+ *
  * Revision 1.10  2003/12/14 14:52:24  dvd
  * efficient memoization
  *

@@ -5,7 +5,7 @@
 #include "rnc.h"
 #include "rnd.h"
 #include "rn.h"
-#include "drv.h"
+#include "rnx.h"
 
 static int parse(struct rnc_source *sp) {
   int start;
@@ -34,12 +34,12 @@ void dump() {
   while(P_TYP(p)) {
     fprintf(stderr,"%s\n",s=p2str(p));
     free(s);
-    drv_expected(p);
-    if(drv_n_exp!=0) {
+    rnx_expected(p);
+    if(rnx_n_exp!=0) {
       int i;
       fprintf(stderr,">\n");
-      for(i=0;i!=drv_n_exp;++i) {
-	fprintf(stderr,"\t%s\n",s=p2str(drv_exp[i]));
+      for(i=0;i!=rnx_n_exp;++i) {
+	fprintf(stderr,"\t%s\n",s=p2str(rnx_exp[i]));
 	free(s);
       }
     }
@@ -52,7 +52,7 @@ int main(int argc,char **argv) {
 
   rnc_init();
   rnd_init();
-  drv_init();
+  rnx_init();
 
 
   sp=rnc_alloc();
@@ -79,6 +79,9 @@ ERRORS:
 
 /* 
  * $Log$
+ * Revision 1.4  2003/12/14 15:21:49  dvd
+ * much better hash functions
+ *
  * Revision 1.3  2003/12/13 22:03:31  dvd
  * rnv works
  *

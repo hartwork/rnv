@@ -387,11 +387,11 @@ static void windup() {
 
 static int hash_p(int p) {
   int *pp=rn_pattern[p];
-  return (pp[0]<<24)|((pp[1]&0xfff)<<12)|(pp[2]&0xfff);
+  return (pp[0]&0xf)|((pp[1]^pp[2])<<4);
 }
 static int hash_nc(int nc) {
   int *ncp=rn_nameclass[nc];
-  return (ncp[0]<<24)|((ncp[1]&0xfff)<<12)|(ncp[2]&0xfff);
+  return (ncp[0]&0x7)|((ncp[1]^ncp[2])<<3);
 }
 static int hash_s(int i) {return strhash(rn_string+i);}
 
@@ -407,6 +407,9 @@ static int equal_s(int s1,int s2) {return strcmp(rn_string+s1,rn_string+s2)==0;}
 
 /* 
  * $Log$
+ * Revision 1.24  2003/12/14 15:21:49  dvd
+ * much better hash functions
+ *
  * Revision 1.23  2003/12/14 14:52:24  dvd
  * efficient memoization
  *
