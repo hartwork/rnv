@@ -71,10 +71,11 @@ static char *kwdtab[NKWD]={
 #define SYM_DOCUMENTATION 41 /* ## */
 #define SYM_LITERAL 42
 
-#define err(msg) vfprintf(stderr,msg" (%s,%u,%u)\n",ap)
+#define err(msg) vfprintf(stderr,"error (%s,%i,%i): "msg"\n",ap)
+#define warn(msg) vfprintf(stderr,"warning (%s,%i,%i): "msg"\n",ap)
 static void default_verror_handler(int er_no,va_list ap) {
   switch(er_no) {
-  case RNC_ER_IO: fprintf(stderr,"I/O error (%s): %s\n",va_arg(ap,char*),strerror(errno)); break;
+  case RNC_ER_IO: err("I/O error: %s\n"); break;
   case RNC_ER_UTF: err("invalid UTF-8 sequence"); break;
   case RNC_ER_XESC: err("unterminated escape"); break;
   case RNC_ER_LEXP: err("lexical error: '%c' expected"); break;
@@ -86,8 +87,8 @@ static void default_verror_handler(int er_no,va_list ap) {
   case RNC_ER_EXT: err("cannot open external grammar '%s'"); break;
   case RNC_ER_DUPNS: err("duplicate namespace prefix '%s'"); break;
   case RNC_ER_DUPDT: err("duplicate datatype prefix '%s'"); break;
-  case RNC_ER_DFLTNS: err("overriding default namespace prefix '%s'"); break;
-  case RNC_ER_DFLTDT: err("overriding default datatype prefix '%s'"); break;
+  case RNC_ER_DFLTNS: warn("overriding default namespace prefix '%s'"); break;
+  case RNC_ER_DFLTDT: warn("overriding default datatype prefix '%s'"); break;
   case RNC_ER_NONS: err("undeclared namespace prefix '%s'"); break;
   case RNC_ER_NODT: err("undeclared datatype prefix '%s'"); break;
   case RNC_ER_NCEX: err("first argument for '-' is not '*' or 'prefix:*'"); break;
@@ -164,7 +165,7 @@ int rnc_bind(struct rnc_source *sp,char *fn,int fd) {
 static void error(int force,struct rnc_source *sp,int er_no,...);
 
 int rnc_open(struct rnc_source *sp,char *fn) {
-  int fd=rnc_bind(sp,fn,open(fn,O_RDONLY)); if(fd==-1) error(1,sp,RNC_ER_IO,sp->fn);
+  int fd=rnc_bind(sp,fn,open(fn,O_RDONLY)); if(fd==-1) error(1,sp,RNC_ER_IO,sp->fn,-1,-1,strerror(errno));
   sp->flags|=SRC_CLOSE;
   return fd;
 }
@@ -258,7 +259,7 @@ static void getu(struct rnc_source *sp) {
   int n,u0=sp->u;
   for(;;) {
     if(!sp->complete&&sp->i>sp->n-BUFTAIL) {
-      if(rnc_read(sp)==-1) error(1,sp,RNC_ER_IO,sp->fn);
+      if(rnc_read(sp)==-1) error(1,sp,RNC_ER_IO,sp->fn,sp->line,sp->col,strerror(errno));
     }
     if(sp->i==sp->n) {
       sp->u=(u0=='\n'||u0=='\r'||u0==-1)?-1:'\n';
@@ -464,7 +465,7 @@ static void advance(struct rnc_source *sp) {
     case '[': getv(sp); NXT(sp).sym=SYM_LSQU; return;
     case ']': getv(sp); NXT(sp).sym=SYM_RSQU; return;
     case '>': getv(sp);
-      if(sp->v!='>') error(0,sp,RNC_ER_LEXP,'>',sp->fn,sp->line,sp->col);
+      if(sp->v!='>') error(0,sp,RNC_ER_LEXP,sp->fn,sp->line,sp->col,'>');
       getv(sp); NXT(sp).sym=SYM_FOLLOW_ANNOTATION; return;
     case '"': case '\'':
       { int q=sp->v;
@@ -523,7 +524,7 @@ static void advance(struct rnc_source *sp) {
 	  } else NXT(sp).sym=SYM_IDENT;
 	  return;
 	} else {
-	  error(0,sp,RNC_ER_LILL,sp->v,sp->fn,sp->line,sp->col);
+	  error(0,sp,RNC_ER_LILL,sp->fn,sp->line,sp->col,sp->v);
 	  getv(sp);
 	  continue;
 	}
@@ -548,7 +549,7 @@ static void skipAnnotationContent(struct rnc_source *sp) {
 	  advance(sp);
 	  break;
 	} else {
-	  error(0,sp,RNC_ER_SILL,sym2str(CUR(sp).sym),sp->fn,CUR(sp).line,CUR(sp).col);
+	  error(0,sp,RNC_ER_SILL,sp->fn,CUR(sp).line,CUR(sp).col,sym2str(CUR(sp).sym));
 	  return;
 	}
       }
@@ -566,11 +567,11 @@ static void getsym(struct rnc_source *sp) {
       continue;
     case SYM_FOLLOW_ANNOTATION: advance(sp);
       if(CUR(sp).sym<0||CUR(sp).sym>SYM_QNAME) {
-	error(0,sp,RNC_ER_SEXP,"identifier, prefixed name or keyword",sym2str(CUR(sp).sym),sp->fn,CUR(sp).line,CUR(sp).col);
+	error(0,sp,RNC_ER_SEXP,sp->fn,CUR(sp).line,CUR(sp).col,"identifier, prefixed name or keyword",sym2str(CUR(sp).sym));
 	while(CUR(sp).sym!=SYM_LSQU&&CUR(sp).sym!=SYM_EOF) advance(sp);
       } else {
 	advance(sp);
-        if(CUR(sp).sym!=SYM_LSQU) error(0,sp,RNC_ER_SEXP,sym2str(SYM_LSQU),sym2str(CUR(sp).sym),sp->fn,CUR(sp).line,CUR(sp).col);
+        if(CUR(sp).sym!=SYM_LSQU) error(0,sp,RNC_ER_SEXP,sp->fn,CUR(sp).line,CUR(sp).col,sym2str(SYM_LSQU),sym2str(CUR(sp).sym));
       }
     case SYM_LSQU:
       skipAnnotationContent(sp);
@@ -585,7 +586,7 @@ static void getsym(struct rnc_source *sp) {
       if(NXT(sp).sym==SYM_CONCAT) {
 	sp->cur=!sp->cur; advance(sp);
 	if(NXT(sp).sym!=SYM_LITERAL) {
-	  error(0,sp,RNC_ER_SEXP,sym2str(SYM_LITERAL),sym2str(CUR(sp).sym),sp->fn,NXT(sp).line,NXT(sp).col);
+	  error(0,sp,RNC_ER_SEXP,sp->fn,NXT(sp).line,NXT(sp).col,sym2str(SYM_LITERAL),sym2str(CUR(sp).sym));
 	  break;
 	}
 	{ int newslen=strlen(CUR(sp).s)+strlen(NXT(sp).s);
@@ -613,7 +614,7 @@ static void skipto(struct rnc_source *sp,int sym) {
 
 static int chkskip(struct rnc_source *sp,int symc,int syms) {
   if(CUR(sp).sym!=symc) {
-    error(0,sp,RNC_ER_SEXP,sym2str(symc),sym2str(CUR(sp).sym),sp->fn,CUR(sp).line,CUR(sp).col);
+    error(0,sp,RNC_ER_SEXP,sp->fn,CUR(sp).line,CUR(sp).col,sym2str(symc),sym2str(CUR(sp).sym));
     skipto(sp,syms);
     return 0;
   } else {
@@ -629,7 +630,7 @@ static int chkwd(struct rnc_source *sp) {
   if(0<=CUR(sp).sym&&CUR(sp).sym<=SYM_IDENT) {
     return 1;
   } else {
-    error(0,sp,RNC_ER_SEXP,"identifier or keyword",sym2str(CUR(sp).sym),sp->fn,CUR(sp).line,CUR(sp).col);
+    error(0,sp,RNC_ER_SEXP,sp->fn,CUR(sp).line,CUR(sp).col,"identifier or keyword",sym2str(CUR(sp).sym));
     return 0;
   }
 }
@@ -657,7 +658,7 @@ static int nsuri(struct rnc_source *sp) {
   case SYM_LITERAL: uri=newString(CUR(sp).s); break;
   case SYM_INHERIT: uri=nss.tab[(sc_find(&nss,-1))][1]; break;
   default:
-    error(0,sp,RNC_ER_SEXP,"literal or 'inherit'",sp->fn,CUR(sp).line,CUR(sp).col);	
+    error(0,sp,RNC_ER_SEXP,sp->fn,CUR(sp).line,CUR(sp).col,"literal or 'inherit'");	
     break;
   }
   getsym(sp);
@@ -677,12 +678,12 @@ static void close_scope(struct rnc_source *sp) {
     if((j=sc_find(&defs,name))) {
       rn_pattern[refs.tab[i][1]+1]=defs.tab[j][1];
     } else {
-      error(1,sp,RNC_ER_UNDEF,rn_string+name,sp->fn,CUR(sp).line,CUR(sp).col);
+      error(1,sp,RNC_ER_UNDEF,sp->fn,CUR(sp).line,CUR(sp).col,rn_string+name);
     }
   }
   sc_close(&defs); sc_close(&refs);
   for(i=prefs.base+1;i!=prefs.top;++i) {
-    if(sc_void(&refs)) error(1,sp,RNC_ER_UNDEF,rn_string+prefs.tab[i][0],sp->fn,CUR(sp).line,CUR(sp).col);
+    if(sc_void(&refs)) error(1,sp,RNC_ER_UNDEF,sp->fn,CUR(sp).line,CUR(sp).col,rn_string+prefs.tab[i][0]);
     else sc_add(&refs,prefs.tab[i][0],prefs.tab[i][1],prefs.tab[i][2]);
   }
   sc_close(&prefs);
@@ -722,9 +723,9 @@ static void addns(struct rnc_source *sp,int pfx,int url) {
     if(nss.tab[i][2]&PFX_INHERITED) {
       nss.tab[i][1]=url; nss.tab[i][2]&=~(PFX_INHERITED|PFX_DEFAULT);
     } else if(nss.tab[i][2]&PFX_DEFAULT) {
-      warning(1,sp,RNC_ER_DFLTNS,rn_string+pfx,sp->fn,CUR(sp).line,CUR(sp).col);
+      warning(1,sp,RNC_ER_DFLTNS,sp->fn,CUR(sp).line,CUR(sp).col,rn_string+pfx);
       nss.tab[i][1]=url; nss.tab[i][2]&=~(PFX_INHERITED|PFX_DEFAULT);
-    } else error(1,sp,RNC_ER_DUPNS,rn_string+pfx,sp->fn,CUR(sp).line,CUR(sp).col);
+    } else error(1,sp,RNC_ER_DUPNS,sp->fn,CUR(sp).line,CUR(sp).col,rn_string+pfx);
   } else sc_add(&nss,pfx,url,0);
 }
 
@@ -732,9 +733,9 @@ static void adddt(struct rnc_source *sp,int pfx,int url) {
   int i;
   if((i=sc_find(&dts,pfx))) {
     if(dts.tab[i][2]&PFX_DEFAULT) {
-      warning(1,sp,RNC_ER_DFLTDT,rn_string+pfx,sp->fn,CUR(sp).line,CUR(sp).col);
+      warning(1,sp,RNC_ER_DFLTDT,sp->fn,CUR(sp).line,CUR(sp).col,rn_string+pfx);
       dts.tab[i][1]=url; dts.tab[i][2]&=~PFX_DEFAULT;
-    } else error(1,sp,RNC_ER_DUPDT,rn_string+pfx,sp->fn,CUR(sp).line,CUR(sp).col);
+    } else error(1,sp,RNC_ER_DUPDT,sp->fn,CUR(sp).line,CUR(sp).col,rn_string+pfx);
   } else sc_add(&dts,pfx,url,0);
 }
 
@@ -755,7 +756,7 @@ static void adddef(struct rnc_source *sp,int name,int pat,int flags) {
       }
     }
   } else {
-    if(sc_locked(&defs)) error(1,sp,RNC_ER_OVRIDE,name!=0?rn_string+name:"start",sp->fn,CUR(sp).line,CUR(sp).col);
+    if(sc_locked(&defs)) error(1,sp,RNC_ER_OVRIDE,sp->fn,CUR(sp).line,CUR(sp).col,name!=0?rn_string+name:"start");
     else sc_add(&defs,name,pat,flags);
   }
 }
@@ -792,14 +793,14 @@ static int decl(struct rnc_source *sp) {
 static int ns2uri(struct rnc_source *sp,int p) {
   int i=sc_find(&nss,p);
   if(!i) {
-    error(1,sp,RNC_ER_NONS,rn_string+p,sp->fn,CUR(sp).line,CUR(sp).col);
+    error(1,sp,RNC_ER_NONS,sp->fn,CUR(sp).line,CUR(sp).col,rn_string+p);
   }
   return i?nss.tab[i][1]:0;
 }
 
 static int dt2uri(struct rnc_source *sp,int p) {
   int i=sc_find(&dts,p);
-  if(!i) error(1,sp,RNC_ER_NODT,rn_string+p,sp->fn,CUR(sp).line,CUR(sp).col);
+  if(!i) error(1,sp,RNC_ER_NODT,sp->fn,CUR(sp).line,CUR(sp).col,rn_string+p);
   return i?dts.tab[i][1]:0;
 }
 
@@ -942,7 +943,7 @@ static int file(struct rnc_source *sp,int nsuri) {
     ret=topLevel(&src);
     sp->flags|=src.flags&SRC_ERRORS;
   } else {
-    error(1,sp,RNC_ER_EXT,path,sp->fn,CUR(sp).line,CUR(sp).col);
+    error(1,sp,RNC_ER_EXT,sp->fn,CUR(sp).line,CUR(sp).col,path);
   }
   rnc_close(&src);
   return ret;
@@ -1075,7 +1076,7 @@ static int primary(struct rnc_source *sp) {
   case SYM_LPAR: getsym(sp); {int ret=pattern(sp); chk_skip(sp,SYM_RPAR,SYM_RCUR); return ret;}
 
   default:
-    error(0,sp,RNC_ER_SILL,sym2str(CUR(sp).sym),sp->fn,CUR(sp).line,CUR(sp).col);
+    error(0,sp,RNC_ER_SILL,sp->fn,CUR(sp).line,CUR(sp).col,sym2str(CUR(sp).sym));
     getsym(sp);
     return 0;
   }
@@ -1121,7 +1122,7 @@ static void define(struct rnc_source *sp,int name) {
   case SYM_ASGN: flags=DE_HEAD; break;
   case SYM_ASGN_CHOICE: flags=DE_CHOICE; break;
   case SYM_ASGN_ILEAVE: flags=DE_ILEAVE; break;
-  default: error(0,sp,RNC_ER_SEXP,"assign method",sym2str(CUR(sp).sym),sp->fn,CUR(sp).line,CUR(sp).col);
+  default: error(0,sp,RNC_ER_SEXP,sp->fn,CUR(sp).line,CUR(sp).col,"assign method",sym2str(CUR(sp).sym));
   }
   getsym(sp);
   pat=pattern(sp);

@@ -16,6 +16,9 @@
 
 #define SC_LEN 64
 
+#define RND_LEN_F 1024
+#define RND_LEN_R 256
+
 #define DRV_LEN_M 4096
 #define DRV_PRIME_M 0xffd
 #define DRV_LIM_M (8*DRV_LEN_M)

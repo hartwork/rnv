@@ -6,17 +6,18 @@
 #include <assert.h>
 #include "rn.h"
 #include "rnx.h"
+#include "ll.h"
 #include "rnd.h"
 
-#define LEN_F 1024
-#define LEN_R 1024
+#define LEN_F RND_LEN_F
+#define LEN_R RND_LEN_R
 
 static int len_f,n_f,len_r,n_r;
 static int *flat;
 static int *refs;
 static int errors;
 
-#define err(msg) vfprintf(stderr,msg"\n",ap)
+#define err(msg) vfprintf(stderr,"error: "msg"\n",ap)
 static void default_verror_handler(int er_no,va_list ap) {
   switch(er_no) {
   case RND_ER_LOOPST: err("loop in start pattern"); break;
