@@ -15,12 +15,12 @@ char *dxl_cmd=NULL;
 
 extern int dxl_allows(char *typ,char *ps,char *s,int n) {
   int pid,status;
- 
+
   if(!dxl_cmd) return 0;
   if((pid=fork())==0) {
     char **argv; int argc;
     char *p; int arg, i;
-    
+
     argc=5; p=ps; arg=0;
     for(;;) {
       if(*p=='\0') {
@@ -55,7 +55,7 @@ extern int dxl_equal(char *typ,char *val,char *s,int n) {
   if(!dxl_cmd) return 0;
   if((pid=fork())==0) {
     char *argv[]={dxl_cmd,"equal",typ,val,NULL,NULL};
- 
+
     argv[4]=(char*)malloc(n+1); argv[4][n]='\0'; strncpy(argv[4],s,n);
     execvp(dxl_cmd,argv);
     fprintf(stderr,"dxl: cannot execute %s\n",dxl_cmd,strerror(errno));

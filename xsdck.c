@@ -19,7 +19,7 @@ int main(int argc,char **argv) {
     ps=(char*)malloc(len); ps[len-1]='\0';
     p=ps; for(i=2;i!=argc-1;++i) {
       a=*(argv+i);
-      while((*(p++)=*(a++))); 
+      while((*(p++)=*(a++)));
     }
     return !xsd_allows(*(argv+1),ps,*(argv+argc-1),strlen(*(argv+argc-1)));
   }
