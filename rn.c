@@ -87,12 +87,12 @@ static int accept_##n(void) { \
 accept(pattern,p,P)
 accept(nameclass,nc,NC)
 
-int rn_newEmpty(void) { P_NEW(EMPTY);
-  rn_setNullable(i_p,1);
+int rn_newNotAllowed(void) { P_NEW(NOT_ALLOWED);
   return accept_p();
 }
 
-int rn_newNotAllowed(void) { P_NEW(NOT_ALLOWED);
+int rn_newEmpty(void) { P_NEW(EMPTY);
+  rn_setNullable(i_p,1);
   return accept_p();
 }
 
@@ -297,7 +297,7 @@ static void windup(void) {
   rn_pattern[0]=RN_P_ERROR;  accept_p(); 
   rn_nameclass[0]=RN_NC_ERROR; accept_nc();
   rn_newString("");
-  rn_empty=rn_newEmpty(); rn_notAllowed=rn_newNotAllowed(); rn_text=rn_newText(); BASE_P=i_p;
+  rn_notAllowed=rn_newNotAllowed(); rn_empty=rn_newEmpty(); rn_text=rn_newText(); BASE_P=i_p;
   rn_dt_string=rn_newDatatype(0,rn_newString("string")); rn_dt_token=rn_newDatatype(0,rn_newString("token"));
   rn_xsd_uri=rn_newString("http://www.w3.org/2001/XMLSchema-datatypes");
 }
@@ -363,7 +363,7 @@ static void mark_p(int start) {
   do {
     p=flat[i++];
     switch(RN_P_TYP(p)) {
-    case RN_P_EMPTY: case RN_P_NOT_ALLOWED: case RN_P_TEXT: case RN_P_DATA: case RN_P_VALUE:
+    case RN_P_NOT_ALLOWED: case RN_P_EMPTY: case RN_P_TEXT: case RN_P_DATA: case RN_P_VALUE:
       break;
 
     case RN_P_CHOICE: rn_Choice(p,p1,p2); goto BINARY;
@@ -412,7 +412,7 @@ static void sweep_p(int *starts,int n_st,int since) {
       if(xlat[p-since]==p) {
 	touched=0;
 	switch(RN_P_TYP(p)) {
-	case RN_P_EMPTY: case RN_P_NOT_ALLOWED: case RN_P_TEXT: case RN_P_DATA: case RN_P_VALUE:
+	case RN_P_NOT_ALLOWED: case RN_P_EMPTY: case RN_P_TEXT: case RN_P_DATA: case RN_P_VALUE:
 	  break;
 
 	case RN_P_CHOICE: rn_Choice(p,p1,p2); goto BINARY;
@@ -483,7 +483,7 @@ static void compress_p(int *starts,int n_st,int since) {
   for(p=since;p!=i_p;p+=p_size[RN_P_TYP(p)]) {
     if(xlat[p-since]!=-1) {
       switch(RN_P_TYP(p)) {
-      case RN_P_EMPTY: case RN_P_NOT_ALLOWED: case RN_P_TEXT: case RN_P_DATA: case RN_P_VALUE:
+      case RN_P_NOT_ALLOWED: case RN_P_EMPTY: case RN_P_TEXT: case RN_P_DATA: case RN_P_VALUE:
 	break;
 
       case RN_P_CHOICE: rn_Choice(p,p1,p2); goto BINARY;

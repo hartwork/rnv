@@ -7,8 +7,8 @@
 
 /* Patterns */
 #define RN_P_ERROR 0
-#define RN_P_EMPTY 1
-#define RN_P_NOT_ALLOWED 2
+#define RN_P_NOT_ALLOWED 1
+#define RN_P_EMPTY 2
 #define RN_P_TEXT 3
 #define RN_P_CHOICE 4
 #define RN_P_INTERLEAVE 5
@@ -57,8 +57,8 @@ them to variables in the local scope, and a creator.
 
 /* assert: p1 at 1, p2 at 2 */
 
-#define rn_Empty(i) RN_P_CHK(i,EMPTY)
 #define rn_NotAllowed(i) RN_P_CHK(i,NOT_ALLOWED)
+#define rn_Empty(i) RN_P_CHK(i,EMPTY)
 #define rn_Text(i) RN_P_CHK(i,TEXT)
 #define rn_Choice(i,p1,p2) RN_P_CHK(i,CHOICE); p1=rn_pattern[i+1]; p2=rn_pattern[i+2]
 #define rn_Interleave(i,p1,p2) RN_P_CHK(i,INTERLEAVE); p1=rn_pattern[i+1]; p2=rn_pattern[i+2]
@@ -112,8 +112,8 @@ extern void rn_add_p(int i);
 
 extern int rn_newString(char *s);
 
-extern int rn_newEmpty(void);
 extern int rn_newNotAllowed(void);
+extern int rn_newEmpty(void);
 extern int rn_newText(void);
 extern int rn_newChoice(int p1,int p2);
 extern int rn_newInterleave(int p1,int p2);

@@ -103,7 +103,7 @@ static int tok(int i) {
     default: return i;
     }
     ++i;
-  } 
+  }
 }
 
 static int endtok(int i) {
@@ -113,23 +113,25 @@ static int endtok(int i) {
     default: break;
     }
     ++i;
-  } 
+  }
 }
 
-static void resp(int ok,int patno) {
+static void resp(int ok,int patno,int prevno) {
   int len,ofs;
   static char buf[LEN_B];
   char *f=ok?OK:explain?ERROR:ER;
   len=sprintf(buf,f,patno); assert(len<LEN_B);
   write(1,buf,len);
-  if(!ok&&explain) {
-    buf[0]=' '; write(1,buf,1);
+  if(!ok) {
+    len=sprintf(buf," %u",lasterr); assert(len<LEN_B);
+    write(1,buf,len);
+    if(explain) {buf[0]=' '; write(1,buf,1);}
   }
   for(;;) { /* read always, write if verbose */
     len=read(erp[0],buf,LEN_B);
     if(len<0) {if(errno==EAGAIN) break; else longjmp(IOER,1);}
     if(len==0) break;
-    if(!ok&&explain) {
+    if(!ok&&explain&&prevno!=rn_notAllowed) {
       ofs=0;
       do {
 	int n=write(1,buf+ofs,len);
@@ -150,14 +152,14 @@ static int query(void) {
       if(len_q-n_q<LEN_B) quebuf=(char*)memstretch(quebuf,len_q=n_q+LEN_B,n_q,sizeof(char));
       dn=read(0,quebuf+n_q,LEN_B);
       if(dn<0) longjmp(IOER,1);
-      if(dn==0) {quebuf[n_q]='\0'; dn=1;}
+      if(dn==0) {errno=EIO; longjmp(IOER,1);}
       n_q+=dn;
     }
     if(quebuf[n++]=='\0') break;
   }
 
   j=endtok(i=tok(0));
-  if((kwd=strntab(quebuf+i,j-i,kwdtab,NKWD))==QUIT) {resp(1,0); return 0;}
+  if((kwd=strntab(quebuf+i,j-i,kwdtab,NKWD))==QUIT) {resp(1,0,0); return 0;}
   switch(kwd) {
   case START: ok=1; patno=start; break;
   case STO: case ATT: case STC: case TXT: case MIX: case ENT:
@@ -181,10 +183,10 @@ static int query(void) {
     }
     break;
 
-  case NKWD: PROTER: fprintf(stderr,"protocol error\n"); patno=0; ok=0; break;
+  case NKWD: PROTER: fprintf(stderr,"protocol error\n"); lasterr=0; patno=0; ok=0; break;
   default: assert(0);
   }
-  resp(ok,patno);
+  resp(ok,patno,prevno);
 
   i=0; while(n!=n_q) quebuf[i++]=quebuf[n++]; n_q=i;
   return 1;
@@ -219,7 +221,7 @@ int main(int argc,char **argv) {
 
     nstderr=stderr;
     if(setjmp(IOER)) {
-      fprintf(nstderr,"I/O error: %s\n",strerror(errno));
+      fprintf(nstderr,"%s\n",strerror(errno));
       return EXIT_FAILURE;
     }
 
@@ -227,6 +229,8 @@ int main(int argc,char **argv) {
     nstderr=fdopen(fd2,"w");
     if(pipe(erp)==-1||dup2(erp[1],2)==-1) longjmp(IOER,1);
     fcntl(erp[0],F_SETFL,O_NONBLOCK);
+    setbuf(stderr,NULL);
+
     while(query());
     return EXIT_SUCCESS;
   }

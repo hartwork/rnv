@@ -28,8 +28,8 @@ static void expected(int p,int first) {
   int p1,p2,px=0,i;
   switch(RN_P_TYP(p)) {
   case RN_P_ERROR: break;
-  case RN_P_EMPTY: break;
   case RN_P_NOT_ALLOWED: break;
+  case RN_P_EMPTY: break;
   case RN_P_TEXT: px=p; break;
   case RN_P_CHOICE: rn_Choice(p,p1,p2); expected(p1,first); expected(p2,first); break;
   case RN_P_INTERLEAVE: rn_Interleave(p,p1,p2); expected(p1,first); expected(p2,first); break;
@@ -69,8 +69,8 @@ char *rnx_p2str(int p) {
   int dt,ps,val,nc,p1;
   switch(RN_P_TYP(p)) {
   case RN_P_ERROR: s=strclone("error"); break;
-  case RN_P_EMPTY: s=strclone("empty"); break;
   case RN_P_NOT_ALLOWED: s=strclone("notAllowed"); break;
+  case RN_P_EMPTY: s=strclone("empty"); break;
   case RN_P_TEXT: s=strclone("text"); break;
   case RN_P_CHOICE: s=strclone("choice (|)"); break;
   case RN_P_INTERLEAVE: s=strclone("interleave (&)"); break;

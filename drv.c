@@ -189,7 +189,7 @@ static int ncof(int nc,int uri,int name) {
 static int apply_after(int (*f)(int q1,int q2),int p1,int p0) {
   int p11,p12;
   switch(RN_P_TYP(p1)) {
-  case RN_P_EMPTY: case RN_P_NOT_ALLOWED: case RN_P_TEXT:
+  case RN_P_NOT_ALLOWED: case RN_P_EMPTY: case RN_P_TEXT:
   case RN_P_INTERLEAVE: case RN_P_GROUP: case RN_P_ONE_OR_MORE:
   case RN_P_LIST: case RN_P_DATA: case RN_P_DATA_EXCEPT: case RN_P_VALUE:
   case RN_P_ATTRIBUTE: case RN_P_ELEMENT:
@@ -208,7 +208,7 @@ static int start_tag_open(int p,int uri,int name,int recover) {
     if(m!=-1) return M_RET(m);
   }
   switch(RN_P_TYP(p)) {
-  case RN_P_EMPTY: case RN_P_NOT_ALLOWED: case RN_P_TEXT: 
+  case RN_P_NOT_ALLOWED: case RN_P_EMPTY: case RN_P_TEXT: 
   case RN_P_LIST: case RN_P_DATA: case RN_P_DATA_EXCEPT: case RN_P_VALUE:
   case RN_P_ATTRIBUTE:
     ret=rn_notAllowed;
@@ -253,7 +253,7 @@ static int attribute_open(int p,int uri,int name) {
   m=newAttributeOpen(p,uri,name);
   if(m!=-1) return M_RET(m);
   switch(RN_P_TYP(p)) {
-  case RN_P_EMPTY: case RN_P_NOT_ALLOWED: case RN_P_TEXT: 
+  case RN_P_NOT_ALLOWED: case RN_P_EMPTY: case RN_P_TEXT: 
   case RN_P_LIST: case RN_P_DATA: case RN_P_DATA_EXCEPT: case RN_P_VALUE:
   case RN_P_ELEMENT:
     ret=rn_notAllowed;
@@ -300,7 +300,7 @@ static int start_tag_close(int p,int recover) {
     if(m!=-1) return M_RET(m);
   }
   switch(RN_P_TYP(p)) {
-  case RN_P_EMPTY: case RN_P_NOT_ALLOWED: case RN_P_TEXT:
+  case RN_P_NOT_ALLOWED: case RN_P_EMPTY: case RN_P_TEXT:
   case RN_P_LIST: case RN_P_DATA: case RN_P_DATA_EXCEPT: case RN_P_VALUE:
   case RN_P_ELEMENT:
     ret=p;
@@ -351,7 +351,7 @@ static int list(int p,char *s,int n) {
 static int text(int p,char *s,int n) { /* matches text, including whitespace */
   int p1,p2,dt,ps,lib,typ,val,ret=0;
   switch(RN_P_TYP(p)) {
-  case RN_P_EMPTY: case RN_P_NOT_ALLOWED:
+  case RN_P_NOT_ALLOWED: case RN_P_EMPTY:
   case RN_P_ATTRIBUTE: case RN_P_ELEMENT:
     ret=rn_notAllowed;
     break;
@@ -405,7 +405,7 @@ static int mixed_text(int p) { /* matches text in mixed context */
   m=newMixedText(p);
   if(m!=-1) return M_RET(m);
   switch(RN_P_TYP(p)) {
-  case RN_P_EMPTY: case RN_P_NOT_ALLOWED:
+  case RN_P_NOT_ALLOWED: case RN_P_EMPTY:
   case RN_P_ATTRIBUTE: case RN_P_ELEMENT:
   case RN_P_LIST: case RN_P_DATA: case RN_P_DATA_EXCEPT: case RN_P_VALUE:
     ret=rn_notAllowed;
@@ -445,7 +445,7 @@ static int end_tag(int p,int recover) {
     if(m!=-1) return M_RET(m);
   }
   switch(RN_P_TYP(p)) {
-  case RN_P_EMPTY: case RN_P_NOT_ALLOWED: case RN_P_TEXT:
+  case RN_P_NOT_ALLOWED: case RN_P_EMPTY: case RN_P_TEXT:
   case RN_P_INTERLEAVE: case RN_P_GROUP: case RN_P_ONE_OR_MORE:
   case RN_P_LIST: case RN_P_DATA: case RN_P_DATA_EXCEPT: case RN_P_VALUE:
   case RN_P_ATTRIBUTE: case RN_P_ELEMENT:

@@ -234,7 +234,7 @@ prints current version;
 <option>-h or -?</option>
 </term>
 <listitem><para>
-displays usage summary and exit.
+displays usage summary and exits.
 </para></listitem>
 </varlistentry>
 </variablelist> 
@@ -293,12 +293,15 @@ The sample below associates documents with grammars for XSLT, DocBook or XSL FO.
 <application>ARX</application> can also be used to link documents to any type of information or processing. 
 </para>
 </section>
-
+<section>
+<title>Applications</title>
+<para>The distribution includes several utilities built upon <application>RNV</application>; they are listed and described in the section.
+</para> 
 <section>
 <title>
 RVP
 </title>
-<para><application>RVP</application> is the abbreviation for <emphasis role="bold">R</emphasis>elax NG <emphasis role="bold">V</emphasis>alidation <emphasis role="bold">P</emphasis>ipe. It reads validation primitives from the standard input and reports result to the standard output; it's main purpose is to ease embedding of a Relax NG validator into various languages and environment. An apllication would launch <application>RVP</application> as a parallel process and use a simple protocol to perform validation. The protocol, in BNF, is:
+<para><application>RVP</application> is abbreviation for <emphasis role="bold">R</emphasis>elax NG <emphasis role="bold">V</emphasis>alidation <emphasis role="bold">P</emphasis>ipe. It reads validation primitives from the standard input and reports result to the standard output; it's main purpose is to ease embedding of a Relax NG validator into various languages and environment. An apllication would launch <application>RVP</application> as a parallel process and use a simple protocol to perform validation. The protocol, in BNF, is:
 </para>
 <programlisting>
 
@@ -315,6 +318,65 @@ RVP
      error ::= "error" patno erno error.
     z ::= "\0" .
 </programlisting>
+
+<itemizedlist>
+<listitem><para>
+RVP assumes that the last colon in a name separates the local
+part from the namespace URI (it is what one gets if specifies ':'
+as namespace separator to Expat).
+</para></listitem>
+<listitem><para>
+Error codes can be grabbed from rvp sources by <command>grep -l
+_ER_ *.h</command> and OR-ing them with corresponding masks from
+erbit.h. Additionally, error 0 is the protocol format error.
+</para></listitem>
+<listitem><para>
+Either "er" or "error" responses are returned, not both; <option>-q</option>
+chooses between concise and verbose forms (invocation syntax described later).
+</para></listitem>
+</itemizedlist>
+<para>The command-line syntax is:
+</para>
+
+<synopsis>
+
+        rvp {-q|-s|-v|-h} schema.rnc
+
+</synopsis>
+
+<para>The options are:
+</para>
+<variablelist>
+<varlistentry>
+<term>
+<option>-q</option>
+</term>
+<listitem><para>returns only error numbers, suppresses messages;</para></listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<option>-s</option>
+</term>
+<listitem><para>takes less memory and runs slower;</para></listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<option>-v</option>
+</term>
+<listitem><para>
+prints current version;
+</para></listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<option>-h or -?</option>
+</term>
+<listitem><para>
+displays usage summary and exits.
+</para></listitem>
+</varlistentry>
+</variablelist> 
+</section>
 </section>
 <section>
 <title>

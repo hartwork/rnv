@@ -79,7 +79,7 @@ static void deref(int start) {
   do {
     p=flat[i++];
     switch(RN_P_TYP(p)) {
-    case RN_P_EMPTY: case RN_P_NOT_ALLOWED: case RN_P_TEXT: case RN_P_DATA: case RN_P_VALUE:
+    case RN_P_NOT_ALLOWED: case RN_P_EMPTY: case RN_P_TEXT: case RN_P_DATA: case RN_P_VALUE:
       break;
 
     case RN_P_CHOICE: rn_Choice(p,p1,p2); goto BINARY;
@@ -124,7 +124,7 @@ static int loop(int p) {
   if(rn_marked(p)) return 1;
   rn_mark(p);
   switch(RN_P_TYP(p)) {
-  case RN_P_EMPTY: case RN_P_NOT_ALLOWED: case RN_P_TEXT: case RN_P_DATA: case RN_P_VALUE:
+  case RN_P_NOT_ALLOWED: case RN_P_EMPTY: case RN_P_TEXT: case RN_P_DATA: case RN_P_VALUE:
   case RN_P_ELEMENT:
     ret=0; break;
 
@@ -174,8 +174,8 @@ static void ctype(int p) {
   int p1,p2,nc;
   if(!rn_contentType(p)) {
     switch(RN_P_TYP(p)) {
-    case RN_P_EMPTY: rn_setContentType(p,RN_P_FLG_CTE,0); break;
     case RN_P_NOT_ALLOWED: rn_setContentType(p,RN_P_FLG_CTE,0); break;
+    case RN_P_EMPTY: rn_setContentType(p,RN_P_FLG_CTE,0); break;
     case RN_P_TEXT: rn_setContentType(p,RN_P_FLG_CTC,0); break;
     case RN_P_CHOICE: rn_Choice(p,p1,p2); ctype(p1); ctype(p2);
       rn_setContentType(p,rn_contentType(p1),rn_contentType(p2)); break;
@@ -256,7 +256,7 @@ static int bad_data_except(int p) {
 static int bad_one_or_more(int p,int in_group) {
   int nc,p1,p2;
   switch(RN_P_TYP(p)) {
-  case RN_P_EMPTY: case RN_P_NOT_ALLOWED: case RN_P_TEXT:
+  case RN_P_NOT_ALLOWED: case RN_P_EMPTY: case RN_P_TEXT:
   case RN_P_DATA: case RN_P_VALUE:
   case RN_P_ELEMENT:
     return 0;
@@ -280,7 +280,7 @@ static int bad_one_or_more(int p,int in_group) {
 static int bad_list(int p) {
   int p1,p2;
   switch(RN_P_TYP(p)) {
-  case RN_P_EMPTY: case RN_P_NOT_ALLOWED:
+  case RN_P_NOT_ALLOWED: case RN_P_EMPTY:
   case RN_P_DATA: case RN_P_VALUE:
     return 0;
 
@@ -306,7 +306,7 @@ static int bad_list(int p) {
 static int bad_attribute(int p) {
   int p1,p2;
   switch(RN_P_TYP(p)) {
-  case RN_P_EMPTY: case RN_P_NOT_ALLOWED: case RN_P_TEXT:
+  case RN_P_NOT_ALLOWED: case RN_P_EMPTY: case RN_P_TEXT:
   case RN_P_DATA: case RN_P_VALUE:
     return 0;
 
@@ -331,7 +331,7 @@ static int bad_attribute(int p) {
 static void path(int p,int nc) {
   int p1,p2,nc1;
   switch(RN_P_TYP(p)) {
-  case RN_P_EMPTY: case RN_P_NOT_ALLOWED: case RN_P_TEXT:
+  case RN_P_NOT_ALLOWED: case RN_P_EMPTY: case RN_P_TEXT:
   case RN_P_DATA: case RN_P_VALUE:
   case RN_P_ELEMENT:
     break;
