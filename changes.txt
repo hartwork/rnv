@@ -1,4 +1,7 @@
 /* $Id$ */
+1.2.3 Tue Dec 30 04:18:01 AMT 2003
+dvd: fixed error reporting
+
 1.2.2 Mon Dec 29 01:59:20 AMT 2003
 dvd: if an element is being skipped because it is invalid, continue parsing
 

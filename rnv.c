@@ -195,7 +195,7 @@ static void start_element(void *userData,const char *name,const char **attrs) {
       ++attrs;
       if(current==rn_notAllowed) {
 	current=drv_attribute_open_recover(previous,suri,sname);
-	error(RNVER_AKEY,suri,name);
+	error(RNVER_AKEY,suri,sname);
       } else {
 	current=drv_text(previous=current,(char*)*attrs,strlen(*attrs));
 	if(current==rn_notAllowed || (current=drv_attribute_close(previous=current))==rn_notAllowed) {
