@@ -363,11 +363,11 @@ static void path(int p,int nc) {
 static void paths(void) {
   int i,p,p1,nc;
   if(bad_start(flat[0])) error(RND_ER_BADSTART);
-  for(i=1;i!=n_f;++i) {
+  for(i=0;i!=n_f;++i) {
     p=flat[i];
     if(RN_P_IS(p,ELEMENT)) {
       rn_Element(p,nc,p1);
-      path(p,nc);
+      path(p1,nc);
     }
   }
 }
