@@ -1,6 +1,6 @@
 # $Id$
 #
-VERSION=1.3.5
+VERSION=1.4.0
 CC=cc
 
 EXPAT_H="<expat.h>"
@@ -99,7 +99,7 @@ depend: ${SRC}
 clean:
 	-rm -f *.o tst/c/*.o  *.a *.so rnv arx rnd_test *_test *.core *.gmon *.gprof rnv*.zip rnv.txt rnv.pdf rnv.html rnv.xml
 
-DIST=rnv+arx
+DIST=rnv
 DISTFILES=license.txt ${SRC} Makefile Makefile.bcc readme.txt changes.txt src.txt
 DISTWIN32=rnv.exe arx.exe readme32.txt license.txt
 DISTTOOLS=tools/xck tools/rnv.vim tools/arx.conf /usr/local/share/rng-c/xslt.rnc /usr/local/share/rng-c/fo.rnc /usr/local/share/rng-c/none.rnc /usr/local/share/rng-c/relaxng.rnc
