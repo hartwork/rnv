@@ -1,3 +1,4 @@
+/* $Id$ */
 #include <assert.h>
 #include "ht.h"
 
@@ -35,3 +36,7 @@ int main(int argc,char **argv) {
   }
   return 0;
 }
+
+/*
+ * $Id$
+ */
