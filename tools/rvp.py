@@ -7,7 +7,7 @@
 # details of the protocol are in a long comment near the start of rvp.c
 #
 
-import sys, os, fcntl, string, re, xml.parsers.expat
+import sys, os, string, re, xml.parsers.expat
 
 global rvpin,rvpout,pat,errors,parser,text,mixed,prevline,prevcol
 
@@ -21,21 +21,20 @@ class ProtocolError(Exception):
 # run RVP with grammar specified on the command line 
 def launch():
   global rvpin,rvpout
-  rvpin,rvpout=os.popen2('rvp '+string.join(sys.argv[1:],' '))
+  inp,out=os.popen2('rvp '+string.join(sys.argv[1:],' '))
+  rvpin,rvpout=inp.fileno(),out.fileno() # os.read|os.write will be used
 
 # terminate string with zero, encode in utf-8 and then send to RVP
 def send(s):
-  rvpin.write(s.encode('UTF-8')+'\0')
-  rvpin.flush()
+  os.write(rvpin,s.encode('UTF-8')+'\0')
 
-# receive a zero-terminated response from RVP, zero byte is dropped  
+# receive a zero-terminated response from RVP, zero byte is dropped
 def recv():
   s=''
   while 1:
-    c=rvpout.read(1)
-    if(c=='\0'): break
-    s=s+c
-  return s
+    s=s+os.read(rvpout,16) # 16 is good for ok responses, errors should be rare
+    if(s[-1]=='\0'): break # last character in a response is always '\0'
+  return s[:-1]
 
 # return current pattern value, and print error message on stderr, if any
 def resp():
@@ -44,8 +43,8 @@ def resp():
   if(r[0]=='ok'): return r[1]
   if(r[0]=='error'):
     errors=1
-    if(r[3]!=''): # if the error string is empty, then error is occured
-    		  # in erroneous state, don't report
+    if(r[3]!=''): # if the error string is empty, then error
+    		  # is occured in erroneous state; don't report
       line,col=parser.ErrorLineNumber,parser.ErrorColumnNumber
       if(line!=prevline or col!=prevcol): # one report per file position
 	sys.stderr.write(str(line)+","+str(col)+": "+r[3])
