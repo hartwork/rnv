@@ -76,10 +76,11 @@
 
 (define (rx-compile regex)
   (letrec (
+      (rxll (utf8->lazy-list regex))
       (nextc
-	(let ((s (utf8->lazy-list regex)))
-	  (lambda ()
-	    (and (pair? s) (let ((c (car s))) (set! s (force (cdr s))) c)))))
+	(lambda ()
+	  (and (pair? rxll) 
+	    (let ((c (car rxll))) (set! rxll (force (cdr rxll))) c))))
       (newpat
 	(let ((cache '()))
 	  (lambda (pattern)
@@ -99,11 +100,11 @@
 	      (set! errors #t)))))
       (chclass
 	(lambda ()
-	  (if (not (= (nextc) 123)) (begin (error! 1) #f)
+	  (if (not (= (nextc) 123)) (begin (error! "{ expected") #f)
 	    (let i ((c (nextc)) (l '()))
 	      (cond
-		((not c) (error! 2) #f)
-		((>= c 128) (error! 3) #f)
+		((not c) (error! "class name expected") #f)
+		((>= c 128) (error! "illegal class name") #f)
 		((= c 125)
 		  (let (
 		     (clsym
@@ -119,8 +120,8 @@
       (esc
 	(lambda ()
 	  (let ((c (nextc)))
-	    (if (not c) (begin (error! 4) '(end))
-	      (if (>= c 128) (begin (error! 5) `(esc ,c))
+	    (if (not c) (begin (error! "escape expected") '(end))
+	      (if (>= c 128) (begin (error! "illegal escape") `(esc ,c))
 		(case (integer->char c)
 		  ((#\p) `(cls . ,(chclass)))
 		   ((#\P) `(ncl . ,(chclass)))
@@ -140,7 +141,7 @@
 		  ((#\\ #\| #\. #\- #\^ #\? #\* #\+
 		      #\{ #\} #\[ #\] #\( #\))
 		   `(esc . ,c))
-		  (else (error! 6) `(esc . ,c))))))))
+		  (else (error! "unknown escape") `(esc . ,c))))))))
       (sym #f)
       (getsym
 	(lambda ()
@@ -150,9 +151,52 @@
 		(or (and (= c 92) (esc))
 		  (and (= c 46) '(ncl . NL)))
 	       `(chr . ,c))))))
+      (chgroup
+        (let (
+	    (check-range 
+	      (lambda () 
+	        (and (eqv? (cdr sym) 'chr) (memv (cdr sym) '(45 91 93))
+		  (error! "illegal range") #t))))
+          (lambda()
+	    (let range ((p (rx-newpat '(none))))
+	      (if 
+	         (and (not (eqv? (car p) 'none))
+	           (and (or (equal? sym '(chr . 45)) (equal? sym '(chr . 93))))) 
+	         p
+	      (case (car sym) 
+	        ((chr esc)
+		  (check-range)
+		  (let ((c (cdr sym))) (getsym)
+		    (if (equal? sym '(chr . 45))
+		      (if (and (pair? rxll) (eqv? (car rxll) 91))
+		        (rx-choice p `(char . ,c))
+			(begin (getsym)
+			  (case (car sym)
+			    ((chr esc) (check-range)
+			      (let ((p (rx-choice p `(range ,c . ,(cdr sym)))))
+				(getsym)
+				(range p)))
+		            (else (error! "illegal range") (getsym) 
+			      (range p)))))
+		      (range (rx-choice p `(char . ,c))))))
+	      ((cls) (range (rx-choice p `(class . (cdr sym)))))
+	      (else (error! "missing ]") (getsym) p)))))))
       (chexpr
 	(lambda()
-	  #f))
+	  (let (
+	      (p 
+		(if (equal? sym '(chr . 94))
+		  (begin (getsym) (rx-newpat `(except any . ,(chgroup))))
+		  (chgroup))))
+	    (if (equal? sym '(chr . 45))
+	      (begin (getsym) 
+	        (or (equal? sym '(chr . 91)) (error! "[ expected"))
+		(getsym)
+		(let ((p (rx-newpat `(except ,p . ,(chgroup)))))
+		  (getsym) 
+	          (or (equal? sym '(chr . 93)) (error! "] expected"))
+		  p))
+	      p))))
       (atom
 	(lambda ()
 	  (case (car sym)
@@ -162,6 +206,7 @@
 		  (getsym)
 		  (let ((p (chexpr)))
 		    (or (equal? sym '(chr . 93)) (error! "missing ]"))
+		    (getsym)
 		    p))
 		((40) ; (
 		  (getsym)
@@ -169,7 +214,9 @@
 		    (or (equal? sym '(chr . 41)) (error! "missing )"))
 		    (getsym)
 		    p))
-		((41 42 43 63 93 123 124 125) (error! 6) (getsym) p)
+		((41 42 43 63 93 123 124 125) 
+		  (error! "unescaped " (integer->char (cdr sym))) 
+		  (getsym) (rx-newpat '(none)))
 		(else
 		  (let ((p (rx-newpat `(char . ,(cdr sym))))) (getsym) p))))
 	    ((esc)
@@ -179,7 +226,7 @@
 	    ((ncl)
 	      (let ((p (rx-newpat `(except any .
 		      ,(rx-newpat `(class . ,(cdr sym))))))) (getsym) p))
-	    (else (error! 7) (getsym) '(none)))))
+	    (else (error! sym) (getsym) (rx-newpat '(none))))))
       (number
 	(lambda ()
 	  (let digit ((n 0))
@@ -209,7 +256,7 @@
 				  (rx-choice (rx-newpat '(empty)) p0))
 				(- n 1))
 				p)))))))
-		 (begin (error! 8) p))))))
+		 (begin (error! "bad quantifier") p))))))
       (piece
 	(lambda ()
 	  (let ((p (atom)))
@@ -248,5 +295,5 @@
 	
     (rx-newpat #f) (getsym) 	
     (let ((p (expr)))
-      (or (equal? sym '(end)) (error! 9))
+      (or (equal? sym '(end)) (error! "junk after end"))
       p)))
