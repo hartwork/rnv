@@ -392,7 +392,7 @@ static void validate(int start,int fd) {
     buf=XML_GetBuffer(expat,BUFSIZ);
     len=read(fd,buf,BUFSIZ);
     if(len<0) {
-      fprintf(stderr,"error (%s)\n",xml,strerror(errno));
+      fprintf(stderr,"error (%s): %s\n",xml,strerror(errno));
       valid=ok=0; break;
     }
     if(!XML_ParseBuffer(expat,len,len==0)) valid=ok=0;
