@@ -64,7 +64,9 @@ The package consists of:
 </para></listitem>
 <listitem><para>the source code map, <filename>src.txt</filename>;
 </para></listitem>
-<listitem><para><filename>Makefile</filename> for unix-like systems;
+<listitem><para><filename>Makefile.bsd</filename> for BSD make;
+</para></listitem>
+<listitem><para><filename>Makefile.gnu</filename> for GNU Make;
 </para></listitem>
 <listitem><para><filename>Makefile.bcc</filename> for Win32 and Borland C/C++ Compiler;
 </para></listitem>
