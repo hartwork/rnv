@@ -1,6 +1,7 @@
 /* $Id$ */
 
 #include <fcntl.h> /* open, read, close */
+#include <unistd.h> /* read, close */
 #include <string.h> /* memcpy */
 #include <stdlib.h> /* calloc,malloc,free */
 #include <stdio.h> /*stderr*/
@@ -327,13 +328,43 @@ static void getv(struct utf_source *sp) {
   }
 }
 
+#define newline(v) ((v)==0||(v)=='\r'||(v)=='\n')
+#define whitespace(v) ((v)==' '||(v)=='\t')
+#define skip_comment(sp) {while(!newline((sp)->v)) getv(sp); getv(sp);}
+
+static void realloc_s(struct utf_source *sp) {
+  char *s; int slen=sp->slen*2;
+  s=(char*)calloc(slen,sizeof(char));
+  memcpy(s,sp->s,sp->slen); free(sp->s); 
+  sp->s=s; sp->slen=slen;
+}
+
 static int sym(struct utf_source *sp) {
-  int s;
   for(;;) {
+    if(newline(sp->v)||whitespace(sp->v)) {getv(sp); continue;}
     switch(sp->v) {
     case -1: return SYM_EOF; 
-    case 0: case '\r': case '\n': case '\t': case ' ': getv(sp); continue;
-    case '#': do getv(sp); while(sp->v!=0); getv(sp); continue;
+    case '#': 
+      getv(sp);
+      if(sp->v=='#') {
+	int i=0;
+	for(;;) {
+	  do getv(sp); while(sp->v=='#');
+	  if(whitespace(sp->v)) getv(sp);
+	  for(;;) {
+	    if(i==sp->slen) realloc_s(sp);
+	    if(newline(sp->v)) {
+	      do getv(sp); while(whitespace(sp->v));
+	      if(sp->v=='#') {getv(sp);
+		if(sp->v=='#') {sp->s[i++]='\n'; break;}
+		skip_comment(sp);
+	      }
+	      sp->s[i]=0; return SYM_DOCUMENTATION;
+	    } else sp->s[i++]=(char)sp->v;
+	    getv(sp);
+	  } 
+	}
+      } else {skip_comment(sp); continue;}
     case '=': getv(sp); return SYM_ASGN;
     case ',': getv(sp); return SYM_SEQ;
     case '|': getv(sp); 
@@ -374,28 +405,23 @@ static int sym(struct utf_source *sp) {
 	  sp->s[0]='\0'; return SYM_LITERAL;
 	}
       } 
-      for(;;) { 
-	int c=sp->v,line=sp->line,col=sp->col; getv(sp);
-	if(i==sp->slen) {
-	  char *s=(char*)calloc(sp->slen*=2,sizeof(char));
-	  strcpy(s,sp->s); free(sp->s); sp->s=s; s=NULL;
-	}
-	if(c==q) {
+      for(;;) {
+	if(sp->v==q) {
 	  if(triple) {
-	    if(i>=2 && sp->s[i-2]==q && sp->s[i-1]==q)  {
+	    if(i>=2 && sp->s[i-2]==q && sp->s[i-1]==q) {
 	      sp->s[i-2]='\0'; break;
-	    }
-	  } else {
+	    } else sp->s[i]=(char)sp->v;
+	  } else {sp->s[i]='\0'; break;}
+	} else if(sp->v<=0) {
+	  if(sp->v==-1 || !triple) {
+	    (*er_handler)(ER_LIT,sp->fn,sp->line,sp->col);
 	    sp->s[i]='\0'; break;
-	  }
-	} else if(c<=0) {
-	  if(c==-1 || !triple) {
-	    (*er_handler)(ER_LIT,sp->fn,line,col);
-	    sp->s[i]='\0'; break;
-	  } else c='\n';
-	} 
-	sp->s[i++]=(char)c;
+	  } else sp->s[i]='\n';
+	} else sp->s[i]=(char)sp->v;
+	getv(sp);
+	if(++i==sp->slen) realloc_s(sp);
       }
+      getv(sp);
     } return SYM_LITERAL;
     default:
       getv(sp); return SYM_IDENT;
@@ -410,7 +436,8 @@ int main(int argc,char **argv) {
   for(;;) {
     switch(sym(&src)) {
     case SYM_EOF: return 0;
-    case SYM_LITERAL: printf("'(%i,%i) %s'\n",src.line,src.col,src.s); break;
+    case SYM_LITERAL: printf("(%i,%i) ``%s''\n",src.line,src.col,src.s); break;
+    case SYM_DOCUMENTATION: printf("(%i,%i) ## %s\n",src.line,src.col,src.s); break;
     }
   }
   rnc_close(&src);
@@ -418,6 +445,9 @@ int main(int argc,char **argv) {
 
 /*
  * $Log$
+ * Revision 1.10  2003/11/25 10:33:53  dvd
+ * documentation and comments
+ *
  * Revision 1.9  2003/11/24 23:00:27  dvd
  * literal, error reporting
  *

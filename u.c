@@ -34,7 +34,6 @@ static int inRange(int u,int r[][2],int len);
 
 #define isa(u,CHAR_CLASS) inRange(u,CHAR_CLASS,sizeof(CHAR_CLASS)/sizeof(int([2])))
 
-int u_newline(int u) {return u=='\r'||u=='\n';}
 int u_base_char(int u) {return isa(u,BASE_CHAR);}
 int u_ideographic(int u) {return isa(u,IDEOGRAPHIC);}
 int u_combining_char(int u) {return isa(u,COMBINING_CHAR);}
@@ -54,6 +53,9 @@ int inRange(int u,int r[][2],int len) {
 
 /*
  * $Log$
+ * Revision 1.7  2003/11/25 10:33:53  dvd
+ * documentation and comments
+ *
  * Revision 1.6  2003/11/21 00:20:06  dvd
  * lexer in progress
  *

@@ -9,7 +9,6 @@
 extern int u_get(int *u,char *s);
 
 /* character classes required for parsing XML */
-extern int u_newline(int u);
 extern int u_base_char(int u);
 extern int u_ideographic(int u);
 extern int u_combining_char(int u);
@@ -20,6 +19,9 @@ extern int u_extender(int u);
 
 /*
  * $Log$
+ * Revision 1.5  2003/11/25 10:33:53  dvd
+ * documentation and comments
+ *
  * Revision 1.4  2003/11/20 16:29:08  dvd
  * x escapes sketched
  *
