@@ -1,5 +1,9 @@
 /* $Id$ */
 
+1.7.1 Thu Aug 19 00:58:58 AMST 2004
+dvd: discovered and fixed a bug with parsing of builtin datatypes,
+     noone seems to use them explicitely.
+
 1.7.0 Sat Mar 27 19:26:39 AMT 2004
 dvd: entities are not expanded, use XX if you need to.
      error messages have the same syntax as Jing's.
