@@ -13,7 +13,8 @@
  exit code: 0 on valid, non-zero on invalid
 
  protocol
-  query ::= (start | start-tag-open | attribute | start-tag-close | text | end-tag) z.
+  query ::= (start | quit | start-tag-open | attribute | start-tag-close | text | end-tag) z.
+   quit ::= "quit".
    start ::= "start" [gramno].
    start-tag-open ::= "start-tag-open" patno name.
    attribute ::= "attribute" patno name value.
