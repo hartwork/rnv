@@ -18,15 +18,15 @@ struct dtl {
 
 #define LEN_DTL 4
 #define LEN_EXP 16
-#define M_SIZE 6
+#define M_SIZE 5
 #define LEN_M 1024
 
 #define M_STO 0
 #define M_STC 1
 #define M_END 2
 #define M_TYP(m) memo[m][0]
-#define M_SET(p) memo[i_m][5]=p
-#define M_RET(m) memo[m][5]
+#define M_SET(p) memo[i_m][M_SIZE-1]=p
+#define M_RET(m) memo[m][M_SIZE-1]
 #define M_NEW(x) memset(memo[i_m],0,sizeof(int[M_SIZE])); memo[i_m][0]=M_##x
 
 static struct dtl *dtl;
@@ -37,7 +37,7 @@ static struct hashtable ht_m;
 
 static int equal_m(int m1,int m2) {
   int *me1=memo[m1],*me2=memo[m2];
-  return (me1[0]==me2[0])&&(me1[1]==me2[1])&&(me1[2]==me2[2])&&(me1[3]==me2[3])&&(me1[4]==me2[4]);
+  return (me1[0]==me2[0])&&(me1[1]==me2[1])&&(me1[2]==me2[2])&&(me1[3]==me2[3]);
 }
 static int hash_m(int m) {
   int *me=memo[m];
@@ -45,24 +45,24 @@ static int hash_m(int m) {
 }
 
 static int accept_m();
-static int newStartTagOpen(int p,int uri,int name,int recover) { 
+static int newStartTagOpen(int p,int uri,int name) { 
   int *me=memo[i_m];
   M_NEW(STO);
-  me[1]=p; me[2]=uri; me[3]=name; me[4]=recover;
+  me[1]=p; me[2]=uri; me[3]=name;
   return ht_get(&ht_m,i_m);
 }
 
-static int newStartTagClose(int p,int recover) {
+static int newStartTagClose(int p) {
   int *me=memo[i_m];
   M_NEW(STC);
-  me[1]=p; me[4]=recover;
+  me[1]=p;
   return ht_get(&ht_m,i_m);
 }
 
-static int newEndTag(int p,int recover) {
+static int newEndTag(int p) {
   int *me=memo[i_m];
   M_NEW(END);
-  me[1]=p; me[4]=recover;
+  me[1]=p;
   return ht_get(&ht_m,i_m);
 }
 
@@ -77,6 +77,10 @@ static int accept_m() {
     } 
   }
   return j;
+}
+
+static void forget_m() {
+  ht_del(&ht_m,i_m);
 }
 
 static int fallback_equal(char *typ,char *val,char *s,int n) {return 1;}
@@ -166,8 +170,8 @@ int apply_after(int (*f)(int q1,int q2),int p1,int p0) {
 
 static int start_tag_open(int p,int uri,int name,int recover) {
   int nc,p1,p2,m,ret=0;
-  m=newStartTagOpen(p,uri,name,recover);
-  if(m!=-1) return M_RET(m);
+  m=newStartTagOpen(p,uri,name);
+  if(m!=-1) if(recover) forget_m(); else return M_RET(m);
   switch(P_TYP(p)) {
   case P_EMPTY: case P_NOT_ALLOWED: case P_TEXT: 
   case P_LIST: case P_DATA: case P_DATA_EXCEPT: case P_VALUE:
@@ -197,7 +201,7 @@ static int start_tag_open(int p,int uri,int name,int recover) {
     break;
   default: assert(0);
   }
-  newStartTagOpen(p,uri,name,recover); M_SET(ret); 
+  newStartTagOpen(p,uri,name); M_SET(ret); 
   accept_m();
   return ret;
 }
@@ -251,8 +255,8 @@ int drv_attribute_recover(int p,char *suri,char *sname,char *s) {
 
 static int start_tag_close(int p,int recover) {
   int p1,p2,ret=0,m;
-  m=newStartTagClose(p,recover);
-  if(m!=-1) return M_RET(m);
+  m=newStartTagClose(p);
+  if(m!=-1) if(recover) forget_m(); else return M_RET(m);
   switch(P_TYP(p)) {
   case P_EMPTY: case P_NOT_ALLOWED: case P_TEXT:
   case P_LIST: case P_DATA: case P_DATA_EXCEPT: case P_VALUE:
@@ -279,7 +283,7 @@ static int start_tag_close(int p,int recover) {
     break;
   default: assert(0);
   }
-  newStartTagClose(p,recover); M_SET(ret); 
+  newStartTagClose(p); M_SET(ret); 
   accept_m();
   return ret;
 }
@@ -353,8 +357,8 @@ int drv_text_recover(int p,char *s,int n) {return p;}
 
 static int end_tag(int p,int recover) {
   int p1,p2,ret=0,m;
-  m=newEndTag(p,recover);
-  if(m!=-1) return M_RET(m);
+  m=newEndTag(p);
+  if(m!=-1) if(recover) forget_m(); else return M_RET(m);
   switch(P_TYP(p)) {
   case P_EMPTY: case P_NOT_ALLOWED: case P_TEXT:
   case P_INTERLEAVE: case P_GROUP: case P_ONE_OR_MORE:
@@ -370,7 +374,7 @@ static int end_tag(int p,int recover) {
     break;
   default: assert(0);
   }
-  newEndTag(p,recover); M_SET(ret);
+  newEndTag(p); M_SET(ret);
   accept_m();
   return ret;
 }
@@ -379,6 +383,9 @@ int drv_end_tag_recover(int p) {return end_tag(p,1);}
 
 /*
  * $Log$
+ * Revision 1.12  2003/12/14 15:40:41  dvd
+ * If a recovery condition is memoized, error is not reported again. I am not it is a good idea.
+ *
  * Revision 1.11  2003/12/14 15:21:49  dvd
  * much better hash functions
  *
