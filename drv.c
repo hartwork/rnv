@@ -44,7 +44,7 @@ static int hash_m(int m) {
   return (me[0]&0x2)|((me[1]^me[2]^me[3])<<2);
 }
 
-static int accept_m();
+static void accept_m(void);
 static int newStartTagOpen(int p,int uri,int name) { 
   int *me=memo[i_m];
   M_NEW(STO);
@@ -66,20 +66,18 @@ static int newEndTag(int p) {
   return ht_get(&ht_m,i_m);
 }
 
-static int accept_m() {
-  int j;
-  if((j=ht_get(&ht_m,i_m))==-1) {
-    ht_put(&ht_m,j=i_m++);
+static void accept_m(void) {
+  if(ht_get(&ht_m,i_m)==-1) {
+    ht_put(&ht_m,i_m++);
     if(i_m==len_m) {
-      int (*newmemo)[M_SIZE]=(int (*)[])calloc(len_m*=2,sizeof(int[M_SIZE]));
-      memcpy(newmemo,memo,(i_m)*sizeof(int[M_SIZE]));
+      int (*newmemo)[M_SIZE]=(int (*)[M_SIZE])calloc(len_m*=2,sizeof(int[M_SIZE]));
+      memcpy(newmemo,memo,i_m*sizeof(int[M_SIZE]));
       free(memo); memo=newmemo;
     } 
   }
-  return j;
 }
 
-static void forget_m() {
+static void forget_m(void) {
   ht_del(&ht_m,i_m);
 }
 
@@ -96,26 +94,26 @@ static int builtin_equal(char *typ,char *val,char *s,int n) {
 
 static int builtin_allows(char *typ,char *ps,char *s,int n) {return 1;}
 
-static void windup();
+static void windup(void);
 
 static int initialized=0;
-void drv_init() {
+void drv_init(void) {
   if(!initialized) { initialized=1;
-    memo=(int (*)[])calloc(len_m=LEN_M,sizeof(int[M_SIZE]));
+    memo=(int (*)[M_SIZE])calloc(len_m=LEN_M,sizeof(int[M_SIZE]));
     dtl=(struct dtl*)calloc(len_dtl=LEN_DTL,sizeof(struct dtl));
     ht_init(&ht_m,len_m,&hash_m,&equal_m);
     windup();
   }
 }
 
-static void windup() {
+static void windup(void) {
   i_m=0; n_dtl=0;
   drv_add_dtl(rn_string+0,&fallback_equal,&fallback_allows); /* guard at 0 */
   drv_add_dtl(rn_string+0,&builtin_equal,&builtin_allows);
   drv_add_dtl(rn_string+rn_xsd_uri,&xsd_equal,&xsd_allows);
 }
 
-void drv_clear() {
+void drv_clear(void) {
   ht_clear(&ht_m);
   windup();
 }
@@ -383,6 +381,9 @@ int drv_end_tag_recover(int p) {return end_tag(p,1);}
 
 /*
  * $Log$
+ * Revision 1.13  2003/12/14 20:07:54  dvd
+ * cleanups
+ *
  * Revision 1.12  2003/12/14 15:40:41  dvd
  * If a recovery condition is memoized, error is not reported again. I am not it is a good idea.
  *

@@ -43,7 +43,7 @@ void ht_put(struct hashtable *ht,int i) {
   if(ht->used==ht->limit) {
     int tablen=ht->tablen; int *table=ht->table; 
     ht->tablen<<=1; ht->limit<<=1;
-    ht->table=calloc(ht->tablen<<1,sizeof(int));
+    ht->table=(int*)calloc(ht->tablen<<1,sizeof(int));
     for(j=0;j!=ht->tablen;++j) ht->table[j]=-1;
     for(j=0;j!=tablen;++j) {
       if(table[j]!=-1) {
@@ -89,6 +89,9 @@ int ht_del(struct hashtable *ht,int i) {
 
 /*
  * $Log$
+ * Revision 1.5  2003/12/14 20:07:54  dvd
+ * cleanups
+ *
  * Revision 1.4  2003/12/07 20:41:42  dvd
  * bugfixes, loops, traits
  *

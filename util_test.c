@@ -15,7 +15,7 @@ char *samples[]={
   "some/file.txt","name",
   "/path/to/file.txt","name",
   0};
-int main() {
+int main(int argc,char **argv) {
   int i=0;
   char buf[1024];
   while(samples[i]) {

@@ -1,9 +1,10 @@
 # $Id$
 #
 CC=cc
+N=95
 INC=-I/usr/local/include
-OPT=-g -O -pg -Wall -Wno-parentheses
-LIB=-lexpat
+OPT=-g -O -pg -Wall -Wno-parentheses -DEXPAT${N}=1
+LIB=-lexpat${N}
 LBL=-L/usr/local/lib
 OBJ=\
 rn.o \
@@ -33,6 +34,9 @@ clean:
 	-rm -f *.o rnv rnd_test *_test *.core *.gmon
 
 # $Log$
+# Revision 1.18  2003/12/14 20:07:54  dvd
+# cleanups
+#
 # Revision 1.17  2003/12/14 10:39:58  dvd
 # +rnx
 #

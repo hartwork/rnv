@@ -3,8 +3,8 @@
 #ifndef DRV_H
 #define DRV_H 1
 
-extern void drv_init();
-extern void drv_clear();
+extern void drv_init(void);
+extern void drv_clear(void);
 
 /* Expat passes character data unterminated.  Hence functions that can deal with cdata expect the length of the data */
 
@@ -25,6 +25,9 @@ extern int drv_end_tag_recover(int p);
 
 /*
  * $Log$
+ * Revision 1.8  2003/12/14 20:07:54  dvd
+ * cleanups
+ *
  * Revision 1.7  2003/12/14 10:39:58  dvd
  * +rnx
  *

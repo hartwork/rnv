@@ -29,7 +29,7 @@ static int parse(struct rnc_source *sp) {
   return 1;
 }
 
-void dump() {
+void dump(void) {
   int p=1,q; char *s;
   while(P_TYP(p)) {
     fprintf(stderr,"%s\n",s=p2str(p));
@@ -79,6 +79,9 @@ ERRORS:
 
 /* 
  * $Log$
+ * Revision 1.5  2003/12/14 20:07:54  dvd
+ * cleanups
+ *
  * Revision 1.4  2003/12/14 15:21:49  dvd
  * much better hash functions
  *

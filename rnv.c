@@ -6,7 +6,11 @@
 #include <stdio.h>  /*fprintf,stderr*/
 #include <string.h> /*strerror,strncpy,strrchr*/
 #include <errno.h>
+#ifdef EXPAT95
+#include <expat.h>
+#else
 #include <xmlparse.h>
+#endif
 #include "rn.h"
 #include "rnc.h"
 #include "rnd.h"
@@ -20,7 +24,7 @@ static XML_Parser expat;
 static int start,current,previous;
 static int errors;
 
-static void init() {
+static void init(void) {
   rn_init();
   rnc_init();
   rnd_init();
@@ -41,7 +45,7 @@ static int load_rnc(char *fn) {
   return 1;
 }
 
-static void error() {
+static void error(void) {
   char *s;
   ++errors;
   rnx_expected(previous);
@@ -124,7 +128,7 @@ static void characters(void *userData,const char *s,int len) {
 }
 
 static int validate(int fd) {
-  char *buf; int len;
+  void *buf; int len;
   previous=current=start;
   errors=0;
 
@@ -192,6 +196,9 @@ ERRORS:
 
 /*
  * $Log$
+ * Revision 1.14  2003/12/14 20:07:54  dvd
+ * cleanups
+ *
  * Revision 1.13  2003/12/14 14:52:24  dvd
  * efficient memoization
  *

@@ -102,7 +102,7 @@ extern int (*rn_pattern)[P_SIZE];
 extern int (*rn_nameclass)[NC_SIZE];
 extern char *rn_params;
 
-extern void rn_new_schema();
+extern void rn_new_schema(void);
 
 extern void setNullable(int i,int x);
 extern void setCdata(int i,int x);
@@ -113,9 +113,9 @@ extern void rn_add_p(int i);
 
 extern int newString(char *s);
 
-extern int newEmpty();
-extern int newNotAllowed();
-extern int newText();
+extern int newEmpty(void);
+extern int newNotAllowed(void);
+extern int newText(void);
 extern int newChoice(int p1,int p2);
 extern int newInterleave(int p1,int p2);
 extern int newGroup(int p1,int p2);
@@ -127,7 +127,7 @@ extern int newValue(int dt,int s);
 extern int newAttribute(int nc,int p1);
 extern int newElement(int nc,int p1);
 extern int newAfter(int p1,int p2);
-extern int newRef();
+extern int newRef(void);
 
 extern char *p2str(int nc);
 
@@ -138,7 +138,7 @@ extern int rn_choice(int p1,int p2);
 extern int rn_ileave(int p1,int p2);
 extern int rn_after(int p1,int p2);
 
-extern int newAnyName();
+extern int newAnyName(void);
 extern int newAnyNameExcept(int nc);
 extern int newQName(int uri,int name);
 extern int newNsName(int uri);
@@ -148,18 +148,21 @@ extern int newDatatype(int lib,int typ);
 
 extern char *nc2str(int nc);
 
-extern int rn_i_ps();
+extern int rn_i_ps(void);
 extern void rn_add_pskey(char *s);
 extern void rn_add_psval(char *s);
-extern void rn_end_ps();
+extern void rn_end_ps(void);
 
-extern void rn_init();
-extern void rn_clear();
+extern void rn_init(void);
+extern void rn_clear(void);
 
 #endif
 
 /*
  * $Log$
+ * Revision 1.23  2003/12/14 20:07:54  dvd
+ * cleanups
+ *
  * Revision 1.22  2003/12/13 22:03:30  dvd
  * rnv works
  *

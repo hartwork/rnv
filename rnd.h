@@ -3,19 +3,22 @@
 #ifndef RND_H
 #define RND_H 1
 
-void rnd_clear();
-void rnd_init();
+void rnd_clear(void);
+void rnd_init(void);
 
 extern void rnd_deref(int start);
-extern void rnd_restrictions();
-extern void rnd_traits();
-extern int rnd_release();
-extern int rnd_errors();
+extern void rnd_restrictions(void);
+extern void rnd_traits(void);
+extern int rnd_release(void);
+extern int rnd_errors(void);
 
 #endif
 
 /*
  * $Log$
+ * Revision 1.7  2003/12/14 20:07:54  dvd
+ * cleanups
+ *
  * Revision 1.6  2003/12/11 23:37:58  dvd
  * derivative in progress
  *

@@ -17,17 +17,17 @@ static int *refs;
 static int errors;
 
 static int initialized=0;
-void rnd_init() {
+void rnd_init(void) {
   if(!initialized) {
     rn_init();
     initialized=1;
   }
 }
 
-void rnd_clear() {}
+void rnd_clear(void) {}
 
 
-int rnd_errors() {
+int rnd_errors(void) {
   return errors!=0;
 }
 
@@ -36,14 +36,14 @@ static void error(int er_no,...) {
   ++errors;
 }
 
-static void realloc_f() {
+static void realloc_f(void) {
   int *newflat;
   newflat=(int*)calloc(len_f*=2,sizeof(int));
   memcpy(newflat,flat,n_f*sizeof(int)); free(flat);
   flat=newflat;
 }
 
-static void realloc_r() {
+static void realloc_r(void) {
   int *newrefs;
   newrefs=(int*)calloc(len_r*=2,sizeof(int));
   memcpy(newrefs,refs,n_r*sizeof(int)); free(refs);
@@ -63,7 +63,7 @@ static int deref(int p) {
   return p1;
 }
 
-static void flatten(p) { if(!marked(p)) {flat[n_f++]=p; mark(p);}}
+static void flatten(int p) { if(!marked(p)) {flat[n_f++]=p; mark(p);}}
 
 void rnd_deref(int start) {
   int p,p1,p2,nc,i,changed;
@@ -149,7 +149,7 @@ static int loop(int p) {
   return ret;
 }
 
-static void loops() {
+static void loops(void) {
   int i=0,p=flat[i],nc=-1,p1;
   for(;;) {
     if(loop(p)) {
@@ -198,7 +198,7 @@ static void ctype(int p) {
   }
 }
 
-static void ctypes() {
+static void ctypes(void) {
   int i=0,p,p1,nc;
   for(i=0;i!=n_f;++i) {
     p=flat[i];
@@ -359,7 +359,7 @@ static void path(int p,int nc) {
   }
 }
 
-static void paths() {
+static void paths(void) {
   int i=0,p,p1,nc=-1;
   if(bad_start(flat[0])) error(ER_BADSTART);
   for(i=1;i!=n_f;++i) {
@@ -371,13 +371,13 @@ static void paths() {
   }
 }
 
-void rnd_restrictions() {
+void rnd_restrictions(void) {
   loops(); if(errors) return; /* loops can cause endless loops in subsequent calls */
   ctypes();
   paths();
 }
 
-static void nullables() {
+static void nullables(void) {
   int i,p,p1,p2,changed;
   do {
     changed=0;
@@ -404,7 +404,7 @@ static void nullables() {
   } while(changed);
 }
 
-static void cdatas() {
+static void cdatas(void) {
   int i,p,p1,p2,changed;
   do {
     changed=0;
@@ -430,12 +430,12 @@ static void cdatas() {
   } while(changed);
 }
 
-void rnd_traits() {
+void rnd_traits(void) {
   nullables();
   cdatas();
 }
 
-int rnd_release() {
+int rnd_release(void) {
   int start=flat[0];
   free(flat); flat=NULL;
   return start;
@@ -443,6 +443,9 @@ int rnd_release() {
 
 /*
  * $Log$
+ * Revision 1.12  2003/12/14 20:07:54  dvd
+ * cleanups
+ *
  * Revision 1.11  2003/12/11 23:37:58  dvd
  * derivative in progress
  *

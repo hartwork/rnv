@@ -4,11 +4,11 @@
 #define RNC_H 1
 
 struct rnc_source;
-extern struct rnc_source *rnc_alloc();
+extern struct rnc_source *rnc_alloc(void);
 extern void rnc_free(struct rnc_source *sp);
 
-extern void rnc_init();
-extern void rnc_clear();
+extern void rnc_init(void);
+extern void rnc_clear(void);
 
 extern int rnc_open(struct rnc_source *sp,char *fn);
 extern int rnc_stropen(struct rnc_source *sp,char *fn,char *s,int len);
@@ -23,6 +23,9 @@ extern int rnc_errors(struct rnc_source *sp);
 
 /*
  * $Log$
+ * Revision 1.8  2003/12/14 20:07:54  dvd
+ * cleanups
+ *
  * Revision 1.7  2003/12/11 23:37:58  dvd
  * derivative in progress
  *

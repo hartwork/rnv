@@ -1,6 +1,7 @@
 /* $Id$ */
 
 #include <stdlib.h> /*calloc,free*/
+#include <string.h> /*memcpy*/
 #include "rn.h"
 #include "rnx.h"
 
@@ -11,13 +12,13 @@ int rnx_n_exp;
 static int len_exp;
 
 static int initialized=0;
-void rnx_init() {
+void rnx_init(void) {
   if(!initialized) { initialized=1;
     rnx_exp=(int*)calloc(len_exp=LEN_EXP,sizeof(int));
   }
 }
 
-void rnx_clear() {}
+void rnx_clear(void) {}
 
 static void expected(int p) {
   int p1,p2,px=0,i;
@@ -61,6 +62,9 @@ void rnx_expected(int p) {
 
 /*
  * $Log$
+ * Revision 1.4  2003/12/14 20:07:54  dvd
+ * cleanups
+ *
  * Revision 1.3  2003/12/14 14:52:24  dvd
  * efficient memoization
  *

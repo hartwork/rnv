@@ -83,7 +83,7 @@ static char *kwdtab[NKWD]={
 
 #define LEN_P 128
 
-struct sym {
+struct cym {
   char *s; int slen;
   int line,col;
   int sym;
@@ -97,10 +97,10 @@ struct rnc_source {
   int line,col,prevline/*when error reported*/;
   int u,v,w; int nx;
   int cur;
-  struct sym sym[2];
+  struct cym sym[2];
 };
 
-struct rnc_source *rnc_alloc() {
+struct rnc_source *rnc_alloc(void) {
   return (struct rnc_source *)malloc(sizeof(struct rnc_source));
 }
 void rnc_free(struct rnc_source *sp) {
@@ -195,7 +195,7 @@ int rnc_errors(struct rnc_source *sp) {
 static struct sc_stack nss,dts,defs,refs,prefs;
 
 static int initialized=0;
-void rnc_init() {
+void rnc_init(void) {
   if(!initialized) { initialized=1;
     rn_init();
     len_p=LEN_P; path=(char*)calloc(len_p,sizeof(char));
@@ -204,7 +204,7 @@ void rnc_init() {
   }
 }
 
-void rnc_clear() {}
+void rnc_clear(void) {}
 
 static void error(int force,struct rnc_source *sp,int er_no,...) {
   if(force || sp->line != sp->prevline) {
@@ -325,7 +325,7 @@ static void getv(struct rnc_source *sp) {
 #define name_char(v) (name_start(v)||u_digit(v)||u_combining_char(v)||u_extender(v)||(v)=='.'||(v)=='-'||(v)==':')
 #define skip_comment(sp) while(!newline(sp->v)) getv(sp); getv(sp)
 
-static void realloc_s(struct sym *symp) {
+static void realloc_s(struct cym *symp) {
   char *s; int slen=symp->slen*2;
   s=(char*)calloc(slen,sizeof(char));
   memcpy(s,symp->s,symp->slen*sizeof(char)); free(symp->s);
@@ -661,7 +661,7 @@ static void fold_efs(struct rnc_source *sp,struct sc_stack *stp,void (*fold)(str
   int len=stp->top-stp->base-1;
   if(len!=0) {
     int i;
-    int (*tab)[SC_RECSIZE]=(int(*)[])calloc(len,sizeof(int[SC_RECSIZE]));
+    int (*tab)[SC_RECSIZE]=(int(*)[SC_RECSIZE])calloc(len,sizeof(int[SC_RECSIZE]));
     memcpy(tab,stp->tab+stp->base+1,len*sizeof(int[SC_RECSIZE]));
     sc_close(stp);
     for(i=0;i!=len;++i) fold(sp,stp,tab[i][0],tab[i][1],tab[i][2]);
@@ -1196,6 +1196,9 @@ int rnc_parse(struct rnc_source *sp) {
 
 /*
  * $Log$
+ * Revision 1.39  2003/12/14 20:07:54  dvd
+ * cleanups
+ *
  * Revision 1.38  2003/12/13 22:03:30  dvd
  * rnv works
  *

@@ -16,7 +16,7 @@ static void windup(struct sc_stack *stp) {
 }
 
 void sc_init(struct sc_stack *stp) {
-  stp->tab=(int(*)[])calloc(stp->len=LEN,sizeof(int[SC_RECSIZE]));
+  stp->tab=(int(*)[SC_RECSIZE])calloc(stp->len=LEN,sizeof(int[SC_RECSIZE]));
   windup(stp);
 }
 
@@ -25,7 +25,7 @@ void sc_clear(struct sc_stack *stp) {
 }
 
 static void realloc_sc(struct sc_stack *stp) {
-  int (*tab)[SC_RECSIZE]=(int(*)[])calloc(stp->len*=2,sizeof(int[SC_RECSIZE]));
+  int (*tab)[SC_RECSIZE]=(int(*)[SC_RECSIZE])calloc(stp->len*=2,sizeof(int[SC_RECSIZE]));
   memcpy(tab,stp->tab,stp->top*sizeof(int[SC_RECSIZE])); free(stp->tab);
   stp->tab=tab;
 }
@@ -66,6 +66,9 @@ int sc_add(struct sc_stack *stp,int key,int val,int aux) {
 
 /*
  * $Log$
+ * Revision 1.8  2003/12/14 20:07:54  dvd
+ * cleanups
+ *
  * Revision 1.7  2003/12/07 09:06:16  dvd
  * +rnd
  *
