@@ -200,17 +200,18 @@ static int samechoice(int p1,int p2) {
   } else return p1==p2;
 }
 
+static int less_p(int p1,int p2);
 int rn_choice(int p1,int p2) {
   if(P_IS(p1,NOT_ALLOWED)) return p2;
   if(P_IS(p2,NOT_ALLOWED)) return p1;
   if(P_IS(p2,CHOICE)) {
     int p21,p22; Choice(p2,p21,p22);
-    p1=newChoice(p1,p21); return rn_choice(p1,p22);
+    p1=rn_choice(p1,p21); return rn_choice(p1,p22);
   }
   if(samechoice(p1,p2)) return p1;
   if(nullable(p1) && (P_IS(p2,EMPTY))) return p1;
   if(nullable(p2) && (P_IS(p1,EMPTY))) return p2;
-  return newChoice(p1,p2);
+  return less_p(p2,p1)?newChoice(p2,p1):newChoice(p1,p2); 
 }
 
 int rn_ileave(int p1,int p2) {
@@ -218,7 +219,7 @@ int rn_ileave(int p1,int p2) {
   if(P_IS(p2,NOT_ALLOWED)) return p2;
   if(P_IS(p1,EMPTY)) return p2;
   if(P_IS(p2,EMPTY)) return p1;
-  return newInterleave(p1,p2);
+  return less_p(p2,p1)?newInterleave(p2,p1):newInterleave(p1,p2);
 }
 
 int rn_after(int p1,int p2) {
@@ -339,6 +340,19 @@ static int equal_p(int p1,int p2) {
   }
   return 0;
 }
+
+static int less_p(int p1,int p2) {
+  int *pp1=rn_pattern+p1,*pp2=rn_pattern+p2;
+  if(P_TYP(p1)!=P_TYP(p2)) return P_TYP(p1)==P_CHOICE||P_TYP(p1)<P_TYP(p2);
+  switch(p_size[P_TYP(p1)]) {
+  case 3: if(pp1[2]!=pp2[2]) return pp1[2]<pp2[2];
+  case 2: if(pp1[1]!=pp2[1]) return pp1[1]<pp2[1];
+  case 1: return 0;
+  default: assert(0);
+  }
+  return 0;
+}
+
 
 static int equal_nc(int nc1,int nc2) {
   int *ncp1=rn_nameclass+nc1,*ncp2=rn_nameclass+nc2;
