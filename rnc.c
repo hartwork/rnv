@@ -78,6 +78,11 @@ static char *kwdtab[NKWD]={
 #define SRC_CLOSE 2
 #define SRC_ERRORS 4
 
+#define CUR(sp) ((sp)->sym[(sp)->cur])
+#define NXT(sp) ((sp)->sym[!(sp)->cur])
+
+#define LEN_P 128
+
 struct sym {
   char *s; int slen;
   int line,col;
@@ -95,10 +100,9 @@ struct rnc_source {
   struct sym sym[2];
 };
 
-#define CUR(sp) ((sp)->sym[(sp)->cur])
-#define NXT(sp) ((sp)->sym[!(sp)->cur])
-
-#define LEN_P 128
+struct rnc_source *rnc_alloc() {
+  return (struct rnc_source *)malloc(sizeof(struct rnc_source));
+}
 
 static int len_p;
 static char *path;
@@ -172,14 +176,16 @@ static int rnc_read(struct rnc_source *sp) {
   return ni;
 }
 
+int rnc_errors(struct rnc_source *sp) {
+  return (sp->flags&SRC_ERRORS)!=0;
+}
+
 #define PFX_INHERITED 1
 #define PFX_DEFAULT 2
 
 #define DE_HEAD 4
 #define DE_CHOICE 8
 #define DE_ILEAVE 16
-
-#define RE_
 
 static struct sc_stack nss,dts,defs,refs,prefs;
 
@@ -193,6 +199,8 @@ void rnc_init() {
     initialized=1;
   }
 }
+
+void rnc_clear() {}
 
 static void error(int force,struct rnc_source *sp,int er_no,...) {
   if(force || sp->line != sp->prevline) {
@@ -761,7 +769,7 @@ static int inherit(struct rnc_source *sp) {
 }
 
 static int name(struct rnc_source *sp,int p,int s) {
-  int nc=newQName(ns2uri(sp,p),p);
+  int nc=newQName(ns2uri(sp,p),s);
   getsym(sp);
   return nc;
 }
@@ -815,7 +823,7 @@ static int nameclass(struct rnc_source *sp) {
   case SYM_EXCEPT:
     if(!(NC_IS(nc,ANY_NAME)||NC_IS(nc,NSNAME))) error(1,sp,ER_NCEX,sp->fn,CUR(sp).line,CUR(sp).col);
     getsym(sp);
-    nc=newNsNameExcept(nc,simplenc(sp));
+    nc=newNameClassExcept(nc,simplenc(sp));
     break;
   }
   return nc;
@@ -825,14 +833,14 @@ static int pattern(struct rnc_source *sp);
 
 static int element(struct rnc_source *sp) {
   int nc,p;
-  nc=nameclass(sp); chk_get(sp,SYM_LCUR); p=newElement(pattern(sp),nc); chk_skip_get(sp,SYM_RCUR);
+  nc=nameclass(sp); chk_get(sp,SYM_LCUR); p=newElement(nc,pattern(sp)); chk_skip_get(sp,SYM_RCUR);
   return p;
 }
 
 static int attribute(struct rnc_source *sp) {
   int nc,p,i=sc_find(&nss,0),nsuri=nss.tab[i][1];
   nss.tab[i][1]=0; nc=nameclass(sp);  nss.tab[i][1]=nsuri;
-  chk_get(sp,SYM_LCUR); p=newAttribute(pattern(sp),nc); chk_skip_get(sp,SYM_RCUR);
+  chk_get(sp,SYM_LCUR); p=newAttribute(nc,pattern(sp)); chk_skip_get(sp,SYM_RCUR);
   return p;
 }
 
@@ -841,7 +849,7 @@ static int refname(struct rnc_source *sp,struct sc_stack *stp) {
   if(i=sc_find(stp,name)) {
     p=stp->tab[i][1];
   } else {
-    p=newRef();
+    p=newRef(name);
     sc_add(stp,name,p,0);
   }
   return p;
@@ -1168,21 +1176,11 @@ int rnc_parse(struct rnc_source *sp) {
   return start;
 }
 
-int main(int argc,char **argv) {
-  struct rnc_source src;
-  rnc_init();
-  if(*(++argv)) rnc_open(&src,*argv); else rnc_bind(&src,"stdin",0);
-  rnc_parse(&src);
-  rnc_close(&src);
-  if(src.flags&=SRC_ERRORS) {
-    fprintf(stderr,"errors happened\n");
-    return 1;
-  }
-  return 1;
-}
-
 /*
  * $Log$
+ * Revision 1.29  2003/12/07 16:50:55  dvd
+ * stage D, dereferencing and checking for loops
+ *
  * Revision 1.28  2003/12/07 09:06:16  dvd
  * +rnd
  *

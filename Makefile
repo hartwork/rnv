@@ -5,15 +5,27 @@ INC=-I.
 OPT=-g -O -Wall -Wno-parentheses
 LIB=
 LBL=
-OBJ=er.o rnc.o u.o ht.o rn.o util.o sc.o rnd.o
+OBJ=\
+rn.o \
+rnc.o \
+rnd.o \
+rnv.o \
+er.o \
+sc.o \
+u.o \
+ht.o \
+util.o 
 
 .c.o:
 	${CC} ${INC} ${OPT} -c -o $@ $<
 
-rnc: ${OBJ}
-	${CC} ${OPT} ${LBL} -o rnc ${OBJ} ${LIB} 
+rnv: ${OBJ}
+	${CC} ${OPT} ${LBL} -o rnv ${OBJ} ${LIB} 
 
 # $Log$
+# Revision 1.7  2003/12/07 16:50:55  dvd
+# stage D, dereferencing and checking for loops
+#
 # Revision 1.6  2003/12/07 09:06:16  dvd
 # +rnd
 #

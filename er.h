@@ -24,8 +24,12 @@
 #define ER_COMBINE 57
 #define ER_OVRIDE 58
 #define ER_EXPT 59
-#define ER_NOSTART 60
-#define ER_UNDEF 61
+#define ER_NOSTART 70
+#define ER_UNDEF 71
+#define ER_LOOPREF 80
+#define ER_LOOPST 81
+#define ER_LOOPEL 82
+
 
 extern void er_handler(int er_no,...);
 extern void (*ver_handler_p)(int er_no,va_list ap);
@@ -34,6 +38,9 @@ extern void (*ver_handler_p)(int er_no,va_list ap);
 
 /*
  * $Log$
+ * Revision 1.13  2003/12/07 16:50:55  dvd
+ * stage D, dereferencing and checking for loops
+ *
  * Revision 1.12  2003/12/05 23:58:44  dvd
  * parses docbook
  *

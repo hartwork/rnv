@@ -125,13 +125,13 @@ int newValue(int dt,int s) { P_NEW(VALUE);
   return accept_p();
 }
 
-int newAttribute(int p1,int nc) { P_NEW(ATTRIBUTE);
-  rn_pattern[i_p][1]=p1; rn_pattern[i_p][2]=nc;
+int newAttribute(int nc,int p1) { P_NEW(ATTRIBUTE);
+  rn_pattern[i_p][2]=nc; rn_pattern[i_p][1]=p1;
   return accept_p();
 }
 
-int newElement(int p1,int nc) { P_NEW(ELEMENT);
-  rn_pattern[i_p][1]=p1; rn_pattern[i_p][2]=nc;
+int newElement(int nc,int p1) { P_NEW(ELEMENT);
+  rn_pattern[i_p][2]=nc; rn_pattern[i_p][1]=p1; 
   return accept_p();
 }
 
@@ -140,45 +140,10 @@ int newAfter(int p1,int p2) { P_NEW(AFTER);
   return accept_p();
 }
 
-int newRef() { P_NEW(REF);
+int newRef(int name) { P_NEW(REF);
   rn_pattern[i_p][1]=i_p; /* it is unique */
+  rn_pattern[i_p][2]=name;
   return accept_p();
-}
-
-#define NC_NEW(x) rn_nameclass[i_nc][0]=NC_##x
-
-int newAnyName() { NC_NEW(ANY_NAME);
-  return accept_nc();
-}
-
-int newAnyNameExcept(int nc) { NC_NEW(ANY_NAME_EXCEPT);
-  rn_nameclass[i_nc][1]=nc;
-  return accept_nc();
-}
-
-int newNsName(int uri) { NC_NEW(NSNAME);
-  rn_nameclass[i_nc][1]=uri;
-  return accept_nc();
-}
-
-int newQName(int uri,int localname) { NC_NEW(NAME);
-  rn_nameclass[i_nc][1]=uri; rn_nameclass[i_nc][2]=localname;
-  return accept_nc();
-}
-
-int newNsNameExcept(int uri,int nc) { NC_NEW(NSNAME_EXCEPT);
-  rn_nameclass[i_nc][1]=uri; rn_nameclass[i_nc][2]=nc;
-  return accept_nc();
-}
-
-int newNameClassChoice(int nc1,int nc2) { NC_NEW(CHOICE);
-  rn_nameclass[i_nc][1]=nc1; rn_nameclass[i_nc][2]=nc2;
-  return accept_nc();
-}
-
-int newDatatype(int lib,int dt) { NC_NEW(DATATYPE);
-  rn_nameclass[i_nc][1]=lib; rn_nameclass[i_nc][2]=dt;
-  return accept_nc();
 }
 
 int rn_groupable(int p1,int p2) {
@@ -227,6 +192,83 @@ int rn_ileave(int p1,int p2) {
   if(P_IS(p1,EMPTY)) return p2;
   if(P_IS(p2,EMPTY)) return p1;
   return newInterleave(p1,p2);
+}
+
+#define NC_NEW(x) rn_nameclass[i_nc][0]=NC_##x
+
+int newQName(int uri,int localname) { NC_NEW(QNAME);
+  rn_nameclass[i_nc][1]=uri; rn_nameclass[i_nc][2]=localname;
+  return accept_nc();
+}
+
+int newNsName(int uri) { NC_NEW(NSNAME);
+  rn_nameclass[i_nc][1]=uri;
+  return accept_nc();
+}
+
+int newAnyName() { NC_NEW(ANY_NAME);
+  return accept_nc();
+}
+
+int newNameClassExcept(int nc1,int nc2) { NC_NEW(EXCEPT);
+  rn_nameclass[i_nc][1]=nc1; rn_nameclass[i_nc][2]=nc2;
+  return accept_nc();
+}
+
+int newNameClassChoice(int nc1,int nc2) { NC_NEW(CHOICE);
+  rn_nameclass[i_nc][1]=nc1; rn_nameclass[i_nc][2]=nc2;
+  return accept_nc();
+}
+
+int newDatatype(int lib,int dt) { NC_NEW(DATATYPE);
+  rn_nameclass[i_nc][1]=lib; rn_nameclass[i_nc][2]=dt;
+  return accept_nc();
+}
+
+char *nc2str(int nc) {
+  char *s,*s1,*s2;
+  int nc1,nc2,uri,localname;
+  switch(NC_TYP(nc)) {
+  case NC_ERROR: return strdup("?");
+  case NC_NSNAME:
+    NsName(nc,uri);
+    s=calloc(strlen(rn_string+uri)+3,sizeof(char));
+    strcpy(s,rn_string+uri); strcat(s,":*");
+    return s;
+
+  case NC_QNAME:
+    QName(nc,uri,localname); 
+    s=calloc(strlen(rn_string+uri)+strlen(rn_string+localname)+2,sizeof(char));
+    strcpy(s,rn_string+uri); strcat(s,"^"); strcat(s,rn_string+localname);
+    return s;
+
+  case NC_ANY_NAME: return strdup("*");
+
+  case NC_EXCEPT:
+    NameClassExcept(nc,nc1,nc2);
+    s1=nc2str(nc1); s2=nc2str(nc2);
+    s=calloc(strlen(s1)+strlen(s2)+2,sizeof(char));
+    strcpy(s,s1); strcat(s,"-"); strcat(s,s2);
+    free(s1); free(s2);
+    return s;
+    
+  case NC_CHOICE:
+    NameClassChoice(nc,nc1,nc2);
+    s1=nc2str(nc1); s2=nc2str(nc2);
+    s=calloc(strlen(s1)+strlen(s2)+2,sizeof(char));
+    strcpy(s,s1); strcat(s,"|"); strcat(s,s2);
+    free(s1); free(s2);
+    return s;
+    
+  case NC_DATATYPE:
+    Datatype(nc,uri,localname); 
+    s=calloc(strlen(rn_string+uri)+strlen(rn_string+localname)+2,sizeof(char));
+    strcpy(s,rn_string+uri); strcat(s,"^"); strcat(s,rn_string+localname);
+    return s;
+  default: 
+    assert(0);
+  }
+  return NULL;
 }
 
 static int hash_p(int i);
@@ -289,12 +331,15 @@ static int hash_p(int i) {return hash_ary(i,(int*)rn_pattern,P_SIZE);}
 static int hash_nc(int i) {return hash_ary(i,(int*)rn_nameclass,NC_SIZE);}
 static int hash_s(int i) {return strhash(rn_string+i);}
 
-static int equal_p(int p1,int p2) {return memcmp(rn_pattern[p1],rn_pattern[p2],P_SIZE)==0;}
-static int equal_nc(int nc1,int nc2) {return memcmp(rn_nameclass[nc1],rn_pattern[nc2],NC_SIZE)==0;}
+static int equal_p(int p1,int p2) {return memcmp(rn_pattern[p1],rn_pattern[p2],P_SIZE*sizeof(int))==0;}
+static int equal_nc(int nc1,int nc2) {return memcmp(rn_nameclass[nc1],rn_pattern[nc2],NC_SIZE*sizeof(int))==0;}
 static int equal_s(int s1,int s2) {return strcmp(rn_string+s1,rn_string+s2)==0;}
 
 /* 
  * $Log$
+ * Revision 1.11  2003/12/07 16:50:55  dvd
+ * stage D, dereferencing and checking for loops
+ *
  * Revision 1.10  2003/12/07 09:06:16  dvd
  * +rnd
  *
