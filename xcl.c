@@ -39,7 +39,7 @@ extern int rn_notAllowed,rx_compact,drv_compact;
 #define PIXGFILE "davidashen-net-xg-file"
 #define PIXGPOS "davidashen-net-xg-pos"
 
-static int peipe,verbose,nexp,rnck;
+static int peipe,verbose,extent,nexp,rnck;
 static char *xml;
 static XML_Parser expat=NULL;
 static int start,current,previous;
@@ -200,12 +200,12 @@ ERROR:
 static int externalEntityRef(XML_Parser p,const char *context, const char *base,const char *systemId,const char *publicId) {
   ok=0;
   if(systemId) {
-    int fd; char *entity;
+    int fd; char *re, *entity;
     assert(base);
     entity=(char*)m_alloc(strlen(base)+strlen(systemId)+2,1);
-    strcpy(entity,systemId); s_abspath(entity,(char*)base);
+    strcpy(entity,systemId); re=s_abspath(entity,(char*)base);
     if((fd=open(entity,O_RDONLY))==-1) {
-      error_handler(XCL_ER_NOXENT,entity,strerror(errno));
+      error_handler(XCL_ER_NOXENT,re,strerror(errno));
     } else {
       XML_Parser expat0=expat; char *xml0=xml; xml=entity;
       expat=XML_ExternalEntityParserCreate(expat0,context,NULL);
@@ -237,7 +237,7 @@ static void validate(int fd) {
 }
 
 static void version(void) {(*er_printf)("rnv version %s\n",RNV_VERSION);}
-static void usage(void) {(*er_printf)("usage: rnv {-[qnspc"
+static void usage(void) {(*er_printf)("usage: rnv {-[qnsxpc"
 #if DXL_EXC
 "d"
 #endif
@@ -249,7 +249,7 @@ static void usage(void) {(*er_printf)("usage: rnv {-[qnspc"
 int main(int argc,char **argv) {
   init();
 
-  peipe=0; verbose=1; nexp=NEXP; rnck=0;
+  peipe=0; verbose=1; extent=0; nexp=NEXP; rnck=0;
   while(*(++argv)&&**argv=='-') {
     int i=1;
     for(;;) {
@@ -258,6 +258,7 @@ int main(int argc,char **argv) {
       case 'q': verbose=0; nexp=0; break;
       case 'n': if(*(argv+1)) nexp=atoi(*(++argv)); goto END_OF_OPTIONS;
       case 's': drv_compact=1; rx_compact=1; break;
+      case 'x': extent=1; break;
       case 'p': peipe=1; break;
       case 'c': rnck=1; break;
 #if DXL_EXC

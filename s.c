@@ -57,7 +57,7 @@ char *s_abspath(char *r,char *b) {
       char *p=r,*q;
       while(*p++); q=p+(sep-b);
       do *(--q)=*(--p); while(p!=r);
-      while(b!=sep) *p++=*b++;
+      while(b!=sep) *r++=*b++;
     }
   }
   return r;

@@ -18,6 +18,7 @@ extern char *s_clone(char *s);
 /* compute the absolute path from a relative path and a base path;
  the caller must ensure that there is enough space in r:
  size(r) > strlen(r)+strlen(b)
+ returns a pointer to the string containing relative path
  */
 extern char *s_abspath(char *r,char *b);
 
