@@ -17,18 +17,25 @@
 #define ER_EXT 50
 #define ER_DUPNS 51
 #define ER_DUPDT 52
-#define ER_NONS 53
-#define ER_NODT 54
-#define ER_NCEX 55
-#define ER_2HEADS 56
-#define ER_COMBINE 57
-#define ER_OVRIDE 58
-#define ER_EXPT 59
+#define ER_DFLTNS 53
+#define ER_DFLTDT 54
+#define ER_NONS 55
+#define ER_NODT 56
+#define ER_NCEX 57
+#define ER_2HEADS 58
+#define ER_COMBINE 59
+#define ER_OVRIDE 60
+#define ER_EXPT 61
 #define ER_NOSTART 70
 #define ER_UNDEF 71
 #define ER_LOOPST 80
 #define ER_LOOPEL 81
 #define ER_CTYPE 82
+#define ER_BADSTART 83
+#define ER_BADMORE 84
+#define ER_BADEXPT 85
+#define ER_BADLIST 86
+#define ER_BADATTR 87
 
 extern void er_handler(int er_no,...);
 extern void (*ver_handler_p)(int er_no,va_list ap);
@@ -37,6 +44,9 @@ extern void (*ver_handler_p)(int er_no,va_list ap);
 
 /*
  * $Log$
+ * Revision 1.16  2003/12/08 21:23:47  dvd
+ * +path restrictions
+ *
  * Revision 1.15  2003/12/08 18:54:51  dvd
  * content-type checks
  *

@@ -210,6 +210,12 @@ static void error(int force,struct rnc_source *sp,int er_no,...) {
   sp->flags|=SRC_ERRORS;
 }
 
+static void warning(int force,struct rnc_source *sp,int er_no,...) {
+  if(force || sp->line != sp->prevline) {
+    va_list ap; va_start(ap,er_no); (*ver_handler_p)(er_no,ap); va_end(ap);
+  }
+}
+
 /* read utf8 */
 static void getu(struct rnc_source *sp) {
   int n,u0=sp->u;
@@ -678,7 +684,10 @@ static void fold_scope(struct rnc_source *sp) {
 static void addns(struct rnc_source *sp,int pfx,int url) {
   int i;
   if(i=sc_find(&nss,pfx)) {
-    if(nss.tab[i][2]&(PFX_INHERITED|PFX_DEFAULT)) {
+    if(nss.tab[i][2]&PFX_INHERITED) {
+      nss.tab[i][1]=url; nss.tab[i][2]&=~(PFX_INHERITED|PFX_DEFAULT);
+    } else if(nss.tab[i][2]&PFX_DEFAULT) {
+      warning(1,sp,ER_DFLTNS,rn_string+pfx,sp->fn,CUR(sp).line,CUR(sp).col);
       nss.tab[i][1]=url; nss.tab[i][2]&=~(PFX_INHERITED|PFX_DEFAULT);
     } else error(1,sp,ER_DUPNS,rn_string+pfx,sp->fn,CUR(sp).line,CUR(sp).col);
   } else sc_add(&nss,pfx,url,0);
@@ -688,6 +697,7 @@ static void adddt(struct rnc_source *sp,int pfx,int url) {
   int i;
   if(i=sc_find(&dts,pfx)) {
     if(dts.tab[i][2]&PFX_DEFAULT) {
+      warning(1,sp,ER_DFLTDT,rn_string+pfx,sp->fn,CUR(sp).line,CUR(sp).col);
       dts.tab[i][1]=url; dts.tab[i][2]&=~PFX_DEFAULT;
     } else error(1,sp,ER_DUPDT,rn_string+pfx,sp->fn,CUR(sp).line,CUR(sp).col);
   } else sc_add(&dts,pfx,url,0);
@@ -1178,6 +1188,9 @@ int rnc_parse(struct rnc_source *sp) {
 
 /*
  * $Log$
+ * Revision 1.30  2003/12/08 21:23:47  dvd
+ * +path restrictions
+ *
  * Revision 1.29  2003/12/07 16:50:55  dvd
  * stage D, dereferencing and checking for loops
  *

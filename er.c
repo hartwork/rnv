@@ -36,6 +36,8 @@ static void default_ver_handler(int er_no,va_list ap) {
   case ER_EXT: cerr("cannot open external grammar '%s'"); break;
   case ER_DUPNS: cerr("duplicate namespace prefix '%s'"); break;
   case ER_DUPDT: cerr("duplicate datatype prefix '%s'"); break;
+  case ER_DFLTNS: cerr("overriding default namespace prefix '%s'"); break;
+  case ER_DFLTDT: cerr("overriding default datatype prefix '%s'"); break;
   case ER_NONS: cerr("undeclared namespace prefix '%s'"); break;
   case ER_NODT: cerr("undeclared datatype prefix '%s'"); break;
   case ER_NCEX: cerr("first argument for '-' is not '*' or 'prefix:*'"); break;
@@ -48,12 +50,20 @@ static void default_ver_handler(int er_no,va_list ap) {
   case ER_LOOPST: derr("loop in start pattern"); break;
   case ER_LOOPEL: derr("loop in pattern for element '%s'"); break;
   case ER_CTYPE: derr("content of element '%s' does not have a content-type"); break;
+  case ER_BADSTART: derr("bad path in start pattern"); break;
+  case ER_BADMORE: derr("bad path before '*' or '+' in element '%s'"); break;
+  case ER_BADEXPT: derr("bad path after '-' in element '%s'"); break;
+  case ER_BADLIST: derr("bad path after 'list' in element '%s'"); break;
+  case ER_BADATTR: derr("bad path in attribute '%s' of element '%s'"); break;
   default: assert(0);
   }
 }
 
 /*
  * $Log$
+ * Revision 1.17  2003/12/08 21:23:47  dvd
+ * +path restrictions
+ *
  * Revision 1.16  2003/12/08 18:54:51  dvd
  * content-type checks
  *
