@@ -1,7 +1,7 @@
 ; $Id$
 ; unicode
 
-(define (string->u-list s)
+(define (utf8->list s) ; no checks, everything we get is unicode
   (letrec (
       (ux
         (lambda (c ul sl n) 
@@ -20,8 +20,7 @@
                   ((< c #xF0) (ux (remainder c #x10) ul sl 2))
                   ((< c #xF8) (ux (remainder c #x08) ul sl 3))
                   ((< c #xFC) (ux (remainder c #x04) ul sl 4))
-                  ((< c #xFE) (ux (remainder c #x02) ul sl 5)))
-                )))))
+                  ((< c #xFE) (ux (remainder c #x02) ul sl 5))))))))
     (left '() (string->list s))))      
 
 (define (u-in-ranges u ranges)
