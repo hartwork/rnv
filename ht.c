@@ -75,7 +75,7 @@ static int del(struct hashtable *ht,int i,int eq) {
 	    j=next(ht,j);
 	    if(ht->table[j]==-1) break;
 	    j0=first(ht,ht->table[j|ht->tablen]);
-	    if((j0<j&&(j<=k||k<=j0))||(j<=k&&k<=j0)) break;
+	    if((k<=j0||j0<j)&&(j0<j||j<=k)&&(j<=k||k<=j0)) break;
 	  }
 	  ht->table[k]=ht->table[j]; ht->table[k|ht->tablen]=ht->table[j|ht->tablen];
 	} while(ht->table[j]!=-1);

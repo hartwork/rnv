@@ -33,7 +33,7 @@ extern int rn_notAllowed,rx_compact,drv_compact;
 #define XCL_ER_IO 0
 #define XCL_ER_XML 1
 
-static int peipe,explain;
+static int peipe,explain,rnck;
 static char *xml;
 static XML_Parser expat=NULL;
 static int start,current,previous;
@@ -183,12 +183,12 @@ ERROR:
 }
 
 static void version(void) {(*er_printf)("rnv version %s\n",RNV_VERSION);}
-static void usage(void) {(*er_printf)("usage: rnv {-[qpsdevh?]} schema.rnc {document.xml}\n");}
+static void usage(void) {(*er_printf)("usage: rnv {-[qpscdevh?]} schema.rnc {document.xml}\n");}
 
 int main(int argc,char **argv) {
   init();
 
-  peipe=0; explain=1;
+  peipe=0; explain=1; rnck=0;
   while(*(++argv)&&**argv=='-') {
     int i=1;
     for(;;) {
@@ -198,6 +198,7 @@ int main(int argc,char **argv) {
       case 'v': version(); break;
       case 's': drv_compact=1; rx_compact=1; break;
       case 'p': peipe=1; break;
+      case 'c': rnck=1; break;
       case 'd': dxl_cmd=*(argv+1); if(*(argv+1)) ++argv; goto END_OF_OPTIONS;
       case 'e': dsl_ld(*(argv+1)); if(*(argv+1)) ++argv; goto END_OF_OPTIONS;
       case 'q': explain=0; break;
@@ -225,11 +226,13 @@ int main(int argc,char **argv) {
 	clear();
       } while(*(++argv));
       if(!ok&&explain) (*er_printf)("error: some documents are invalid\n");
-    } else { /* stdin */
-      xml="stdin";
-      validate(0);
-      clear();
-      if(!ok&&explain) (*er_printf)("error: invalid input\n");
+    } else {
+      if(!rnck) {
+        xml="stdin";
+        validate(0);
+        clear();
+        if(!ok&&explain) (*er_printf)("error: invalid input\n");
+      }
     }
   }
 

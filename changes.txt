@@ -1,6 +1,9 @@
 /* $Id$ */
 
 1.5.0
+Fri Jan 23 21:51:34 AMT 2004
+dvd: newRef+1 is initialized to 0 (bugfix, integrity check in ht)
+
 Wed Jan 21 02:38:09 AMT 2004
 dvd: SCM is now working as embedded engine; it was not obvious
      that the initialization call had to be lower on the stack

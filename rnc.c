@@ -292,26 +292,26 @@ static void getv(struct rnc_source *sp) {
 	    if(sp->u=='}') goto END_OF_HEX_DIGITS;
 	    sp->v<<=4;
 	    switch(sp->u) {
-            case '0': break;
-            case '1': sp->v+=1; break;
-            case '2': sp->v+=2; break;
-            case '3': sp->v+=3; break;
-            case '4': sp->v+=4; break;
-            case '5': sp->v+=5; break;
-            case '6': sp->v+=6; break;
-            case '7': sp->v+=7; break;
-            case '8': sp->v+=8; break;
-            case '9': sp->v+=9; break;
+	    case '0': break;
+	    case '1': sp->v+=1; break;
+	    case '2': sp->v+=2; break;
+	    case '3': sp->v+=3; break;
+	    case '4': sp->v+=4; break;
+	    case '5': sp->v+=5; break;
+	    case '6': sp->v+=6; break;
+	    case '7': sp->v+=7; break;
+	    case '8': sp->v+=8; break;
+	    case '9': sp->v+=9; break;
 	    case 'A': case 'a': sp->v+=10; break;
 	    case 'B': case 'b': sp->v+=11; break;
 	    case 'C': case 'c': sp->v+=12; break;
 	    case 'D': case 'd': sp->v+=13; break;
 	    case 'E': case 'e': sp->v+=14; break;
 	    case 'F': case 'f': sp->v+=15; break;
-            default:
+	    default:
 	      error(0,sp,RNC_ER_XESC,sp->fn,CUR(sp).line,CUR(sp).col);
 	      goto END_OF_HEX_DIGITS;
-            }
+	    }
 	  } END_OF_HEX_DIGITS:;
 	} else {
 	  sp->v='\\'; sp->w=sp->u;
@@ -473,7 +473,7 @@ static void advance(struct rnc_source *sp) {
       }
     default:
       { int escaped=0,prefixed=0;
-        if(sp->v=='\\') {escaped=1; getv(sp);}
+	if(sp->v=='\\') {escaped=1; getv(sp);}
 	if(name_start(sp->v)) {
 	  int i=0;
 	  for(;;) {
@@ -482,7 +482,7 @@ static void advance(struct rnc_source *sp) {
 	    getv(sp);
 	    if(!name_char(sp->v)) {NXT(sp).s[i]='\0'; break;}
 	    if(sp->v==':') prefixed=1;
-          }
+	  }
 	  if(!(escaped||prefixed)) {
 	    int kwd;
 	    if((kwd=s_tab(NXT(sp).s,kwdtab,NKWD))!=NKWD) {
@@ -519,7 +519,7 @@ static void skipAnnotationContent(struct rnc_source *sp) {
       case SYM_ASGN:
       case SYM_LITERAL: case SYM_CONCAT: advance(sp); break;
       default:
-        if(0<=CUR(sp).sym&&CUR(sp).sym<NKWD) { /* keywords */
+	if(0<=CUR(sp).sym&&CUR(sp).sym<NKWD) { /* keywords */
 	  advance(sp);
 	  break;
 	} else {
@@ -545,7 +545,7 @@ static void getsym(struct rnc_source *sp) {
 	while(CUR(sp).sym!=SYM_LSQU&&CUR(sp).sym!=SYM_EOF) advance(sp);
       } else {
 	advance(sp);
-        if(CUR(sp).sym!=SYM_LSQU) error(0,sp,RNC_ER_SEXP,sp->fn,CUR(sp).line,CUR(sp).col,sym2str(SYM_LSQU),sym2str(CUR(sp).sym));
+	if(CUR(sp).sym!=SYM_LSQU) error(0,sp,RNC_ER_SEXP,sp->fn,CUR(sp).line,CUR(sp).col,sym2str(SYM_LSQU),sym2str(CUR(sp).sym));
       }
     case SYM_LSQU:
       skipAnnotationContent(sp);
