@@ -28,7 +28,7 @@ ll.h \
 erbit.h \
 xcl.c \
 arx.c \
-ary.c \
+ary.c ary.h \
 rn.c rn.h \
 rnc.c rnc.h \
 rnd.c rnd.h \
@@ -95,14 +95,14 @@ clean:
 
 DISTFILES=license.txt ${SRC} Makefile Makefile.bcc readme.txt changes.txt src.txt
 DISTWIN32=rnv.exe arx.exe
-DISTTOOLS=tools/rnv.vim tools/arx.conf /home/dvd/work/RNG-C/xslt.rnc /home/dvd/work/RNG-C/fo.rnc
+DISTTOOLS=tools/rnv.vim tools/arx.conf /usr/local/share/rng-c/xslt.rnc /usr/local/share/rng-c/fo.rnc /usr/local/share/rng-c/none.rnc /usr/local/share/rng-c/relaxng.rnc
 zip: rnv-${VERSION}.zip
 rnv-${VERSION}.zip: ${DISTFILES} ${DISTWIN32} ${DISTTOOLS}
 	-rm -rf rnv.zip rnv-[0-9]*.[0-9]*.[0-9]*
 	mkdir rnv-${VERSION} rnv-${VERSION}/tools rnv-${VERSION}/win32
-	ln ${DISTFILES} rnv-${VERSION}/.
-	ln ${DISTWIN32} rnv-${VERSION}/win32/.
-	ln ${DISTTOOLS} rnv-${VERSION}/tools/.
+	cp ${DISTFILES} rnv-${VERSION}/.
+	cp ${DISTWIN32} rnv-${VERSION}/win32/.
+	cp ${DISTTOOLS} rnv-${VERSION}/tools/.
 	zip -9 -r rnv-${VERSION}.zip rnv-${VERSION}
 	-rm -rf rnv-${VERSION}
 

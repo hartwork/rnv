@@ -1,6 +1,6 @@
 # $Id$
 #
-VERSION=1.3.3
+VERSION=1.3.4
 CC=bcc32
 
 EXPAT_H="<expat.h>"
@@ -10,7 +10,7 @@ INC=-I. -Ic:\\expat\\source\\lib -Ic:\\borland\\bcc55\\include
 LBL=-L. -Lc:\\borland\\bcc55\\lib
 
 DEF=-DEXPAT_H=${EXPAT_H} -DUNISTD_H=${UNISTD_H} -DRNV_VERSION="\"${VERSION}\"" -DARX_VERSION="\"${VERSION}\""
-WARN=-w-pia- -w-par- -w-aus-
+WARN=-w-pia- -w-par- -w-aus- -w-ccc-
 OPT=-O2
 
 CFLAGS=${INC} ${DEF} ${WARN} ${OPT}
@@ -24,7 +24,7 @@ ll.h \
 erbit.h \
 xcl.c \
 arx.c \
-ary.c \
+ary.c ary.h \
 rn.c rn.h \
 rnc.c rnc.h \
 rnd.c rnd.h \
