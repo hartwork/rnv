@@ -1,0 +1,76 @@
+namespace good = "should succeed"
+namespace bad = "must fail"
+
+start = notAllowed
+|	empty
+|	text
+|       ( element x {empty} & element y {empty} )
+|       ( element x {empty} , element y {empty} )
+|       list { "a", "b" }
+|	token
+|	( token - "token" )
+|	"token"
+|	attribute a {text}
+|	element bad:one-or-more.group.attribute { 
+	(
+		attribute a {text}
+		, attribute b {text}
+	)+ 
+}
+|	element bad:one-or-more.interleave.attribute { 
+	(
+		attribute a {text}
+		& attribute b {text}
+	)+ 
+}
+|	element bad:data-except-empty {
+  		token - empty
+	}
+|	element bad:data-except-text {
+  		token - text
+	}
+|	element bad:data-except-list {
+  		token - list { "a", "b" }
+	}
+|	element good:data-except-choice {
+  		token - ("a"| "b")
+	}
+|	element bad:data-except-group {
+  		token - ("a", "b")
+	}
+|	element bad:data-except-interleave {
+  		token - ("a" & "b")
+	}
+|	element bad:data-except-one-or-more {
+  		token - ("a" +)
+	}
+|	element bad:data-except-optional {
+  		token - ("a" ?)
+	}
+|	element good:list-not-allowed {
+	  	list { notAllowed }
+	}
+|	element bad:list-text {
+	  	list { text }
+	}
+|	element bad:list-interleave {
+	  	list { "a" & "b" }
+	}
+|	element good:list-group {
+	  	list { "a" , "b" }
+	}
+| 	element bad:value-group-element {
+   		"a", element x {empty}
+	}
+| 	element good:value-group-attribute {
+   		"a", attribute a {text}
+	}
+| 	element good:empty-group-value {
+  		empty , "a"
+	}
+| 	element good:not-allowed-group-value {
+  		notAllowed , "a"
+	}
+| 	element bad:text-group-value {
+  		text , "a"
+	}
