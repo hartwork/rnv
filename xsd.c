@@ -3,6 +3,7 @@
 #include <limits.h> /*INT_MAX*/
 #include <stdlib.h> /*atof,atol,strtol*/
 #include <stdio.h> /*stdio*/
+#include <string.h> /*strlen*/
 #include <math.h> /*HUGE_VAL*/
 #include <assert.h>
 #include "u.h"
