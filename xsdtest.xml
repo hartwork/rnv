@@ -1,0 +1,63 @@
+<typetest>
+ <!-- Date and Time -->
+   <!-- basic -->
+  <types 
+    duration="P1Y2M3DT2H3M1S"
+    date="1969-04-30"
+    time="02:15:01"
+    datetime="1969-12-30T02:01:01"
+    year="0001"
+    month="--11--"
+    day="---30"
+    yearmonth="1968-12"
+    monthday="--12-30"
+    />
+    <!-- UTC -->
+  <types 
+    duration="P1Y2M3D"
+    date="1969-04-30Z"
+    time="02:15:01Z"
+    datetime="1969-12-30T02:01:01Z"
+    year="0001Z"
+    month="--11--Z"
+    day="---30Z"
+    yearmonth="1968-12Z"
+    monthday="--12-30Z"
+    />
+    <!-- MSK -->
+  <types 
+    duration="P20H32M11S"
+    date="1969-04-30+03:00"
+    time="02:15:01+03:00"
+    datetime="1969-12-30T02:01:01"
+    year="0001+03:00"
+    month="--11--+03:00"
+    day="---30+03:00"
+    yearmonth="1968-12+03:00"
+    monthday="--12-30+03:00"
+    />
+    <!-- West -->
+  <types 
+    duration="-P1Y2M3DT2H3M1.25S"
+    date="1969-04-30-07:30"
+    time="02:15:01-07:30"
+    datetime="1969-12-30T02:01:01"
+    year="0001-07:30"
+    month="--11---07:30"
+    day="---30-07:30"
+    yearmonth="1968-12-07:30"
+    monthday="--12-30-07:30"
+    />
+   <!-- Fantasy -->
+  <types 
+    duration="-P13123412341234Y13443253DT3M111.2231231235S"
+    date="-1969-04-30-07:11"
+    time="02:15:01.30+14:59"
+    datetime="-1969-12-30T02:01:01.321123123-05:00"
+    year="0001-07:30"
+    month="--11---07:30"
+    day="---31-07:30"
+    yearmonth="1968-12-07:30"
+    monthday="--12-30-07:30"
+    />
+</typetest>

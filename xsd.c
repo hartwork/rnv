@@ -10,7 +10,7 @@
 #include "rx.h"
 #include "xsd.h"
 
-static void default_error_handler(char *msg) {fprintf(stderr,"msg\n");}
+static void default_error_handler(char *msg) {fprintf(stderr,"%s\n",msg);}
 void (*xsd_error_handler)(char *msg)=&default_error_handler;
 
 static int initialized=0;
@@ -139,16 +139,28 @@ static int tokncnt(char *s,int n) {
 
 #define NPAT 16
 
-/* isn't it nice to have an implementation of unicode regular expressions */
-#define PAT_ORDINAL "[0-9]+"
+struct facets {
+  int set;
+  char *pattern[NPAT+1]; int npat;
+  int length, minLength, maxLength, totalDigits, fractionDigits;
+  char *maxExclusive, *maxInclusive, *minExclusive, *minInclusive;
+  int whiteSpace;
+};
+
+
+/* isn't it nice to have an implementation of unicode regular expressions? */
+#define PAT_ORDINAL "([0-9]+)"
+#define PAT_FRACTIONAL "(\\.[0-9]+)"
 #define PAT_POSITIVE "\\+?"PAT_ORDINAL
 #define PAT_NON_NEGATIVE "\\+?"PAT_ORDINAL
 #define PAT_NON_POSITIVE "\\-"PAT_ORDINAL"|0+"
 #define PAT_NEGATIVE "\\-"PAT_ORDINAL
-#define PAT_INTEGER "[+-]?"PAT_ORDINAL
-#define PAT_DECIMAL PAT_INTEGER"(\\.[0-9]+)?"
+#define PAT_INTEGER "([+-]?"PAT_ORDINAL")"
+#define PAT_DECIMAL PAT_INTEGER PAT_FRACTIONAL"?"
 #define PAT_FLOATING PAT_DECIMAL"([Ee]"PAT_INTEGER")?|INF|-INF|NaN"
+
 #define PAT_ANY_URI "(([a-zA-Z][0-9a-zA-Z+\\-\\.]*:)?/{0,2}[0-9a-zA-Z;/?:@&=+$\\.\\-_!~*'()%]+)?(#[0-9a-zA-Z;/?:@&=+$\\.\\-_!~*'()%]+)?"
+
 #define PAT_NCNAME "[\\i-[:]][\\c-[:]]*"
 #define PAT_QNAME "("PAT_NCNAME":)?"PAT_NCNAME
 #define PAT_NMTOKEN "\\c+"
@@ -156,17 +168,43 @@ static int tokncnt(char *s,int n) {
 #define PAT_NCNAMES PAT_NCNAME"( "PAT_NCNAME")*"
 #define PAT_NMTOKENS PAT_NMTOKEN"( "PAT_NMTOKEN")*"
 #define PAT_NAMES PAT_NAME"( "PAT_NAME")*"
+
 #define PAT_LANGUAGE "([a-zA-Z]{1,8}(-[a-zA-Z0-9]{1,8})*"
+
+#define PAT_DURAY "("PAT_ORDINAL"Y)"
+#define PAT_DURAM "("PAT_ORDINAL"M)"
+#define PAT_DURAD "("PAT_ORDINAL"D)"
+#define PAT_DURADATE \
+  "(" PAT_DURAY   PAT_DURAM"?"PAT_DURAD"?" \
+  "|" PAT_DURAY"?"PAT_DURAM   PAT_DURAD"?" \
+  "|" PAT_DURAY"?"PAT_DURAM"?"PAT_DURAD ")"
+#define PAT_DURAH "("PAT_ORDINAL"H)"
+#define PAT_DURAM "("PAT_ORDINAL"M)"
+#define PAT_DURAS "("PAT_ORDINAL"(\\."PAT_ORDINAL")?S)"
+#define PAT_DURATIME \
+  "(" PAT_DURAH   PAT_DURAM"?"PAT_DURAS"?" \
+  "|" PAT_DURAM"?"PAT_DURAM   PAT_DURAS"?" \
+  "|" PAT_DURAS"?"PAT_DURAM"?"PAT_DURAS ")"
+#define PAT_DURATION "-?P("PAT_DURADATE"|"PAT_DURATIME"|"PAT_DURADATE"T"PAT_DURATIME")"
+
+#define PAT_ZONE "(Z|[+-](0[0-9]|1[0-4]):[0-5][0-9])"
+#define PAT_YEAR0 "[0-9]{4,}" 
+#define PAT_MONTH0 "(0[1-9]|1[12])"
+#define PAT_DAY0 "([0-2][0-9]|3[01])"
+#define PAT_YEAR "-?"PAT_YEAR0 PAT_ZONE"?"
+#define PAT_MONTH "--"PAT_MONTH0"--"PAT_ZONE"?"
+#define PAT_DAY "---"PAT_DAY0 PAT_ZONE"?"
+#define PAT_YEAR_MONTH "-?"PAT_YEAR0"-"PAT_MONTH0 PAT_ZONE"?"
+#define PAT_MONTH_DAY "--"PAT_MONTH0"-"PAT_DAY0 PAT_ZONE"?"
+#define PAT_DATE0 PAT_YEAR0"-"PAT_MONTH0"-"PAT_DAY0
+#define PAT_TIME0 "([0-1][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9]"PAT_FRACTIONAL"?"
+#define PAT_DATE "-?"PAT_DATE0 PAT_ZONE"?"
+#define PAT_TIME "-?"PAT_TIME0 PAT_ZONE"?"
+#define PAT_DATE_TIME "-?"PAT_DATE0"T"PAT_TIME0 PAT_ZONE"?"
 
 int xsd_allows(char *typ,char *ps,char *s,int n) {
   int ok=1,length;
-  struct {
-    int set;
-    char *pattern[NPAT+1]; int npat;
-    int length, minLength, maxLength, totalDigits, fractionDigits;
-    char *maxExclusive, *maxInclusive, *minExclusive, *minInclusive;
-    int whiteSpace;
-  } fct;
+  struct facets fct;
   fct.set=0; fct.npat=0;
   { int n;
     while((n=strlen(ps))) {
@@ -219,15 +257,33 @@ int xsd_allows(char *typ,char *ps,char *s,int n) {
   case TYP_DOUBLE:
     fct.pattern[fct.npat++]=PAT_FLOATING;
     break;
-  case TYP_DURATION: break;
-  case TYP_DATE_TIME: break;
-  case TYP_DATE: break;
-  case TYP_TIME: break;
-  case TYP_G_YEAR_MONTH: break;
-  case TYP_G_YEAR: break;
-  case TYP_G_MONTH_DAY: break;
-  case TYP_G_DAY: break;
-  case TYP_G_MONTH: break;
+  case TYP_DURATION: 
+    fct.pattern[fct.npat++]=PAT_DURATION;
+    break;
+  case TYP_DATE_TIME: 
+    fct.pattern[fct.npat++]=PAT_DATE_TIME;
+    break;
+  case TYP_DATE:
+    fct.pattern[fct.npat++]=PAT_DATE;
+    break;
+  case TYP_TIME:
+    fct.pattern[fct.npat++]=PAT_TIME;
+    break;
+  case TYP_G_YEAR_MONTH:
+    fct.pattern[fct.npat++]=PAT_YEAR_MONTH;
+    break;
+  case TYP_G_YEAR:
+    fct.pattern[fct.npat++]=PAT_YEAR;
+    break;
+  case TYP_G_MONTH_DAY:
+    fct.pattern[fct.npat++]=PAT_MONTH_DAY;
+    break;
+  case TYP_G_DAY:
+    fct.pattern[fct.npat++]=PAT_DAY;
+    break;
+  case TYP_G_MONTH:
+    fct.pattern[fct.npat++]=PAT_MONTH;
+    break;
   case TYP_HEX_BINARY: break;
   case TYP_BASE64BINARY: break;
   case TYP_ANY_URI: 
@@ -305,20 +361,28 @@ int xsd_allows(char *typ,char *ps,char *s,int n) {
     fct.pattern[fct.npat++]=PAT_NEGATIVE;
     break;
   case TYP_BYTE: 
+    fct.pattern[fct.npat++]=PAT_INTEGER;
     break;
   case TYP_UNSIGNED_BYTE: 
+    fct.pattern[fct.npat++]=PAT_NON_NEGATIVE;
     break;
   case TYP_SHORT: 
+    fct.pattern[fct.npat++]=PAT_INTEGER;
     break;
   case TYP_UNSIGNED_SHORT: 
+    fct.pattern[fct.npat++]=PAT_NON_NEGATIVE;
     break;
   case TYP_INT: 
+    fct.pattern[fct.npat++]=PAT_INTEGER;
     break;
   case TYP_UNSIGNED_INT: 
+    fct.pattern[fct.npat++]=PAT_NON_NEGATIVE;
     break;
   case TYP_LONG: 
+    fct.pattern[fct.npat++]=PAT_INTEGER;
     break;
   case TYP_UNSIGNED_LONG: 
+    fct.pattern[fct.npat++]=PAT_NON_NEGATIVE;
     break;
   case NTYP:
     { char *buf=(char*)calloc(strlen(ERR_INVALID_DATATYPE)+strlen(typ)+1,sizeof(char));

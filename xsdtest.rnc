@@ -1,0 +1,13 @@
+start = element typetest {types+}
+types = element types { 
+    attribute datetime { xsd:dateTime } ?
+  , attribute date { xsd:date } ?
+  , attribute time { xsd:time } ?
+  , attribute year { xsd:gYear } ?
+  , attribute month { xsd:gMonth } ?
+  , attribute day { xsd:gDay } ?
+  , attribute yearmonth { xsd:gYearMonth } ?
+  , attribute monthday { xsd:gMonthDay } ?
+  , attribute duration { xsd:duration } ?
+}
+  
