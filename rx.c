@@ -20,13 +20,14 @@
 #define PRIME_R RX_PRIME_R
 #define R_LEN 16
 
+/* it is good to have few patterns when deltas are memoized */
 #define P_ERROR 0
 #define P_EMPTY 1
 #define P_NOT_ALLOWED  2
 #define P_CHOICE 3
 #define P_GROUP 4
 #define P_ONE_OR_MORE 5 /*+*/
-#define P_EXCEPT 6 /*single-single*/ 
+#define P_EXCEPT 6 /*single-single*/
 #define P_RANGE 7 /*lower,upper inclusive*/
 #define P_CLASS 8 /*complement is .-*/
 #define P_ANY 9
@@ -57,6 +58,11 @@
 #define nullable(p) (pattern[p][0]&P_NUL)
 
 int rx_compact=0;
+/* 'compact' in drv and rx do different things.
+ In drv, it limits the size of the table of memoized deltas. In rx, it limits the size
+ of the buffer for cached regular expressions; memoized deltas are always limited by LIM_M,
+ since the whole repertoire of unicode characters can blow up the buffer.
+ */
 
 static char *regex;
 static int (*pattern)[P_SIZE];
@@ -65,18 +71,18 @@ static struct hashtable ht_r,ht_p,ht_2;
 static int i_p,len_p,i_r,len_r,i_2,len_2;
 static int empty,notAllowed,any;
 
-static int accept_p(void) { 
-  int j; 
-  if((j=ht_get(&ht_p,i_p))==-1) { 
-    ht_put(&ht_p,j=i_p++); 
-    if(i_p==len_p) { 
-      int (*newpattern)[P_SIZE]=(int (*)[P_SIZE])calloc(len_p*=2,sizeof(int[P_SIZE])); 
-      memcpy(newpattern,pattern,i_p*sizeof(int[P_SIZE])); free(pattern); 
+static int accept_p(void) {
+  int j;
+  if((j=ht_get(&ht_p,i_p))==-1) {
+    ht_put(&ht_p,j=i_p++);
+    if(i_p==len_p) {
+      int (*newpattern)[P_SIZE]=(int (*)[P_SIZE])calloc(len_p*=2,sizeof(int[P_SIZE]));
+      memcpy(newpattern,pattern,i_p*sizeof(int[P_SIZE])); free(pattern);
       pattern=newpattern;
-    } 
-  } 
-  memset(pattern[i_p],0,sizeof(int[P_SIZE])); 
-  return j; 
+    }
+  }
+  memset(pattern[i_p],0,sizeof(int[P_SIZE]));
+  return j;
 }
 
 #define P_NEW(x) (pattern[i_p][0]=P_##x)
@@ -128,6 +134,13 @@ static int choice(int p1,int p2) {
   return newChoice(p1,p2);
 }
 
+static int klass(int cn) {
+  if(cn<0) return newExcept(any,newClass(-cn));
+  if(cn==0) return notAllowed;
+  return newClass(cn);
+}
+
+
 
 static int equal_r(int r1,int r2) {return strcmp(regex+r1,regex+r2)==0;}
 static int hash_r(int r) {return strhash(regex+r);}
@@ -173,7 +186,7 @@ static struct hashtable ht_m;
 
 static int new_memo(int p,int c) {
   int *me=memo[i_m];
-  if(ht_get(&ht_m,i_m)==i_m) ht_del(&ht_m,i_m); 
+  if(ht_get(&ht_m,i_m)==i_m) ht_del(&ht_m,i_m);
   me[0]=p; me[1]=c;
   return ht_get(&ht_m,i_m);
 }
@@ -195,7 +208,7 @@ static void accept_m(void) {
     int (*newmemo)[M_SIZE]=(int (*)[M_SIZE])calloc(len_m*=2,sizeof(int[M_SIZE]));
     memcpy(newmemo,memo,i_m*sizeof(int[M_SIZE]));
     free(memo); memo=newmemo;
-  } 
+  }
 }
 
 static void windup(void);
@@ -224,7 +237,7 @@ static void clear(void) {
 static void windup(void) {
   i_p=i_r=i_2=i_m=0;
   memset(pattern[0],0,sizeof(int[P_SIZE]));
-  pattern[0][0]=P_ERROR;  accept_p(); 
+  pattern[0][0]=P_ERROR;  accept_p();
   empty=newEmpty(); notAllowed=newNotAllowed(); any=newAny();
 }
 
@@ -278,7 +291,7 @@ static int chclass(void) {
 static void getsym(void) {
   int u;
   if(regex[ri]=='\0') sym=SYM_END; else {
-    ri+=u_get(&u,regex+ri); 
+    ri+=u_get(&u,regex+ri);
     if(u=='\\') {
       ri+=u_get(&u,regex+ri);
       switch(u) {
@@ -298,7 +311,7 @@ static void getsym(void) {
       case 'n': sym=SYM_ESC; val=0xA; break;
       case 'r': sym=SYM_ESC; val=0xD; break;
       case 't': sym=SYM_ESC; val=0x9; break;
-      case '\\': case '|': case '.': case '-': case '^': case '?': case '*': case '+': 
+      case '\\': case '|': case '.': case '-': case '^': case '?': case '*': case '+':
       case '{': case '}': case '[': case ']': case '(': case ')':
         sym=SYM_ESC; val=u; break;
       default: error(); sym=SYM_ESC; val=u; break;
@@ -338,7 +351,7 @@ static int chgroup(void) {
 	p=choice(p,newChar(c));
       }
       break;
-    case SYM_CLS: p=choice(p,newClass(val)); getsym(); break;
+    case SYM_CLS: p=choice(p,klass(val)); getsym(); break;
     case SYM_END: error(); goto END_OF_GROUP;
     default: assert(0);
     }
@@ -349,12 +362,12 @@ static int chgroup(void) {
 
 static int chexpr(void) {
   int p;
-  if(sym==SYM_CHR&&val=='^') { getsym(); 
+  if(sym==SYM_CHR&&val=='^') { getsym();
     p=newExcept(any,chgroup());
   } else {
     p=chgroup();
   }
-  if(sym==SYM_CHR&&val=='-') { getsym(); 
+  if(sym==SYM_CHR&&val=='-') { getsym();
     chk_get('['); p=newExcept(p,chexpr()); chk_get(']');
   }
   return p;
@@ -368,13 +381,13 @@ static int atom(void) {
     switch(val) {
     case '[': getsym(); p=chexpr(); chk_get(']'); break;
     case '(': getsym(); p=expression(); chk_get(')'); break;
-    case '{': case '?': case '*': case '+': case '|': 
+    case '{': case '?': case '*': case '+': case '|':
     case ')': case ']': case '}': error(); getsym(); break;
     default: p=newChar(val); getsym(); break;
     }
     break;
   case SYM_ESC: p=newChar(val); getsym(); break;
-  case SYM_CLS: p=newClass(val); getsym(); break;
+  case SYM_CLS: p=klass(val); getsym(); break;
   default: error(); getsym(); break;
   }
   return p;
@@ -432,7 +445,7 @@ static int piece(void) {
     case '*': getsym(); p=choice(empty,one_or_more(p)); break;
     case '+': getsym(); p=one_or_more(p); break;
     default: break;
-    } 
+    }
   }
   return p;
 }
@@ -455,7 +468,7 @@ static int expression(void) {
 }
 
 static void bind(int r) {
-  r0=ri=r; sym=-1; errors=0; 
+  r0=ri=r; sym=-1; errors=0;
   getsym();
 }
 
@@ -637,7 +650,7 @@ static int drv(int p,int c) {
   case P_ONE_OR_MORE: OneOrMore(p,p1); ret=group(drv(p1,c),choice(empty,p)); break;
   case P_EXCEPT: Except(p,p1,p2); ret=nullable(drv(p1,c))&&!nullable(drv(p2,c))?empty:notAllowed; break;
   case P_RANGE: Range(p,cf,cl); ret=cf<=c&&c<=cl?empty:notAllowed; break;
-  case P_CLASS: Class(p,cn); ret=(cn>0?in_class(c,cn):!in_class(c,-cn))?empty:notAllowed; break;
+  case P_CLASS: Class(p,cn); ret=in_class(c,cn)?empty:notAllowed; break;
   case P_ANY: ret=empty; break;
   case P_CHAR: Char(p,cf); ret=c==cf?empty:notAllowed; break;
   default: ret=0; assert(0);
@@ -683,8 +696,8 @@ int rx_cmatch(char *rx,char *s,int n) {
     int u;
     SKIP_SPACE: for(;;) {
       if(s==end) return nullable(p);
-      s+=u_get(&u,s); 
-      if(!xmlc_white_space(u)) break; 
+      s+=u_get(&u,s);
+      if(!xmlc_white_space(u)) break;
     }
     for(;;) {
       if(p==notAllowed) return 0;
@@ -693,14 +706,14 @@ int rx_cmatch(char *rx,char *s,int n) {
 	if(p==notAllowed) {
 	  for(;;) {
 	    if(s==end) return 1;
-	    s+=u_get(&u,s); 
+	    s+=u_get(&u,s);
 	    if(!xmlc_white_space(u)) return 0;
-	  } 
+	  }
 	} else goto SKIP_SPACE;
       }
       p=drv(p,u);
       if(s==end) goto SKIP_SPACE;
-      s+=u_get(&u,s); 
+      s+=u_get(&u,s);
     }
   } else return 0;
 }
