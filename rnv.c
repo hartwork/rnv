@@ -13,11 +13,17 @@
 #include "rnx.h"
 #include "drv.h"
 
+#define LEN_T 1024
+
 static char *xml;
 static XML_Parser expat;
 static int start,current,previous;
 static int errors;
 static int explain=1;
+
+/* Expat does not normalize strings on input unless the whole file is loaded into the buffer */
+static char *text; static int len_t;
+static int n_t;
 
 static void init(void) {
   rn_init();
@@ -25,6 +31,8 @@ static void init(void) {
   rnd_init();
   rnx_init();
   drv_init();
+  text=(char*)calloc(len_t=LEN_T,sizeof(char));
+  n_t=0;
 }
 
 static int load_rnc(char *fn) {
@@ -86,7 +94,21 @@ static void not_allowed(char *what,char *suri,char *sname) {
 #define ATTRIBUTES_MISSING "required attributes missing"
 #define TEXT_NOT_ALLOWED "text not allowed"
 
+static void flush_text() {
+  if(n_t!=0) {
+    if(current!=rn_notAllowed) {
+      current=drv_text(previous=current,text,n_t);
+      if(current==rn_notAllowed) {
+	error(TEXT_NOT_ALLOWED);
+	current=drv_text_recover(previous,text,n_t);
+      }
+    }
+    n_t=0;
+  }
+}
+
 static void start_element(void *userData,const char *name,const char **attrs) {
+  flush_text();
   if(current!=rn_notAllowed) { 
     qname((char*)name);
     current=drv_start_tag_open(previous=current,suri,sname);
@@ -94,18 +116,18 @@ static void start_element(void *userData,const char *name,const char **attrs) {
       not_allowed(ELEMENT_NOT_ALLOWED,suri,sname);
       current=drv_start_tag_open_recover(previous,suri,sname);
     }
-    while(current) {
+    while(current!=rn_notAllowed) {
       if(!(*attrs)) break;
       qname((char*)*attrs);
       ++attrs;
       current=drv_attribute(previous=current,suri,sname,(char*)*attrs);
       if(current==rn_notAllowed) {
 	not_allowed(ATTRIBUTE_NOT_ALLOWED,suri,sname);
-	error(msg);
+	current=drv_attribute_recover(previous,suri,sname,(char*)*attrs);
       }
       ++attrs;
     }
-    if(current) {
+    if(current!=rn_notAllowed) {
       current=drv_start_tag_close(previous=current);
       if(current==rn_notAllowed) {
 	error(ATTRIBUTES_MISSING);
@@ -116,6 +138,7 @@ static void start_element(void *userData,const char *name,const char **attrs) {
 }
 
 static void end_element(void *userData,const char *name) {
+  flush_text();
   if(current!=rn_notAllowed) {
     current=drv_end_tag(previous=current);
     if(current==rn_notAllowed) {
@@ -127,11 +150,12 @@ static void end_element(void *userData,const char *name) {
 
 static void characters(void *userData,const char *s,int len) {
   if(current!=rn_notAllowed) {
-    current=drv_text(previous=current,(char*)s,len);
-    if(current==rn_notAllowed) {
-      error(TEXT_NOT_ALLOWED);
-      current=drv_text_recover(previous,(char*)s,len);
+    if(n_t+len>len_t) {
+      char *newtext=(char*)calloc(n_t+len,sizeof(char)); 
+      memcpy(newtext,text,n_t*sizeof(char)); free(text); 
+      text=newtext;
     }
+    strncpy(text+n_t,s,len); n_t+=len;
   }
 }
 
