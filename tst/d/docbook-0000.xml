@@ -1,0 +1,31 @@
+<book>
+  <title>Title</title>
+  <chapter>
+    <title>Title</title>
+    <para>Para
+    </para>
+    <variablelist>
+      <varlistentry>
+        <term>ter</term>
+      </varlistentry>
+    </variablelist>
+  </chapter>
+  <chapter>
+    <para>Para
+    </para>
+    <variablelist>
+      <varlistentry>
+        <term/>
+        text
+        <listitem>
+	  <para/>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </chapter>
+  <chapter>
+    <para>Para
+    </para>
+  </chapter>
+</book>
+
