@@ -957,10 +957,10 @@ static int mixed(struct rnc_source *sp) {
 
 static int param(struct rnc_source *sp) {
   if(0<=CUR(sp).sym&&CUR(sp).sym<=SYM_IDENT) {
+    rn_add_pskey(CUR(sp).s);
     getsym(sp);
     chk_get(sp,SYM_ASGN);
-    if(chksym(sp,SYM_LITERAL)) {
-    }
+    if(chksym(sp,SYM_LITERAL)) rn_add_psval(CUR(sp).s);
     getsym(sp);
     return 1;
   } else return 0;
@@ -984,12 +984,14 @@ static int datatype(struct rnc_source *sp) {
 }
 
 static int params(struct rnc_source *sp) {
+  int ret=rn_i_ps();
   if(CUR(sp).sym==SYM_LCUR) {
     getsym(sp);
     while(param(sp));
     chk_skip_get(sp,SYM_RCUR);
+    rn_end_ps();
   }
-  return 0;
+  return ret;
 }
 
 static int data(struct rnc_source *sp) {
@@ -1195,6 +1197,9 @@ int rnc_parse(struct rnc_source *sp) {
 
 /*
  * $Log$
+ * Revision 1.37  2003/12/12 22:48:27  dvd
+ * datatype parameters are supported
+ *
  * Revision 1.36  2003/12/11 23:37:58  dvd
  * derivative in progress
  *

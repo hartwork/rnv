@@ -293,24 +293,11 @@ static int end_tag(int p) {
 
 int drv_end_tag(int p) {return end_tag(p);}
 
-#if 0
-  case P_EMPTY:
-  case P_NOT_ALLOWED:
-  case P_TEXT:
-  case P_CHOICE:
-  case P_INTERLEAVE:
-  case P_GROUP:
-  case P_ONE_OR_MORE:
-  case P_LIST:
-  case P_DATA:
-  case P_DATA_EXCEPT:
-  case P_VALUE:
-  case P_ATTRIBUTE:
-  case P_ELEMENT:
-  case P_AFTER:
-#endif
 /*
  * $Log$
+ * Revision 1.5  2003/12/12 22:48:27  dvd
+ * datatype parameters are supported
+ *
  * Revision 1.4  2003/12/12 22:21:06  dvd
  * drv written, compiled, not yet debugged
  *

@@ -146,6 +146,11 @@ extern int newDatatype(int lib,int typ);
 
 extern char *nc2str(int nc);
 
+extern int rn_i_ps();
+extern void rn_add_pskey(char *s);
+extern void rn_add_psval(char *s);
+extern void rn_end_ps();
+
 extern void rn_init();
 extern void rn_clear();
 
@@ -153,6 +158,9 @@ extern void rn_clear();
 
 /*
  * $Log$
+ * Revision 1.21  2003/12/12 22:48:27  dvd
+ * datatype parameters are supported
+ *
  * Revision 1.20  2003/12/12 22:21:06  dvd
  * drv written, compiled, not yet debugged
  *
