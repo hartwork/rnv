@@ -22,6 +22,7 @@
 #define P_ELEMENT 13
 #define P_REF 14
 #define P_AFTER 15
+#define P_VOID 255
 
 /*
 Patterns and nameclasses are stored in arrays of arrays of integers.
@@ -155,5 +156,8 @@ extern void rn_end_ps(void);
 
 extern void rn_init(void);
 extern void rn_clear(void);
+
+extern void rn_compress(int *starts,int n);
+extern int rn_compress_last(int start);
 
 #endif

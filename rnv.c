@@ -58,6 +58,8 @@ static int load_rnc(char *fn) {
   rnd_traits();
   start=rnd_release(); 
 
+  start=rn_compress_last(start);
+
   return 1;
 }
 
@@ -228,7 +230,7 @@ ERROR:
 }
 
 static void version(void) {fprintf(stderr,"rnv version %s\n",RNV_VERSION);}
-static void usage(void) {fprintf(stderr,"usage: rnv {-[qvh?]} schema.rnc {document.xml}\n");}
+static void usage(void) {fprintf(stderr,"usage: rnv {-[qsvh?]} schema.rnc {document.xml}\n");}
 
 int main(int argc,char **argv) {
   int ok;

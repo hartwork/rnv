@@ -8,6 +8,7 @@
 #include "rn.h"
 
 #define LEN_P 1024
+#define LIM_P 4096
 #define PRIME_P 0x3fd
 #define LEN_NC 256
 #define PRIME_NC 0xfb
@@ -21,7 +22,7 @@ int rn_empty,rn_text,rn_notAllowed,rn_dt_string,rn_dt_token,rn_xsd_uri;
 
 static struct hashtable ht_p, ht_nc, ht_s;
 
-static int i_p,i_nc,i_s,base_p,i_ref,i_ps;
+static int i_p,i_nc,i_s,BASE_P,base_p,i_ref,i_ps;
 static int len_p,len_nc,len_s,len_ps;
 
 void rn_new_schema(void) {base_p=i_p; i_ref=0;}
@@ -380,7 +381,7 @@ static void windup(void) {
   rn_pattern[0][0]=P_ERROR;  accept_p(); 
   rn_nameclass[0][0]=NC_ERROR; accept_nc();
   newString("");
-  rn_empty=newEmpty(); rn_notAllowed=newNotAllowed(); rn_text=newText();
+  rn_empty=newEmpty(); rn_notAllowed=newNotAllowed(); rn_text=newText(); BASE_P=i_p;
   rn_dt_string=newDatatype(0,newString("string")); rn_dt_token=newDatatype(0,newString("token"));
   rn_xsd_uri=newString("http://www.w3.org/2001/XMLSchema-datatypes");
   rn_end_ps();
@@ -405,3 +406,198 @@ static int equal_nc(int nc1,int nc2) {
   return (ncp1[0]&0xFF)==(ncp2[0]&0xFF) && ncp1[1] == ncp2[1] && ncp1[2] == ncp2[2];
 }
 static int equal_s(int s1,int s2) {return strcmp(rn_string+s1,rn_string+s2)==0;}
+
+/* marks patterns reachable from start, assumes that the references are resolved */
+static void mark_p(int start) {
+  int p,p1,p2,nc,i;
+  int n_f=0;
+  int *flat=(int*)calloc(i_p,sizeof(int));
+
+  flat[n_f++]=start; mark(start);
+  i=0; 
+  do {
+    p=flat[i++];
+    switch(P_TYP(p)) {
+    case P_EMPTY: case P_NOT_ALLOWED: case P_TEXT: case P_DATA: case P_VALUE:
+      break;
+
+    case P_CHOICE: Choice(p,p1,p2); goto BINARY;
+    case P_INTERLEAVE: Interleave(p,p1,p2); goto BINARY;
+    case P_GROUP: Group(p,p1,p2); goto BINARY;
+    case P_DATA_EXCEPT: DataExcept(p,p1,p2); goto BINARY;
+    BINARY:
+      if(!marked(p2)) {flat[n_f++]=p2; mark(p2);}
+      goto UNARY;
+
+    case P_ONE_OR_MORE: OneOrMore(p,p1); goto UNARY;
+    case P_LIST: List(p,p1); goto UNARY;
+    case P_ATTRIBUTE: Attribute(p,nc,p1); goto UNARY;
+    case P_ELEMENT: Element(p,nc,p1); goto UNARY;
+    UNARY:
+      if(!marked(p1)) {flat[n_f++]=p1; mark(p1);}
+      break;
+
+    default: 
+      assert(0);
+    }
+  } while(i!=n_f);
+  free(flat);
+}
+
+/* assumes that used patterns are marked */
+static void sweep_p(int *starts,int n_st,int since) {
+  int p,p1,p2,nc,q,n,changed,touched;
+  int *xlat;
+  xlat=(int*)calloc(i_p-since,sizeof(int));
+  n=0; changed=0;
+  for(p=since;p!=i_p;++p) {
+    if(!marked(p)) {
+      rn_del_p(p);
+      xlat[p-since]=-1;
+    } else if((q=ht_get(&ht_p,p))!=p) {
+      unmark(p);
+      xlat[p-since]=q;
+      changed=1;
+    } else {
+      ++n;
+      xlat[p-since]=p;
+    }
+  }
+  while(changed) {
+    changed=0;
+    for(p=since;p!=i_p;++p) {
+      if(xlat[p-since]==p) {
+	touched=0;
+	switch(P_TYP(p)) {
+	case P_EMPTY: case P_NOT_ALLOWED: case P_TEXT: case P_DATA: case P_VALUE:
+	  break;
+
+	case P_CHOICE: Choice(p,p1,p2); goto BINARY;
+	case P_INTERLEAVE: Interleave(p,p1,p2); goto BINARY;
+	case P_GROUP: Group(p,p1,p2); goto BINARY;
+	case P_DATA_EXCEPT: DataExcept(p,p1,p2); goto BINARY;
+	BINARY:
+	  if(p2>=since && (q=xlat[p2-since])!=p2) {
+	    ht_del(&ht_p,p); 
+	    touched=1; 
+	    rn_pattern[p][2]=q;
+	  }
+	  goto UNARY;
+
+	case P_ONE_OR_MORE: OneOrMore(p,p1); goto UNARY;
+	case P_LIST: List(p,p1); goto UNARY;
+	case P_ATTRIBUTE: Attribute(p,nc,p1); goto UNARY;
+	case P_ELEMENT: Element(p,nc,p1); goto UNARY;
+	UNARY:
+	  if(p1>=since && (q=xlat[p1-since])!=p1) {
+	    if(!touched) ht_del(&ht_p,p);
+	    touched=1; 
+	    rn_pattern[p][1]=q;
+	  }
+	  break;
+
+	default: 
+	  assert(0);
+	}
+	if(touched) {
+	  changed=1;
+	  if((q=ht_get(&ht_p,p))==-1) {
+	    ht_put(&ht_p,p);
+	  } else {
+	    unmark(p);
+	    xlat[p-since]=q;
+	  }
+	}
+      }
+    }
+  }
+  while(n_st--!=0) {if(*starts>=since) *starts=xlat[*starts-since]; ++starts;}
+  free(xlat);
+}
+
+static void unmark_p(int since) {
+  int p; 
+  for(p=0;p!=since;++p) unmark(p);
+  for(p=since;p!=i_p;++p) {
+    if(marked(p)) unmark(p); else rn_pattern[p][0]=P_VOID;
+  }
+}
+
+static void compress_p(int *starts,int n_st,int since) {
+  int p,p1,p2,q,nc,i_q,touched;
+  int *xlat=(int*)calloc(i_p-since,sizeof(int));
+  q=since;
+  for(p=since;p!=i_p;++p) xlat[p-since]=P_IS(p,VOID)?-1:q++; 
+  i_q=q;
+  for(p=since;p!=i_p;++p) {
+    touched=0;
+    if(xlat[p-since]!=-1) {
+      switch(P_TYP(p)) {
+      case P_EMPTY: case P_NOT_ALLOWED: case P_TEXT: case P_DATA: case P_VALUE:
+	break;
+
+      case P_CHOICE: Choice(p,p1,p2); goto BINARY;
+      case P_INTERLEAVE: Interleave(p,p1,p2); goto BINARY;
+      case P_GROUP: Group(p,p1,p2); goto BINARY;
+      case P_DATA_EXCEPT: DataExcept(p,p1,p2); goto BINARY;
+      BINARY:
+	if(p2>=since && (q=xlat[p2-since])!=p2) {
+	  ht_del(&ht_p,p); 
+	  touched=1; 
+	  rn_pattern[p][2]=q;
+	}
+	goto UNARY;
+
+      case P_ONE_OR_MORE: OneOrMore(p,p1); goto UNARY;
+      case P_LIST: List(p,p1); goto UNARY;
+      case P_ATTRIBUTE: Attribute(p,nc,p1); goto UNARY;
+      case P_ELEMENT: Element(p,nc,p1); goto UNARY;
+      UNARY:
+	if(p1>=since && (q=xlat[p1-since])!=p1) {
+	  if(!touched) ht_del(&ht_p,p);
+	  touched=1; 
+	  rn_pattern[p][1]=q;
+	}
+	break;
+
+      default: 
+	assert(0);
+      }
+      if((q=xlat[p-since])!=p) {
+	if(!touched) ht_del(&ht_p,p);
+	rn_pattern[q][0]=rn_pattern[p][0];
+	rn_pattern[q][1]=rn_pattern[p][1];
+	rn_pattern[q][2]=rn_pattern[p][2];
+	rn_pattern[p][0]=P_VOID;
+	touched=1;
+      }
+      if(touched) ht_put(&ht_p,q);
+    }
+  }
+  while(n_st--!=0) {if(*starts>=since) *starts=xlat[*starts-since]; ++starts;}
+  if(i_q!=i_p) {
+    i_p=i_q;
+    if(i_p<LIM_P && len_p>LIM_P) {
+      int (*newpattern)[P_SIZE]=(int(*)[P_SIZE])calloc(len_p=LIM_P,sizeof(int[P_SIZE]));
+      memcpy(newpattern,rn_pattern,i_p*sizeof(int[P_SIZE])); free(rn_pattern);
+      rn_pattern=newpattern;
+    }
+    memset(rn_pattern[i_p],0,sizeof(int[P_SIZE]));
+  }
+}
+
+void rn_compress(int *starts,int n_st) {
+  int i;
+  for(i=0;i!=n_st;++i) mark_p(starts[i]);
+  sweep_p(starts,n_st,BASE_P);
+  unmark_p(BASE_P);
+  compress_p(starts,n_st,BASE_P);
+}
+
+int rn_compress_last(int start) {
+  mark_p(start);
+  sweep_p(&start,1,base_p);
+  unmark_p(base_p);
+  compress_p(&start,1,base_p);
+  return start;
+}

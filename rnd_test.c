@@ -7,6 +7,9 @@
 #include "rn.h"
 #include "rnx.h"
 
+int starts[1024];
+int n_st=0;
+
 static int parse(struct rnc_source *sp) {
   int start;
 
@@ -24,24 +27,23 @@ static int parse(struct rnc_source *sp) {
   rnd_traits();
   start=rnd_release();
 
+#if 0
+  start=rn_compress_last(start);
+#endif
+
   fprintf(stderr,"start=%i\n",start);
+
+  starts[n_st++]=start;
 
   return 1;
 }
 
-void dump(void) {
-  int p=1,q; char *s;
+static void dump(void) {
+  int p=1; char *s;
   while(P_TYP(p)) {
-    fprintf(stderr,"%s\n",s=p2str(p));
-    free(s);
-    rnx_expected(p);
-    if(rnx_n_exp!=0) {
-      int i;
-      fprintf(stderr,">\n");
-      for(i=0;i!=rnx_n_exp;++i) {
-	fprintf(stderr,"\t%s\n",s=p2str(rnx_exp[i]));
-	free(s);
-      }
+    if(!P_IS(p,VOID)) {
+      fprintf(stderr,"%c%4i: %s\n",marked(p)?'+':' ',p,s=p2str(p));
+      free(s);
     }
     ++p;
   }
@@ -67,6 +69,10 @@ int main(int argc,char **argv) {
     if(!parse(sp)) goto ERRORS;
   }
   rnc_free(sp);
+
+  rn_compress(starts,n_st);
+
+  while(n_st--) printf("start=%i\n",starts[n_st]);
 
   dump();
 

@@ -1,7 +1,10 @@
 /* $Id$ */
 1.1.0 Thu Dec 18 05:05:33 AMT 2003
 dvd: drv_start_attribute and memoization implemented; hash values are 
-     multiplied by large primes - helps with current hashing algorithms.
+     multiplied by large primes - helps with current hashing algorithms;
+     garbage collection added to rn (rn_compress, rn_compress_last);
+     compact mode implemented for validation, the buffer for memoized patterns
+     does not exceed a limit when the validator runs in compact mode.
      
 1.0.9 Wed Dec 17 23:36:05 AMT 2003
 dvd: drv_mixed_text added, results memoized; code cleanups to compile easier;
