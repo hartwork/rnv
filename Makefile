@@ -1,6 +1,6 @@
 # $Id$
 #
-VERSION=1.0.1
+VERSION=1.0.2
 CC=cc
 EXPAT_H="<expat.h>"
 UNISTD_H="<unistd.h>"
@@ -50,7 +50,7 @@ rnd_test: ${OBJ} rnd_test.o
 	${CC} ${OPT} ${LFLAGS} ${LBL} -o rnd_test rnd_test.o ${OBJ} ${LIB} 
 
 clean: 
-	-rm -f *.o rnv rnd_test *_test *.core *.gmon *.gprof rnv*.zip
+	-rm -f *.o rnv rnd_test *_test *.core *.gmon *.gprof rnv*.zip rnv.txt rnv.pdf rnv.html rnv.xml
 
 DISTFILES=license.txt ${SRC} Makefile compile.bat rnv.exe readme.txt 
 zip: ${DISTFILES}

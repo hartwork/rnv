@@ -170,7 +170,19 @@ ERROR:
 int main(int argc,char **argv) {
   init();
 
-  if(*(++argv)&&strcmp(*argv,"-q")==0) {explain=0; ++argv;}
+  while(*(++argv)&&**argv=='-') {
+    int i=1;
+    for(;;) {
+      switch(*(*argv+i)) {
+      case 'q': explain=0; break;
+      case 'h': case '?': *(argv+1)=NULL; break;
+      case '\0': goto END_OF_OPTIONS;
+      default: fprintf(stderr,"unknown option '-%c'\n",*(*argv+i)); break;
+      }
+      ++i;
+    }
+    END_OF_OPTIONS:
+  }
 
   if(!*argv) {
     fprintf(stderr,"rnv version  %s\nusage: rnv [-q] schema.rnc {document.xml}\n",RNV_VERSION);

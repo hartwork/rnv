@@ -51,7 +51,7 @@ Invocation
 
    If no documents are specified, RNV attempts to read the XML document
    from the standard input. When -q is specified, expected elements and
-   attribute are not listed.
+   attributes are not listed.
 
 Limitations
 
