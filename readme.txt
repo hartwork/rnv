@@ -1,10 +1,11 @@
 
 RNV -- Relax NG Compact Syntax Validator in C
 
-Version 1.1 
+Version 1.2 
 
    Table of Contents
 
+   News since 1.1 
    Package Contents 
    Installation 
    Invocation 
@@ -23,15 +24,25 @@ Version 1.1
    and shortcomings; however, it validates documents against a number of
    grammars. I use it.
 
+News since 1.1
+
+   I have implemented XML Schema datatypes checking. The support is not
+   complete (details are in the list of limitations). On the bright side,
+   the utility now includes a complete and sufficiently fast
+   implementation of Unicode regular expressions (with ugly XML Schema
+   syntax, but still useful).
+
 Package Contents
 
    The package consists of:
      * the license, license.txt;
      * the source code, *.[ch];
+     * the source code map, src.txt;
      * Makefile for unix-like systems;
      * compile.bat to compile with Borland C/C++ Compiler on Windows;
      * rnv.exe, a Win32 executable statically linked with a current
        version of Expat from http://expat.sourceforge.net/;
+     * the log of changes, changes.txt;
      * this file, readme.txt.
 
 Installation
@@ -68,11 +79,12 @@ Invocation
 Limitations
 
      * RNV assumes that the encoding of the syntax file is UTF-8.
-     * The validator does not validate character data against XML Schema
-       datatypes; anything that is not a string is treated as a token.
-       The API has facilities to plug in multiple datatype libraries, but
-       I currently don't need that particular datatype library for my
-       work.
+     * Support for XSL Schema Part 2: Datatypes is partial.
+          + ordering for duration is not implemented;
+          + value equality for dateTime and derived types is not
+            implemented (any two dates are equal);
+          + only local parts of QName values are checked for equality,
+            ENTITY values are only checked for lexical validity.
      * The schema parser does not check that all restrictions are obeyed,
        in particular, restrictions 7.3 and 7.4 are not checked.
      * RNV for Win32 platforms is a Unix program compiled on Win32. It

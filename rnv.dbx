@@ -22,7 +22,7 @@ News since 1.1
 </title>
 
 <para>
-I have implemented XML Schema datatypes checking. The support is not complete, see the list of limitations for details. On the bright side, the utility now includes a complete and sufficiently fast implementation of Unicode regular expressions (with ugly XML Schema syntax, but still useful).
+I have implemented XML Schema datatypes checking. The support is not complete (details are in the list of limitations). On the bright side, the utility now includes a complete and sufficiently fast implementation of Unicode regular expressions (with ugly XML Schema syntax, but still useful).
 </para>
 </section>
 
@@ -43,6 +43,7 @@ The package consists of:
 </listitem>
 <listitem>
 - the source code map, <filename>src.txt</filename>;
+</listitem>
 <listitem>
 - <filename>Makefile</filename> for unix-like systems;
 </listitem>
