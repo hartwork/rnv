@@ -306,7 +306,7 @@ RVP
 <programlisting>
 
      query ::= (start | start-tag-open | attribute | start-tag-close | text | end-tag) z.
-     start ::= "start".
+     start ::= "start" [gramno].
      start-tag-open ::= "start-tag-open" patno name.
      attribute ::= "attribute" patno name value.
      start-tag-close :: = "start-tag-close" patno name.
@@ -334,13 +334,14 @@ erbit.h. Additionally, error 0 is the protocol format error.
 Either "er" or "error" responses are returned, not both; <option>-q</option>
 chooses between concise and verbose forms (invocation syntax described later).
 </para></listitem>
+<listitem><para><command>start</command> passes the index of grammar (first grammar in the list is number 0); if the number is omitted, 0 is assumed.
 </itemizedlist>
 <para>The command-line syntax is:
 </para>
 
 <synopsis>
 
-        rvp {-q|-s|-v|-h} schema.rnc
+        rvp {-q|-s|-v|-h} {schema.rnc}
 
 </synopsis>
 

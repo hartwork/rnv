@@ -14,7 +14,7 @@
 
  protocol
   query ::= (start | start-tag-open | attribute | start-tag-close | text | end-tag) z.
-   start ::= "start".
+   start ::= "start" [gramno].
    start-tag-open ::= "start-tag-open" patno name.
    attribute ::= "attribute" patno name value.
    start-tag-close :: = "start-tag-close" patno name.
@@ -30,6 +30,7 @@
     last colon in name separates namespace uri and local part
     -q?er:error
     error==0 yields message 'protocol error' and happens when a query is not understood
+    start assumes gramno=0 if the argument is omitted
 */
 
 #include <stdlib.h>
@@ -76,7 +77,7 @@ char *kwdtab[NKWD]={
 #define LEN_B 1024
 
 static FILE *nstderr;
-static int explain=1, start, lasterr;
+static int explain=1, lasterr, *starts, n_st;
 static int len_q,n_q; char *quebuf;
 static int erp[2]; /* *erp to read error messages */
 static jmp_buf IOER;
@@ -161,10 +162,16 @@ static int query(void) {
   j=endtok(i=tok(0));
   if((kwd=strntab(quebuf+i,j-i,kwdtab,NKWD))==QUIT) {resp(1,0,0); return 0;}
   switch(kwd) {
-  case START: ok=1; patno=start; break;
+  case START:
+    j=endtok((i=tok(j)));
+    patno=0; while(i!=j) patno=patno*10+quebuf[i++]-'0';
+    if(patno>=n_st) goto PROTER;
+    ok=1; patno=starts[patno];
+    break;
   case STO: case ATT: case STC: case TXT: case MIX: case ENT:
     j=endtok((i=tok(j))); if(i==j) goto PROTER;
     patno=0; do patno=patno*10+quebuf[i++]-'0'; while(i!=j);
+    if(patno==0) goto PROTER; /* 0 is ERROR, not allowed */
     switch(kwd) {
     case STO: case ATT: case STC: case ENT:
       j=endtok((i=tok(j))); if(i==j||(kwd==ATT&&quebuf[j]=='\0')) goto PROTER;
@@ -193,13 +200,15 @@ static int query(void) {
 }
 
 static void version(void) {fprintf(stderr,"rvp version %s\n",RVP_VERSION);}
-static void usage(void) {fprintf(stderr,"usage: rvp {-[qsvh?]} schema.rnc\n");}
+static void usage(void) {fprintf(stderr,"usage: rvp {-[qsvh?]} {schema.rnc}\n");}
 
 int main(int argc,char **argv) {
+  int i, ok;
   init();
 
+  --argc;
   while(*(++argv)&&**argv=='-') {
-    int i=1;
+    --argc; i=1;
     for(;;) {
       switch(*(*argv+i)) {
       case '\0': goto END_OF_OPTIONS;
@@ -214,9 +223,15 @@ int main(int argc,char **argv) {
     END_OF_OPTIONS:;
   }
 
-  if(*argv==NULL || *(argv+1)!=NULL) {usage(); return 1;}
+  if(*argv==NULL) {usage(); return 1;}
 
-  if((start=rnl_fn(*(argv)))) {
+
+  starts=(int*)memalloc(argc,sizeof(int));
+  ok=1; n_st=0;
+  do {
+    ok=(starts[n_st++]=rnl_fn(*(argv++)))&&ok;
+  } while(*argv);
+  if(ok) {
     int fd2;
 
     nstderr=stderr;

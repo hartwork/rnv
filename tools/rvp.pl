@@ -22,7 +22,7 @@ $|=1;  # using pipes
 $/="\0"; # the zero byte is separator
 
 # write queries to RVPIN, get responses from RVPOUT
-open2(\*RVPOUT,\*RVPIN,@RVP,shift @ARGV);
+open2(\*RVPOUT,\*RVPIN,@RVP,@ARGV);
 
 sub resp {
   $_=<RVPOUT>;
@@ -40,7 +40,8 @@ sub resp {
       $errors=1;
       return $pat;
     };
-  die "protocol error, stopped ";
+  /^er (\d+).*/ and do {$errors=1; return $1;};
+  die "protocol error ($_), stopped ";
 }
 
 sub start_tag_open {
@@ -80,7 +81,8 @@ sub mixed {
 }
 
 sub start {
-  print RVPIN "start\0";
+  my $no=shift @_ or 0;
+  print RVPIN "start $no\0";
   return resp();
 }
 
@@ -142,7 +144,7 @@ $parser->setHandlers(
   End=>\&end_element,
   Char=>\&characters);
 
-$current=start();
+$current=start(0);
 $parser->parse(*STDIN);
 quit();
 
