@@ -1,0 +1,94 @@
+# $Id$
+#
+VERSION=1.3.3
+CC=bcc32
+
+EXPAT_H="<expat.h>"
+UNISTD_H="<io.h>"
+
+INC=-I. -Ic:\\expat\\source\\lib -Ic:\\borland\\bcc55\\include
+LBL=-L. -Lc:\\borland\\bcc55\\lib
+
+DEF=-DEXPAT_H=${EXPAT_H} -DUNISTD_H=${UNISTD_H} -DRNV_VERSION="\"${VERSION}\"" -DARX_VERSION="\"${VERSION}\""
+WARN=-w-pia- -w-par- -w-aus-
+OPT=-O2
+
+CFLAGS=${INC} ${DEF} ${WARN} ${OPT}
+LFLAGS=${OPT} ${LBL}
+
+LIBEXPAT=libexpats_mtd.lib
+LIB=${LIBEXPAT}
+
+SRC=\
+ll.h \
+erbit.h \
+xcl.c \
+arx.c \
+rn.c rn.h \
+rnc.c rnc.h \
+rnd.c rnd.h \
+rnv.c rnv.h \
+rnx.c rnx.h \
+drv.c drv.h \
+xsd.c xsd.h \
+xsd_tm.c xsd_tm.h \
+sc.c sc.h \
+ht.c ht.h \
+u.c u.h \
+xmlc.c xmlc.h \
+strops.c strops.h \
+memops.c memops.h \
+rx.c rx.h \
+rx_cls_u.c \
+rx_cls_ranges.c
+
+OBJ=\
+rn.obj \
+rnc.obj \
+rnd.obj \
+rnv.obj \
+rnx.obj \
+drv.obj \
+xsd.obj \
+xsd_tm.obj \
+sc.obj \
+u.obj \
+ht.obj \
+xmlc.obj \
+strops.obj \
+memops.obj \
+rx.obj
+
+.SUFFIXES: .c .obj
+
+.c.obj:
+	${CC} ${CFLAGS} -c -o$@ $<
+
+all: rnv.exe arx.exe
+
+rnv.exe: xcl.obj ${OBJ}
+	${CC} ${LFLAGS} -ernv.exe xcl.obj ${OBJ} ${LIB}
+
+arx.exe: arx.obj ${OBJ}
+	${CC} ${LFLAGS} -earx.exe arx.obj ${OBJ} ${LIB}
+
+clean:
+	-rm -f *.obj *.exe
+	-del *.obj *.exe
+
+xcl.obj: memops.h erbit.h rn.h rnc.h rnd.h rnv.h rnx.h ll.h
+rn.obj: memops.h strops.h ht.h ll.h rn.h
+rnc.obj: u.h xmlc.h memops.h strops.h rn.h sc.h rnc.h
+rnd.obj: memops.h rn.h rnx.h ll.h rnd.h
+rnv.obj: memops.h xmlc.h erbit.h rn.h drv.h rnv.h
+rnx.obj: memops.h strops.h rn.h ll.h rnx.h
+drv.obj: xmlc.h memops.h strops.h ht.h rn.h xsd.h ll.h erbit.h drv.h
+xsd.obj: u.h xmlc.h strops.h erbit.h rx.h xsd_tm.h xsd.h
+xsd_tm.obj: xsd_tm.h
+sc.obj: memops.h ll.h sc.h
+ht.obj: memops.h ht.h
+u.obj: u.h
+xmlc.obj: u.h xmlc.h
+strops.obj: xmlc.h memops.h strops.h
+memops.obj: memops.h
+rx.obj: u.h xmlc.h memops.h strops.h ht.h ll.h rx.h rx_cls_u.c rx_cls_ranges.c
