@@ -371,11 +371,6 @@ static int arx(char *fn) {
   }
 }
 
-static void flush_text(void) {
-  ok=rnv_text(&current,&previous,text,n_t,mixed)&&ok;
-  text[n_t=0]='\0';
-}
-
 /*
 isany::Pattern->Bool
 isany p =
@@ -446,6 +441,11 @@ static int isany(int p) {
   int p1,p2;
   if(!RN_P_IS(p,AFTER)) return 0;
   rn_After(p,p1,p2); return isanymix(p1)&&(p2==rn_empty||isany(p2));
+}
+
+static void flush_text(void) {
+  ok=rnv_text(&current,&previous,text,n_t,mixed)&&ok;
+  text[n_t=0]='\0';
 }
 
 static void start_element(void *userData,const char *name,const char **attrs) {
