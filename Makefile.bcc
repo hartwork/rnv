@@ -1,6 +1,6 @@
 # $Id$
 #
-VERSION=1.6.3
+VERSION=1.6.4
 CC=bcc32
 
 EXPAT_H="<expat.h>"
