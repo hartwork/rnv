@@ -23,7 +23,8 @@ struct dtl {
 
 #define M_STO 0
 #define M_STC 1
-#define M_END 2
+#define M_TXT 2
+#define M_END 3
 #define M_TYP(m) memo[m][0]
 #define M_SET(p) memo[i_m][M_SIZE-1]=p
 #define M_RET(m) memo[m][M_SIZE-1]
@@ -59,6 +60,13 @@ static int newStartTagClose(int p) {
   return ht_get(&ht_m,i_m);
 }
 
+static int newMixedText(int p) {
+  int *me=memo[i_m];
+  M_NEW(TXT);
+  me[1]=p;
+  return ht_get(&ht_m,i_m);
+}
+
 static int newEndTag(int p) {
   int *me=memo[i_m];
   M_NEW(END);
@@ -75,10 +83,6 @@ static void accept_m(void) {
       free(memo); memo=newmemo;
     } 
   }
-}
-
-static void forget_m(void) {
-  ht_del(&ht_m,i_m);
 }
 
 static int fallback_equal(char *typ,char *val,char *s,int n) {return 1;}
@@ -168,8 +172,10 @@ int apply_after(int (*f)(int q1,int q2),int p1,int p0) {
 
 static int start_tag_open(int p,int uri,int name,int recover) {
   int nc,p1,p2,m,ret=0;
-  m=newStartTagOpen(p,uri,name);
-  if(m!=-1) {if(recover) forget_m(); else return M_RET(m);}
+  if(!recover) {
+    m=newStartTagOpen(p,uri,name);
+    if(m!=-1) return M_RET(m);
+  }
   switch(P_TYP(p)) {
   case P_EMPTY: case P_NOT_ALLOWED: case P_TEXT: 
   case P_LIST: case P_DATA: case P_DATA_EXCEPT: case P_VALUE:
@@ -199,8 +205,10 @@ static int start_tag_open(int p,int uri,int name,int recover) {
     break;
   default: assert(0);
   }
-  newStartTagOpen(p,uri,name); M_SET(ret); 
-  accept_m();
+  if(!recover) {
+    newStartTagOpen(p,uri,name); M_SET(ret); 
+    accept_m();
+  }
   return ret;
 }
 
@@ -253,8 +261,10 @@ int drv_attribute_recover(int p,char *suri,char *sname,char *s) {
 
 static int start_tag_close(int p,int recover) {
   int p1,p2,ret=0,m;
-  m=newStartTagClose(p);
-  if(m!=-1) {if(recover) forget_m(); else return M_RET(m);}
+  if(!recover) {
+    m=newStartTagClose(p);
+    if(m!=-1) return M_RET(m);
+  }
   switch(P_TYP(p)) {
   case P_EMPTY: case P_NOT_ALLOWED: case P_TEXT:
   case P_LIST: case P_DATA: case P_DATA_EXCEPT: case P_VALUE:
@@ -281,8 +291,10 @@ static int start_tag_close(int p,int recover) {
     break;
   default: assert(0);
   }
-  newStartTagClose(p); M_SET(ret); 
-  accept_m();
+  if(!recover) {
+    newStartTagClose(p); M_SET(ret); 
+    accept_m();
+  }
   return ret;
 }
 int drv_start_tag_close(int p) {return start_tag_close(p,0);}
@@ -353,10 +365,54 @@ static int textws(int p,char *s,int n) {
 int drv_text(int p,char *s,int n) {return textws(p,s,n);}
 int drv_text_recover(int p,char *s,int n) {return p;}
 
+static int mixed_text(int p,int recover) { /* matches text in mixed context */
+  int p1,p2,ret=0,m;
+  if(recover) {
+    ret=p;
+  } else {
+    m=newMixedText(p);
+    if(m!=-1) return M_RET(m);
+    switch(P_TYP(p)) {
+    case P_EMPTY: case P_NOT_ALLOWED:
+    case P_ATTRIBUTE: case P_ELEMENT:
+    case P_LIST: case P_DATA: case P_DATA_EXCEPT: case P_VALUE:
+      ret=rn_notAllowed;
+      break;
+    case P_TEXT:
+      ret=p;
+      break;
+    case P_AFTER: After(p,p1,p2); 
+      ret=rn_after(mixed_text(p1,recover),p2);
+      break;
+    case P_CHOICE: Choice(p,p1,p2);
+      ret=rn_choice(mixed_text(p1,recover),mixed_text(p2,recover));
+      break;
+    case P_INTERLEAVE: Interleave(p,p1,p2);
+      ret=rn_choice(rn_ileave(mixed_text(p1,recover),p2),rn_ileave(p1,mixed_text(p2,recover)));
+      break;
+    case P_GROUP: Group(p,p1,p2);
+      { int p11=rn_group(mixed_text(p1,recover),p2);
+	ret=nullable(p1)?rn_choice(p11,mixed_text(p2,recover)):p11;
+      } break;
+    case P_ONE_OR_MORE: OneOrMore(p,p1);
+      ret=rn_group(mixed_text(p1,recover),rn_choice(p,rn_empty));
+      break;
+    default: assert(0);
+    }
+    newMixedText(p); M_SET(ret);
+    accept_m();
+  }
+  return ret;
+} 
+int drv_mixed_text(int p) {return mixed_text(p,0);}
+int drv_mixed_text_recover(int p) {return mixed_text(p,1);}
+
 static int end_tag(int p,int recover) {
   int p1,p2,ret=0,m;
-  m=newEndTag(p);
-  if(m!=-1) {if(recover) forget_m(); else return M_RET(m);}
+  if(!recover) {
+    m=newEndTag(p);
+    if(m!=-1) return M_RET(m);
+  }
   switch(P_TYP(p)) {
   case P_EMPTY: case P_NOT_ALLOWED: case P_TEXT:
   case P_INTERLEAVE: case P_GROUP: case P_ONE_OR_MORE:
@@ -372,8 +428,10 @@ static int end_tag(int p,int recover) {
     break;
   default: assert(0);
   }
-  newEndTag(p); M_SET(ret);
-  accept_m();
+  if(!recover) {
+    newEndTag(p); M_SET(ret);
+    accept_m();
+  }
   return ret;
 }
 int drv_end_tag(int p) {return end_tag(p,0);}

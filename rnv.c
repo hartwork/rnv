@@ -96,7 +96,15 @@ static int whitespace(void) {
 
 static void flush_text(void) {
   if(n_t!=0) {
-    if(!(mixed&&whitespace())) {
+    if(mixed) {
+      if(!whitespace()) {
+	current=drv_mixed_text(previous=current);
+	if(current==rn_notAllowed) {
+	  error(TEXT_NOT_ALLOWED);
+	  current=drv_mixed_text_recover(previous);
+	}
+      }
+    } else {
       current=drv_text(previous=current,text,n_t);
       if(current==rn_notAllowed) {
 	error(TEXT_NOT_ALLOWED);

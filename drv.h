@@ -18,6 +18,8 @@ extern int drv_start_tag_close(int p);
 extern int drv_start_tag_close_recover(int p);
 extern int drv_text(int p,char *s,int n);
 extern int drv_text_recover(int p,char *s,int n);
+extern int drv_mixed_text(int p);
+extern int drv_mixed_text_recover(int p);
 extern int drv_end_tag(int p);
 extern int drv_end_tag_recover(int p);
 
