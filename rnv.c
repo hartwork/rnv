@@ -75,11 +75,11 @@ static void error(int erno,...) {
   fprintf(stderr,"invalid document (%s,%i,%i): ",xml,XML_GetCurrentLineNumber(expat),XML_GetCurrentColumnNumber(expat));
   va_start(ap,erno);
   switch(erno) {
-  case RNVER_ELEM: err("element '%s^%s' not allowed"); break;
-  case RNVER_AKEY: err("attribute '%s^%s' not allowed"); break;
-  case RNVER_AVAL: err("attribute '%s^%s with invalid value \"%s\"'"); break;
+  case RNVER_ELEM: err("element %s^%s not allowed"); break;
+  case RNVER_AKEY: err("attribute %s^%s not allowed"); break;
+  case RNVER_AVAL: err("attribute %s^%s with invalid value \"%s\""); break;
   case RNVER_EMIS: err("incomplete content"); break;
-  case RNVER_AMIS: err("missing attributes of '%s^%s'"); break;
+  case RNVER_AMIS: err("missing attributes of %s^%s"); break;
   case RNVER_UFIN: err("unfinished content"); break;
   case RNVER_TEXT: err("invalid text or data"); break;
   case RNVER_MIXT: err("text not allowed"); break;
