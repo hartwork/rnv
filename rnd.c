@@ -91,7 +91,7 @@ void rnd_deref(int start) {
       changed=0;
       if(P_IS(p1,REF)) {p1=deref(p1); changed=1;}
       if(P_IS(p2,REF)) {p2=deref(p2); changed=1;}
-      if(changed) {rn_del_p(p); rn_pattern[p][1]=p1; rn_pattern[p][2]=p2; rn_add_p(p);}
+      if(changed) {rn_del_p(p); rn_pattern[p+1]=p1; rn_pattern[p+2]=p2; rn_add_p(p);}
       if(n_f+2>len_f) realloc_f();
       flatten(p1); flatten(p2);
       break;
@@ -103,7 +103,7 @@ void rnd_deref(int start) {
     UNARY:
       changed=0;
       if(P_IS(p1,REF)) {p1=deref(p1); changed=1;}
-      if(changed) {rn_del_p(p); rn_pattern[p][1]=p1; rn_add_p(p);}
+      if(changed) {rn_del_p(p); rn_pattern[p+1]=p1; rn_add_p(p);}
       if(n_f+1>len_f) realloc_f();
       flatten(p1);
       break;
@@ -116,7 +116,7 @@ void rnd_deref(int start) {
     }
   } while(i!=n_f);
   for(i=0;i!=n_f;++i) unmark(flat[i]);
-  for(i=0;i!=n_r;++i) {p=refs[i]; rn_pattern[p][1]=0; unmark(p);}
+  for(i=0;i!=n_r;++i) {p=refs[i]; rn_pattern[p+1]=0; unmark(p);}
   free(refs);
 }
 

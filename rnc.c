@@ -643,7 +643,7 @@ static void close_scope(struct rnc_source *sp) {
   for(i=refs.base+1;i!=refs.top;++i) {
     name=refs.tab[i][0];
     if((j=sc_find(&defs,name))) {
-      rn_pattern[refs.tab[i][1]][1]=defs.tab[j][1];
+      rn_pattern[refs.tab[i][1]+1]=defs.tab[j][1];
     } else {
       error(1,sp,ER_UNDEF,rn_string+name,sp->fn,CUR(sp).line,CUR(sp).col);
     }

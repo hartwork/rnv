@@ -12,11 +12,11 @@
 #define RN_LIM_P 4*RN_LEN_P
 #define RN_LEN_NC 256
 #define RN_PRIME_NC 0xfb
-#define RN_LEN_S 4096
+#define RN_LEN_S 256
 
 #define SC_LEN 64
 
-#define DRV_LEN_M 4096
+#define DRV_LEN_M 1024
 #define DRV_PRIME_M 0xffd
 #define DRV_LIM_M 8*DRV_LEN_M
 
