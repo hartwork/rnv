@@ -1,6 +1,8 @@
 /* $Id$ */
 
-1.4.0
+1.4.0 Mon Jan 12 17:39:58 AMT 2004
+dvd: changed rvp.py to use os.read|os.write for performance
+
 Mon Jan 12 03:53:56 AMT 2004
 dvd: rvp is implemented; reads validation events from input, sends diagnostics
      to output; embedding examples in perl and python
