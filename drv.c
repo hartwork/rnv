@@ -235,6 +235,8 @@ static int start_tag_open(int p,int uri,int name,int recover) {
 int drv_start_tag_open(int p,char *suri,char *sname) {return start_tag_open(p,newString(suri),newString(sname),0);}
 int drv_start_tag_open_recover(int p,char *suri,char *sname) {return start_tag_open(p,newString(suri),newString(sname),1);}
 
+static int puorg_rn(int p2,int p1) {return rn_group(p1,p2);}
+
 static int attribute_open(int p,int uri,int name) {
   int nc,p1,p2,m,ret=0;
   m=newAttributeOpen(p,uri,name);
@@ -259,7 +261,7 @@ static int attribute_open(int p,int uri,int name) {
   case P_GROUP: Group(p,p1,p2); 
     ret=rn_choice(
       apply_after(&rn_group,attribute_open(p1,uri,name),p2),
-      apply_after(&rn_group,attribute_open(p2,uri,name),p1));
+      apply_after(&puorg_rn,attribute_open(p2,uri,name),p1));
     break;
   case P_ONE_OR_MORE: OneOrMore(p,p1);
     ret=apply_after(&rn_group,attribute_open(p1,uri,name),rn_choice(p,rn_empty));

@@ -1,7 +1,8 @@
 /* $Id$ */
 
-1.2.1 четверг, 25 декабря 2003 г. 16:50:27 (AMT)
-dvd: equality and ordering for dateTime (and its partial variants) implemented;
+1.2.1 Thu Dec 25 19:30:55 AMT 2003
+dvd: added puorg_nr to implement attribute_open correctly;
+     equality and ordering for dateTime (and its partial variants) implemented;
      rx,xsd use overloadable error handlers with variable lists.
 
 1.2.0 Wed Dec 24 04:40:25 AMT 2003
