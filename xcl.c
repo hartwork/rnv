@@ -216,7 +216,7 @@ static void validate(int fd) {
 }
 
 static void version(void) {(*er_printf)("rnv version %s\n",RNV_VERSION);}
-static void usage(void) {(*er_printf)("usage: rnv {-[qnpsc"
+static void usage(void) {(*er_printf)("usage: rnv {-[qnspc"
 #if DXL_EXC
 "d"
 #endif
@@ -234,8 +234,8 @@ int main(int argc,char **argv) {
     for(;;) {
       switch(*(*argv+i)) {
       case '\0': goto END_OF_OPTIONS;
-      case 'h': case '?': usage(); return 1;
-      case 'v': version(); break;
+      case 'q': verbose=0; nexp=0; break;
+      case 'n': if(*(argv+1)) nexp=atoi(*(++argv)); goto END_OF_OPTIONS;
       case 's': drv_compact=1; rx_compact=1; break;
       case 'p': peipe=1; break;
       case 'c': rnck=1; break;
@@ -245,8 +245,8 @@ int main(int argc,char **argv) {
 #if DSL_SCM
       case 'e': dsl_ld(*(argv+1)); if(*(argv+1)) ++argv; goto END_OF_OPTIONS;
 #endif
-      case 'n': if(*(argv+1)) nexp=atoi(*(++argv)); goto END_OF_OPTIONS;
-      case 'q': verbose=0; nexp=0; break;
+      case 'v': version(); break;
+      case 'h': case '?': usage(); return 1;
       default: (*er_printf)("unknown option '-%c'\n",*(*argv+i)); break;
       }
       ++i;
