@@ -1,7 +1,7 @@
 /* $Id$ */
 
 #include <stdlib.h> /* calloc */
-#include <string.h> /* strcmp,memcmp,strlen,strcpy,strdup,memcpy,memset */
+#include <string.h> /* strcmp,memcmp,strlen,strcpy,strclone,memcpy,memset */
 #include <stdio.h> /* debugging*/
 
 #include "util.h"
@@ -162,22 +162,22 @@ char *p2str(int p) {
   char *s=NULL,*s1;
   int dt,ps,val,nc,p1;
   switch(P_TYP(p)) {
-  case P_ERROR: s=strdup("error"); break;
-  case P_EMPTY: s=strdup("empty"); break;
-  case P_NOT_ALLOWED: s=strdup("notAllowed"); break;
-  case P_TEXT: s=strdup("text"); break;
-  case P_CHOICE: s=strdup("choice (|)"); break;
-  case P_INTERLEAVE: s=strdup("interleave (&)"); break;
-  case P_GROUP: s=strdup("group (,)"); break;
-  case P_ONE_OR_MORE: s=strdup("one or more (+)"); break;
-  case P_LIST: s=strdup("list"); break;
+  case P_ERROR: s=strclone("error"); break;
+  case P_EMPTY: s=strclone("empty"); break;
+  case P_NOT_ALLOWED: s=strclone("notAllowed"); break;
+  case P_TEXT: s=strclone("text"); break;
+  case P_CHOICE: s=strclone("choice (|)"); break;
+  case P_INTERLEAVE: s=strclone("interleave (&)"); break;
+  case P_GROUP: s=strclone("group (,)"); break;
+  case P_ONE_OR_MORE: s=strclone("one or more (+)"); break;
+  case P_LIST: s=strclone("list"); break;
   case P_DATA: Data(p,dt,ps);
     s1=nc2str(dt);
     s=(char*)calloc(strlen("data ")+1+strlen(s1),sizeof(char));
     strcpy(s,"data "); strcat(s,s1);
     free(s1);
     break;
-  case P_DATA_EXCEPT: s=strdup("dataExcept (-)");  break;
+  case P_DATA_EXCEPT: s=strclone("dataExcept (-)");  break;
   case P_VALUE: Value(p,dt,val);
     s=(char*)calloc(strlen("value \"\"")+1+strlen(rn_string+val),sizeof(char));
     strcpy(s,"value \""); strcat(s,rn_string+val); strcat(s,"\"");
@@ -194,8 +194,8 @@ char *p2str(int p) {
     strcpy(s,"element "); strcat(s,s1);
     free(s1);
     break;
-  case P_REF: s=strdup("ref"); break;
-  case P_AFTER: s=strdup("after"); break;
+  case P_REF: s=strclone("ref"); break;
+  case P_AFTER: s=strclone("after"); break;
   default: assert(0);
   }
   return s;
@@ -290,7 +290,7 @@ char *nc2str(int nc) {
   char *s=NULL,*s1,*s2;
   int nc1,nc2,uri,name;
   switch(NC_TYP(nc)) {
-  case NC_ERROR: s=strdup("?"); break;
+  case NC_ERROR: s=strclone("?"); break;
   case NC_NSNAME:
     NsName(nc,uri);
     s=(char*)calloc(strlen(rn_string+uri)+3,sizeof(char));
@@ -301,7 +301,7 @@ char *nc2str(int nc) {
     s=(char*)calloc(strlen(rn_string+uri)+strlen(rn_string+name)+2,sizeof(char));
     strcpy(s,rn_string+uri); strcat(s,"^"); strcat(s,rn_string+name);
     break;
-  case NC_ANY_NAME: s=strdup("*"); break;
+  case NC_ANY_NAME: s=strclone("*"); break;
   case NC_EXCEPT:
     NameClassExcept(nc,nc1,nc2);
     s1=nc2str(nc1); s2=nc2str(nc2);
@@ -339,7 +339,7 @@ static void add_ps(char *s) {
 }
 void rn_add_pskey(char *s) {add_ps(s);}
 void rn_add_psval(char *s) {add_ps(s);}
-void rn_end_ps() {add_ps("");}
+void rn_end_ps(void) {add_ps("");}
 
 static int hash_p(int i);
 static int hash_nc(int i);
@@ -352,7 +352,7 @@ static int equal_s(int s1,int s2);
 static void windup(void);
 
 static int initialized=0;
-void rn_init() {
+void rn_init(void) {
   if(!initialized) { initialized=1;
     rn_pattern=(int (*)[P_SIZE])calloc(len_p=LEN_P,sizeof(int[P_SIZE]));
     rn_nameclass=(int (*)[NC_SIZE])calloc(len_nc=LEN_NC,sizeof(int[NC_SIZE]));

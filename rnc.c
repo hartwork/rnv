@@ -2,7 +2,7 @@
 
 #include <fcntl.h> /* open, close */
 #include UNISTD_H /* open,read,close */
-#include <string.h> /* memcpy,strlen,strcpy,strcat,strdup */
+#include <string.h> /* memcpy,strlen,strcpy,strcat,strclone */
 #include <stdlib.h> /* calloc,malloc,free */
 #include <stdio.h> /*stderr*/
 #include <stdarg.h> /*va_list,va_arg,va_end*/
@@ -116,14 +116,14 @@ static int rnc_read(struct rnc_source *sp);
 
 int rnc_stropen(struct rnc_source *sp,char *fn,char *s,int len) {
   rnc_source_init(sp);
-  sp->fn=strdup(fn);
+  sp->fn=strclone(fn);
   sp->buf=s; sp->n=len; sp->complete=1;
   return 0;
 }
 
 int rnc_bind(struct rnc_source *sp,char *fn,int fd) {
   rnc_source_init(sp);
-  sp->fn=strdup(fn); sp->fd=fd;
+  sp->fn=strclone(fn); sp->fd=fd;
   sp->buf=(char*)calloc(BUFSIZE,sizeof(char)); sp->flags=SRC_FREE;
   if(!(sp->complete=sp->fd==-1)) rnc_read(sp);
   return sp->fd;

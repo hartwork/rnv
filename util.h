@@ -12,6 +12,9 @@ extern int tokncmp(char *s1,char *s2,int n2);
 /* hash value for a zero-terminated string */
 extern int strhash(char *s);
 
+/* strdup is a non-standard function */
+extern char *strclone(char *s);
+
 /* compute the absolute path from a relative path and a base path;
  the caller must ensure that there is enough space in r:
  size(r) > strlen(r)+strlen(b)

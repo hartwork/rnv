@@ -1,5 +1,6 @@
 /* $Id$ */
 
+#include <string.h>
 #include "util.h"
 
 int xml_white_space(int v) {return v=='\t'||v=='\n'||v=='\r'||v==' ';}
@@ -31,6 +32,10 @@ int strhash(char *s) {
   int h=0; 
   while(*s) h=h*31+*(s++); 
   return h;
+}
+
+char *strclone(char *s) {
+  return strcpy((char*)calloc(strlen(s),sizeof(char)),s);
 }
 
 extern char *abspath(char *r,char *b) {
