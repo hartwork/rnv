@@ -1,7 +1,6 @@
 /* $Id$ */
 
 #include <stdio.h>
-
 #include <string.h> /* strcmp,strlen,strcpy*/
 
 #include "m.h"
@@ -54,24 +53,22 @@ int rn_groupable(int p1,int p2) {
 
 static int add_s(char *s) {
   int len=strlen(s)+1;
-  if(i_s+len>len_s) rn_string=(char*)m_stretch(rn_string,len_s=2*(i_s+len),i_s,sizeof(char));
+  if(i_s+len>len_s) rn_string=(char*)m_stretch(rn_string,
+    len_s=2*(i_s+len),i_s,sizeof(char));
   strcpy(rn_string+i_s,s);
   return len;
 }
 
-int rn_newString(char *s) {
-  int d_s,j;
-  assert(!adding_ps);
-  d_s=add_s(s);
-  if((j=ht_get(&ht_s,i_s))==-1) {
-    ht_put(&ht_s,j=i_s);
-    i_s+=d_s;
-  }
-  return j;
-}
-
-#define P_NEW(x) rn_pattern[i_p]=x
-
+/* the two functions below are structuraly identical; 
+ they used to be expanded from a macro using ##, 
+ but then I eliminated all occurences of ## -- 
+ it was an obstacle to porting; sam script to turn 
+ the first into the second is
+s/([^a-z])p([^a-z])/\1nc\2/g
+s/([^A-Z])P([^A-Z])/\1NC\2/g
+s/_pattern/_nameclass/g
+ */
+ 
 static int accept_p(void) {
   int j;
   if((j=ht_get(&ht_p,i_p))==-1) {
@@ -93,6 +90,19 @@ static int accept_nc(void) {
   }
   return j;
 }
+
+int rn_newString(char *s) {
+  int d_s,j;
+  assert(!adding_ps);
+  d_s=add_s(s);
+  if((j=ht_get(&ht_s,i_s))==-1) {
+    ht_put(&ht_s,j=i_s);
+    i_s+=d_s;
+  }
+  return j;
+}
+
+#define P_NEW(x) rn_pattern[i_p]=x
 
 int rn_newNotAllowed(void) { P_NEW(RN_P_NOT_ALLOWED);
   return accept_p();
