@@ -565,7 +565,7 @@ int xsd_allows(char *typ,char *ps,char *s,int n) {
 }
 
 static int dblcmpn(char *val,char *s,char n) {
-  int d1,d2;
+  double d1,d2;
   return tokcmpn(val,s,n)==0?0
     : tokcmpn(val,"NaN",3)==0||tokcmpn("NaN",s,n)==0?1
     : (d1=atod(val),d2=atodn(s,n),d1<d2?-1:d1>d2?1:0);
