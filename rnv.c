@@ -270,13 +270,8 @@ static int validate(int fd) {
       goto ERROR;
     }
     if(peipe) peipe=peipe&&pipeout(buf,len);
-    if(len==0) {
-      if(!XML_ParseBuffer(expat,len,1)) goto PARSE_ERROR;
-      break;
-    } else {
-      if(!XML_ParseBuffer(expat,len,0)) goto PARSE_ERROR;
-      if(current==rn_notAllowed) break;
-    }
+    if(!XML_ParseBuffer(expat,len,len==0)) goto PARSE_ERROR;
+    if(len==0) break;
   }
   XML_ParserFree(expat);
   return !errors;
