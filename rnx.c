@@ -1,10 +1,8 @@
 /* $Id$ */
 
-#include "rnx.h"
-#include "rn.h"
-
 #include <stdlib.h> /*calloc,free*/
 #include "rn.h"
+#include "rnx.h"
 
 #define LEN_EXP 16
 
@@ -63,6 +61,9 @@ void rnx_expected(int p) {
 
 /*
  * $Log$
+ * Revision 1.2  2003/12/14 10:52:36  dvd
+ * recovery
+ *
  * Revision 1.1  2003/12/14 10:39:58  dvd
  * +rnx
  *

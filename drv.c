@@ -105,7 +105,7 @@ int apply_after(int (*f)(int q1,int q2),int p1,int p0) {
 
 /* ret is for experiments with memoization of results */
 
-static int start_tag_open(int p,int uri,int name) {
+static int start_tag_open(int p,int uri,int name,int recover) {
   int nc,p1,p2,ret=0;
   switch(P_TYP(p)) {
   case P_EMPTY: case P_NOT_ALLOWED: case P_TEXT: 
@@ -114,33 +114,33 @@ static int start_tag_open(int p,int uri,int name) {
     ret=rn_notAllowed;
     break;
   case P_CHOICE: Choice(p,p1,p2);
-    ret=rn_choice(start_tag_open(p1,uri,name),start_tag_open(p2,uri,name));
+    ret=rn_choice(start_tag_open(p1,uri,name,recover),start_tag_open(p2,uri,name,recover));
     break;
   case P_ELEMENT: Element(p,nc,p1); 
     ret=ncof(nc,uri,name)?rn_after(p1,rn_empty):rn_notAllowed; 
     break;
   case P_INTERLEAVE: Interleave(p,p1,p2); 
     ret=rn_choice(
-      apply_after(&rn_ileave,start_tag_open(p1,uri,name),p2),
-      apply_after(&rn_ileave,start_tag_open(p2,uri,name),p1));
+      apply_after(&rn_ileave,start_tag_open(p1,uri,name,recover),p2),
+      apply_after(&rn_ileave,start_tag_open(p2,uri,name,recover),p1));
     break;
   case P_GROUP: Group(p,p1,p2); 
-    { int p11=apply_after(&rn_group,start_tag_open(p1,uri,name),p2);
-      ret=nullable(p1)?rn_choice(p11,start_tag_open(p2,uri,name)):p11;
+    { int p11=apply_after(&rn_group,start_tag_open(p1,uri,name,recover),p2);
+      ret=(nullable(p1)||recover)?rn_choice(p11,start_tag_open(p2,uri,name,recover)):p11;
     } break;
   case P_ONE_OR_MORE: OneOrMore(p,p1);
-    ret=apply_after(&rn_group,start_tag_open(p1,uri,name),rn_choice(p,rn_empty));
+    ret=apply_after(&rn_group,start_tag_open(p1,uri,name,recover),rn_choice(p,rn_empty));
     break;
   case P_AFTER: After(p,p1,p2);
-    ret=apply_after(&rn_after,start_tag_open(p1,uri,name),p2);
+    ret=apply_after(&rn_after,start_tag_open(p1,uri,name,recover),p2);
     break;
   default: assert(0);
   }
   return ret;
 }
 
-int drv_start_tag_open(int p,char *suri,char *sname) {return start_tag_open(p,newString(suri),newString(sname));}
-int drv_start_tag_open_recover(int p,char *suri,char *sname) {return rn_notAllowed;}
+int drv_start_tag_open(int p,char *suri,char *sname) {return start_tag_open(p,newString(suri),newString(sname),0);}
+int drv_start_tag_open_recover(int p,char *suri,char *sname) {return start_tag_open(p,newString(suri),newString(sname),1);}
 
 static int text(int p,char *s,int n);
 static int attribute(int p,int uri,int name,char *s) {
@@ -297,7 +297,7 @@ static int end_tag(int p,int recover) {
     ret=rn_choice(end_tag(p1,recover),end_tag(p2,recover));
     break;
   case P_AFTER: After(p,p1,p2);
-    ret=(recover||nullable(p1))?p2:rn_notAllowed;
+    ret=(nullable(p1)||recover)?p2:rn_notAllowed;
     break;
   default: assert(0);
   }
@@ -308,6 +308,9 @@ int drv_end_tag_recover(int p) {return end_tag(p,1);}
 
 /*
  * $Log$
+ * Revision 1.9  2003/12/14 10:52:36  dvd
+ * recovery
+ *
  * Revision 1.8  2003/12/14 10:39:58  dvd
  * +rnx
  *
