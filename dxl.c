@@ -13,7 +13,7 @@
 
 char *dxl_cmd=NULL;
 
-extern int dxl_allows(char *typ,char *ps,char *s,int n) {
+int dxl_allows(char *typ,char *ps,char *s,int n) {
   int pid,status;
 
   if(!dxl_cmd) return 0;
@@ -49,7 +49,7 @@ extern int dxl_allows(char *typ,char *ps,char *s,int n) {
   return 0;
 }
 
-extern int dxl_equal(char *typ,char *val,char *s,int n) {
+int dxl_equal(char *typ,char *val,char *s,int n) {
   int pid,status;
 
   if(!dxl_cmd) return 0;
