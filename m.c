@@ -10,6 +10,7 @@
 #endif
 
 #if M_STATIC
+
 static char memory[M_STATIC];
 static char *mp=memory,*pmp=memory;
 
