@@ -18,7 +18,6 @@ regexp=string in '/', '/' inside quoted by '\'
 rng=relax ng compact syntax
 
 comments start with # and continue till end of line
-
 */
 
 #include <stdlib.h>
