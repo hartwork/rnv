@@ -93,22 +93,23 @@ depend: ${SRC}
 clean:
 	-rm -f *.o tst/c/*.o  *.a *.so rnv arx rnd_test *_test *.core *.gmon *.gprof rnv*.zip rnv.txt rnv.pdf rnv.html rnv.xml
 
+DIST=rnv+arx
 DISTFILES=license.txt ${SRC} Makefile Makefile.bcc readme.txt changes.txt src.txt
-DISTWIN32=rnv.exe arx.exe
+DISTWIN32=rnv.exe arx.exe readme32.txt license.txt
 DISTTOOLS=tools/rnv.vim tools/arx.conf /usr/local/share/rng-c/xslt.rnc /usr/local/share/rng-c/fo.rnc /usr/local/share/rng-c/none.rnc /usr/local/share/rng-c/relaxng.rnc
-zip: rnv-${VERSION}.zip
-rnv-${VERSION}.zip: ${DISTFILES} ${DISTWIN32} ${DISTTOOLS}
-	-rm -rf rnv.zip rnv-[0-9]*.[0-9]*.[0-9]*
-	mkdir rnv-${VERSION} rnv-${VERSION}/tools rnv-${VERSION}/win32
-	cp ${DISTFILES} rnv-${VERSION}/.
-	cp ${DISTWIN32} rnv-${VERSION}/win32/.
-	cp ${DISTTOOLS} rnv-${VERSION}/tools/.
-	zip -9 -r rnv-${VERSION}.zip rnv-${VERSION}
-	-rm -rf rnv-${VERSION}
+zip: ${DIST}-${VERSION}.zip
+${DIST}-${VERSION}.zip: ${DISTFILES} ${DISTWIN32} ${DISTTOOLS}
+	-rm -rf rnv.zip ${DIST}-[0-9]*.[0-9]*.[0-9]*
+	mkdir ${DIST}-${VERSION} ${DIST}-${VERSION}/tools
+	cp ${DISTFILES} ${DIST}-${VERSION}/.
+	cp ${DISTTOOLS} ${DIST}-${VERSION}/tools/.
+	zip -9 -r ${DIST}-${VERSION}.zip ${DIST}-${VERSION}
+	-rm -rf ${DIST}-${VERSION}
+	zip -9 -r ${DIST}-${VERSION}-win32bin.zip ${DISTWIN32}
 
-install: rnv-${VERSION}.zip readme.txt changes.txt
-	-cp -f rnv-${VERSION}.zip readme.txt changes.txt ${DISTDIR}
-	(cd ${DISTDIR}; rm -f RNV.ZIP ; ln -s rnv-${VERSION}.zip RNV.ZIP)
+install: ${DIST}-${VERSION}.zip readme.txt changes.txt
+	-cp -f ${DIST}-${VERSION}.zip ${DIST}-${VERSION}-win32bin.zip readme.txt changes.txt ${DISTDIR}
+	(cd ${DISTDIR}; rm -f RNV.ZIP ; ln -s ${DIST}-${VERSION}.zip RNV.ZIP)
 
 # DO NOT DELETE
 

@@ -41,6 +41,12 @@ I have implemented XML Schema datatypes checking. The support is not complete (d
 Package Contents
 </title>
 
+<note>
+<para>
+I have put <filename>rnv.exe</filename> and <filename>arx.exe</filename>,  Win32 executables statically linked with a current version of Expat from <ulink>http://expat.sourceforge.net/</ulink>, into a separate distribution archive (with name ending in <filename>-win32bin</filename>). It contains only the program binaries and should be available from the same location as the source distribution.
+</para>
+</note>
+
 <para>
 The package consists of:
 </para>
@@ -68,9 +74,6 @@ The package consists of:
 </listitem>
 <listitem>
 - <filename>tools/*.rnc</filename>, sample Relax NG grammars;
-</listitem>
-<listitem>
-- <filename>win32/rnv.exe</filename> and <filename>win32/arx.exe</filename>,  Win32 executables statically linked with a current version of Expat from <ulink>http://expat.sourceforge.net/</ulink>;
 </listitem>
 <listitem>
 - the log of changes, <filename>changes.txt</filename>;
