@@ -15,9 +15,14 @@
 	      (cdr sl)
 	      'in)))))))
 
+; (dsl-equal? string string string)	      
 (define (dsl-equal? typ val s)
-  (string=? val s))
+  (case (string->symbol typ)
+    ((string) (string=? val s))
+    ((token) (dsl-equal? "string" (dsl-string->token val) (dsl-string->token s)))
+    (else #f)))
 
+; (dsl-allows? string '((string . string)*) string)
 (define (dsl-allows? typ ps s)
   (case (string->symbol typ)
     ((string)
@@ -34,4 +39,4 @@
 	      (else #f)))
 	  #t)))
     ((token) (dsl-allows? "string" ps (dsl-string->token s)))
-    (else #f)))
+    (else #t)))
