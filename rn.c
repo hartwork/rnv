@@ -414,14 +414,23 @@ static void sweep_p(int *starts,int n_st,int since) {
   xlat=(int*)m_alloc(i_p-since,sizeof(int));
   changed=0;
   for(p=since;p!=i_p;p+=p_size[RN_P_TYP(p)]) {
-    if(!rn_marked(p)) {
-      xlat[p-since]=-1;
-    } else if((q=ht_get(&ht_p,p))!=p) {
-      rn_unmark(p);
-      xlat[p-since]=q;
-      changed=1;
-    } else {
-      xlat[p-since]=p;
+    if(!rn_marked(p)) xlat[p-since]=-1;
+  }
+  for(p=since;p!=i_p;p+=p_size[RN_P_TYP(p)]) {
+    if(xlat[p-since]!=-1) {
+      if((q=ht_get(&ht_p,p))!=p) {
+        if(xlat[q-since]!=-1) {
+          rn_unmark(p);
+          xlat[p-since]=q;
+          changed=1;
+	} else {
+	  ht_deli(&ht_p,q);
+	  ht_put(&ht_p,p);
+	  xlat[p-since]=p;
+	}
+      } else {
+        xlat[p-since]=p;
+      }
     }
   }
   while(changed) {

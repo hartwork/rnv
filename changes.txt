@@ -1,5 +1,8 @@
 /* $Id$ */
 
+1.6.3 Thu Mar 11 22:47:17 AMT 2004
+dvd: Bug fix in mark_p -- no more dangling references to unused patterns.
+
 1.6.2 Mon Mar  8 13:22:52 AMT 2004
 dvd: Added processing of davidashen-net-xg-file and -pos PIs to
      work with xg.
