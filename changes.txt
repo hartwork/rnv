@@ -1,8 +1,9 @@
 /* $Id$ */
 
 1.5.0
-
-dvd: added -d and -e to rnv; I was not sure for a long time whether
+Tue Jan 20 22:24:50 AMT 2004
+dvd: changed rx to conform to XSD errata (- is not a valid range)
+     added -d and -e to rnv; I was not sure for a long time whether
      I should do it.
 
 Tue Jan 20 04:45:39 AMT 2004

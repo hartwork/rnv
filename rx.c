@@ -140,8 +140,6 @@ static int cls(int cn) {
   return newClass(cn);
 }
 
-
-
 static int equal_r(int r1,int r2) {return strcmp(regex+r1,regex+r2)==0;}
 static int hash_r(int r) {return s_hval(regex+r);}
 
@@ -193,6 +191,7 @@ void rx_default_verror_handler(int erno,va_list ap) {
   case RX_ER_NORPA: err("')' expected"); break;
   case RX_ER_BADCL: err("unknown class"); break;
   case RX_ER_NODGT: err("digit expected"); break;
+  case RX_ER_NOTRC: err("range or class expected"); break;
   default: assert(0);
   }
 }
@@ -276,7 +275,7 @@ static void windup(void) {
 static int r0,ri,sym,val,errors;
 
 static void error(int erno) {
-  if(!errors) error_handler(erno,regex+r0,u_strlen(regex+r0));
+  if(!errors) error_handler(erno,regex+r0,u_strlen(regex+r0)-u_strlen(regex+ri));
   ++errors;
 }
 
@@ -345,22 +344,23 @@ static void getsym(void) {
 
 static void chk_get(int v,int erno) {if(sym!=SYM_CHR||val!=v) error(erno); getsym();}
 
+
+#define chkrch(val) if((val)=='['||(val)==']'||(val)=='-') error(RX_ER_NOTRC)
+
 static int chgroup(void) {
   int p=notAllowed,c;
   for(;;) {
     switch(sym) {
-    case SYM_CHR: if(val==']'||(val=='-'&&regex[ri]=='[')) goto END_OF_GROUP;
+    case SYM_CHR: chkrch(val); 
     case SYM_ESC: c=val; getsym();
       if(sym==SYM_CHR&&val=='-') {
 	if(regex[ri]=='[') {
 	  p=choice(p,newChar(c));
 	  goto END_OF_GROUP;
-	} else if(regex[ri]==']') {
-	  p=choice(p,newChar(c));
 	} else {
 	  getsym();
 	  switch(sym) {
-	  case SYM_CHR:
+	  case SYM_CHR: chkrch(val);
 	  case SYM_ESC: p=choice(p,newRange(c,val)); getsym(); break;
 	  default: error(RX_ER_BADCH); getsym(); break;
 	  }
@@ -373,6 +373,7 @@ static int chgroup(void) {
     case SYM_END: error(RX_ER_NORSQ); goto END_OF_GROUP;
     default: assert(0);
     }
+    if(sym==SYM_CHR&&(val==']'||val=='-')) goto END_OF_GROUP;
   }
   END_OF_GROUP:;
   return p;
@@ -734,26 +735,3 @@ int rx_cmatch(char *rx,char *s,int n) {
   } else return 0;
 }
 
-#ifdef TEST_RX
-void rx_dump(void) {
-  int i;
-  for(i=0;i!=i_p;++i) {
-    printf("%i: ",i);
-    switch(P_TYP(i)) {
-    case  P_ERROR: printf("?"); break;
-    case  P_EMPTY: printf("-"); break;
-    case  P_NOT_ALLOWED: printf("!"); break;
-    case  P_CHOICE: printf("#%i|#%i",pattern[i][1],pattern[i][2]); break;
-    case  P_GROUP: printf("#%i#%i",pattern[i][1],pattern[i][2]); break;
-    case  P_ONE_OR_MORE: printf("#%i+",pattern[i][1]); break;
-    case  P_EXCEPT: printf("#%i/#%i",pattern[i][1],pattern[i][2]); break;
-    case  P_RANGE: printf("%c-%c",pattern[i][1],pattern[i][2]); break;
-    case  P_CLASS: printf("@%i",pattern[i][1]); break;
-    case  P_ANY: printf("."); break;
-    case  P_CHAR: printf("%c",pattern[i][1]); break;
-    default: assert(0);
-    }
-    printf("\n");
-  }
-}
-#endif

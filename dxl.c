@@ -1,6 +1,7 @@
 /* $Id$ */
 
 #include <stdlib.h>
+#include "dxl.h"
 
 char *dxl_cmd=NULL;
 
@@ -18,7 +19,6 @@ char *dxl_cmd=NULL;
 #include <assert.h>
 #include "m.h"
 #include "er.h"
-#include "dxl.h"
 
 int dxl_allows(char *typ,char *ps,char *s,int n) {
   int pid,status;

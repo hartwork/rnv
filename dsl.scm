@@ -1,6 +1,9 @@
 ; $Id$
 ; sample scheme datatype library for RVP
 
+; (define gc-hook (display "gc-hook\n"))
+; (verbose 10)
+
 (define (dsl-string->token s)
   (let loop ((tl '()) (sl (string->list s)) (state #f))
     (if (null? sl) (list->string (reverse tl))

@@ -280,9 +280,9 @@ struct facets {
 #define PAT_NON_NEGATIVE "\\+?"PAT_ORDINAL
 #define PAT_NON_POSITIVE "\\-"PAT_ORDINAL"|0+"
 #define PAT_NEGATIVE "\\-"PAT_ORDINAL
-#define PAT_INTEGER "([+-]?"PAT_ORDINAL")"
+#define PAT_INTEGER "([+\\-]?"PAT_ORDINAL")"
 
-#define PAT_FIXED "([+-]?"PAT_DECIMAL")"
+#define PAT_FIXED "([+\\-]?"PAT_DECIMAL")"
 #define PAT_FLOATING PAT_FIXED"([Ee]"PAT_INTEGER")?|INF|-INF|NaN"
 
 #define PAT_HEX_BINARY "[0-9a-fA-F]+"
@@ -316,7 +316,7 @@ struct facets {
   "|" PAT_DURAS"?"PAT_DURAM"?"PAT_DURAS "))"
 #define PAT_DURATION "-?P("PAT_DURADATE PAT_DURATIME"|"PAT_DURADATE"|"PAT_DURATIME")"
 
-#define PAT_ZONE "(Z|[+-](0[0-9]|1[0-4]):[0-5][0-9])"
+#define PAT_ZONE "(Z|[+\\-](0[0-9]|1[0-4]):[0-5][0-9])"
 #define PAT_YEAR0 "[0-9]{4,}"
 #define PAT_MONTH0 "(0[1-9]|1[0-2])"
 #define PAT_DAY0 "([0-2][0-9]|3[01])"
