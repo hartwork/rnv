@@ -1,6 +1,6 @@
 # $Id$
 #
-VERSION=1.7.1
+VERSION=1.7.4
 CC=bcc32
 
 EXPAT_H="<expat.h>"
@@ -24,6 +24,7 @@ ll.h \
 erbit.h \
 xcl.c \
 arx.c \
+test.c \
 ary.c ary.h \
 rn.c rn.h \
 rnc.c rnc.h \
@@ -74,13 +75,16 @@ rx.obj
 .c.obj:
 	${CC} ${CFLAGS} -c -o$@ $<
 
-all: rnv.exe arx.exe
+all: rnv.exe arx.exe test.exe
 
 rnv.exe: xcl.obj ${OBJ}
 	${CC} ${LFLAGS} -ernv.exe xcl.obj ${OBJ} ${LIB}
 
 arx.exe: arx.obj ${OBJ}
 	${CC} ${LFLAGS} -earx.exe arx.obj ${OBJ} ${LIB}
+
+test.exe: test.obj ${OBJ}
+	${CC} ${LFLAGS} -etest.exe test.obj ${OBJ} ${LIB}
 
 clean:
 	-rm -f *.obj *.exe
