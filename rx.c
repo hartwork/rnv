@@ -255,7 +255,7 @@ static void error(void) {
     int n=strlen(ERRMSG)+strlen(regex+r0)+11;
     char *buf=(char*)calloc(n,sizeof(char));
     fprintf(stderr,"r0=%i ri=%i\n",r0,ri);
-    snprintf(buf,n,ERRMSG,regex+r0,u_strlen(regex+r0)-u_strlen(regex+ri));
+    sprintf(buf,ERRMSG,regex+r0,u_strlen(regex+r0)-u_strlen(regex+ri));
     (*rx_error_handler)(buf);
     free(buf);
   }
