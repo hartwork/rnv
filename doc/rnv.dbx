@@ -106,7 +106,7 @@ The command-line syntax is
 </para>
 <synopsis>
 
-        rnv {-q|-p|-s|-v|-h} grammar.rnc {document1.xml}
+	rnv {-q|-p|-s|-v|-h} grammar.rnc {document1.xml}
 
 </synopsis>
 
@@ -169,7 +169,7 @@ RNV assumes that the encoding of the syntax file is UTF-8.
 
 <listitem>
 <para>
-Support for XSL Schema Part 2: Datatypes is partial. 
+Support for XSL Schema Part 2: Datatypes is partial.
 </para>
 <itemizedlist mark="disc">
 <listitem><para>ordering for <varname>duration</varname> is not implemented;
@@ -189,7 +189,7 @@ RNV for Win32 platforms is a Unix program compiled on Win32. It expects file pat
 
 <programlisting>
 
-      rnv.exe ../schema/docbook.rnc userguide.dbx 
+      rnv.exe ../schema/docbook.rnc userguide.dbx
 </programlisting>
 </listitem>
 </itemizedlist>
@@ -198,7 +198,7 @@ RNV for Win32 platforms is a Unix program compiled on Win32. It expects file pat
 <section>
 <title>Applications</title>
 <para>The distribution includes several utilities built upon <application>RNV</application>; they are listed and described in the following sections.
-</para> 
+</para>
 
 <section>
 <title>
@@ -206,7 +206,7 @@ ARX
 </title>
 
 <para>
-<application>ARX</application> is a tool to automatically determine the type of a document from its name and contents. It is inspired by James Clark's schema location approach for nXML, <ulink url="http://groups.yahoo.com/group/emacs-nxml-mode/message/259">http://groups.yahoo.com/group/emacs-nxml-mode/message/259</ulink>, and is a development of the idea described in <ulink url="http://relaxng.org/pipermail/relaxng-user/2003-December/000214.html">http://relaxng.org/pipermail/relaxng-user/2003-December/000214.html</ulink>. 
+<application>ARX</application> is a tool to automatically determine the type of a document from its name and contents. It is inspired by James Clark's schema location approach for nXML, <ulink url="http://groups.yahoo.com/group/emacs-nxml-mode/message/259">http://groups.yahoo.com/group/emacs-nxml-mode/message/259</ulink>, and is a development of the idea described in <ulink url="http://relaxng.org/pipermail/relaxng-user/2003-December/000214.html">http://relaxng.org/pipermail/relaxng-user/2003-December/000214.html</ulink>.
 </para>
 
 <para>
@@ -215,7 +215,7 @@ ARX
 
 <synopsis>
 
-        arx {-n|-v|-h} document.xml  arx.conf {arx.conf}
+	arx {-n|-v|-h} document.xml  arx.conf {arx.conf}
 
 </synopsis>
 
@@ -246,7 +246,7 @@ prints current version;
 displays usage summary and exits.
 </para></listitem>
 </varlistentry>
-</variablelist> 
+</variablelist>
 
 <para>
 The configuration file must confrom to the following grammar:
@@ -281,20 +281,20 @@ or XSL FO.
 <programlisting>
 
       grammars {
-        docbook="docbook.rnc"
-        xslt="xslt.rnc"
-        xslfo="fo.rnc"
+	docbook="docbook.rnc"
+	xslt="xslt.rnc"
+	xslfo="fo.rnc"
       }
 
       valid {
-        start = element (book|article|chapter|reference) {any}
-        any = (element * {any}|attribute * {text}|text)*
+	start = element (book|article|chapter|reference) {any}
+	any = (element * {any}|attribute * {text}|text)*
       } =&gt; docbook
 
       !valid {
-        default namespace xsl = "http://www.w3.org/1999/XSL/Transform"
-        start = element *-xsl:* {not-xsl}
-        not-xsl = (element *-xsl:* {not-xsl}|attribute * {text}|text)*
+	default namespace xsl = "http://www.w3.org/1999/XSL/Transform"
+	start = element *-xsl:* {not-xsl}
+	not-xsl = (element *-xsl:* {not-xsl}|attribute * {text}|text)*
       } =&gt; xslt
 
       =~/.*\.xsl/ =&gt; xslt
@@ -302,7 +302,7 @@ or XSL FO.
 </programlisting>
 
 <para>
-<application>ARX</application> can also be used to link documents to any type of information or processing. 
+<application>ARX</application> can also be used to link documents to any type of information or processing.
 </para>
 </section>
 <section id="RVP">
@@ -321,13 +321,13 @@ simple protocol to perform validation. The protocol, in BNF, is:
 <programlisting>
 
      query ::= (
-           quit
-         | start
-         | start-tag-open
-         | attribute
-         | start-tag-close
-         | text
-         | end-tag) z.
+	   quit
+	 | start
+	 | start-tag-open
+	 | attribute
+	 | start-tag-close
+	 | text
+	 | end-tag) z.
        quit ::= "quit".
        start ::= "start" [gramno].
        start-tag-open ::= "start-tag-open" patno name.
@@ -370,7 +370,7 @@ number 0); if the number is omitted, 0 is assumed.
 
 <synopsis>
 
-        rvp {-q|-s|-v|-h} {schema.rnc}
+	rvp {-q|-s|-v|-h} {schema.rnc}
 
 </synopsis>
 
@@ -407,7 +407,7 @@ displays usage summary and exits.
 </para></listitem>
 </varlistentry>
 </variablelist>
-<para>To assist embedding RVP, samples in Perl 
+<para>To assist embedding RVP, samples in Perl
 (<filename>tools/rvp.pl</filename>) and Python
 (<filename>tools/rvp.py</filename>) are provided. The scripts use
 Expat wrappers for each of the languages to parse documents; they

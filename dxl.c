@@ -31,7 +31,7 @@ int dxl_allows(char *typ,char *ps,char *s,int n) {
     argc=5; p=ps; arg=0;
     for(;;) {
       if(*p=='\0') {
-        if(arg) {arg=0; ++argc;} else break;
+	if(arg) {arg=0; ++argc;} else break;
       } else arg=1;
       ++p;
     }
@@ -41,9 +41,9 @@ int dxl_allows(char *typ,char *ps,char *s,int n) {
     argv[0]=dxl_cmd; argv[1]="allows"; argv[2]=typ;
     i=3; if(i<argc) {
       for(;;) {
-        argv[i++]=ps;
+	argv[i++]=ps;
 	if(i==argc) break;
-        while(*(ps++));
+	while(*(ps++));
       }
     }
     execv(dxl_cmd,argv);

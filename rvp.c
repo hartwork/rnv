@@ -53,8 +53,8 @@
 #include "rnl.h"
 #include "rnv.h"
 #include "dxl.h"
-#include "er.h"
 #include "dsl.h"
+#include "er.h"
 
 extern int rn_notAllowed, drv_compact, rx_compact;
 

@@ -2,11 +2,14 @@
 
 1.5.0
 
+dvd: added -d and -e to rnv; I was not sure for a long time whether
+     I should do it.
+
 Tue Jan 20 04:45:39 AMT 2004
 dvd: rearranged a lot of things; put error reporting through a single
      function er_vprintf, useful for interfacing to scripting languages;
      some success with dsl -- dsl-equal? works
-     
+
 Tue Jan 20 00:24:56 AMT 2004
 dvd: renamed strops to s, memops to m, functions has s_ and m_ prefixes
 
@@ -49,7 +52,7 @@ dvd: isany is now ary_isany (ary is helpers for arx)
 Mon Jan  5 00:56:25 AMT 2004
 dvd: rnx_isany is added. It is used by arx and checks for a pattern that matches any element;
      should be written as
-              any = (element * {any}|attribute * {text}|text)*
+	      any = (element * {any}|attribute * {text}|text)*
      (triple choice, elements in any order)
 
 Sun Jan  4 03:38:10 AMT 2004

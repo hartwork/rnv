@@ -76,8 +76,9 @@ int dsl_allows(char *typ,char *ps,char *s,int n) {
     }
     shere(bp,sp); bp+=strnesc(bp,s,n);
     while((*(bp++)=*(sp++)));
+    scm_egc();
     ret=scm_evstr(buf);
-    m_free(buf); 
+    m_free(buf);
   }
   return ret!=BOOL_F;
 }
@@ -95,6 +96,7 @@ int dsl_equal(char *typ,char *val,char *s,int n) {
     shere(bp,sp); bp+=stresc(bp,val);
     shere(bp,sp); bp+=strnesc(bp,s,n);
     while((*(bp++)=*(sp++)));
+    scm_egc();
     ret=scm_evstr(buf);
     m_free(buf);
   }
