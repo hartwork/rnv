@@ -1,6 +1,5 @@
 /* $Id$ */
 
-#include <stdlib.h>
 #include <string.h> /*strlen,strcpy,strcmp*/
 #include <stdio.h> /*stderr for error_handler*/
 #include <assert.h>

@@ -1,7 +1,6 @@
 /* $Id$ */
 
 #include <stdarg.h>
-#include <stdlib.h>
 #include <fcntl.h>  /*open,close*/
 #include UNISTD_H   /*open,read,close*/
 #include <stdio.h>  /*fprintf,stderr*/

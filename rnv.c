@@ -1,6 +1,5 @@
 /* $Id$ */
 
-#include <stdlib.h>
 #include <string.h> /*strerror,strncpy,strrchr*/
 #include <stdio.h>
 #include "memops.h"

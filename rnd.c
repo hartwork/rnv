@@ -1,6 +1,5 @@
 /* $Id$ */
 
-#include <stdlib.h>
 #include <string.h> /*memcpy*/
 #include <stdio.h>
 #include <assert.h>
@@ -76,8 +75,8 @@ static void flatten(int p) { if(!marked(p)) {flat[n_f++]=p; mark(p);}}
 void rnd_deref(int start) {
   int p,p1,p2,nc,i,changed;
 
-  flat=(int*)calloc(len_f=LEN_F,sizeof(int)); n_f=0;
-  refs=(int*)calloc(len_r=LEN_R,sizeof(int)); n_r=0;
+  flat=(int*)memalloc(len_f=LEN_F,sizeof(int)); n_f=0;
+  refs=(int*)memalloc(len_r=LEN_R,sizeof(int)); n_r=0;
   errors=0;
 
   if(P_IS(start,REF)) start=deref(start);
@@ -124,7 +123,7 @@ void rnd_deref(int start) {
   } while(i!=n_f);
   for(i=0;i!=n_f;++i) unmark(flat[i]);
   for(i=0;i!=n_r;++i) {p=refs[i]; rn_pattern[p+1]=0; unmark(p);}
-  free(refs);
+  memfree(refs);
 }
 
 static int loop(int p) {
@@ -164,7 +163,7 @@ static void loops(void) {
       if(i==0) error(RND_ER_LOOPST); else {
 	char *s=rnx_nc2str(nc);
 	error(RND_ER_LOOPEL,s);
-	free(s);
+	memfree(s);
       }
     }
     for(;;) {++i;
@@ -216,7 +215,7 @@ static void ctypes(void) {
       if(!contentType(p1)) {
 	char *s=rnx_nc2str(nc);
 	error(RND_ER_CTYPE,s);
-	free(s);
+	memfree(s);
       }
     }
   }
@@ -348,18 +347,18 @@ static void path(int p,int nc) {
   case P_INTERLEAVE: Interleave(p,p1,p2); goto BINARY;
   case P_GROUP: Group(p,p1,p2); goto BINARY;
   case P_DATA_EXCEPT: DataExcept(p,p1,p2); 
-    if(bad_data_except(p2)) {char *s=rnx_nc2str(nc); error(RND_ER_BADEXPT,s); free(s);}
+    if(bad_data_except(p2)) {char *s=rnx_nc2str(nc); error(RND_ER_BADEXPT,s); memfree(s);}
     goto BINARY;
   BINARY: path(p1,nc); path(p2,nc); break;
 
   case P_ONE_OR_MORE: OneOrMore(p,p1); 
-    if(bad_one_or_more(p1,0)) {char *s=rnx_nc2str(nc); error(RND_ER_BADMORE,s); free(s);}
+    if(bad_one_or_more(p1,0)) {char *s=rnx_nc2str(nc); error(RND_ER_BADMORE,s); memfree(s);}
     goto UNARY;
   case P_LIST: List(p,p1); 
-    if(bad_list(p1)) {char *s=rnx_nc2str(nc); error(RND_ER_BADLIST,s); free(s);}
+    if(bad_list(p1)) {char *s=rnx_nc2str(nc); error(RND_ER_BADLIST,s); memfree(s);}
     goto UNARY;
   case P_ATTRIBUTE: Attribute(p,nc1,p1); 
-    if(bad_attribute(p1)) {char *s=rnx_nc2str(nc),*s1=rnx_nc2str(nc1); error(RND_ER_BADATTR,s1,s); free(s1); free(s);}
+    if(bad_attribute(p1)) {char *s=rnx_nc2str(nc),*s1=rnx_nc2str(nc1); error(RND_ER_BADATTR,s1,s); memfree(s1); memfree(s);}
     goto UNARY;
   UNARY: path(p1,nc); break; 
 
@@ -445,6 +444,6 @@ void rnd_traits(void) {
 
 int rnd_release(void) {
   int start=flat[0];
-  free(flat); flat=NULL;
+  memfree(flat); flat=NULL;
   return start;
 }

@@ -1,6 +1,5 @@
 /* $Id$ */
 
-#include <stdlib.h>
 #include <string.h> /* strcmp,memcmp,strlen,strcpy,strclone,memcpy,memset */
 
 #include "memops.h"

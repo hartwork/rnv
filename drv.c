@@ -1,7 +1,6 @@
 /* $Id$ */
 
 #include <string.h> /*strcmp*/
-#include <stdlib.h> 
 #include <stdio.h>
 #include "xmlc.h" /*xmlc_white_space*/
 #include "memops.h"

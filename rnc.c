@@ -2,7 +2,6 @@
 
 #include <fcntl.h> /* open, close */
 #include UNISTD_H /* open,read,close */
-#include <stdlib.h>
 #include <string.h> /* memcpy,strlen,strcpy,strcat,strclone */
 #include <stdio.h> /*stderr,fprintf*/
 #include <errno.h> /*errno*/
@@ -688,7 +687,7 @@ static void fold_efs(struct rnc_source *sp,struct sc_stack *stp,void (*fold)(str
   int len=stp->top-stp->base-1;
   if(len!=0) {
     int i;
-    int (*tab)[SC_RECSIZE]=(int(*)[SC_RECSIZE])calloc(len,sizeof(int[SC_RECSIZE]));
+    int (*tab)[SC_RECSIZE]=(int(*)[SC_RECSIZE])memalloc(len,sizeof(int[SC_RECSIZE]));
     memcpy(tab,stp->tab+stp->base+1,len*sizeof(int[SC_RECSIZE]));
     sc_close(stp);
     for(i=0;i!=len;++i) fold(sp,stp,tab[i][0],tab[i][1],tab[i][2]);
