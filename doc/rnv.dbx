@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <article>
+
 <title>
-RNV — Relax NG Compact Syntax Validator in C
+RNV &#x2014; Relax NG Compact Syntax Validator in C
 </title>
 <subtitle>
 Version 1.3
@@ -63,9 +64,6 @@ The package consists of:
 <listitem><para><filename>Makefile.bcc</filename> for Win32 and Borland C/C++ Compiler;
 </para></listitem>
 <listitem><para><filename>tools/xck</filename>, a simple shell script I am using to validate documents;
-</para></listitem>
-<listitem><para><filename>tools/rnv.vim</filename>, a plug-in for Vim;
-</para></listitem><listitem><para><filename>tools/arx.conf</filename>, <application>ARX</application> configuration file;
 </para></listitem>
 <listitem><para><filename>tools/*.rnc</filename>, sample Relax NG grammars;
 </para></listitem>
@@ -188,9 +186,12 @@ RNV for Win32 platforms is a Unix program compiled on Win32. It expects file pat
 </programlisting>
 </listitem>
 </itemizedlist>
-
-
 </section>
+
+<section>
+<title>Applications</title>
+<para>The distribution includes several utilities built upon <application>RNV</application>; they are listed and described in the following sections.
+</para> 
 
 <section>
 <title>
@@ -295,14 +296,17 @@ The sample below associates documents with grammars for XSLT, DocBook or XSL FO.
 </para>
 </section>
 <section>
-<title>Applications</title>
-<para>The distribution includes several utilities built upon <application>RNV</application>; they are listed and described in the section.
-</para> 
-<section>
 <title>
 RVP
 </title>
-<para><application>RVP</application> is abbreviation for <emphasis role="bold">R</emphasis>elax NG <emphasis role="bold">V</emphasis>alidation <emphasis role="bold">P</emphasis>ipe. It reads validation primitives from the standard input and reports result to the standard output; it's main purpose is to ease embedding of a Relax NG validator into various languages and environment. An apllication would launch <application>RVP</application> as a parallel process and use a simple protocol to perform validation. The protocol, in BNF, is:
+<para><application>RVP</application> is abbreviation for <emphasis
+role="bold">R</emphasis>elax NG <emphasis role="bold">V</emphasis>alidation
+<emphasis role="bold">P</emphasis>ipe. It reads validation primitives
+from the standard input and reports result to the standard output;
+it's main purpose is to ease embedding of a Relax NG validator into
+various languages and environment. An apllication would launch
+<application>RVP</application> as a parallel process and use a
+simple protocol to perform validation. The protocol, in BNF, is:
 </para>
 <programlisting>
 
@@ -331,11 +335,13 @@ Error codes can be grabbed from rvp sources by <command>grep -l
 _ER_ *.h</command> and OR-ing them with corresponding masks from
 erbit.h. Additionally, error 0 is the protocol format error.
 </para></listitem>
-<listitem><para>
-Either "er" or "error" responses are returned, not both; <option>-q</option>
-chooses between concise and verbose forms (invocation syntax described later).
+<listitem><para> Either "er" or "error" responses are returned, not
+both; <option>-q</option> chooses between concise and verbose forms
+(invocation syntax described later).
 </para></listitem>
-<listitem><para><command>start</command> passes the index of grammar (first grammar in the list is number 0); if the number is omitted, 0 is assumed.
+<listitem><para><command>start</command> passes the index of a
+grammar (first grammar in the list of command-line arguments has
+number 0); if the number is omitted, 0 is assumed.
 </para></listitem>
 </itemizedlist>
 <para>The command-line syntax is:
@@ -379,9 +385,26 @@ displays usage summary and exits.
 </para></listitem>
 </varlistentry>
 </variablelist>
-<para>To assist embedding RVP, a sample in perl is provided, <filename>tools/rvp.pl</filename>. The script uses XML::Parser::Expat; it takes a Relax NG grammar (in the compact syntax) as the command line argument and reads the XML from the standard input. The script is not designed as a general-purpose module, instead, it is kept simple and unobscured to illustrate the technique.
+<para>To assist embedding RVP, samples in Perl 
+(<filename>tools/rvp.pl</filename>) and Python
+(<filename>tools/rvp.py</filename>) are provided. The scripts use
+Expat wrappers for each of the languages to parse documents; they
+take a Relax NG grammar (in the compact syntax) as the command line
+argument and read the XML from the standard input. For example, the
+following commands validate <filename>rnv.dbx</filename> against
+<filename>docbook.rnc</filename>:
 </para>
-<para>Perl (as well as Python, Ruby and other) programmers are encouraged to implement and share general-purpose modules for their languages of choice.
+<programlisting>
+
+      perl rvp.pl docbook.rnc &lt; rnv.dbx
+      python rvp.py docbook.rnc &lt; rnv.dbx
+
+</programlisting>
+<para>The scripts are  kept simple and unobscured to illustrate the
+technique, rather than being designed as general-purpose modules.
+Programmers using Perl, Python, Ruby and other languages are
+encouraged to implement and share general-purpose modules for their
+languages of choice.
 </para>
 </section>
 </section>
