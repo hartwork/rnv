@@ -36,12 +36,16 @@ extern int rn_notAllowed,rx_compact,drv_compact;
 #define XCL_ER_NOXENT 2
 #define XCL_ER_NOSID 3
 
+#define PIXGFILE "davidashen-net-xg-file"
+#define PIXGPOS "davidashen-net-xg-pos"
+
 static int peipe,verbose,nexp,rnck;
 static char *xml;
 static XML_Parser expat=NULL;
 static int start,current,previous;
 static int mixed=0;
 static int lastline,lastcol,level;
+static char *xgfile=NULL,*xgpos=NULL;
 static int ok;
 
 /* Expat does not normalize strings on input */
@@ -54,8 +58,9 @@ static void verror_handler(int erno,va_list ap) {
     rnl_default_verror_handler(erno&~ERBIT_RNL,ap);
   } else {
     int line=XML_GetCurrentLineNumber(expat),col=XML_GetCurrentColumnNumber(expat);
-    if(line!=lastline||col!=lastcol) {
-      (*er_printf)("error (%s,%i,%i): ",xml,lastline=line,lastcol=col);
+    if(line!=lastline||col!=lastcol) { lastline=line; lastcol=col;
+      if(xgfile) (*er_printf)("error (%s,%s): ",xgfile,xgpos); else
+      (*er_printf)("error (%s,%i,%i): ",xml,line,col);
       if(erno&ERBIT_RNV) {
 	rnv_default_verror_handler(erno&~ERBIT_RNV,ap);
 	if(nexp) { int req=2, i=0; char *s;
@@ -150,6 +155,18 @@ static void characters(void *userData,const char *s,int len) {
   }
 }
 
+static void processingInstruction(void *userData,
+    const char *target,const char *data) {
+  if(strcmp(PIXGFILE,target)==0) {
+    if(xgfile) m_free(xgfile); 
+    xgfile=s_clone((char*)data);
+  } else if(strcmp(PIXGPOS,target)==0) {
+    if(xgpos) m_free(xgpos);
+    xgpos=s_clone((char*)data);
+    *strchr(xgpos,' ')=',';
+  }
+}
+
 static int pipeout(void *buf,int len) {
   int ofs=0,iw,lenw=len;
   for(;;) {
@@ -210,6 +227,7 @@ static void validate(int fd) {
   XML_SetElementHandler(expat,&start_element,&end_element);
   XML_SetCharacterDataHandler(expat,&characters);
   XML_SetExternalEntityRefHandler(expat,&externalEntityRef);
+  XML_SetProcessingInstructionHandler(expat,&processingInstruction);
   XML_SetBase(expat,xml);
   ok=process(fd);
   XML_ParserFree(expat);

@@ -1,5 +1,9 @@
 /* $Id$ */
 
+1.6.2 Mon Mar  8 13:22:52 AMT 2004
+dvd: Added processing of davidashen-net-xg-file and -pos PIs to
+     work with xg.
+
 1.6.1 Mon Mar  1 12:55:48 AMT 2004
 dvd: Added ranlib to Makefile to make rnv build smoothly on Mac OS X.
 
