@@ -11,18 +11,23 @@ extern void drv_clear();
 extern void drv_add_dtl(char *suri,int (*equal)(char *typ,char *val,char *s,int n),int (*allows)(char *typ,char *ps,char *s,int n));
 
 extern int drv_start_tag_open(int p,char *suri,char *sname);
+extern int drv_start_tag_open_recover(int p,char *suri,char *sname);
 extern int drv_attribute(int p,char *suri,char *sname,char *s);
+extern int drv_attribute_recover(int p,char *suri,char *sname,char *s);
 extern int drv_start_tag_close(int p);
+extern int drv_start_tag_close_recover(int p);
 extern int drv_text(int p,char *s,int n);
+extern int drv_text_recover(int p,char *s,int n);
 extern int drv_end_tag(int p);
-
-extern int drv_n_exp, *drv_exp;
-extern void drv_expected(int p);
+extern int drv_end_tag_recover(int p);
 
 #endif
 
 /*
  * $Log$
+ * Revision 1.7  2003/12/14 10:39:58  dvd
+ * +rnx
+ *
  * Revision 1.6  2003/12/13 22:03:30  dvd
  * rnv works
  *

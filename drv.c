@@ -19,9 +19,7 @@ struct dtl {
 #define LEN_EXP 16
 
 static struct dtl *dtl;
-int *drv_exp;
-int drv_n_exp;
-static int len_dtl,len_exp,n_dtl;
+static int len_dtl,n_dtl;
 
 static int fallback_equal(char *typ,char *val,char *s,int n) {return 1;}
 static int fallback_allows(char *typ,char *ps,char *s,int n) {return 1;}
@@ -42,8 +40,6 @@ static int initialized=0;
 void drv_init() {
   if(!initialized) { initialized=1;
     dtl=(struct dtl*)calloc(len_dtl=LEN_DTL,sizeof(struct dtl));
-    drv_exp=(int*)calloc(len_exp=LEN_EXP,sizeof(int));
-
     windup();
   }
 }
@@ -144,6 +140,7 @@ static int start_tag_open(int p,int uri,int name) {
 }
 
 int drv_start_tag_open(int p,char *suri,char *sname) {return start_tag_open(p,newString(suri),newString(sname));}
+int drv_start_tag_open_recover(int p,char *suri,char *sname) {return rn_notAllowed;}
 
 static int text(int p,char *s,int n);
 static int attribute(int p,int uri,int name,char *s) {
@@ -185,7 +182,11 @@ int drv_attribute(int p,char *suri,char *sname,char *s) {
   return attribute(p,newString(suri),newString(sname),s);
 }
 
-static int start_tag_close(int p) {
+int drv_attribute_recover(int p,char *suri,char *sname,char *s) {
+  return p;
+}
+
+static int start_tag_close(int p,int recover) {
   int p1,p2,ret=0;
   switch(P_TYP(p)) {
   case P_EMPTY: case P_NOT_ALLOWED: case P_TEXT:
@@ -194,28 +195,29 @@ static int start_tag_close(int p) {
     ret=p;
     break;
   case P_CHOICE: Choice(p,p1,p2);
-    ret=rn_choice(start_tag_close(p1),start_tag_close(p2));
+    ret=rn_choice(start_tag_close(p1,recover),start_tag_close(p2,recover));
     break;
   case P_INTERLEAVE: Interleave(p,p1,p2);
-    ret=rn_ileave(start_tag_close(p1),start_tag_close(p2));
+    ret=rn_ileave(start_tag_close(p1,recover),start_tag_close(p2,recover));
     break;
   case P_GROUP: Group(p,p1,p2);
-    ret=rn_group(start_tag_close(p1),start_tag_close(p2));
+    ret=rn_group(start_tag_close(p1,recover),start_tag_close(p2,recover));
     break;
   case P_ONE_OR_MORE: OneOrMore(p,p1);
-    ret=rn_one_or_more(start_tag_close(p1));
+    ret=rn_one_or_more(start_tag_close(p1,recover));
     break;
   case P_ATTRIBUTE: 
-    ret=rn_notAllowed;
+    ret=recover?rn_empty:rn_notAllowed;
     break;
   case P_AFTER: After(p,p1,p2);
-    ret=rn_after(start_tag_close(p1),p2);
+    ret=rn_after(start_tag_close(p1,recover),p2);
     break;
   default: assert(0);
   }
   return ret;
 }
-int drv_start_tag_close(int p) {return start_tag_close(p);}
+int drv_start_tag_close(int p) {return start_tag_close(p,0);}
+int drv_start_tag_close_recover(int p) {return start_tag_close(p,1);}
 
 static int list(int p,char *s,int n) {
   char *end=s+n,*sp=s;
@@ -280,8 +282,9 @@ static int textws(int p,char *s,int n) {
   return ws?rn_choice(p,p1):p1;
 }
 int drv_text(int p,char *s,int n) {return textws(p,s,n);}
+int drv_text_recover(int p,char *s,int n) {return p;}
 
-static int end_tag(int p) {
+static int end_tag(int p,int recover) {
   int p1,p2,ret=0;
   switch(P_TYP(p)) {
   case P_EMPTY: case P_NOT_ALLOWED: case P_TEXT:
@@ -291,59 +294,23 @@ static int end_tag(int p) {
     ret=rn_notAllowed;
     break;
   case P_CHOICE: Choice(p,p1,p2);
-    ret=rn_choice(end_tag(p1),end_tag(p2));
+    ret=rn_choice(end_tag(p1,recover),end_tag(p2,recover));
     break;
   case P_AFTER: After(p,p1,p2);
-    ret=nullable(p1)?p2:rn_notAllowed;
+    ret=(recover||nullable(p1))?p2:rn_notAllowed;
     break;
   default: assert(0);
   }
   return ret;
 }
-int drv_end_tag(int p) {return end_tag(p);}
-
-static void expected(int p) {
-  int p1,p2,px=0,i;
-  switch(P_TYP(p)) {
-  case P_ERROR: break;
-  case P_EMPTY: break;
-  case P_NOT_ALLOWED: break;
-  case P_TEXT: px=p; break;
-  case P_CHOICE: Choice(p,p1,p2); expected(p1); expected(p2); break;
-  case P_INTERLEAVE: Interleave(p,p1,p2); expected(p1); expected(p2); break;
-  case P_GROUP: Group(p,p1,p2); expected(p1); if(nullable(p1)) expected(p2); break;
-  case P_ONE_OR_MORE: OneOrMore(p,p1); expected(p1); break;
-  case P_LIST: List(p,p1); expected(p1); break;
-  case P_DATA: px=p; break;
-  case P_DATA_EXCEPT: DataExcept(p,p1,p2); expected(p1); break;
-  case P_VALUE: px=p; break;
-  case P_ATTRIBUTE: px=p; break;
-  case P_ELEMENT: px=p; break;
-  case P_AFTER: After(p,p1,p2); expected(p1); px=p; break;
-  case P_REF: break;
-  default: assert(0);
-  }
-  if(px) {
-    for(i=0;i!=drv_n_exp;++i) {
-      if(drv_exp[i]==px) {px=0; break;}
-    }
-    if(px) {
-      if(drv_n_exp==len_exp) {
-	int *newexp=(int*)calloc(len_exp*=2,sizeof(int));
-	memcpy(newexp,drv_exp,drv_n_exp*sizeof(int)); free(drv_exp);
-	drv_exp=newexp;
-      }
-      drv_exp[drv_n_exp++]=px;
-    }
-  }
-}
-void drv_expected(int p) {
-  drv_n_exp=0;
-  expected(p);
-}
+int drv_end_tag(int p) {return end_tag(p,0);}
+int drv_end_tag_recover(int p) {return end_tag(p,1);}
 
 /*
  * $Log$
+ * Revision 1.8  2003/12/14 10:39:58  dvd
+ * +rnx
+ *
  * Revision 1.7  2003/12/13 22:31:54  dvd
  * a few bugfixes
  *

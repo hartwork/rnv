@@ -10,13 +10,15 @@
 #include "rn.h"
 #include "rnc.h"
 #include "rnd.h"
+#include "rnx.h"
 #include "drv.h"
 
 #define RNV_VERSION "1.0.0"
 
-static int start,current,previous;
+static char *xml;
 static XML_Parser expat;
-char *xml;
+static int start,current,previous;
+static int errors;
 
 static void init() {
   rn_init();
@@ -38,30 +40,35 @@ static int load_rnc(char *fn) {
   return 1;
 }
 
-static void explain_error() {
+static void error() {
   char *s;
-  drv_expected(previous);
-  if(drv_n_exp!=0) {
+  ++errors;
+  rnx_expected(previous);
+  if(rnx_n_exp!=0) {
     int i;
     fprintf(stderr,"invalid document (%s,%i,%i)\nexpected:\n",xml,XML_GetCurrentLineNumber(expat),XML_GetCurrentColumnNumber(expat));
-    for(i=0;i!=drv_n_exp;++i) {
-      fprintf(stderr,"\t%s\n",s=p2str(drv_exp[i]));
+    for(i=0;i!=rnx_n_exp;++i) {
+      fprintf(stderr,"\t%s\n",s=p2str(rnx_exp[i]));
       free(s);
     }
   }
 }
 
-static char *suri,*sname;
+static char *suri=NULL,*sname;
+static int len_suri=-1;
 
 static void qname(char *name) {
-  char *sep;
+  char *sep,len;
   sep=strrchr(name,':'); 
   if(sep) {
     sname=sep+1;
   } else {
     sep=sname=name;
   }
-  suri=(char*)calloc(sep-name+1,sizeof(char));
+  len=sep-name+1;
+  if(len>len_suri) { len_suri=len;
+    free(suri); suri=(char*)calloc(len_suri,sizeof(char));
+  }
   strncpy(suri,name,sep-name);
   suri[sep-name]='\0';
 }
@@ -70,41 +77,55 @@ static void start_element(void *userData,const char *name,const char **attrs) {
   if(current!=rn_notAllowed) { 
     qname((char*)name);
     current=drv_start_tag_open(previous=current,suri,sname);
-    free(suri);
-    for(;;) {
-      if(current==rn_notAllowed) {
-	explain_error();
-	break;
-      }
+    if(current==rn_notAllowed) {
+      error();
+      current=drv_start_tag_open_recover(previous,suri,sname);
+    }
+    while(current) {
       if(!(*attrs)) break;
       qname((char*)*attrs);
       ++attrs;
       current=drv_attribute(previous=current,suri,sname,(char*)*attrs);
-      free(suri);
+      if(current==rn_notAllowed) {
+	error();
+	current=drv_attribute_recover(previous,suri,sname,(char*)*attrs);
+      }
       ++attrs;
     }
-    current=drv_start_tag_close(previous=current);
-    if(current==rn_notAllowed) explain_error();
+    if(current) {
+      current=drv_start_tag_close(previous=current);
+      if(current==rn_notAllowed) {
+	error();
+	current=drv_start_tag_close_recover(previous);
+      }
+    }
   }
 }
 
 static void end_element(void *userData,const char *name) {
   if(current!=rn_notAllowed) {
     current=drv_end_tag(previous=current);
-    if(current==rn_notAllowed) explain_error();
+    if(current==rn_notAllowed) {
+      error();
+      current=drv_end_tag_recover(previous);
+    }
   }
 }
 
 static void characters(void *userData,const char *s,int len) {
   if(current!=rn_notAllowed) {
     current=drv_text(previous=current,(char*)s,len);
-    if(current==rn_notAllowed) explain_error();
+    if(current==rn_notAllowed) {
+      error();
+      current=drv_text_recover(previous,(char*)s,len);
+    }
   }
 }
 
 static int validate(int fd) {
   char *buf; int len;
   previous=current=start;
+  errors=0;
 
   expat=XML_ParserCreateNS(NULL,':');
   XML_SetElementHandler(expat,&start_element,&end_element);
@@ -125,7 +146,7 @@ static int validate(int fd) {
     }
   }
   XML_ParserFree(expat);
-  return current!=rn_notAllowed;
+  return !errors;
 
 PARSE_ERROR:
   fprintf(stderr,"%s (%s,%i,%i)\n",XML_ErrorString(XML_GetErrorCode(expat)),xml,XML_GetCurrentLineNumber(expat),XML_GetCurrentColumnNumber(expat));
@@ -170,6 +191,9 @@ ERRORS:
 
 /*
  * $Log$
+ * Revision 1.12  2003/12/14 10:39:58  dvd
+ * +rnx
+ *
  * Revision 1.11  2003/12/13 22:55:04  dvd
  * cleanups
  *

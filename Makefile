@@ -9,6 +9,7 @@ OBJ=\
 rn.o \
 rnc.o \
 rnd.o \
+rnx.o \
 drv.o \
 xsd.o \
 er.o \
@@ -32,6 +33,9 @@ clean:
 	-rm -f *.o rnv rnd_test *_test *.core *.gmon
 
 # $Log$
+# Revision 1.17  2003/12/14 10:39:58  dvd
+# +rnx
+#
 # Revision 1.16  2003/12/13 22:34:45  dvd
 # cleanups
 #
