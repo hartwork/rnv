@@ -1,5 +1,9 @@
 /* $Id$ */
 
+1.7.0 Sat Mar 27 19:26:39 AMT 2004
+dvd: entities are not expanded, use XX if you need to.
+     error messages have the same syntax as Jing's.
+
 1.6.6 Sun Mar 21 22:41:10 AMT 2004
 dvd: turned on parsing of external parameter entities;
      with the next next release rnv will be split in two;

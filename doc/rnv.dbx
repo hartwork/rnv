@@ -5,7 +5,7 @@
 RNV — Relax NG Compact Syntax Validator in C
 </title>
 <subtitle>
-Version 1.6
+Version 1.7
 </subtitle>
 
 <abstract>
@@ -18,6 +18,14 @@ RNV is a part of an on-going work, and the current code can have bugs and shortc
  </abstract>
 
 <section>
+<title>News since 1.6</title>
+<para>The format for error messages is similar to that of Jing
+(file name, line and column are colon-separated). Entities and
+DTD processing is moved out of RNV, use XX, available from the
+same download location, to expand entities.
+</para>
+</section>
+<section>
 <title>
 New since 1.5
 </title>
@@ -27,16 +35,6 @@ an acquired test suite and published schemata, but have found that I
 can make more bugs than they cover, thus a reworked an extended test
 suite is now used for testing. The code has also been cleaned up and
 simplified in places during porting to Plan9.
-</para>
-</section>
-<section>
-<title>News since 1.4</title>
-<para>Two ways to use extension datatype libraries are implemented for RNV;
-they allow to extend type-checking capabilities of Relax NG for data 
-far beyond the scope of XML Schema datatypes. RNV now parses external system
-entities, it was my omission not to implement this earlier, and I am glad 
-it is done now. Memory usage and diagnostics have been improved, and the source
-code has been rearranged again for better modularity.
 </para>
 </section>
 
