@@ -25,6 +25,9 @@ rnv: ${OBJ}
 	${CC} ${OPT} ${LBL} -o rnv ${OBJ} ${LIB} 
 
 # $Log$
+# Revision 1.12  2003/12/11 17:01:31  dvd
+# utf8 is handled properly
+#
 # Revision 1.11  2003/12/10 22:23:52  dvd
 # *** empty log message ***
 #
@@ -58,3 +61,21 @@ rnv: ${OBJ}
 # Revision 1.1  2003/11/23 16:31:10  dvd
 # Makefile added
 #
+# DO NOT DELETE
+
+drv.o: rn.h drv.h
+er.o: er.h
+ht.o: ht.h
+ht_test.o: ht.h
+rn.o: util.h ht.h rn.h
+rnc.o: util.h u.h er.h rn.h sc.h rnc.h
+rnd.o: er.h rn.h rnd.h
+rnv.o: rnc.h rnd.h
+sc.o: sc.h
+u.o: u.h
+u_test.o: u.h
+u_test2.o: u.h
+u_test3.o: u.h
+util.o: util.h
+util_test.o: util.h
+xsd.o: xsd.h

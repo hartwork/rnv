@@ -3,27 +3,37 @@
 #include "u.h"
 
 #define ux(u,c) (((u)<<6)|(c&0x3F))
-
 #define u1(t) t[0]
 #define u2(t) ux(t[0]&0x1F,t[1])
 #define u3(t) ux(ux(t[0]&0xF,t[1]),t[2])
 #define u4(t) ux(ux(ux(t[0]&0x7,t[1]),t[2]),t[3])
 #define u5(t) ux(ux(ux(ux(t[0]&0x3,t[1]),t[2]),t[3]),t[4])
-#define u6(t) ux(ux(ux(ux(ux(t[0]&0x1,t[1]),t[2]),t[3]),t[4]),t[5])
+
+#define vx(c,u) c=0x80|((u)&0x3F)
+#define v1(t,u) t[0]=u
+#define v2(t,u) t[0]=0xC0|u>>6;vx(t[1],u)
+#define v3(t,u) t[0]=0xE0|u>>12;vx(t[1],u>>6);vx(t[2],u)
+#define v4(t,u) t[0]=0xF0|u>>18;vx(t[1],u>>12);vx(t[2],u>>6);vx(t[3],u)
+#define v5(t,u) t[0]=0xF8|u>>24;vx(t[1],u>>18);vx(t[2],u>>12);vx(t[3],u>>6);vx(t[4],u)
 
 int u_get(int *up,char *s) {
   unsigned char *t=(unsigned char*)s;
   if(*t<0x80) {*up=u1(t); return 1;}
-  if(*t<0xC0) {return 0;}
+  if(*t<0xC0) return 0;
   if(*t<0xE0) {*up=u2(t); return 2;} 
   if(*t<0xF0) {*up=u3(t); return 3;}
   if(*t<0xF8) {*up=u4(t); return 4;}
   if(*t<0xFC) {*up=u5(t); return 5;}
-  if(*t<0xFE) {*up=u6(t); return 6;}
   return 0;
 }
 
 int u_put(char *s,int u) {
+  unsigned char *t=(unsigned char*)s;
+  if(u<0x80) {v1(t,u); return 1;}
+  if(u<0x2000) {v2(t,u); return 2;}
+  if(u<0x100000) {v3(t,u); return 3;}
+  if(u<0x8000000) {v4(t,u); return 4;}
+  v5(t,u); return 5;
 }
 
 /* sorted range arrays */
@@ -56,6 +66,9 @@ int inRange(int u,int r[][2],int len) {
 
 /*
  * $Log$
+ * Revision 1.9  2003/12/11 17:01:31  dvd
+ * utf8 is handled properly
+ *
  * Revision 1.8  2003/12/10 23:02:13  dvd
  * prepared to add u_put
  *

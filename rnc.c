@@ -71,7 +71,7 @@ static char *kwdtab[NKWD]={
 #define SYM_DOCUMENTATION 41 /* ## */
 #define SYM_LITERAL 42
 
-#define BUFSIZE 8+U_MAXLEN
+#define BUFSIZE 128+U_MAXLEN
 #define BUFTAIL U_MAXLEN
 
 #define SRC_FREE 1
@@ -399,7 +399,7 @@ static void advance(struct rnc_source *sp) {
 		skip_comment(sp);
 	      }
 	      NXT(sp).s[i]=0; NXT(sp).sym=SYM_DOCUMENTATION; return;
-	    } else NXT(sp).s[i++]=(char)sp->v; /* UNICODE */
+	    } else i+=u_put(NXT(sp).s+i,sp->v);
 	    getv(sp);
 	  }
 	}
@@ -443,14 +443,14 @@ static void advance(struct rnc_source *sp) {
 	    if(triple) {
 	      if(i>=2 && NXT(sp).s[i-2]==q && NXT(sp).s[i-1]==q) {
 		NXT(sp).s[i-2]='\0'; break;
-	      } else NXT(sp).s[i++]=(char)sp->v; /* UNICODE */
+	      } else i+=u_put(NXT(sp).s+i,sp->v);
 	    } else {NXT(sp).s[i]='\0'; break;}
 	  } else if(sp->v<=0) {
 	    if(sp->v==-1 || !triple) {
 	      error(0,sp,ER_LLIT,sp->fn,sp->line,sp->col);
 	      NXT(sp).s[i]='\0'; break;
 	    } else NXT(sp).s[i++]='\n';
-	  } else NXT(sp).s[i++]=(char)sp->v; /* UNICODE */
+	  } else i+=u_put(NXT(sp).s+i,sp->v);
 	  getv(sp);
 	  if(i+U_MAXLEN>NXT(sp).slen) realloc_s(&NXT(sp));
 	}
@@ -462,7 +462,7 @@ static void advance(struct rnc_source *sp) {
 	if(name_start(sp->v)) {
 	  int i=0;
 	  for(;;) {
-	    NXT(sp).s[i++]=sp->v; /* UNICODE */
+	    i+=u_put(NXT(sp).s+i,sp->v);
 	    if(i+U_MAXLEN>NXT(sp).slen) realloc_s(&NXT(sp));
 	    getv(sp);
 	    if(!name_char(sp->v)) {NXT(sp).s[i]='\0'; break;}
@@ -1187,6 +1187,9 @@ int rnc_parse(struct rnc_source *sp) {
 
 /*
  * $Log$
+ * Revision 1.35  2003/12/11 17:01:31  dvd
+ * utf8 is handled properly
+ *
  * Revision 1.34  2003/12/10 23:02:13  dvd
  * prepared to add u_put
  *
