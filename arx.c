@@ -159,18 +159,20 @@ static char *sym2str(int sym) {
   return NULL;
 }
 
-#define ARX_ER_SYN 0
-#define ARX_ER_EXP 1
-#define ARX_ER_REX 2
-#define ARX_ER_RNG 3
-#define ARX_ER_NOQ 4
-#define ARX_ER_TYP 5
+#define ARX_ER_IO 0
+#define ARX_ER_SYN 1
+#define ARX_ER_EXP 2
+#define ARX_ER_REX 3
+#define ARX_ER_RNG 4
+#define ARX_ER_NOQ 5
+#define ARX_ER_TYP 6
 
 /* there is nothing in the grammar I need utf-8 processing for */
 #define err(msg) vfprintf(stderr,msg"\n",ap)
 static void verror_handler(int erno,va_list ap) {
   fprintf(stderr,"error (%s,%i,%i): ",arxfn,line,col);
   switch(erno) {
+  case ARX_ER_IO: err("I/O error: %s"); break;
   case ARX_ER_SYN: err("syntax error"); break;
   case ARX_ER_EXP: err("%s expected, %s found"); break;
   case ARX_ER_REX: err("invalid regular expression"); break;
@@ -190,8 +192,8 @@ static void error(int erno,...) {
 
 static void getcc(void) {
   for(;;) { int cc0=cc;
-    if(i_b==len_b) {i_b=0; len_b=read(arxfd,buf,BUFSIZ);}
-    cc=i_b==len_b?-1:((unsigned char*)buf)[i_b++];
+    if(i_b==len_b) {i_b=0; if((len_b=read(arxfd,buf,BUFSIZ))==-1) error(ARX_ER_IO,strerror(errno));}
+    cc=i_b>=len_b?-1:((unsigned char*)buf)[i_b++];
     if(cc==-1) {if(cc0=='\n') break; else cc='\n';}
     if(cc=='\n' && cc0=='\r') continue;
     if(cc0=='\n' || cc0=='\r') {++line; col=0;} else ++col;
