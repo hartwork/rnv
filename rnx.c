@@ -32,7 +32,7 @@ static void expected(int p,int first) {
   case P_TEXT: px=p; break;
   case P_CHOICE: Choice(p,p1,p2); expected(p1,first); expected(p2,first); break;
   case P_INTERLEAVE: Interleave(p,p1,p2); expected(p1,first); expected(p2,first); break;
-  case P_GROUP: Group(p,p1,p2); expected(p1,first); expected(p2,first||nullable(p1)); break;
+  case P_GROUP: Group(p,p1,p2); expected(p1,first); expected(p2,first&&nullable(p1)); break;
   case P_ONE_OR_MORE: OneOrMore(p,p1); expected(p1,first); break;
   case P_LIST: List(p,p1); expected(p1,first); break;
   case P_DATA: px=p; break;
@@ -44,7 +44,7 @@ static void expected(int p,int first) {
   case P_REF: break;
   default: assert(0);
   }
-  if(px) {
+  if(px&&(first||P_IS(px,ATTRIBUTE))) {
     for(i=0;i!=rnx_n_exp;++i) {
       if(rnx_exp[i]==px) {px=0; break;}
     }
