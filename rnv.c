@@ -101,25 +101,25 @@ static int whitespace(void) {
 }
 
 static void flush_text(void) {
-  if(n_t!=0) {
-    if(mixed) {
-      if(!whitespace()) {
-	current=drv_mixed_text(previous=current);
-	if(current==rn_notAllowed) {
-	  error(TEXT_NOT_ALLOWED);
-	  current=drv_mixed_text_recover(previous);
-	}
-      }
-    } else {
-      current=drv_text(previous=current,text,n_t);
+  if(mixed) {
+    if(!whitespace()) {
+      current=drv_mixed_text(previous=current);
       if(current==rn_notAllowed) {
 	error(TEXT_NOT_ALLOWED);
-	current=drv_text_recover(previous,text,n_t);
+	current=drv_mixed_text_recover(previous);
       }
     }
-    n_t=0;
+  } else {
+    current=drv_text(previous=current,text,n_t);
+    if(current==rn_notAllowed) {
+      error(TEXT_NOT_ALLOWED);
+      current=drv_text_recover(previous,text,n_t);
+    }
   }
+  n_t=0;
 }
+
+static int level=0;
 
 static void start_element(void *userData,const char *name,const char **attrs) {
   if(current!=rn_notAllowed) { 
@@ -170,6 +170,8 @@ static void start_element(void *userData,const char *name,const char **attrs) {
       }
     }
     mixed=0;
+  } else {
+    ++level;
   }
 }
 
@@ -182,6 +184,8 @@ static void end_element(void *userData,const char *name) {
       current=drv_end_tag_recover(previous);
     }
     mixed=1;
+  } else {
+    if(level==0) current=previous; else --level;
   }
 }
 

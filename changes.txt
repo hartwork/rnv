@@ -2,6 +2,7 @@
 
 1.2.1 Thu Dec 25 19:30:55 AMT 2003
 dvd: added puorg_nr to implement attribute_open correctly;
+     empty elements are correctly validated against data and values;
      equality and ordering for dateTime (and its partial variants) implemented;
      rx,xsd use overloadable error handlers with variable lists.
 
