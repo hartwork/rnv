@@ -13,6 +13,7 @@
 #define LEN_NC 256
 #define PRIME_NC 0xfb
 #define LEN_S 16384
+#define S_LEN 16
 #define LEN_PS 1024
 
 int (*rn_pattern)[P_SIZE];
@@ -363,7 +364,7 @@ void rn_init(void) {
 
     ht_init(&ht_p,len_p,&hash_p,&equal_p);
     ht_init(&ht_nc,len_nc,&hash_nc,&equal_nc);
-    ht_init(&ht_s,len_s,&hash_s,&equal_s);
+    ht_init(&ht_s,len_s/S_LEN,&hash_s,&equal_s);
 
     windup();
   }

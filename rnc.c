@@ -2,9 +2,8 @@
 
 #include <fcntl.h> /* open, close */
 #include UNISTD_H /* open,read,close */
-#include <string.h> /* memcpy,strlen,strcpy,strcat,strdup */
+#include <string.h> /* memcpy,strlen,strcpy,strcat,strclone */
 #include <stdlib.h> /* calloc,malloc,free */
-#include <stdio.h> /*stderr*/
 #include <stdarg.h> /*va_list,va_arg,va_end*/
 #include <assert.h> /*assert*/
 
@@ -104,6 +103,7 @@ struct rnc_source *rnc_alloc(void) {
   return (struct rnc_source *)malloc(sizeof(struct rnc_source));
 }
 void rnc_free(struct rnc_source *sp) {
+  memset(sp,0xff,sizeof(struct rnc_source));
   free(sp);
 }
 
@@ -115,14 +115,14 @@ static int rnc_read(struct rnc_source *sp);
 
 int rnc_stropen(struct rnc_source *sp,char *fn,char *s,int len) {
   rnc_source_init(sp);
-  sp->fn=strdup(fn);
+  sp->fn=strclone(fn);
   sp->buf=s; sp->n=len; sp->complete=1;
   return 0;
 }
 
 int rnc_bind(struct rnc_source *sp,char *fn,int fd) {
   rnc_source_init(sp);
-  sp->fn=strdup(fn); sp->fd=fd;
+  sp->fn=strclone(fn); sp->fd=fd;
   sp->buf=(char*)calloc(BUFSIZE,sizeof(char)); sp->flags=SRC_FREE;
   if(!(sp->complete=sp->fd==-1)) rnc_read(sp);
   return sp->fd;
@@ -884,10 +884,10 @@ static int parent(struct rnc_source *sp) {
 }
 
 static int relpath(struct rnc_source *sp) {
-  int ret=0;
+  int ret;
   if((ret=chksym(sp,SYM_LITERAL))) {
     int len=strlen(sp->fn)+strlen(CUR(sp).s)+1;
-    if(len>len_p) {free(path); len_p=len; path=(char*)calloc(len_p,sizeof(char));}
+    if(len>len_p) {free(path); path=(char*)calloc(len_p=len,sizeof(char));}
     strcpy(path,CUR(sp).s); abspath(path,sp->fn);
   }
   getsym(sp);
@@ -981,8 +981,9 @@ static int datatype(struct rnc_source *sp) {
 }
 
 static int params(struct rnc_source *sp) {
-  int ret=rn_i_ps();
+  int ret=0;
   if(CUR(sp).sym==SYM_LCUR) {
+    ret=rn_i_ps();
     getsym(sp);
     while(param(sp));
     chk_skip_get(sp,SYM_RCUR);
@@ -1084,7 +1085,7 @@ static int pattern(struct rnc_source *sp) {
 }
 
 static void define(struct rnc_source *sp,int name) {
-  int pat=0,flags=0;
+  int pat,flags=0;
   switch(CUR(sp).sym) {
   case SYM_ASGN: flags=DE_HEAD; break;
   case SYM_ASGN_CHOICE: flags=DE_CHOICE; break;
