@@ -1,6 +1,7 @@
 /* $Id$ */
 
-#include <string.h>
+#include <stdlib.h> /*calloc*/
+#include <string.h> /*strcpy,strlen*/
 #include "util.h"
 
 int xml_white_space(int v) {return v=='\t'||v=='\n'||v=='\r'||v==' ';}
