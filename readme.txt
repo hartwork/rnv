@@ -121,6 +121,10 @@ Invocation
           names of files being processed are not printed; in error
           messages, expected elements and attributes are not listed;
 
+   -n <num>
+          sets the maximum number of reported expected elements and
+          attributes, -q sets this to 0 and can be overriden;
+
    -p
           copies the input to the output;
 
