@@ -79,7 +79,7 @@ static XML_Parser expat=NULL;
 static int current,previous;
 static int mixed=0;
 static int ok,wf,any;
-static char *text; static int len_t;
+static char *text; static int len_txt;
 static int n_t;
 
 
@@ -112,13 +112,13 @@ static void init(void) {
     rules=(int(*)[3])m_alloc(len_r=LEN_R,sizeof(int[3]));
     ht_init(&ht_s,LEN_S,&hash_s,&equal_s);
     value=(char*)m_alloc(len_v=LEN_V,sizeof(char));
-    text=(char*)m_alloc(len_t=LEN_T,sizeof(char));
+    text=(char*)m_alloc(len_txt=LEN_T,sizeof(char));
     windup();
   }
 }
 
 static void clear(void) {
-  if(len_t>LIM_T) {m_free(text); text=(char*)m_alloc(len_t=LEN_T,sizeof(char));}
+  if(len_txt>LIM_T) {m_free(text); text=(char*)m_alloc(len_txt=LEN_T,sizeof(char));}
   ht_clear(&ht_s);
   windup();
 }
@@ -393,10 +393,10 @@ static void end_element(void *userData,const char *name) {
 
 static void characters(void *userData,const char *s,int len) {
   if(current!=rn_notAllowed) {
-    int newlen_t=n_t+len+1;
-    if(newlen_t<=LIM_T&&LIM_T<len_t) newlen_t=LIM_T;
-    else if(newlen_t<len_t) newlen_t=len_t;
-    if(len_t!=newlen_t) text=(char*)m_stretch(text,len_t=newlen_t,n_t,sizeof(char));
+    int newlen_txt=n_t+len+1;
+    if(newlen_txt<=LIM_T&&LIM_T<len_txt) newlen_txt=LIM_T;
+    else if(newlen_txt<len_txt) newlen_txt=len_txt;
+    if(len_txt!=newlen_txt) text=(char*)m_stretch(text,len_txt=newlen_txt,n_t,sizeof(char));
     memcpy(text+n_t,s,len); n_t+=len; text[n_t]='\0'; /* '\0' guarantees that the text is bounded, and strto[ld] work for data */
   }
 }

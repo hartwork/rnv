@@ -186,7 +186,7 @@ static int externalEntityRef(XML_Parser p,const char *context, const char *base,
     int fd; char *entity;
     assert(base);
     entity=(char*)m_alloc(strlen(base)+strlen(systemId)+2,1);
-    strcpy(entity,systemId); s_abspath(entity,base);
+    strcpy(entity,systemId); s_abspath(entity,(char*)base);
     if((fd=open(entity,O_RDONLY))==-1) {
       error_handler(XCL_ER_NOXENT,entity,strerror(errno));
     } else { 
