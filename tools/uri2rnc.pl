@@ -28,27 +28,28 @@ $ANY
 END
 
 my $DOCBOOK=<<END;
-start = element (book|article|part|chapter|section) { any }
+start = element (set|setindex|book|part|reference|preface|chapter|appendix|article|bibliography|glossary|index|refentry|sect1|sect2|sect3|sect4|sect5|section) { any }
 $ANY
 END
 
 my $NOTXSLT=<<END;
 default namespace xsl = "http://www.w3.org/1999/XSL/Transform"
 start = element *-xsl:* {not-xsl}
-any = (element *-xsl:* {any}|attribute * {text}|text)*
+not-xsl = (element *-xsl:* {not-xsl}|attribute * {text}|text)*
 END
 
 my $RELAXNG=<<END;
 default namespace rng = "http://relaxng.org/ns/structure/1.0"
-start = element grammar {any}
+start = element rng:* {any}
 $ANY
 END
 
 my $type;
 for($ARGV[0]) {
-  $type=(
-  valid($_,$XML) 
-    and (valid($_,$DOCBOOK) and "docbook"
+  $type=(0
+  or valid($_,$XML) 
+    and (0
+      or valid($_,$DOCBOOK) and "docbook"
       or!valid($_,$NOTXSLT) and "xslt"
       or valid($_,$RELAXNG) and "relaxng")
   or /\.x?ht(ml?)?$/	and "xhtml"
