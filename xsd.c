@@ -252,7 +252,7 @@ struct facets {
 #define PAT_FLOATING PAT_FIXED"([Ee]"PAT_INTEGER")?|INF|-INF|NaN"
 
 #define PAT_HEX_BINARY "[0-9a-fA-F]+"
-#define PAT_BASE64_BINARY "[A-Za-z0-9+/ ]+={0,2}"
+#define PAT_BASE64_BINARY "[A-Za-z0-9+/ ]+(=( ?=)?)?"
 
 #define PAT_ANY_URI "(([a-zA-Z][0-9a-zA-Z+\\-\\.]*:)?/{0,2}[0-9a-zA-Z;/?:@&=+$\\.\\-_!~*'()%]+)?(#[0-9a-zA-Z;/?:@&=+$\\.\\-_!~*'()%]+)?"
 

@@ -61,23 +61,12 @@
     monthday="--12-30-07:30"
     />
 
-  <types
-    decimal=" 123."
-    />
+  <types decimal=" 123." />
+  <types decimal="  .4570000 "/>
+  <types decimal=" -." /> <!-- error -->
 
-  <types
-    decimal="  .4570000   "
-    int="5"
-    />
-
-  <types
-    decimal=" -."
-    int="3"
-    />
-
-  <types
-    base64binary="ABCDEE=="
-    />
+  <types base64binary="ABCDEF/=" />
+  <types base64binary="1 2 3 4 5 6 = =" />
 
   <values
     hexbinary=" ABc123A "
@@ -88,15 +77,11 @@
     duration= " -P1Y10.2S "
     />
 
-  <values
-     qname = " block "
-    />
-
-  <values
-     qname = " fo:block "
-    />
-
-  <values
-     qname = " bar:block "
-     />
+  <values qname = " block " />
+  <values qname = " fo:block " />
+  <values qname = " bar:block " />
+  <values qname2 = " block " />
+  <values qname2 = " fo:block " />
+  <values qname2 = " bar:block " />
+  <values qname2 = "fo:blok"/> <!-- error -->
 </typetest>
