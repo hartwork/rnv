@@ -39,7 +39,7 @@ static void init(void) {
   }
 }
 
-#define ALLOWS "(dsl-allows? \"%s\" '(%s) \"%s\")
+#define ALLOWS "(dsl-allows? \"%s\" '(%s) \"%s\")"
 #define PARAM "(\"%s\".\"%s\")"
 #define EQUAL "(dsl-equal? \"%s\" \"%s\" \"%s\")"
 

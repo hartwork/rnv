@@ -13,3 +13,4 @@ int er_default_printf(char *format,...) {
 }
 int er_default_vprintf(char *format,va_list ap) {return vfprintf(stderr,format,ap);}
 
+

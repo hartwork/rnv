@@ -5,11 +5,17 @@ CC=cc
 
 EXPAT_H="<expat.h>"
 UNISTD_H="<unistd.h>"
+DSL_SCM=0
 
 INC=-I/usr/local/include
 LBL=-L/usr/local/lib
 
-DEF=-DDSL_SCM=1 -DEXPAT_H=${EXPAT_H} -DUNISTD_H=${UNISTD_H} -DRNV_VERSION="\"${VERSION}\"" -DARX_VERSION="\"${VERSION}\"" -DRVP_VERSION="\"${VERSION}\""
+DEF=\
+-DEXPAT_H=${EXPAT_H} \
+-DUNISTD_H=${UNISTD_H} \
+-DRNV_VERSION="\"${VERSION}\"" \
+-DARX_VERSION="\"${VERSION}\"" \
+-DRVP_VERSION="\"${VERSION}\""
 WARN=-Wall -Wstrict-prototypes  -Wmissing-prototypes -Wcast-align
 OPT=-O -g
 
@@ -17,8 +23,13 @@ CFLAGS=${INC} ${DEF} ${WARN} ${OPT}
 LFLAGS=${OPT} ${LBL}
 
 LIBEXPAT=-lexpat
-LIBSCM=-lscm
-LIB=${LIBEXPAT} ${LIBSCM} -lm
+
+LIB=${LIBEXPAT}
+
+.if ${DSL_SCM}
+DEF+=-DDSL_SCM=${DSL_SCM}
+LIB+=-lscm -lm
+.endif
 
 LIBRNVA=librnv.a
 LIBRNVSO=librnv.so
@@ -137,22 +148,27 @@ install: ${DIST}-${VERSION}.zip readme.txt changes.txt
 
 # DO NOT DELETE
 
-xcl.o: m.h erbit.h rnl.h rnv.h rnx.h ll.h
-arx.o: u.h m.h s.h xmlc.h ht.h erbit.h rnl.h rnv.h rx.h ary.h
+xcl.o: m.h erbit.h rnl.h rnv.h rnx.h er.h ll.h
+arx.o: u.h m.h s.h xmlc.h ht.h erbit.h rnl.h rnv.h rx.h er.h ary.h
+rvp.o: m.h s.h erbit.h drv.h rnl.h rnv.h dxl.h er.h dsl.h
+xsdck.o: er.h xsd.h
 ary.o: rn.h ary.h
 rn.o: m.h s.h ht.h ll.h rn.h
-rnc.o: u.h xmlc.h m.h s.h rn.h sc.h rnc.h
-rnd.o: m.h rn.h rnx.h ll.h rnd.h
+rnc.o: u.h xmlc.h m.h s.h rn.h sc.h er.h rnc.h
+rnd.o: m.h rn.h rnx.h ll.h er.h rnd.h
 rnl.o: erbit.h rn.h rnc.h rnd.h rnl.h
-rnv.o: m.h xmlc.h erbit.h drv.h rnv.h
+rnv.o: m.h xmlc.h erbit.h drv.h er.h rnv.h
 rnx.o: m.h s.h rn.h ll.h rnx.h
-drv.o: xmlc.h m.h s.h ht.h rn.h xsd.h ll.h erbit.h drv.h
-xsd.o: u.h xmlc.h s.h erbit.h rx.h xsd_tm.h xsd.h
+drv.o: xmlc.h m.h s.h ht.h rn.h xsd.h ll.h erbit.h er.h drv.h
+xsd.o: u.h xmlc.h s.h erbit.h rx.h xsd_tm.h er.h xsd.h
 xsd_tm.o: xsd_tm.h
+dxl.o: m.h er.h dxl.h
+dsl.o: dsl.h m.h er.h
 sc.o: m.h ll.h sc.h
 ht.o: m.h ht.h
+er.o: er.h
 u.o: u.h
 xmlc.o: u.h xmlc.h
 s.o: xmlc.h m.h s.h
-m.o: m.h
-rx.o: u.h xmlc.h m.h s.h ht.h ll.h rx.h rx_cls_u.c rx_cls_ranges.c
+m.o: er.h m.h
+rx.o: u.h xmlc.h m.h s.h ht.h ll.h er.h rx.h rx_cls_u.c rx_cls_ranges.c
