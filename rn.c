@@ -37,6 +37,9 @@ int newString(char *s) {
 
 #define P_NEW(x) rn_pattern[i_p][0]=P_##x
 
+void rn_del_p(int i) {ht_del(&ht_p,i);}
+void rn_add_p(int i) {ht_put(&ht_p,i);}
+
 void setNullable(int x) {if(x) rn_pattern[i_p][0]|=P_FLG_NUL;}
 void setCdata(int x) {if(x) rn_pattern[i_p][0]|=P_FLG_TXT;}
 void setContentType(int t1,int t2) {rn_pattern[i_p][0]|=(t1>t2?t1:t2);}
@@ -105,12 +108,13 @@ int newList(int p1) { P_NEW(LIST);
 
 int newData(int dt,int ps) { P_NEW(DATA);
   rn_pattern[i_p][1]=dt;
+  rn_pattern[i_p][2]=ps;
   setCdata(1);
   return accept_p();
 }
 
-int newDataExcept(int dt,int p1) { P_NEW(DATA_EXCEPT);
-  rn_pattern[i_p][1]=dt; rn_pattern[i_p][2]=p1;
+int newDataExcept(int p1,int p2) { P_NEW(DATA_EXCEPT);
+  rn_pattern[i_p][1]=p1; rn_pattern[i_p][2]=p2;
   setCdata(1);
   return accept_p();
 }
@@ -121,18 +125,18 @@ int newValue(int dt,int s) { P_NEW(VALUE);
   return accept_p();
 }
 
-int newAttribute(int nc,int p1) { P_NEW(ATTRIBUTE);
-  rn_pattern[i_p][1]=nc; rn_pattern[i_p][2]=p1;
+int newAttribute(int p1,int nc) { P_NEW(ATTRIBUTE);
+  rn_pattern[i_p][1]=p1; rn_pattern[i_p][2]=nc;
   return accept_p();
 }
 
-int newElement(int nc,int p1) { P_NEW(ELEMENT);
-  rn_pattern[i_p][1]=nc; rn_pattern[i_p][2]=p1;
+int newElement(int p1,int nc) { P_NEW(ELEMENT);
+  rn_pattern[i_p][1]=p1; rn_pattern[i_p][2]=nc;
   return accept_p();
 }
 
-int newAfter(int qn,int p1,int p2) { P_NEW(AFTER);
-  rn_pattern[i_p][1]=qn; rn_pattern[i_p][2]=p1; rn_pattern[i_p][3]=p2;
+int newAfter(int p1,int p2) { P_NEW(AFTER);
+  rn_pattern[i_p][1]=p1; rn_pattern[i_p][2]=p2;
   return accept_p();
 }
 
@@ -291,6 +295,9 @@ static int equal_s(int s1,int s2) {return strcmp(rn_string+s1,rn_string+s2)==0;}
 
 /* 
  * $Log$
+ * Revision 1.10  2003/12/07 09:06:16  dvd
+ * +rnd
+ *
  * Revision 1.9  2003/12/05 14:28:39  dvd
  * separate stacks for references
  *

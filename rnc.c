@@ -825,14 +825,14 @@ static int pattern(struct rnc_source *sp);
 
 static int element(struct rnc_source *sp) {
   int nc,p;
-  nc=nameclass(sp); chk_get(sp,SYM_LCUR); p=newElement(nc,pattern(sp)); chk_skip_get(sp,SYM_RCUR);
+  nc=nameclass(sp); chk_get(sp,SYM_LCUR); p=newElement(pattern(sp),nc); chk_skip_get(sp,SYM_RCUR);
   return p;
 }
 
 static int attribute(struct rnc_source *sp) {
   int nc,p,i=sc_find(&nss,0),nsuri=nss.tab[i][1];
   nss.tab[i][1]=0; nc=nameclass(sp);  nss.tab[i][1]=nsuri;
-  chk_get(sp,SYM_LCUR); p=newAttribute(nc,pattern(sp)); chk_skip_get(sp,SYM_RCUR);
+  chk_get(sp,SYM_LCUR); p=newAttribute(pattern(sp),nc); chk_skip_get(sp,SYM_RCUR);
   return p;
 }
 
@@ -1155,8 +1155,6 @@ int rnc_parse(struct rnc_source *sp) {
 
   start=topLevel(sp); if(start!=-1) sc_add(&defs,0,start,0);
 
- /* second pass here */
-
   if(i=sc_find(&defs,0)) {
     start=defs.tab[i][1];
   } else {
@@ -1185,6 +1183,9 @@ int main(int argc,char **argv) {
 
 /*
  * $Log$
+ * Revision 1.28  2003/12/07 09:06:16  dvd
+ * +rnd
+ *
  * Revision 1.27  2003/12/06 00:55:13  dvd
  * parses all grammars from nxml-mode samples
  *

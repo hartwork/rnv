@@ -5,7 +5,7 @@ INC=-I.
 OPT=-g -O -Wall -Wno-parentheses
 LIB=
 LBL=
-OBJ=er.o rnc.o u.o ht.o rn.o util.o sc.o
+OBJ=er.o rnc.o u.o ht.o rn.o util.o sc.o rnd.o
 
 .c.o:
 	${CC} ${INC} ${OPT} -c -o $@ $<
@@ -14,6 +14,9 @@ rnc: ${OBJ}
 	${CC} ${OPT} ${LBL} -o rnc ${OBJ} ${LIB} 
 
 # $Log$
+# Revision 1.6  2003/12/07 09:06:16  dvd
+# +rnd
+#
 # Revision 1.5  2003/12/06 00:55:13  dvd
 # parses all grammars from nxml-mode samples
 #

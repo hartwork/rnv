@@ -1,6 +1,7 @@
 /* $Id$ */
 
-#include <stdlib.h> /*calloc*/
+#include <stdlib.h> /*calloc,free*/
+#include <string.h> /*memcpy*/
 #include <assert.h> /*assert*/
 #include "sc.h"
 
@@ -65,6 +66,9 @@ int sc_add(struct sc_stack *stp,int key,int val,int aux) {
 
 /*
  * $Log$
+ * Revision 1.7  2003/12/07 09:06:16  dvd
+ * +rnd
+ *
  * Revision 1.6  2003/12/06 00:55:14  dvd
  * parses all grammars from nxml-mode samples
  *

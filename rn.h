@@ -37,15 +37,18 @@ them to variables in the local scope, and a creator.
 #define P_IS(i,x)  (P_##x==P_TYP(i))
 #define P_CHK(i,x)  assert(P_IS(i,x))
 
-#define P_FLG_NUL 0x0100
-#define P_FLG_TXT 0x0200
-#define P_FLG_CTE 0x0400
-#define P_FLG_CTC 0x0800
-#define P_FLG_CTS 0x1000
+#define P_FLG_NUL 0x00000100
+#define P_FLG_TXT 0x00000200
+#define P_FLG_CTE 0x00000400
+#define P_FLG_CTC 0x00000800
+#define P_FLG_CTS 0x00001000
+#define P_FLG_MRK 0x10000000
 
 #define nullable(i) (rn_pattern[i][0]&P_FLG_NUL)
 #define cdata(i) (rn_pattern[i][0]&P_FLG_TXT)
 #define contentType(i) (rn_pattern[i][0]&0x1C00)
+
+/* p1 always at 1, p2 always at 2 */
 
 #define Empty(i) P_CHK(i,EMPTY)
 #define NotAllowed(i) P_CHK(i,NOT_ALLOWED)
@@ -53,15 +56,15 @@ them to variables in the local scope, and a creator.
 #define Choice(i,p1,p2) P_CHK(i,CHOICE); p1=rn_pattern[i][1]; p2=rn_pattern[i][2]
 #define Interleave(i,p1,p2) P_CHK(i,INTERLEAVE); p1=rn_pattern[i][1]; p2=rn_pattern[i][2]
 #define Group(i,p1,p2) P_CHK(i,GROUP); p1=rn_pattern[i][1]; p2=rn_pattern[i][2]
-#define OneOrMore(i,p1) P_CHK(i,ONE_OR_MORE); p1=rn_pattern[i][1]
-#define List(i,p1) P_CHK(i,LIST); p1=rn_pattern[i][1]
-#define Data(i,dt,ps) P_CHK(i,DATA); dt=rn_pattern[i][1]
-#define DataExcept(i,dt,p1) P_CHK(i,DATA_EXCEPT); dt=rn_pattern[i][1]; p1=rn_pattern[i][2]
+#define OneOrMore(i,p1) P_CHK(i,ONE_OR_MORE); p1=rn_pattern[i][2]
+#define List(i,p1) P_CHK(i,LIST); p1=rn_pattern[i][2]
+#define Data(i,dt,ps) P_CHK(i,DATA); dt=rn_pattern[i][1]; ps=rn_pattern[i][2]
+#define DataExcept(i,p1,p2) P_CHK(i,DATA_EXCEPT); p1=rn_pattern[i][1]; p2=rn_pattern[i][2]
 #define Value(i,dt,s) P_CHK(i,VALUE); dt=rn_pattern[i][1]; s=rn_pattern[i][2]
-#define Attribute(i,nc,p1) P_CHK(i,ATTRIBUTE); nc=rn_pattern[i][1]; p1=rn_pattern[i][2]
-#define Element(i,nc,p1) P_CHK(i,ELEMENT); nc=rn_pattern[i][1]; p1=rn_pattern[i][2]
-#define After(i,qn,p1,p2) P_CHK(i,AFTER); qn=rn_pattern[i][1]; p1=rn_pattern[i][2]; p2=rn_pattern[i][3]
-#define Ref(i,p) P_CHK(i,REF); p=rn_pattern[i][1]
+#define Attribute(i,p1,nc) P_CHK(i,ATTRIBUTE); p1=rn_pattern[i][1]; nc=rn_pattern[i][2]
+#define Element(i,p1,nc) P_CHK(i,ELEMENT); p1=rn_pattern[i][1]; nc=rn_pattern[i][2]
+#define After(i,p1,p2) P_CHK(i,AFTER); p1=rn_pattern[i][1]; p2=rn_pattern[i][2]
+#define Ref(i,p) P_CHK(i,REF); p=rn_pattern[i][2]
 
 /* Name Classes */
 #define NC_ERROR 0
@@ -90,11 +93,14 @@ extern int rn_empty,rn_text,rn_notAllowed;
 
 extern char *rn_string;
 
-#define P_SIZE 4
+#define P_SIZE 3
 #define NC_SIZE 3
 
 extern int (*rn_pattern)[P_SIZE];
 extern int (*rn_nameclass)[NC_SIZE];
+
+extern void rn_del_p(int i);
+extern void rn_add_p(int i);
 
 extern void setNullable(int x);
 extern void setCdata(int x);
@@ -111,11 +117,11 @@ extern int newGroup(int p1,int p2);
 extern int newOneOrMore(int p1);
 extern int newList(int p1);
 extern int newData(int dt,int ps);
-extern int newDataExcept(int dt,int p1);
+extern int newDataExcept(int p1,int p2);
 extern int newValue(int dt,int s);
-extern int newAttribute(int nc,int p1);
-extern int newElement(int nc,int p1);
-extern int newAfter(int qn,int p1,int p2);
+extern int newAttribute(int p1,int nc);
+extern int newElement(int p1,int nc);
+extern int newAfter(int p1,int p2);
 extern int newRef();
 
 extern int rn_groupable(int p1,int p2);
@@ -139,6 +145,9 @@ extern void rn_clear();
 
 /*
  * $Log$
+ * Revision 1.12  2003/12/07 09:06:16  dvd
+ * +rnd
+ *
  * Revision 1.11  2003/12/05 14:28:39  dvd
  * separate stacks for references
  *
