@@ -39,7 +39,7 @@ static void default_ver_handler(int er_no,va_list ap) {
     vfprintf(stderr,"lexical error: illegal character \\x{%x} (%s,%u,%u)\n",ap);
     break;
   case ER_SEXP:
-    vfprintf(stderr,"syntax error: %s expected (%s,%u<%u)\n",ap);
+    vfprintf(stderr,"syntax error: %s expected (%s,%u,%u)\n",ap);
     break;
   case ER_SILL:
     vfprintf(stderr,"syntax error: %s unexpected  (%s,%u,%u)\n",ap);
@@ -53,6 +53,9 @@ static void default_ver_handler(int er_no,va_list ap) {
 
 /*
  * $Log$
+ * Revision 1.8  2003/11/27 14:19:15  dvd
+ * syntax done, now to includes
+ *
  * Revision 1.7  2003/11/26 23:49:00  dvd
  * syntax almost ready
  *
