@@ -387,7 +387,7 @@ static void windup(void) {
 
 static int hash_p(int p) {
   int *pp=rn_pattern[p];
-  return (pp[0]&0xf)|((pp[1]^pp[2])<<4);
+  return (pp[0]&0xF)|((pp[1]^pp[2])<<4);
 }
 static int hash_nc(int nc) {
   int *ncp=rn_nameclass[nc];
@@ -397,10 +397,10 @@ static int hash_s(int i) {return strhash(rn_string+i);}
 
 static int equal_p(int p1,int p2) {
   int *pp1=rn_pattern[p1],*pp2=rn_pattern[p2];
-  return (pp1[0]&0xff)==(pp2[0]&0xff) && pp1[1] == pp2[1] && pp1[2] == pp2[2];
+  return (pp1[0]&0xFF)==(pp2[0]&0xFF) && pp1[1] == pp2[1] && pp1[2] == pp2[2];
 }
 static int equal_nc(int nc1,int nc2) {
   int *ncp1=rn_nameclass[nc1],*ncp2=rn_nameclass[nc2];
-  return (ncp1[0]&0xff)==(ncp2[0]&0xff) && ncp1[1] == ncp2[1] && ncp1[2] == ncp2[2];
+  return (ncp1[0]&0xFF)==(ncp2[0]&0xFF) && ncp1[1] == ncp2[1] && ncp1[2] == ncp2[2];
 }
 static int equal_s(int s1,int s2) {return strcmp(rn_string+s1,rn_string+s2)==0;}

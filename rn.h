@@ -33,7 +33,7 @@ them to variables in the local scope, and a creator.
 */
 
 /* Pattern Bindings */
-#define P_TYP(i) (rn_pattern[i][0]&0xff)
+#define P_TYP(i) (rn_pattern[i][0]&0xFF)
 #define P_IS(i,x)  (P_##x==P_TYP(i))
 #define P_CHK(i,x)  assert(P_IS(i,x))
 
@@ -80,7 +80,7 @@ them to variables in the local scope, and a creator.
 #define NC_DATATYPE 6
 
 /* Name Class Bindings  */
-#define NC_TYP(i) (rn_nameclass[i][0]&0xff)
+#define NC_TYP(i) (rn_nameclass[i][0]&0xFF)
 #define NC_IS(i,x) (NC_##x==NC_TYP(i))
 #define NC_CHK(i,x) assert(NC_IS(i,x))
 
