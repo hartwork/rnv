@@ -7,7 +7,7 @@
 #include <string.h> /*strerror,strncpy,strrchr*/
 #include <errno.h>
 #include EXPAT_H
-#include "util.h" /*xml_white_space*/
+#include "xmlc.h" /*xmlc_white_space*/
 #include "rn.h"
 #include "rnc.h"
 #include "rnd.h"
@@ -94,7 +94,7 @@ static int whitespace(void) {
   char *s=text,*end=text+n_t;
   for(;;) {
     if(s==end) return 1;
-    if(!xml_white_space(*(s++))) return 0;
+    if(!xmlc_white_space(*(s++))) return 0;
   }
 }
 

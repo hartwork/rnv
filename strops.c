@@ -2,26 +2,25 @@
 
 #include <stdlib.h> /*calloc*/
 #include <string.h> /*strcpy,strlen*/
-#include "util.h"
-
-int xml_white_space(int v) {return v=='\t'||v=='\n'||v=='\r'||v==' ';}
+#include "xmlc.h"
+#include "strops.h"
 
 int tokncmp(char *s1,char *s2,int n2) {
   char *end2=s2+n2;
-  while(xml_white_space(*s1)) ++s1;
-  while(s2!=end2&&xml_white_space(*s2)) ++s2;
+  while(xmlc_white_space(*s1)) ++s1;
+  while(s2!=end2&&xmlc_white_space(*s2)) ++s2;
   for(;;) {
     if(s2==end2) {
-      while(xml_white_space(*s1)) ++s1;
+      while(xmlc_white_space(*s1)) ++s1;
       return *s1;
     }
     if(*s1=='\0') {
-      while(s2!=end2&&xml_white_space(*s2)) ++s2;
+      while(s2!=end2&&xmlc_white_space(*s2)) ++s2;
       return s2==end2?0:-*s2;
     }
-    if(xml_white_space(*s1)&&xml_white_space(*s2)) {
-      do ++s1; while(xml_white_space(*s1));
-      do ++s2; while(s2!=end2&&xml_white_space(*s2));
+    if(xmlc_white_space(*s1)&&xmlc_white_space(*s2)) {
+      do ++s1; while(xmlc_white_space(*s1));
+      do ++s2; while(s2!=end2&&xmlc_white_space(*s2));
     } else {
       if(*s1!=*s2) return *s1-*s2;
       ++s1; ++s2;

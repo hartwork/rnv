@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <string.h>
-#include "util.h"
+#include "strops.h"
 
 #if 0
 /* abspath */

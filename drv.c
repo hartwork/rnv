@@ -2,7 +2,8 @@
 
 #include <string.h> /*strcmp*/
 #include <stdlib.h> /*calloc,free*/
-#include "util.h" /*tokncmp,xml_white_space*/
+#include "xmlc.h" /*xmlc_white_space*/
+#include "strops.h" /*tokncmp*/
 #include "ht.h"
 #include "rn.h"
 #include "er.h"
@@ -93,7 +94,7 @@ static void accept_m(void) {
     if(drv_compact) ht_del(&ht_m,i_m); else return;
   }
   ht_put(&ht_m,i_m++);
-  if(drv_compact && i_m==LIM_M) i_m=0;
+  if(drv_compact&&i_m==LIM_M) i_m=0;
   if(i_m==len_m) {
     int (*newmemo)[M_SIZE]=(int (*)[M_SIZE])calloc(len_m*=2,sizeof(int[M_SIZE]));
     memcpy(newmemo,memo,i_m*sizeof(int[M_SIZE]));
@@ -321,9 +322,9 @@ static int text(int p,char *s,int n);
 static int list(int p,char *s,int n) {
   char *end=s+n,*sp;
   for(;;) {
-    while(s!=end&&xml_white_space(*s)) ++s;
+    while(s!=end&&xmlc_white_space(*s)) ++s;
     sp=s;
-    while(sp!=end&&!xml_white_space(*sp)) ++sp;
+    while(sp!=end&&!xmlc_white_space(*sp)) ++sp;
     if(s==end) break;
     p=text(p,s,sp-s);
     s=sp;
@@ -377,7 +378,7 @@ static int text(int p,char *s,int n) { /* matches text, including whitespace */
 static int textws(int p,char *s,int n) {
   int p1=text(p,s,n),ws=1;
   char *end=s+n;
-  while(s!=end) {if(!xml_white_space(*s)) {ws=0; break;} ++s;}
+  while(s!=end) {if(!xmlc_white_space(*s)) {ws=0; break;} ++s;}
   return ws?rn_choice(p,p1):p1;
 }
 int drv_text(int p,char *s,int n) {return textws(p,s,n);}

@@ -1,10 +1,7 @@
 /* $Id$ */
 
-#ifndef UTIL_H
-#define UTIL_H 1
-
-/* tests whether a character is an xml whitespace */
-extern int xml_white_space(int v);
+#ifndef STROPS_H
+#define STROPS_H 1
 
 /* compares two tokens, s1 is null terminated, s2 is not */
 extern int tokncmp(char *s1,char *s2,int n2);

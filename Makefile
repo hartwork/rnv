@@ -29,7 +29,8 @@ er.c er.h \
 sc.c sc.h \
 ht.c ht.h \
 u.c u.h \
-util.c util.h
+xmlc.c xmlc.h \
+strops.c strops.h
 
 OBJ=\
 rn.o \
@@ -42,7 +43,8 @@ er.o \
 sc.o \
 u.o \
 ht.o \
-util.o 
+xmlc.o \
+strops.o 
 
 .c.o:
 	${CC} ${INC} ${OPT} ${CFLAGS} -c -o $@ $<

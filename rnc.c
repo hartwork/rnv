@@ -7,8 +7,9 @@
 #include <stdarg.h> /*va_list,va_arg,va_end*/
 #include <assert.h> /*assert*/
 
-#include "util.h"
 #include "u.h"
+#include "xmlc.h"
+#include "strops.h"
 #include "er.h"
 #include "rn.h"
 #include "sc.h"
@@ -321,8 +322,8 @@ static void getv(struct rnc_source *sp) {
 /* why \r is not a new line by itself when escaped? it is when not. */
 #define newline(v) ((v)==0||(v)=='\n')
 #define whitespace(v) ((v)==' '||(v)=='\t')
-#define name_start(v) (u_base_char(v)||u_ideographic(v)||(v)=='_')
-#define name_char(v) (name_start(v)||u_digit(v)||u_combining_char(v)||u_extender(v)||(v)=='.'||(v)=='-'||(v)==':')
+#define name_start(v) (xmlc_base_char(v)||xmlc_ideographic(v)||(v)=='_')
+#define name_char(v) (name_start(v)||xmlc_digit(v)||xmlc_combining_char(v)||xmlc_extender(v)||(v)=='.'||(v)=='-'||(v)==':')
 #define skip_comment(sp) while(!newline(sp->v)) getv(sp); getv(sp)
 
 static void realloc_s(struct cym *symp) {

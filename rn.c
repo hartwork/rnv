@@ -3,7 +3,7 @@
 #include <stdlib.h> /* calloc */
 #include <string.h> /* strcmp,memcmp,strlen,strcpy,strclone,memcpy,memset */
 
-#include "util.h"
+#include "strops.h"
 #include "ht.h"
 #include "rn.h"
 

@@ -2,7 +2,7 @@
 
 #include <string.h> /*strncmp*/
 #include <stdio.h> /*stdio*/
-#include "util.h"
+#include "strops.h"
 #include "xsd.h"
 
 static void default_nodt_handler(char *typ) {
