@@ -20,8 +20,8 @@ Version 1.0
    license, see license.txt for details.
 
    RNV is a part of an on-going work, and the current code can have bugs
-   and shortcomings; however, it is able to validate documents against a
-   number of grammars. I use it.
+   and shortcomings; however, it validates documents against a number of
+   grammars. I use it.
 
 Package Contents
 
@@ -54,19 +54,23 @@ Invocation
 
 Limitations
 
-   XML Schema datatypes are not checked; anything that is not a string is
-   treated as a token. The API has facilities to plug in multiple
-   datatype libraries, but I currently don't need that particular
-   datatype library for my work.
+     * RNV assumes that the encoding of the syntax file is UTF-8.
+     * The validator does not validate character data against XML Schema
+       datatypes; anything that is not a string is treated as a token.
+       The API has facilities to plug in multiple datatype libraries, but
+       I currently don't need that particular datatype library for my
+       work.
+     * The schema parser does not check that all restrictions are obeyed,
+       in particular, restrictions 7.3 and 7.4 are not checked.
+     * RNV for Win32 platforms is a Unix program compiled on WIn32. It
+       expects file paths to be written with normal slashes; if a schema
+       is in a different directory and includes or refers external files,
+       then the schema's path must be written in the Unix way for the
+       relative paths to work. For example, under Windows, rnv that uses
+       ..\schema\docbook.rnc to validate userguide.dbx should be invoked
+       as:
 
-   RNV for Win32 platforms is a Unix program compiled on Win32. It
-   expects file paths to be written with normal slashes; if a schema is
-   in a different directory and includes or refers external files, then
-   the schema's path must be written in the Unix way for the relative
-   paths to work. For example, under Windows, rnv that uses
-   ..\schema\docbook.rnc to validate userguide.dbx should be invoked as:
-
-      rnv.exe ../schema/docbook.rnc userguide.dbx
+	rnv.exe ../schema/docbook.rnc userguide.dbx
 
 New versions
 

@@ -12,7 +12,7 @@ Version 1.0
 <application>RNV</application> is an implementation of <citetitle>Relax NG Compact Syntax</citetitle>, <ulink>http://relaxng.org/compact-20021121.html</ulink>. It is written in ANSI C, the command-line utility uses <application>Expat</application>, <ulink>http://www.jclark.com/xml/expat.html</ulink>. It is distributed under BSD license, see <filename>license.txt</filename> for details.
 </para>
 <para>
-RNV is a part of an on-going work, and the current code can have bugs and shortcomings; however, it is able to validate documents against a number of grammars. I use it.
+RNV is a part of an on-going work, and the current code can have bugs and shortcomings; however, it validates documents against a number of grammars. I use it.
 </para>
  </abstract>
 
@@ -82,10 +82,20 @@ If no documents are specified, <application>RNV</application> attempts to read t
 Limitations
 </title>
 
-<para>
-XML Schema datatypes are not checked; anything that is not a string is treated as a token. The API has facilities to plug in multiple datatype libraries, but I currently don't need that particular datatype library for my work. 
-</para>
+<itemizedlist>
+<listitem>
+RNV assumes that the encoding of the syntax file is UTF-8.
+</listitem>
 
+<listitem>
+The validator does not validate character data against XML Schema datatypes; anything that is not a string is treated as a token. The API has facilities to plug in multiple datatype libraries, but I currently don't need that particular datatype library for my work. 
+</listitem>
+
+<listitem>
+The schema parser does not check that all restrictions are obeyed, in particular, restrictions 7.3 and 7.4 are not checked.
+</listitem>
+
+<listitem>
 <para>
 RNV for Win32 platforms is a Unix program compiled on WIn32. It expects file paths to be written with normal slashes; if a schema is in a different directory and includes or refers external files, then the schema's path must be written in the Unix way for the relative paths to work. For example, under Windows, rnv that uses <filename>..\schema\docbook.rnc</filename> to validate <filename>userguide.dbx</filename> should be invoked as:
 </para>
@@ -93,6 +103,9 @@ RNV for Win32 platforms is a Unix program compiled on WIn32. It expects file pat
 <synopsis>
 rnv.exe ../schema/docbook.rnc userguide.dbx 
 </synopsis>
+</listitem>
+</itemizedlist>
+
 
 </section>
 

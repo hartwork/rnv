@@ -39,13 +39,13 @@ static int load_rnc(char *fn) {
   return 1;
 }
 
-static void error(void) {
+static void error(char *msg) {
   char *s;
   ++errors;
   rnx_expected(previous);
   if(rnx_n_exp!=0) {
     int i;
-    fprintf(stderr,"invalid document (%s,%i,%i)\nexpected:\n",xml,XML_GetCurrentLineNumber(expat),XML_GetCurrentColumnNumber(expat));
+    fprintf(stderr,"invalid document (%s,%i,%i): %s\nexpected:\n",xml,XML_GetCurrentLineNumber(expat),XML_GetCurrentColumnNumber(expat),msg);
     for(i=0;i!=rnx_n_exp;++i) {
       fprintf(stderr,"\t%s\n",s=p2str(rnx_exp[i]));
       free(s);
@@ -72,12 +72,26 @@ static void qname(char *name) {
   suri[len-1]='\0';
 }
 
+#define ELEMENT_NOT_ALLOWED "element '%s^%s' not allowed"
+#define ATTRIBUTE_NOT_ALLOWED "attribute '%s' not allowed"
+#define ELEMENTS_MISSING "required elements missing"
+#define ATTRIBUTES_MISSING "required attributes missing"
+#define TEXT_NOT_ALLOWED "text not allowed"
+
+static char *msg=NULL;
+static int len_msg=-1;
+
 static void start_element(void *userData,const char *name,const char **attrs) {
   if(current!=rn_notAllowed) { 
     qname((char*)name);
     current=drv_start_tag_open(previous=current,suri,sname);
     if(current==rn_notAllowed) {
-      error();
+      int len=strlen(ELEMENT_NOT_ALLOWED)+strlen(suri)+strlen(sname);
+      if(len>len_msg) {len_msg=len;
+	free(msg); msg=(char*)calloc(len_msg,sizeof(char));
+      }
+      msg[sprintf(msg,ELEMENT_NOT_ALLOWED,suri,sname)]='\0';
+      error(msg);
       current=drv_start_tag_open_recover(previous,suri,sname);
     }
     while(current) {
@@ -86,15 +100,19 @@ static void start_element(void *userData,const char *name,const char **attrs) {
       ++attrs;
       current=drv_attribute(previous=current,suri,sname,(char*)*attrs);
       if(current==rn_notAllowed) {
-	error();
-	current=drv_attribute_recover(previous,suri,sname,(char*)*attrs);
+	int len=strlen(ATTRIBUTE_NOT_ALLOWED)+strlen(suri)+strlen(sname);
+	if(len>len_msg) {len_msg=len;
+	  free(msg); msg=(char*)calloc(len_msg,sizeof(char));
+	}
+	msg[sprintf(msg,ATTRIBUTE_NOT_ALLOWED,suri,sname)]='\0';
+	error(msg);
       }
       ++attrs;
     }
     if(current) {
       current=drv_start_tag_close(previous=current);
       if(current==rn_notAllowed) {
-	error();
+	error(ATTRIBUTES_MISSING);
 	current=drv_start_tag_close_recover(previous);
       }
     }
@@ -105,7 +123,7 @@ static void end_element(void *userData,const char *name) {
   if(current!=rn_notAllowed) {
     current=drv_end_tag(previous=current);
     if(current==rn_notAllowed) {
-      error();
+      error(ELEMENTS_MISSING);
       current=drv_end_tag_recover(previous);
     }
   }
@@ -115,7 +133,7 @@ static void characters(void *userData,const char *s,int len) {
   if(current!=rn_notAllowed) {
     current=drv_text(previous=current,(char*)s,len);
     if(current==rn_notAllowed) {
-      error();
+      error(TEXT_NOT_ALLOWED);
       current=drv_text_recover(previous,(char*)s,len);
     }
   }
