@@ -1,5 +1,8 @@
 /* $Id$ */
 
+1.6.6 Sun Mar 21 22:41:10 AMT 2004
+dvd: turned on parsing of external parameter entities
+
 1.6.5 Sat Mar 13 21:24:31 AMT 2004
 dvd: continued overhaul of rn.c and other places
 

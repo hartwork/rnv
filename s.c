@@ -54,10 +54,10 @@ char *s_abspath(char *r,char *b) {
     char *c=b,*sep=(char*)0;
     for(;;) {if(!(*c)) break; if(*c++=='/') sep=c;}
     if(sep) {
-      char *p,*q;
-      p=r; while(*p++); q=p+(sep-b);
+      char *p=r,*q;
+      while(*p++); q=p+(sep-b);
       do *(--q)=*(--p); while(p!=r);
-      p=r; while(b!=sep) *p++=*b++;
+      while(b!=sep) *p++=*b++;
     }
   }
   return r;

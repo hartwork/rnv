@@ -209,6 +209,7 @@ static int externalEntityRef(XML_Parser p,const char *context, const char *base,
     } else {
       XML_Parser expat0=expat; char *xml0=xml; xml=entity;
       expat=XML_ExternalEntityParserCreate(expat0,context,NULL);
+      XML_SetBase(expat,xml);
       ok=process(fd);
       XML_ParserFree(expat);
       xml=xml0; expat=expat0;
@@ -224,6 +225,8 @@ static int externalEntityRef(XML_Parser p,const char *context, const char *base,
 static void validate(int fd) {
   previous=current=start;
   expat=XML_ParserCreateNS(NULL,':');
+  XML_SetParamEntityParsing(expat,XML_PARAM_ENTITY_PARSING_ALWAYS)
+    || ((*er_printf)("expat compiled without -DXML_DTD\n"),0);
   XML_SetElementHandler(expat,&start_element,&end_element);
   XML_SetCharacterDataHandler(expat,&characters);
   XML_SetExternalEntityRefHandler(expat,&externalEntityRef);
