@@ -1,0 +1,18 @@
+/* $Id$ */
+1.1.0 Thu Dec 18 05:05:33 AMT 2003
+dvd: drv_start_attribute and memoization implemented; hash values are 
+     multiplied by large primes - helps with current hashing algorithms;
+     garbage collection added to rn (rn_compress, rn_compress_last);
+     compact mode implemented for validation, the buffer for memoized patterns
+     does not exceed a limit when the validator runs in compact mode.
+     
+1.0.9 Wed Dec 17 23:36:05 AMT 2003
+dvd: drv_mixed_text added, results memoized; code cleanups to compile easier;
+     added targets for static and shared libraries to the Makefile, many small
+     touch-ups
+
+1.0.8; Tue Dec 16 14:05:16 AMT 2003
+dvd: memory for error message in rnv.c is allocated properly
+
+1.0.7; Tue Dec 16 00:12:04 AMT 2003
+dvd: added reporting of attribute value for invalid attributes
