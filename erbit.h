@@ -5,9 +5,10 @@
 
 #define ERBIT_RNC 0x01000
 #define ERBIT_RND 0x02000
-#define ERBIT_RX  0x04000
-#define ERBIT_XSD 0x08000
-#define ERBIT_DRV 0x10000
-#define ERBIT_RNV 0x20000
+#define ERBIT_RNL 0x04000
+#define ERBIT_RX  0x08000
+#define ERBIT_XSD 0x10000
+#define ERBIT_DRV 0x20000
+#define ERBIT_RNV 0x40000
 
 #endif

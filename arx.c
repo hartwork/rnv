@@ -35,14 +35,12 @@ comments start with # and continue till end of line
 #include "xmlc.h"
 #include "ht.h"
 #include "erbit.h"
-#include "rnc.h"
-#include "rnd.h"
+#include "rnl.h"
 #include "rnv.h"
 #include "rx.h"
 #include "ary.h"
 
 extern int rn_notAllowed;
-extern int rn_compress_last(int start);
 
 /* rules */
 #define VALID 1
@@ -103,7 +101,7 @@ static void windup(void);
 static int initialized=0;
 static void init(void) {
   if(!initialized) {initialized=1;
-    rnc_init(); rnd_init(); rnv_init();
+    rnl_init(); rnv_init();
     rnv_verror_handler=&silent_verror_handler;
     string=(char*)memalloc(len_v=LEN_S*S_AVG_SIZE,sizeof(char));
     t2s=(int(*)[2])memalloc(len_2=LEN_2,sizeof(int[2]));
@@ -349,15 +347,10 @@ static int arx(char *fn) {
       case SYM_NVAL: rules[i_r][0]=INVAL; goto RNG;
       RNG: getsym();
 	if(chksym(SYM_RENG)) {
-	  struct rnc_source src; int start;
 	  char *rncfn=(char*)memalloc(strlen(arxfn)+strlen("#rnc[]")+12,sizeof(char));
 	  sprintf(rncfn,"%s#rnc[%i]",arxfn,rnc++);
-	  rnc_stropen(&src,rncfn,value,strlen(value));
-	  free(rncfn);
-	  start=rnc_parse(&src); rnc_close(&src); 
-	  if(!rnc_errors(&src)&&(start=rnd_fixup(start))) {
-	    rules[i_r][1]=rn_compress_last(start); 
-	  } else error(ARX_ER_RNG);
+	  if(!(rules[i_r][1]=rnl_s(rncfn,value,strlen(value)))) error(ARX_ER_RNG);
+	  memfree(rncfn);
 	}
 	getsym();
 	if(chksym(SYM_IDNT)) rules[i_r][2]=typ2str();

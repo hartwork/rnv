@@ -11,15 +11,12 @@
 #include EXPAT_H
 #include "memops.h"
 #include "erbit.h"
-#include "rnc.h"
-#include "rnd.h"
+#include "rnl.h"
 #include "rnv.h"
 #include "rnx.h"
 #include "ll.h"
 
 extern int rn_notAllowed,rx_compact,drv_compact;
-
-extern int rn_compress_last(int start);
 
 #define LEN_T XCL_LEN_T
 #define LIM_T XCL_LIM_T
@@ -44,10 +41,8 @@ static int n_t;
 
 #define err(msg) vfprintf(stderr,msg"\n",ap);
 static void verror_handler(int erno,va_list ap) {
-  if(erno&ERBIT_RNC) {
-    rnc_default_verror_handler(erno&~ERBIT_RNC,ap);
-  } else if(erno&ERBIT_RND) {
-    rnd_default_verror_handler(erno&~ERBIT_RND,ap);
+  if(erno&ERBIT_RNL) {
+    rnl_default_verror_handler(erno&~ERBIT_RNL,ap);
   } else {
     int line=XML_GetCurrentLineNumber(expat),col=XML_GetCurrentColumnNumber(expat);
     if(line!=lastline||col!=lastcol) {
@@ -77,16 +72,14 @@ static void verror_handler(int erno,va_list ap) {
   }
 }
 
-static void verror_handler_rnc(int erno,va_list ap) {verror_handler(erno|ERBIT_RNC,ap);}
-static void verror_handler_rnd(int erno,va_list ap) {verror_handler(erno|ERBIT_RND,ap);}
+static void verror_handler_rnl(int erno,va_list ap) {verror_handler(erno|ERBIT_RNL,ap);}
 static void verror_handler_rnv(int erno,va_list ap) {verror_handler(erno|ERBIT_RNV,ap);}
 
 static void windup(void);
 static int initialized=0;
 static void init(void) {
   if(!initialized) {initialized=1;
-    rnc_init(); rnc_verror_handler=&verror_handler_rnc;
-    rnd_init(); rnd_verror_handler=&verror_handler_rnd;
+    rnl_init(); rnl_verror_handler=&verror_handler_rnl;
     rnv_init(); rnv_verror_handler=&verror_handler_rnv;
     rnx_init();
     text=(char*)memalloc(len_t=LEN_T,sizeof(char));
@@ -102,15 +95,6 @@ static void clear(void) {
 static void windup(void) {
   text[n_t=0]='\0';
   level=0; lastline=lastcol=-1;
-}
-
-static int load_rnc(char *fn) {
-  struct rnc_source src;
-  if(rnc_open(&src,fn)!=-1) start=rnc_parse(&src); rnc_close(&src); 
-  if(!rnc_errors(&src)&&(start=rnd_fixup(start))) {
-    start=rn_compress_last(start); 
-  } else start=0;
-  return start;
 }
 
 static void error_handler(int erno,...) {
@@ -216,7 +200,7 @@ int main(int argc,char **argv) {
 
   if(!*(argv)) {usage(); return 1;}
 
-  if((ok=load_rnc(*(argv++)))) {
+  if((ok=start=rnl_fn(*(argv++)))) {
     if(*argv) {
       do {
 	int fd; xml=*argv;

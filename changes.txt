@@ -1,8 +1,11 @@
 /* $Id$ */
 
-1.3.5
+1.4.0 Sat Jan 10 03:18:12 AMT 2004
 
-Tue Jan  6 11:56:06 AMT 2004
+dvd: factored out loading of rnc into rnl; now instead of calling rnc
+     and rnd separately rnl_(fn|fd|s) is called. 
+
+1.3.5 Tue Jan  6 11:56:06 AMT 2004
 dvd: learned that UTF-8 is reality, added processing; fixed check for name
      characters in arx, made it >0x7f||nmtoken  (no good reason to process unicode);
      added end-of-line to error messages from Expat

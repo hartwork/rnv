@@ -32,6 +32,7 @@ ary.c ary.h \
 rn.c rn.h \
 rnc.c rnc.h \
 rnd.c rnd.h \
+rnl.c rnl.h \
 rnv.c rnv.h \
 rnx.c rnx.h \
 drv.c drv.h \
@@ -51,6 +52,7 @@ OBJ=\
 rn.o \
 rnc.o \
 rnd.o \
+rnl.o \
 rnv.o \
 rnx.o \
 drv.o \
@@ -113,11 +115,13 @@ install: ${DIST}-${VERSION}.zip readme.txt changes.txt
 
 # DO NOT DELETE
 
-xcl.o: memops.h erbit.h rnc.h rnd.h rnv.h rnx.h ll.h
-arx.o: memops.h strops.h xmlc.h ht.h erbit.h rnc.h rnd.h rnv.h rx.h
+xcl.o: memops.h erbit.h rnl.h rnv.h rnx.h ll.h
+arx.o: u.h memops.h strops.h xmlc.h ht.h erbit.h rnl.h rnv.h rx.h ary.h
+ary.o: rn.h ary.h
 rn.o: memops.h strops.h ht.h ll.h rn.h
 rnc.o: u.h xmlc.h memops.h strops.h rn.h sc.h rnc.h
 rnd.o: memops.h rn.h rnx.h ll.h rnd.h
+rnl.o: erbit.h rn.h rnc.h rnd.h rnl.h
 rnv.o: memops.h xmlc.h erbit.h drv.h rnv.h
 rnx.o: memops.h strops.h rn.h ll.h rnx.h
 drv.o: xmlc.h memops.h strops.h ht.h rn.h xsd.h ll.h erbit.h drv.h
