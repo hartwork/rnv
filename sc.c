@@ -1,6 +1,5 @@
 /* $Id$ */
 
-#include <string.h> /*memcpy*/
 #include <assert.h> /*assert*/
 #include "memops.h"
 #include "ll.h"

@@ -1,6 +1,5 @@
 /* $Id$ */
 
-#include <string.h> /*strcmp*/
 #include <stdio.h>
 #include "xmlc.h" /*xmlc_white_space*/
 #include "memops.h"
@@ -65,7 +64,6 @@ static void verror_handler_xsd(int erno,va_list ap) {(*drv_verror_handler)(erno|
 
 static void new_memo(int typ) {
   if(drv_compact && ht_get(&ht_m,i_m)==i_m) ht_del(&ht_m,i_m); 
-  memset(memo[i_m],0,sizeof(int[M_SIZE])); 
   memo[i_m][0]=typ;
 }
 
@@ -95,21 +93,21 @@ static int newAttributeOpen(int p,int uri,int name) {
 static int newStartTagClose(int p) {
   int *me=memo[i_m];
   new_memo(M_STC);
-  me[1]=p;
+  me[1]=p; me[2]=me[3]=0;
   return ht_get(&ht_m,i_m);
 }
 
 static int newMixedText(int p) {
   int *me=memo[i_m];
   new_memo(M_TXT);
-  me[1]=p;
+  me[1]=p; me[2]=me[3]=0;
   return ht_get(&ht_m,i_m);
 }
 
 static int newEndTag(int p) {
   int *me=memo[i_m];
   new_memo(M_END);
-  me[1]=p;
+  me[1]=p; me[2]=me[3]=0;
   return ht_get(&ht_m,i_m);
 }
 

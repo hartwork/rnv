@@ -4,7 +4,7 @@
 #include <fcntl.h>  /*open,close*/
 #include UNISTD_H   /*open,read,close*/
 #include <stdio.h>  /*fprintf,stderr*/
-#include <string.h> /*strerror,strncpy*/
+#include <string.h> /*strerror*/
 #include <errno.h>
 #include EXPAT_H
 #include "memops.h"

@@ -1,8 +1,7 @@
 /* $Id$ */
 
 #include <limits.h> /*INT_MAX*/
-#include <stdlib.h>
-#include <string.h> /*strchr*/
+#include <stdlib.h> /*atof,atol,strtol*/
 #include <stdio.h> /*stdio*/
 #include <math.h> /*HUGE_VAL*/
 #include <assert.h>

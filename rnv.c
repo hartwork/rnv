@@ -1,6 +1,6 @@
 /* $Id$ */
 
-#include <string.h> /*strerror,strncpy,strrchr*/
+#include <string.h> /*strncpy,strrchr*/
 #include <stdio.h>
 #include "memops.h"
 #include "xmlc.h" /*xmlc_white_space*/

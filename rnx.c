@@ -1,6 +1,7 @@
 /* $Id$ */
 
-#include <string.h> /*memcpy*/
+#include <stdlib.h> /*NULL*/
+#include <string.h> /*strcat*/
 #include "memops.h"
 #include "strops.h"
 #include "rn.h"

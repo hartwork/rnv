@@ -1,6 +1,6 @@
 /* $Id$ */
 
-#include <stdlib.h>
+#include <stdlib.h> /*NULL*/
 #include <assert.h> /*assert*/
 #include "memops.h"
 #include "ht.h"

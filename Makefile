@@ -13,7 +13,7 @@ DEF=-DEXPAT_H=${EXPAT_H} -DUNISTD_H=${UNISTD_H} -DRNV_VERSION="\"${VERSION}\""
 WARN=-Wall -Wstrict-prototypes  -Wmissing-prototypes -Wcast-align
 OPT=-O -g
 
-CFLAGS=${INC} ${DEF} ${WARN} ${OPT}
+CFLAGS=${INC} ${DEF} ${WARN} ${OPT} -x c++
 LFLAGS=${OPT} ${LBL}
 
 LIBEXPAT=-lexpat
@@ -43,7 +43,7 @@ strops.c strops.h \
 memops.c memops.h \
 rx.c rx.h \
 rx_cls_u.c \
-rx_cls_ranges.c 
+rx_cls_ranges.c
 
 OBJ=\
 rn.o \
@@ -60,7 +60,7 @@ ht.o \
 xmlc.o \
 strops.o \
 memops.o \
-rx.o 
+rx.o
 
 .SUFFIXES: .c .o
 
@@ -70,10 +70,10 @@ rx.o
 all: rnv
 
 rnv: xcl.o ${LIBRNV}
-	${CC} ${LFLAGS} -o rnv xcl.o ${LIBRNV} ${LIB} 
+	${CC} ${LFLAGS} -o rnv xcl.o ${LIBRNV} ${LIB}
 
 rnd_test: ${OBJ} rnd_test.o
-	${CC} ${LFLAGS} -o rnd_test rnd_test.o ${OBJ} ${LIB} 
+	${CC} ${LFLAGS} -o rnd_test rnd_test.o ${OBJ} ${LIB}
 
 ${LIBRNVA}: ${OBJ}
 	ar rc $@ ${OBJ}
@@ -84,7 +84,7 @@ ${LIBRNVSO}: ${OBJ}
 depend: ${SRC}
 	makedepend -Y ${DEF} ${SRC}
 
-clean: 
+clean:
 	-rm -f *.o  *.a *.so rnv rnd_test *_test *.core *.gmon *.gprof rnv*.zip rnv.txt rnv.pdf rnv.html rnv.xml
 
 DISTFILES=license.txt ${SRC} Makefile readme.txt changes.txt src.txt

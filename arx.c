@@ -36,12 +36,12 @@ static char *string;
 static struct ht_s;
 
 static int add_s(char *s) {
-  int len=strlen(s);
-  if(i_s+len>=len_s) string=(char*)memstretch(string,len_s=2*(i_s+len),i_s,sizeof(char));
+  int len=strlen(s)+1;
+  if(i_s+len>len_s) string=(char*)memstretch(string,len_s=2*(i_s+len),i_s,sizeof(char));
   strcpy(string+i_s,s);
   if((j=ht_get(&ht_s,i_s))==-1) {
     ht_put(&ht_s,j=i_s);
-    i_s+=len+1;
+    i_s+=len;
   }
   return j;
 }

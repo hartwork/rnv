@@ -18,7 +18,7 @@ extern void *memalloc(int length,int size) {
 }
 
 void *memstretch(void *p,int newlen,int oldlen,int size) {
-  char *newp=memalloc(newlen,size);
+  void *newp=memalloc(newlen,size);
   memcpy(newp,p,oldlen*size); 
   memfree(p);
   return newp;

@@ -1,9 +1,9 @@
 /* $Id$ */
 
-#include <string.h> /* strcmp,memcmp,strlen,strcpy,strclone,memcpy,memset */
+#include <string.h> /* strcmp,strlen,strcpy*/
 
 #include "memops.h"
-#include "strops.h"
+#include "strops.h" /* strhash */
 #include "ht.h"
 #include "ll.h"
 #include "rn.h"

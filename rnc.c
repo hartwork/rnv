@@ -2,7 +2,7 @@
 
 #include <fcntl.h> /* open, close */
 #include UNISTD_H /* open,read,close */
-#include <string.h> /* memcpy,strlen,strcpy,strcat,strclone */
+#include <string.h> /* memcpy,strlen,strcpy,strcat */
 #include <stdio.h> /*stderr,fprintf*/
 #include <errno.h> /*errno*/
 #include <assert.h> /*assert*/
@@ -10,7 +10,7 @@
 #include "u.h"
 #include "xmlc.h"
 #include "memops.h"
-#include "strops.h"
+#include "strops.h" /* strclone */
 #include "rn.h"
 #include "sc.h"
 #include "rnc.h"
