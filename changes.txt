@@ -1,4 +1,6 @@
 /* $Id$ */
+1.2.2 Mon Dec 29 01:59:20 AMT 2003
+dvd: if an element is being skipped because it is invalid, continue parsing
 
 1.2.1 Fri Dec 26 15:50:49 AMT 2003
 dvd: error reporting redone; errors for xsd and rx are routed through validation
