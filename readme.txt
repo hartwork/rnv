@@ -374,10 +374,10 @@ Scheme Datatypes
    Another way to add custom datatypes to RNV is to use the built-in
    Scheme interpeter (SCM,
    http://www.swiss.ai.mit.edu/~jaffer/SCM.html) to implement the
-   library in Scheme, a dialect of Lisp. This solution more flexible and
-   robust, then the previous one, but requires knowledge of a particular
-   programming language (or at least desire to learn it, and the result
-   is definitely worth the effort).
+   library in Scheme, a dialect of Lisp. This solution is more flexible
+   and robust than the previous one, but requires knowledge of a
+   particular programming language (or at least desire to learn it, and
+   the result is definitely worth the effort).
 
    To support it, SCM must be installed on the computer, and RNV or RVP
    must be compiled with DSL_SCM set to 1 (make DSL_SCM=1), in which case
@@ -434,7 +434,23 @@ Scheme Datatypes
       "(" domain "|" location ")")))
 
    This code is much simpler to read and debug, and then the parts can be
-   joined and added to the grammar for production use.
+   joined and added to the grammar for production use. Furthermore, it is
+   easy to implement the parsing of structured regular expressions
+   embedded into parameters of datatypes in Relax NG itself. dsl.scm, the
+   sample datatype library, can handle parameter s-pattern with regular
+   expressions split into named parts, and the example above becomes:
+    s-pattern="""
+      comment = "\(([^\(\)\\]|\\.)*\)"
+      atom = "[a-zA-Z0-9!#$%&'*+\-/=?\^_`{|}~]+"
+      atoms = atom "(\." atom ")*"
+      person = "\"([^\"\\]|\\.)*\""
+      location = "\[([^\[\]\\]|\\.)*\]"
+      local-part = "(" atom "|" person ")"
+      domain = "(" atoms "|" location ")"
+      start = "(" comment " )?" local-part "@" domain "( " comment ")?"
+    """
+
+   addr-spec-dsl.rnc is included in the distribution.
 
 New versions
 

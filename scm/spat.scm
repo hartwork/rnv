@@ -62,17 +62,15 @@
 		   (cond
 		     ((string? piece) piece)
 		     ((symbol? piece)
-		       (if (memv piece parents) 
-		         (begin
-			   (error! "recursion through " piece)
-			   "")
-		         (let ((entry (assv piece code)))
+		       (if (memv piece parents)
+			 (begin (error! "recursion through " piece) "")
+			 (let ((entry (assv piece code)))
 			   (if entry
-			     (apply string-append 
+			     (apply string-append
 			       (map (lambda (p)
-				   (let ((parents (cons piece parents))) 
+				   (let ((parents (cons piece parents)))
 				     (resolve p parents)))
-			         (cdr entry)))
+				 (cdr entry)))
 			     (begin (error! piece " unresolved") "")))))))))
 	     (resolve 'start '())))))
     (let ((regex (splice (code))))

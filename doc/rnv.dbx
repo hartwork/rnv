@@ -46,6 +46,7 @@ been made to the core modules, mostly to provide better separation
 <section>
 <title>Aknowledgements</title>
 <para>  I would like to thank those who have helped me develop RNV. 
+</para>
   <para>Dave Pawson has been the first user of the program.</para>
   <para>Alexander Peshkov helps me with testing and I have been able
   to correct very well hidden errors with his help.</para>
@@ -53,7 +54,6 @@ been made to the core modules, mostly to provide better separation
   the first release, and has helped me to improve it on more than one
   occasion.
   </para>
-</para>
 </section>
 
 <section>
@@ -592,8 +592,28 @@ but the syntax does not have the means for that.
       "@"
       "(" domain "|" location ")")))
 </programlisting>
-<para>This code is much simpler to read and debug, and then the parts can be joined and
-added to the grammar for production use.
+<para>This code is much simpler to read and debug, and then the
+parts can be joined and added to the grammar for production use.
+Furthermore, it is easy to implement the parsing of
+structured regular expressions embedded into parameters of
+datatypes in Relax NG itself. <filename>dsl.scm</filename>, the
+sample datatype library, can handle parameter
+<varname>s-pattern</varname> with regular expressions split
+into named parts, and the example above becomes:
+</para>
+<programlisting>
+    s-pattern="""
+      comment = "\(([^\(\)\\]|\\.)*\)"
+      atom = "[a-zA-Z0-9!#$%&amp;'*+\-/=?\^_`{|}~]+"
+      atoms = atom "(\." atom ")*"
+      person = "\"([^\"\\]|\\.)*\""
+      location = "\[([^\[\]\\]|\\.)*\]"
+      local-part = "(" atom "|" person ")"
+      domain = "(" atoms "|" location ")"
+      start = "(" comment " )?" local-part "@" domain "( " comment ")?"
+    """
+</programlisting>
+<para><filename>addr-spec-dsl.rnc</filename> is included in the distribution.
 </para>
 </section>
 </section>
