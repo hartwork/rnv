@@ -399,7 +399,6 @@ static void sweep_p(int *starts,int n_st,int since) {
   changed=0;
   for(p=since;p!=i_p;p+=p_size[P_TYP(p)]) {
     if(!marked(p)) {
-      ht_deli(&ht_p,p);
       xlat[p-since]=-1;
     } else if((q=ht_get(&ht_p,p))!=p) {
       unmark(p);
@@ -424,7 +423,7 @@ static void sweep_p(int *starts,int n_st,int since) {
 	case P_DATA_EXCEPT: DataExcept(p,p1,p2); goto BINARY;
 	BINARY:
 	  if(p2>=since && (q=xlat[p2-since])!=p2) {
-	    ht_del(&ht_p,p); 
+	    ht_deli(&ht_p,p); 
 	    touched=1; 
 	    rn_pattern[p+2]=q;
 	  }
@@ -436,7 +435,7 @@ static void sweep_p(int *starts,int n_st,int since) {
 	case P_ELEMENT: Element(p,nc,p1); goto UNARY;
 	UNARY:
 	  if(p1>=since && (q=xlat[p1-since])!=p1) {
-	    if(!touched) ht_del(&ht_p,p);
+	    if(!touched) ht_deli(&ht_p,p);
 	    touched=1; 
 	    rn_pattern[p+1]=q;
 	  }
@@ -465,25 +464,25 @@ static void unmark_p(int since) {
   int p; 
   for(p=0;p!=since;p+=p_size[P_TYP(p)]) unmark(p);
   for(p=since;p!=i_p;p+=p_size[P_TYP(p)]) {
-    if(marked(p)) unmark(p); else erase(p);
+    if(marked(p)) unmark(p); else {ht_deli(&ht_p,p); erase(p);}
   }
 }
 
 static void compress_p(int *starts,int n_st,int since) {
-  int p,p1,p2,q,nc,i_q,touched;
+  int p,p1,p2,q,nc,i_q;
   int *xlat=(int*)memalloc(i_p-since,sizeof(int));
   q=since;
   for(p=since;p!=i_p;p+=p_size[P_TYP(p)]) {
     if(erased(p)) {
       xlat[p-since]=-1;
     } else {
+      ht_deli(&ht_p,p);
       xlat[p-since]=q; 
       q+=p_size[P_TYP(p)];
     }
   }
   i_q=q;
   for(p=since;p!=i_p;p+=p_size[P_TYP(p)]) {
-    touched=0;
     if(xlat[p-since]!=-1) {
       switch(P_TYP(p)) {
       case P_EMPTY: case P_NOT_ALLOWED: case P_TEXT: case P_DATA: case P_VALUE:
@@ -494,10 +493,7 @@ static void compress_p(int *starts,int n_st,int since) {
       case P_GROUP: Group(p,p1,p2); goto BINARY;
       case P_DATA_EXCEPT: DataExcept(p,p1,p2); goto BINARY;
       BINARY:
-	if(p2>=since && (q=xlat[p2-since])!=p2) {
-	  ht_del(&ht_p,p); touched=1; 
-	  rn_pattern[p+2]=q;
-	}
+	if(p2>=since && (q=xlat[p2-since])!=p2) rn_pattern[p+2]=q;
 	goto UNARY;
 
       case P_ONE_OR_MORE: OneOrMore(p,p1); goto UNARY;
@@ -505,10 +501,7 @@ static void compress_p(int *starts,int n_st,int since) {
       case P_ATTRIBUTE: Attribute(p,nc,p1); goto UNARY;
       case P_ELEMENT: Element(p,nc,p1); goto UNARY;
       UNARY:
-	if(p1>=since && (q=xlat[p1-since])!=p1) {
-	  if(!touched) {ht_del(&ht_p,p); touched=1;}
-	  rn_pattern[p+1]=q;
-	}
+	if(p1>=since && (q=xlat[p1-since])!=p1) rn_pattern[p+1]=q;
 	break;
 
       default: 
@@ -516,10 +509,9 @@ static void compress_p(int *starts,int n_st,int since) {
       }
       if((q=xlat[p-since])!=p) {
 	int i;
-	if(!touched) {ht_del(&ht_p,p); touched=1;}
 	for(i=0;i!=p_size[P_TYP(p)];++i) rn_pattern[q+i]=rn_pattern[p+i];
       }
-      if(touched) ht_put(&ht_p,q);
+      ht_put(&ht_p,q);
     }
   }
   while(n_st--!=0) {if(*starts>=since) *starts=xlat[*starts-since]; ++starts;}

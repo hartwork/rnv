@@ -55,7 +55,7 @@ void ht_put(struct hashtable *ht,int i) {
     }
     memfree(table);
   }
-  for(j=first(ht,hv);ht->table[j]!=-1;j=next(ht,j));
+  for(j=first(ht,hv);ht->table[j]!=-1;j=next(ht,j)) assert(!ht->equal(i,ht->table[j]));
   ht->table[j]=i;
   ht->table[ht->tablen|j]=hv;
   ++ht->used;
