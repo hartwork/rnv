@@ -23,7 +23,6 @@ SRC=\
 ll.h \
 erbit.h \
 xcl.c \
-xsdck.c \
 arx.c \
 ary.c ary.h \
 rn.c rn.h \
@@ -75,7 +74,7 @@ rx.obj
 .c.obj:
 	${CC} ${CFLAGS} -c -o$@ $<
 
-all: rnv.exe arx.exe xsdck.exe
+all: rnv.exe arx.exe
 
 rnv.exe: xcl.obj ${OBJ}
 	${CC} ${LFLAGS} -ernv.exe xcl.obj ${OBJ} ${LIB}
@@ -83,15 +82,10 @@ rnv.exe: xcl.obj ${OBJ}
 arx.exe: arx.obj ${OBJ}
 	${CC} ${LFLAGS} -earx.exe arx.obj ${OBJ} ${LIB}
 
-xsdck.exe: xsdck.obj ${OBJ}
-	${CC} ${LFLAGS} -exsdck.exe xsdck.obj ${OBJ} ${LIB}
-
 clean:
 	-rm -f *.obj *.exe
 	-del *.obj *.exe
-
 	
-xsdck.obj: er.h xsd.h
 xcl.obj: m.h erbit.h rnl.h rnv.h rnx.h er.h ll.h
 arx.obj: u.h m.h s.h xmlc.h ht.h erbit.h rnl.h rnv.h rx.h er.h ary.h
 ary.obj: rn.h ary.h

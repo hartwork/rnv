@@ -90,6 +90,8 @@ Note
      * Makefile.bcc for Win32 and Borland C/C++ Compiler;
      * tools/xck, a simple shell script I am using to validate documents;
      * tools/*.rnc, sample Relax NG grammars;
+     * scm/*.scm, program modules in Scheme, for Scheme Datatypes
+       Library;
      * the log of changes, changes.txt;
      * this file, readme.txt.
      * Other scripts, samples and plug-ins appear in tools/ eventually.

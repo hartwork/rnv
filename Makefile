@@ -150,7 +150,7 @@ Makefile.bsd: Makefile
 	cat > $@
 
 DIST=rnv
-DISTFILES=license.txt ${SRC} Makefile.gnu Makefile.bsd readme.txt changes.txt src.txt
+DISTFILES=license.txt ${SRC} Makefile.gnu Makefile.bsd Makefile.bcc readme.txt changes.txt src.txt
 DISTWIN32=rnv.exe arx.exe readme32.txt license.txt
 DISTTOOLS=\
 tools/xck tools/rnv.vim tools/arx.conf \

@@ -33,9 +33,8 @@ LIB=${LIBEXPAT}
 
 .if ${DSL_SCM}
 DEF+=-DDSL_SCM=${DSL_SCM} -DSCM_H=${SCM_H}
-LIB+=-lscm
-LIB_SCM:sh=for a in m socket dl; do [ -f /usr/lib/lib$${a}.a ] && echo "-l$${a}" ; done ; true
-LIB+=${LIB_SCM}
+LIB_SCM=-lm 
+LIB+=-lscm ${LIB_SCM}
 .endif
 
 .if ${DXL_EXC}

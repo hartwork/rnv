@@ -10,6 +10,7 @@
 #include <assert.h>
 #include EXPAT_H
 #include "m.h"
+#include "s.h"
 #include "erbit.h"
 #include "drv.h"
 #include "rnl.h"
@@ -180,19 +181,23 @@ ERROR:
 }
 
 static int externalEntityRef(XML_Parser p,const char *context, const char *base,const char *systemId,const char *publicId) {
-  int fd;
   ok=0;
-  if(systemId) {
-    if((fd=open(systemId,O_RDONLY))==-1) {
-      error_handler(XCL_ER_NOXENT,systemId,strerror(errno));
+  if(systemId) {    
+    int fd; char *entity;
+    assert(base);
+    entity=(char*)m_alloc(strlen(base)+strlen(systemId)+2,1);
+    strcpy(entity,systemId); s_abspath(entity,base);
+    if((fd=open(entity,O_RDONLY))==-1) {
+      error_handler(XCL_ER_NOXENT,entity,strerror(errno));
     } else { 
-      char *xml0=xml; XML_Parser expat0=expat;
-      xml=(char*)systemId;
+      XML_Parser expat0=expat; char *xml0=xml; xml=entity;
       expat=XML_ExternalEntityParserCreate(expat0,context,NULL);
       ok=process(fd);
-      XML_ParserFree(expat);
-      expat=expat0; xml=xml0;
+      XML_ParserFree(expat); 
+      xml=xml0; expat=expat0;
+      close(fd);
     }
+    m_free(entity);
   } else {
     error_handler(XCL_ER_NOSID);
   }
@@ -205,6 +210,7 @@ static void validate(int fd) {
   XML_SetElementHandler(expat,&start_element,&end_element);
   XML_SetCharacterDataHandler(expat,&characters);
   XML_SetExternalEntityRefHandler(expat,&externalEntityRef);
+  XML_SetBase(expat,xml);
   ok=process(fd);
   XML_ParserFree(expat);
 }

@@ -87,6 +87,9 @@ The package consists of:
 </para></listitem>
 <listitem><para><filename>tools/*.rnc</filename>, sample Relax NG grammars;
 </para></listitem>
+<listitem><para><filename>scm/*.scm</filename>, program modules in Scheme, for
+Scheme Datatypes Library;
+</para></listitem>
 <listitem><para>the log of changes, <filename>changes.txt</filename>;
 </para></listitem>
 <listitem><para>this file, <filename>readme.txt</filename>.
@@ -101,7 +104,12 @@ Installation
 </title>
 
 <para>
-On Unix-like systems, run <command>make</command>. If you are using Expat 1.2, define <varname>EXPAT_H</varname> as <filename>xmlparse.h</filename> (instead of <filename>expat.h</filename>).
+On Unix-like systems, run <command>make -f Makefile.gnu</command>
+or <command>make -f Makefile.bsd</command>, depending on which
+flavour of make you have; Makefile.bsd should probably work on SysV,
+but, unfortunately, I have no place to check for the last couple of
+years. If you are using Expat 1.2, define <varname>EXPAT_H</varname> 
+as <filename>xmlparse.h</filename> instead of <filename>expat.h</filename>).
 </para>
 
 <para>
