@@ -1,4 +1,8 @@
 /* $Id$ */
+
+1.2.4 Wed Dec 31 20:55:46 AMT 2003
+dvd: off-by-one in the code for concatenation of literals
+
 1.2.3 Tue Dec 30 04:18:01 AMT 2003
 dvd: fixed error reporting
 

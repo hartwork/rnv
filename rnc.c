@@ -556,12 +556,12 @@ static void getsym(struct rnc_source *sp) {
 	  error(0,sp,ER_SEXP,sym2str(SYM_LITERAL),sym2str(CUR(sp).sym),sp->fn,NXT(sp).line,NXT(sp).col);
 	  break;
 	}
-	{ int newslen=strlen(CUR(sp).s)+strlen(NXT(sp).s);
+	{ int newslen=strlen(CUR(sp).s)+strlen(NXT(sp).s)+1;
 	  char *s;
 	  if(newslen>CUR(sp).slen) {
-	    s=(char*)calloc(newslen+1,sizeof(char));
+	    s=(char*)calloc(newslen,sizeof(char));
 	    strcpy(s,CUR(sp).s); free(CUR(sp).s);
-	    CUR(sp).s=s;
+	    CUR(sp).s=s; CUR(sp).slen=newslen;
 	  } else s=CUR(sp).s;
 	  strcat(s,NXT(sp).s);
 	}
