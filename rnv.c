@@ -250,7 +250,7 @@ static void characters(void *userData,const char *s,int len) {
 static int pipeout(void *buf,int len) {
   int ofs=0,iw,lenw=len;
   for(;;) {
-    if((iw=write(1,buf+ofs,lenw))==-1) {error(RNVER_IO,strerror(errno)); return 0;}
+    if((iw=write(1,(char*)buf+ofs,lenw))==-1) {error(RNVER_IO,strerror(errno)); return 0;}
     ofs+=iw; lenw-=iw; if(lenw==0) return 1;
   }
 }
