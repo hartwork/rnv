@@ -74,4 +74,3 @@ int ary_isany(int p) {
   if(!RN_P_IS(p,AFTER)) return 0;
   rn_After(p,p1,p2); return isanymix(p1)&&(p2==rn_empty||ary_isany(p2));
 }
-

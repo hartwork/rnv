@@ -1,6 +1,9 @@
 /* $Id$ */
 
-1.3.4
+1.3.4 
+Mon Jan  5 17:00:57 AMT 2004
+dvd: isany is now ary_isany (ary is helpers for arx)
+
 Mon Jan  5 00:56:25 AMT 2004
 dvd: rnx_isany is added. It is used by arx and checks for a pattern that matches any element;
      should be written as 
