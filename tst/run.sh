@@ -2,7 +2,13 @@
 
 RNDIR=/usr/local/share/rng-c
 HOME=/home/dvd
+RNVDIR=${HOME}/work/PreTI/CImpl
 FLAGS=${RNVFLAGS:-}
+
+for a in 1 2 3 4 5
+do
+	rnv ${FLAGS} ${RNVDIR}/tst/dt/test${a}-compiled.rnc ${RNVDIR}/tst/dt/test${a}.xml
+done
 
 for a in ${RNDIR}/*.rnc
 do
