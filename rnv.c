@@ -266,7 +266,6 @@ static int validate(int fd) {
       break;
     } else {
       if(!XML_ParseBuffer(expat,len,0)) goto PARSE_ERROR;
-      if(current==rn_notAllowed) break;
     }
   }
   XML_ParserFree(expat);
