@@ -105,6 +105,7 @@ extern void rn_new_schema(void);
 
 extern int rn_contentType(int i);
 extern void rn_setContentType(int i,int t1,int t2);
+extern int rn_groupable(int p1,int p2);
 
 extern void rn_del_p(int i);
 extern void rn_add_p(int i);
@@ -127,7 +128,6 @@ extern int rn_newElement(int nc,int p1);
 extern int rn_newAfter(int p1,int p2);
 extern int rn_newRef(void);
 
-extern int rn_groupable(int p1,int p2);
 extern int rn_one_or_more(int p);
 extern int rn_group(int p1,int p2);
 extern int rn_choice(int p1,int p2);

@@ -45,6 +45,10 @@ void rn_add_p(int i) {if(ht_get(&ht_p,i)==-1) ht_put(&ht_p,i);}
 
 int rn_contentType(int i) {return rn_pattern[i]&0x1C00;}
 void rn_setContentType(int i,int t1,int t2) {rn_pattern[i]|=(t1>t2?t1:t2);}
+int rn_groupable(int p1,int p2) {
+  int ct1=rn_contentType(p1),ct2=rn_contentType(p2);
+  return ((ct1&ct2&RN_P_FLG_CTC)||((ct1|ct2)&RN_P_FLG_CTE));
+}
 
 static int add_s(char *s) {
   int len=strlen(s)+1;
@@ -170,11 +174,6 @@ int rn_newAfter(int p1,int p2) { P_NEW(AFTER);
 int rn_newRef(void) { P_NEW(REF);
   rn_pattern[i_p+2]=i_ref++;
   return accept_p();
-}
-
-int rn_groupable(int p1,int p2) {
-  int ct1=rn_contentType(p1),ct2=rn_contentType(p2);
-  return ((ct1&ct2&RN_P_FLG_CTC)||((ct1|ct2)&RN_P_FLG_CTE));
 }
 
 int rn_one_or_more(int p) {

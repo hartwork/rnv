@@ -37,6 +37,7 @@ comments start with # and continue till end of line
 #include "rnc.h"
 #include "rnd.h"
 #include "rnv.h"
+#include "rnx.h"
 #include "rx.h"
 
 extern int rn_notAllowed;
@@ -74,7 +75,7 @@ static char *value;
 static XML_Parser expat=NULL;
 static int current,previous;
 static int mixed=0;
-static int ok,wf;
+static int ok,wf,any;
 static char *text; static int len_t;
 static int n_t;
 
@@ -380,7 +381,7 @@ static void start_element(void *userData,const char *name,const char **attrs) {
     mixed=1;
     flush_text();
     ok=rnv_start_tag(&current,&previous,(char*)name,(char**)attrs)&&ok;
-    mixed=0;
+    mixed=0; any=any||rnx_isany(current);
   }
 }
 
@@ -409,6 +410,7 @@ static void validate(int start,int fd) {
   expat=XML_ParserCreateNS(NULL,':');
   XML_SetElementHandler(expat,&start_element,&end_element);
   XML_SetCharacterDataHandler(expat,&characters);
+  ok=1; any=0;
   for(;;) {
     buf=XML_GetBuffer(expat,BUFSIZ);
     len=read(fd,buf,BUFSIZ);
@@ -417,8 +419,7 @@ static void validate(int start,int fd) {
       wf=ok=0; break;
     }
     if(!XML_ParseBuffer(expat,len,len==0)) wf=ok=0;
-    if(!ok) break;
-    if(len==0) break;
+    if(!ok||any||len==0) break;
   }
   XML_ParserFree(expat);
   return;
@@ -455,8 +456,8 @@ int main(int argc,char **argv) {
       int i;
       for(i=0;i!=i_r;++i) {
 	switch(rules[i][0]) {
-        case VALID: if((ok=wf)) {ok=1; validate(rules[i][1],fd=open(xml,O_RDONLY)); close(fd);} break;
-	case INVAL: if((ok=wf)) {ok=1; validate(rules[i][1],fd=open(xml,O_RDONLY)); close(fd); ok=wf&&!ok;} break;
+        case VALID: if((ok=wf)) {validate(rules[i][1],fd=open(xml,O_RDONLY)); close(fd);} break;
+	case INVAL: if((ok=wf)) {validate(rules[i][1],fd=open(xml,O_RDONLY)); close(fd); ok=wf&&!ok;} break;
 	case MATCH: ok=rx_match(string+rules[i][1],xml,strlen(xml)); break;
 	case NOMAT: ok=!rx_match(string+rules[i][1],xml,strlen(xml)); break;
 	default: assert(0);
