@@ -3,10 +3,10 @@
 
 (load (in-vicinity (program-vicinity) "rx.scm"))
 
-(require 'regex)
-
 (define scheme-regex #t)
 (define dsl-debug #f)
+
+(or scheme-regex (require 'regex))
 
 (define (dsl-string->token s)
   (let loop ((tl '()) (sl (string->list s)) (state #f))

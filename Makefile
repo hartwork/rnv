@@ -3,7 +3,7 @@
 
 #PUBLIC
 
-VERSION=1.5.1
+VERSION=1.5.2
 CC=cc
 
 # optional features
