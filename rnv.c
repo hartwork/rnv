@@ -228,7 +228,7 @@ ERROR:
 }
 
 static void version(void) {fprintf(stderr,"rnv version %s\n",RNV_VERSION);}
-static void usage(void) {fprintf(stderr,"usage: rnv {-q|-v} schema.rnc {document.xml}\n");}
+static void usage(void) {fprintf(stderr,"usage: rnv {-[qvh?]} schema.rnc {document.xml}\n");}
 
 int main(int argc,char **argv) {
   int ok;
@@ -242,6 +242,7 @@ int main(int argc,char **argv) {
       case '\0': goto END_OF_OPTIONS;
       case 'h': case '?': usage(); return 1;
       case 'v': version(); break;
+      case 's': drv_compact=1; break;
       case 'q': explain=0; break;
       default: fprintf(stderr,"unknown option '-%c'\n",*(*argv+i)); break;
       }

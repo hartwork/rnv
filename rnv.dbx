@@ -3,7 +3,7 @@
 RNV -- Relax NG Compact Syntax Validator in C
 </title>
 <subtitle>
-Version 1.0
+Version 1.1
 </subtitle>
 
 
@@ -69,14 +69,48 @@ Invocation
 The command-line syntax is
 </para>
 <synopsis>
-rnv {-q|-v} grammar.rnc {document1.xml}
+
+        rnv {-q|-s|-v|-h} grammar.rnc {document1.xml}
+
 </synopsis>
 
 <para>
-If no documents are specified, <application>RNV</application> attempts to read the XML document from the standard input.
-When <option>-q</option> is specified, expected elements and attributes are not listed. <option>-v</option> prints version
-of the program.
+If no documents are specified, <application>RNV</application> attempts to read the XML document from the standard input. The options are:
 </para>
+<variablelist>
+<varlistentry>
+<term>
+<option>-q</option>
+</term>
+<listitem>
+in error messages, expected elements and attributes are not listed.
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<option>-s</option>
+</term>
+<listitem>
+rnv uses less memory and runs slower.
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<option>-v</option>
+</term>
+<listitem>
+rnv version is displayed
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<option>-h or -?</option>
+</term>
+<listitem>
+<application>RNV</application> displays usage summary and exits.
+</listitem>
+</varlistentry>
+</variablelist>
 </section>
 
 <section>
@@ -102,9 +136,11 @@ The schema parser does not check that all restrictions are obeyed, in particular
 RNV for Win32 platforms is a Unix program compiled on WIn32. It expects file paths to be written with normal slashes; if a schema is in a different directory and includes or refers external files, then the schema's path must be written in the Unix way for the relative paths to work. For example, under Windows, rnv that uses <filename>..\schema\docbook.rnc</filename> to validate <filename>userguide.dbx</filename> should be invoked as:
 </para>
 
-<synopsis>
+<informalexample>
+
 rnv.exe ../schema/docbook.rnc userguide.dbx 
-</synopsis>
+
+</informalexample>
 </listitem>
 </itemizedlist>
 

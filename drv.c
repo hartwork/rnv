@@ -18,6 +18,7 @@ struct dtl {
 #define LEN_DTL 4
 #define M_SIZE 5
 #define LEN_M 4096
+#define LIM_M 32768
 #define PRIME_M 0xffd
 
 #define M_STO 0
@@ -25,16 +26,22 @@ struct dtl {
 #define M_ATT 2
 #define M_TXT 3
 #define M_END 4
-#define M_TYP(m) memo[m][0]
 #define M_SET(p) memo[i_m][M_SIZE-1]=p
 #define M_RET(m) memo[m][M_SIZE-1]
-#define M_NEW(x) memset(memo[i_m],0,sizeof(int[M_SIZE])); memo[i_m][0]=M_##x
+
+int drv_compact=0;
 
 static struct dtl *dtl;
 static int len_dtl,n_dtl;
 static int (*memo)[M_SIZE];
 static int i_m,len_m;
 static struct hashtable ht_m;
+
+static void new_memo(int typ) {
+  if(drv_compact && ht_get(&ht_m,i_m)==i_m) ht_del(&ht_m,i_m); 
+  memset(memo[i_m],0,sizeof(int[M_SIZE])); 
+  memo[i_m][0]=typ;
+}
 
 static int equal_m(int m1,int m2) {
   int *me1=memo[m1],*me2=memo[m2];
@@ -48,48 +55,50 @@ static int hash_m(int m) {
 static void accept_m(void);
 static int newStartTagOpen(int p,int uri,int name) { 
   int *me=memo[i_m];
-  M_NEW(STO);
+  new_memo(M_STO);
   me[1]=p; me[2]=uri; me[3]=name;
   return ht_get(&ht_m,i_m);
 }
 
 static int newAttributeOpen(int p,int uri,int name) { 
   int *me=memo[i_m];
-  M_NEW(ATT);
+  new_memo(M_ATT);
   me[1]=p; me[2]=uri; me[3]=name;
   return ht_get(&ht_m,i_m);
 }
 
 static int newStartTagClose(int p) {
   int *me=memo[i_m];
-  M_NEW(STC);
+  new_memo(M_STC);
   me[1]=p;
   return ht_get(&ht_m,i_m);
 }
 
 static int newMixedText(int p) {
   int *me=memo[i_m];
-  M_NEW(TXT);
+  new_memo(M_TXT);
   me[1]=p;
   return ht_get(&ht_m,i_m);
 }
 
 static int newEndTag(int p) {
   int *me=memo[i_m];
-  M_NEW(END);
+  new_memo(M_END);
   me[1]=p;
   return ht_get(&ht_m,i_m);
 }
 
 static void accept_m(void) {
-  if(ht_get(&ht_m,i_m)==-1) {
-    ht_put(&ht_m,i_m++);
-    if(i_m==len_m) {
-      int (*newmemo)[M_SIZE]=(int (*)[M_SIZE])calloc(len_m*=2,sizeof(int[M_SIZE]));
-      memcpy(newmemo,memo,i_m*sizeof(int[M_SIZE]));
-      free(memo); memo=newmemo;
-    } 
+  if(ht_get(&ht_m,i_m)!=-1) {
+    if(drv_compact) ht_del(&ht_m,i_m); else return;
   }
+  ht_put(&ht_m,i_m++);
+  if(drv_compact && i_m==LIM_M) i_m=0;
+  if(i_m==len_m) {
+    int (*newmemo)[M_SIZE]=(int (*)[M_SIZE])calloc(len_m*=2,sizeof(int[M_SIZE]));
+    memcpy(newmemo,memo,i_m*sizeof(int[M_SIZE]));
+    free(memo); memo=newmemo;
+  } 
 }
 
 static int fallback_equal(char *typ,char *val,char *s,int n) {return 1;}

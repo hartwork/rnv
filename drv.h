@@ -3,6 +3,8 @@
 #ifndef DRV_H
 #define DRV_H 1
 
+extern int drv_compact;
+
 extern void drv_init(void);
 extern void drv_clear(void);
 
