@@ -1,0 +1,7 @@
+/* $Id$ */
+
+1.0.8; Tue Dec 16 14:05:16 AMT 2003
+dvd: memory for error message in rnv.c is allocated properly
+
+1.0.7; Tue Dec 16 00:12:04 AMT 2003
+dvd: added reporting of attribute value for invalid attributes

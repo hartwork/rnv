@@ -52,11 +52,14 @@ rnd_test: ${OBJ} rnd_test.o
 clean: 
 	-rm -f *.o rnv rnd_test *_test *.core *.gmon *.gprof rnv*.zip rnv.txt rnv.pdf rnv.html rnv.xml
 
-DISTFILES=license.txt ${SRC} Makefile compile.bat rnv.exe readme.txt 
-zip: ${DISTFILES}
+DISTFILES=license.txt ${SRC} Makefile compile.bat rnv.exe readme.txt changes.txt
+zip: rnv-${VERSION}.zip
+rnv-${VERSION}.zip: ${DISTFILES}
 	-rm -rf rnv.zip rnv-[0-9]*.[0-9]*.[0-9]*
 	mkdir rnv-${VERSION}
 	ln ${DISTFILES} rnv-${VERSION}/.
 	zip -r rnv-${VERSION}.zip rnv-${VERSION}
 	-rm -rf rnv-${VERSION}
 
+install: rnv-${VERSION} readme.txt changes.txt
+	-cp -f $> ${DISTDIR}
