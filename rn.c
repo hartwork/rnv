@@ -7,6 +7,7 @@
 #include "ht.h"
 #include "ll.h"
 #include "rn.h"
+#include "rnx.h"
 
 #define LEN_P RN_LEN_P
 #define PRIME_P RN_PRIME_P
@@ -479,14 +480,13 @@ static void sweep_p(int *starts,int n_st,int since) {
 
 static void unmark_p(int since) {
   int p;
-  for(p=0;p!=since;p+=p_size[RN_P_TYP(p)]) assert(!rn_marked(p));
   for(p=since;p!=i_p;p+=p_size[RN_P_TYP(p)]) {
     if(rn_marked(p)) rn_unmark(p); else {ht_deli(&ht_p,p); erase(p);}
   }
 }
 
 static void compress_p(int *starts,int n_st,int since) {
-  int p,psiz, p1,p2,nc, q,i_q,len_q;
+  int p,psiz, p1,p2,nc, q,i_q, newlen_p;
   int *xlat=(int*)m_alloc(i_p-since,sizeof(int));
   p=q=since;
   while(p!=i_p) { psiz=p_size[RN_P_TYP(p)];
@@ -537,13 +537,24 @@ static void compress_p(int *starts,int n_st,int since) {
     if(*starts>=since) *starts=xlat[*starts-since];
     ++starts;
   }
-  if(i_q!=i_p) { i_p=i_q; len_q=i_q*2;
-    if(len_p>P_AVG_SIZE*LIM_P&&len_q<len_p) {
+  m_free(xlat);
+  
+  if(i_q!=i_p) { i_p=i_q; newlen_p=i_p*2;
+    if(len_p>P_AVG_SIZE*LIM_P&&newlen_p<len_p) {
       rn_pattern=(int*)m_stretch(rn_pattern,
-	len_p=len_q>P_AVG_SIZE*LEN_P?len_q:P_AVG_SIZE*LEN_P,
+	len_p=newlen_p>P_AVG_SIZE*LEN_P?newlen_p:P_AVG_SIZE*LEN_P,
 	i_p,sizeof(int));
     }
   }
+
+#if 0
+  for(p=0;p!=i_p;p+=p_size[RN_P_TYP(p)]) {
+    char *s=rnx_p2str(p);
+    printf("%s\n",s);
+    m_free(s);
+  }
+#endif    
+  printf("i_p=%i\n",i_p);
 }
 
 void rn_compress(int *starts,int n_st) {
