@@ -46,6 +46,7 @@ static int n_t;
 
 #define err(msg) vfprintf(stderr,msg,ap);
 static void verror_handler(int erno,va_list ap) {
+  errors++;
   if(erno&ERBIT_RNC) {
     (*rncverror0)(erno&~ERBIT_RNC,ap);
   } else if(erno&ERBIT_RND) {
@@ -122,9 +123,8 @@ static int load_rnc(char *fn) {
   return 1;
 }
 
-static void error(int erno,...) {
+static void error_handler(int erno,...) {
   va_list ap; va_start(ap,erno); verror_handler(erno,ap); va_end(ap);
-  ++errors;
 }
 
 static void flush_text(void) {
@@ -170,7 +170,7 @@ static void characters(void *userData,const char *s,int len) {
 static int pipeout(void *buf,int len) {
   int ofs=0,iw,lenw=len;
   for(;;) {
-    if((iw=write(1,(char*)buf+ofs,lenw))==-1) {error(XCL_ER_IO,strerror(errno)); return 0;}
+    if((iw=write(1,(char*)buf+ofs,lenw))==-1) {error_handler(XCL_ER_IO,strerror(errno)); return 0;}
     ofs+=iw; lenw-=iw; if(lenw==0) return 1;
   }
 }
@@ -186,7 +186,7 @@ static int validate(int fd) {
     buf=XML_GetBuffer(expat,BUFSIZ);
     len=read(fd,buf,BUFSIZ);
     if(len<0) {
-      error(XCL_ER_IO,strerror(errno));
+      error_handler(XCL_ER_IO,strerror(errno));
       goto ERROR;
     }
     if(peipe) peipe=peipe&&pipeout(buf,len);
@@ -197,7 +197,7 @@ static int validate(int fd) {
   return !errors;
 
 PARSE_ERROR:
-  error(XCL_ER_XML,XML_ErrorString(XML_GetErrorCode(expat)));
+  error_handler(XCL_ER_XML,XML_ErrorString(XML_GetErrorCode(expat)));
   while(peipe&&(len=read(fd,buf,BUFSIZ))!=0) peipe=peipe&&pipeout(buf,len);
 ERROR:
   return 0;

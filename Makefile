@@ -3,6 +3,11 @@
 VERSION=1.3.2
 CC=cc
 
+# sample entries to validate from vim
+RNV=rnv
+DOCBOOK_RNC=../../RNG-C/docbook.rnc
+DOCBOOK_XSL=../../RNG-C/xslt.rnc
+
 EXPAT_H="<expat.h>"
 UNISTD_H="<unistd.h>"
 
@@ -60,8 +65,16 @@ xmlc.o \
 strops.o \
 rx.o 
 
+.SUFFIXES: .c .o .dbx .xsl .valid
+
 .c.o:
 	${CC} ${CFLAGS} -c -o $@ $<
+
+.dbx.valid:
+	${RNV} ${DOCBOOKRNC} $<
+
+.xsl.valid:
+	${RNV} ${DOCBOOKXSL} $<
 
 all: rnv
 
