@@ -78,11 +78,8 @@ int inRange(int u,int r[][2],int len) {
 
 /*
  * $Log$
- * Revision 1.12  2003/12/14 20:41:49  dvd
- * typo in u.c
- *
- * Revision 1.11  2003/12/14 20:39:05  dvd
- * ParseBuffer unless len==0
+ * Revision 1.13  2003/12/14 20:48:10  dvd
+ * cleanups
  *
  * Revision 1.10  2003/12/11 23:35:15  dvd
  * unicode mess

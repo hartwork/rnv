@@ -63,7 +63,7 @@ static char *suri=NULL,*sname;
 static int len_suri=-1;
 
 static void qname(char *name) {
-  char *sep,len;
+  char *sep; int len;
   sep=strrchr(name,':'); 
   if(sep) {
     sname=sep+1;
@@ -196,11 +196,11 @@ ERRORS:
 
 /*
  * $Log$
+ * Revision 1.16  2003/12/14 20:48:10  dvd
+ * cleanups
+ *
  * Revision 1.15  2003/12/14 20:39:05  dvd
  * ParseBuffer unless len==0
- *
- * Revision 1.14  2003/12/14 20:07:54  dvd
- * cleanups
  *
  * Revision 1.13  2003/12/14 14:52:24  dvd
  * efficient memoization
