@@ -239,9 +239,9 @@ RVP
      * RVP assumes that the last colon in a name separates the local part
        from the namespace URI (it is what one gets if specifies ':' as
        namespace separator to Expat).
-     * Error codes can be grabbed from rvp sources by grep -l _ER_ *.h
-       and OR-ing them with corresponding masks from erbit.h.
-       Additionally, error 0 is the protocol format error.
+     * Error codes can be grabbed from rvp sources by grep _ER_ *.h and
+       OR-ing them with corresponding masks from erbit.h. Additionally,
+       error 0 is the protocol format error.
      * Either "er" or "error" responses are returned, not both; -q
        chooses between concise and verbose forms (invocation syntax
        described later).

@@ -341,7 +341,7 @@ part from the namespace URI (it is what one gets if specifies ':'
 as namespace separator to Expat).
 </para></listitem>
 <listitem><para>
-Error codes can be grabbed from rvp sources by <command>grep -l
+Error codes can be grabbed from rvp sources by <command>grep
 _ER_ *.h</command> and OR-ing them with corresponding masks from
 erbit.h. Additionally, error 0 is the protocol format error.
 </para></listitem>

@@ -121,7 +121,7 @@ ${DIST}-${VERSION}.zip: ${DISTFILES} ${DISTWIN32} ${DISTTOOLS}
 	zip -9 -r ${DIST}-${VERSION}-win32bin.zip ${DISTWIN32}
 
 install: ${DIST}-${VERSION}.zip readme.txt changes.txt
-	-cp -f ${DIST}-${VERSION}.zip ${DIST}-${VERSION}-win32bin.zip readme.txt changes.txt ${DISTDIR}
+	-cp -f ${DIST}-${VERSION}.zip ${DIST}-${VERSION}-win32bin.zip readme.txt changes.txt doc/rnv.pdf ${DISTDIR}
 	(cd ${DISTDIR}; rm -f RNV.ZIP ; ln -s ${DIST}-${VERSION}.zip RNV.ZIP)
 
 # DO NOT DELETE
