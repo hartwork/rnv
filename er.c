@@ -59,12 +59,18 @@ static void default_ver_handler(int er_no,va_list ap) {
   case ER_NODT:
     vfprintf(stderr,"undeclared datatype prefix '%s' (%s,%u,%u)\n",ap);
     break;
+  case ER_NCEX:
+    vfprintf(stderr,"first argument for '-' is not '*' or 'prefix:*' (%s,%u,%u)\n",ap);
+    break;
   default: assert(0);
   }
 }
 
 /*
  * $Log$
+ * Revision 1.11  2003/11/29 20:51:39  dvd
+ * nameclasses
+ *
  * Revision 1.10  2003/11/29 17:47:48  dvd
  * decl
  *

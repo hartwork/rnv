@@ -18,6 +18,7 @@
 #define ER_DUPDT 52
 #define ER_NONS 53
 #define ER_NODT 54
+#define ER_NCEX 55
 
 extern void er_handler(int er_no,...);
 extern void (*ver_handler_p)(int er_no,va_list ap);
@@ -26,6 +27,9 @@ extern void (*ver_handler_p)(int er_no,va_list ap);
 
 /*
  * $Log$
+ * Revision 1.10  2003/11/29 20:51:39  dvd
+ * nameclasses
+ *
  * Revision 1.9  2003/11/29 17:47:48  dvd
  * decl
  *

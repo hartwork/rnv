@@ -27,7 +27,7 @@ static void realloc_sc() {
 
 void sc_open() {
   sc_tab[sc_base=sc_top++][1]=SC_BASE; if(sc_top==len) realloc_sc();
-  sc_add(SC_DFLT,0,SC_NS|SC_NS_INHERITED); /* default namespace */
+  sc_add(0,0,SC_NS|SC_NS_INHERITED); /* default namespace */
   sc_add(SC_INHR,0,SC_NS|SC_NS_INHERITED); /* inherited namespace */
 }
 
@@ -59,6 +59,9 @@ int sc_add(int key,int val,int aux) {
 
 /*
  * $Log$
+ * Revision 1.2  2003/11/29 20:51:39  dvd
+ * nameclasses
+ *
  * Revision 1.1  2003/11/29 17:47:48  dvd
  * decl
  *

@@ -50,7 +50,7 @@ void rn_init() {
     memset(rn_nameclass[0],0,sizeof(int[NC_SIZE]));
     rn_pattern[0][0]=P_ERROR;  rn_accept_p();
     rn_nameclass[0][0]=NC_ERROR; rn_accept_nc();
-    rn_accept_s("");
+    rn_accept_s(""); /* empty string is always at 0 */
 
     rn_first=(int*)calloc(len_p,sizeof(int));
     rn_first_a=(int*)calloc(len_p,sizeof(int));
@@ -119,6 +119,9 @@ int rn_accept_s(char *s) {
 
 /* 
  * $Log$
+ * Revision 1.5  2003/11/29 20:51:39  dvd
+ * nameclasses
+ *
  * Revision 1.4  2003/11/29 17:47:48  dvd
  * decl
  *

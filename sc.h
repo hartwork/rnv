@@ -14,8 +14,8 @@
 #define SC_DE_ILEAVE 16
 
 /* special prefixes */
-#define SC_DFLT 0 /* empty string is always at index 0 */
 #define SC_INHR -1 /* no string is at this index, used for inherited namespace */
+#define SC_START -1 /* key for 'start' define */
 
 /* sentinel urls */
 #define SC_BASE -1
@@ -41,6 +41,9 @@ extern int sc_add(int key,int val,int aux); /* returns index for the new record 
 
 /* 
  * $Log$
+ * Revision 1.2  2003/11/29 20:51:39  dvd
+ * nameclasses
+ *
  * Revision 1.1  2003/11/29 17:47:48  dvd
  * decl
  * 
