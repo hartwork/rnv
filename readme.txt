@@ -98,8 +98,11 @@ Note
 
 Installation
 
-   On Unix-like systems, run make. If you are using Expat 1.2, define
-   EXPAT_H as xmlparse.h (instead of expat.h).
+   On Unix-like systems, run make -f Makefile.gnu or make -f
+   Makefile.bsd, depending on which flavour of make you have;
+   Makefile.bsd should probably work on SysV, but, unfortunately, I have
+   no place to check for the last couple of years. If you are using Expat
+   1.2, define EXPAT_H as xmlparse.h instead of expat.h).
 
    On Windows, use rnv.exe. To recompile from the sources, use
    Makefile.bcc with Borland C/C++ Compiler, or create a makefile or
