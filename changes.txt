@@ -1,5 +1,10 @@
 /* $Id$ */
 
+1.5.7 Mon Feb 16 20:03:13 AMT 2004
+dvd: rewrote the pattern space compression algorithm -- it should
+     be correct now, and if it is still not, debugging should be
+     much easier
+
 1.5.6 Tue Feb 10 19:37:07 AMT 2004
 dvd: actually turned path checks on
 

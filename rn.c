@@ -365,7 +365,8 @@ static void mark_p(int start) {
   do {
     p=flat[i++];
     switch(RN_P_TYP(p)) {
-    case RN_P_NOT_ALLOWED: case RN_P_EMPTY: case RN_P_TEXT: case RN_P_DATA: case RN_P_VALUE:
+    case RN_P_NOT_ALLOWED: case RN_P_EMPTY: case RN_P_TEXT:
+    case RN_P_DATA: case RN_P_VALUE:
       break;
 
     case RN_P_CHOICE: rn_Choice(p,p1,p2); goto BINARY;
@@ -414,7 +415,8 @@ static void sweep_p(int *starts,int n_st,int since) {
       if(xlat[p-since]==p) {
 	touched=0;
 	switch(RN_P_TYP(p)) {
-	case RN_P_NOT_ALLOWED: case RN_P_EMPTY: case RN_P_TEXT: case RN_P_DATA: case RN_P_VALUE:
+	case RN_P_NOT_ALLOWED: case RN_P_EMPTY: case RN_P_TEXT: 
+	case RN_P_DATA: case RN_P_VALUE:
 	  break;
 
 	case RN_P_CHOICE: rn_Choice(p,p1,p2); goto BINARY;
@@ -472,20 +474,21 @@ static void unmark_p(int since) {
 }
 
 static void compress_p(int *starts,int n_st,int since) {
-  int p,p1,p2,q,nc,i_q;
+  int p,psiz, p1,p2,nc, q,i_q;
   int *xlat=(int*)m_alloc(i_p-since,sizeof(int));
-  q=since;
-  for(p=since;p!=i_p;p+=p_size[RN_P_TYP(p)]) {
+  p=q=since;
+  while(p!=i_p) { psiz=p_size[RN_P_TYP(p)];
     if(erased(p)) {
       xlat[p-since]=-1;
     } else {
       ht_deli(&ht_p,p);
       xlat[p-since]=q;
-      q+=p_size[RN_P_TYP(p)];
+      q+=psiz;
     }
+    p+=psiz;
   }
   i_q=q; p=since;
-  while(p!=i_p) { int psiz=p_size[RN_P_TYP(p)]; /* rn_pattern[p] changes */
+  while(p!=i_p) { psiz=p_size[RN_P_TYP(p)]; /* rn_pattern[p] changes */
     if(xlat[p-since]!=-1) {
       switch(RN_P_TYP(p)) {
       case RN_P_NOT_ALLOWED: case RN_P_EMPTY: case RN_P_TEXT:
@@ -523,9 +526,9 @@ static void compress_p(int *starts,int n_st,int since) {
     ++starts;
   }
   if(i_q!=i_p) { int len_q=i_q*2;
-    if(len_p>P_AVG_SIZE*LIM_P&&len_q<len_p) 
+    if(len_p>P_AVG_SIZE*LIM_P&&len_q<len_p)
       rn_pattern=(int*)m_stretch(rn_pattern,
-        len_p=len_q>P_AVG_SIZE*LEN_P?len_q:P_AVG_SIZE*LEN_P,
+	len_p=len_q>P_AVG_SIZE*LEN_P?len_q:P_AVG_SIZE*LEN_P,
 	i_p=i_q,sizeof(int));
   }
 }

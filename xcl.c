@@ -36,7 +36,7 @@ extern int rn_notAllowed,rx_compact,drv_compact;
 #define XCL_ER_NOXENT 2
 #define XCL_ER_NOSID 3
 
-static int peipe,explain,rnck;
+static int peipe,verbose,nexp,rnck;
 static char *xml;
 static XML_Parser expat=NULL;
 static int start,current,previous;
@@ -59,15 +59,12 @@ static void verror_handler(int erno,va_list ap) {
       (*er_printf)("error (%s,%i,%i): ",xml,lastline=line,lastcol=col);
       if(erno&ERBIT_RNV) {
 	rnv_default_verror_handler(erno&~ERBIT_RNV,ap);
-	if(explain) {
-	  rnx_expected(previous);
-	  if(rnx_n_exp!=0 && rnx_n_exp<=NEXP) {
-	    int i;
-	    (*er_printf)("expected:\n");
-	    for(i=0;i!=rnx_n_exp;++i) {
-	      (*er_printf)("\t%s\n",s=rnx_p2str(rnx_exp[i]));
-	      m_free(s);
-	    }
+	rnx_expected(previous);
+	if(rnx_n_exp!=0 && rnx_n_exp<=nexp) { int i;
+	  (*er_printf)("expected:\n");
+	  for(i=0;i!=rnx_n_exp;++i) {
+	    (*er_printf)("\t%s\n",s=rnx_p2str(rnx_exp[i]));
+	    m_free(s);
 	  }
 	}
       } else {
@@ -216,7 +213,7 @@ static void validate(int fd) {
 }
 
 static void version(void) {(*er_printf)("rnv version %s\n",RNV_VERSION);}
-static void usage(void) {(*er_printf)("usage: rnv {-[qpsc"
+static void usage(void) {(*er_printf)("usage: rnv {-[qnpsc"
 #if DXL_EXC
 "d"
 #endif
@@ -228,7 +225,7 @@ static void usage(void) {(*er_printf)("usage: rnv {-[qpsc"
 int main(int argc,char **argv) {
   init();
 
-  peipe=0; explain=1; rnck=0;
+  peipe=0; verbose=1; nexp=NEXP; rnck=0;
   while(*(++argv)&&**argv=='-') {
     int i=1;
     for(;;) {
@@ -245,7 +242,8 @@ int main(int argc,char **argv) {
 #if DSL_SCM
       case 'e': dsl_ld(*(argv+1)); if(*(argv+1)) ++argv; goto END_OF_OPTIONS;
 #endif
-      case 'q': explain=0; break;
+      case 'n': if(*(argv+1)) nexp=atoi(*(++argv)); goto END_OF_OPTIONS;
+      case 'q': verbose=0; nexp=0; break;
       default: (*er_printf)("unknown option '-%c'\n",*(*argv+i)); break;
       }
       ++i;
@@ -264,18 +262,18 @@ int main(int argc,char **argv) {
 	  ok=0;
 	  continue;
 	}
-	if(explain) (*er_printf)("%s\n",xml);
+	if(verbose) (*er_printf)("%s\n",xml);
 	validate(fd);
 	close(fd);
 	clear();
       } while(*(++argv));
-      if(!ok&&explain) (*er_printf)("error: some documents are invalid\n");
+      if(!ok&&verbose) (*er_printf)("error: some documents are invalid\n");
     } else {
       if(!rnck) {
 	xml="stdin";
 	validate(0);
 	clear();
-	if(!ok&&explain) (*er_printf)("error: invalid input\n");
+	if(!ok&&verbose) (*er_printf)("error: invalid input\n");
       }
     }
   }
