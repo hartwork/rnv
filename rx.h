@@ -5,21 +5,22 @@
 #ifndef RX_H
 #define RX_H
 
-#define RXER_BADCH 0
-#define RXER_UNFIN 1
-#define RXER_NOLSQ 2
-#define RXER_NORSQ 3
-#define RXER_NOLCU 4
-#define RXER_NORCU 5
-#define RXER_NOLPA 6
-#define RXER_NORPA 7
-#define RXER_BADCL 8
-#define RXER_NODGT 9
+#define RX_ER_BADCH 0
+#define RX_ER_UNFIN 1
+#define RX_ER_NOLSQ 2
+#define RX_ER_NORSQ 3
+#define RX_ER_NOLCU 4
+#define RX_ER_NORCU 5
+#define RX_ER_NOLPA 6
+#define RX_ER_NORPA 7
+#define RX_ER_BADCL 8
+#define RX_ER_NODGT 9
 
 extern void (*rx_verror_handler)(int erno,va_list ap);
 extern int rx_compact;
 
 extern void rx_init(void);
+extern void rx_clear(void);
 
 /* 
  returns positive value if the s[0..n] ~= rx, 0 if not, -1 on regex error; 

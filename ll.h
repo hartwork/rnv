@@ -23,8 +23,8 @@
 #define RNX_LEN_EXP 16
 #define RNX_LIM_EXP 64
 
-#define RNV_LEN_T 1024
-#define RNV_LIM_T 16384
+#define XCL_LEN_T 1024
+#define XCL_LIM_T 16384
 
 #define RX_LEN_P 256
 #define RX_PRIME_P 0xfb

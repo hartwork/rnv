@@ -23,13 +23,13 @@ static void default_verror_handler(int erno,va_list ap) {
     rxverror0(erno&~ERBIT_RX,ap);
   } else {
     switch(erno) {
-    case XSDER_TYP: err("unknown type %s"); break;
-    case XSDER_PAR: err("unknown parameter %s"); break;
-    case XSDER_PARVAL: err("invalid parameter value %s=\"%s\""); break;
-    case XSDER_VAL: err("invalid typed value \"%s\" for type %s"); break;
-    case XSDER_NPAT: err("no more than 16 patterns per type are supported"); break;
-    case XSDER_WS: err("the builtin derived datatype that specifies the desired value for the whiteSpace facet should be used instead of 'whiteSpace'"); break;
-    case XSDER_ENUM: err("'value' should be used instead of 'enumeration'"); break;
+    case XSD_ER_TYP: err("unknown type %s"); break;
+    case XSD_ER_PAR: err("unknown parameter %s"); break;
+    case XSD_ER_PARVAL: err("invalid parameter value %s=\"%s\""); break;
+    case XSD_ER_VAL: err("invalid typed value \"%s\" for type %s"); break;
+    case XSD_ER_NPAT: err("no more than 16 patterns per type are supported"); break;
+    case XSD_ER_WS: err("the builtin derived datatype that specifies the desired value for the whiteSpace facet should be used instead of 'whiteSpace'"); break;
+    case XSD_ER_ENUM: err("'value' should be used instead of 'enumeration'"); break;
     default: assert(0);
     }
   }
@@ -43,14 +43,23 @@ static void error_handler(int erno,...) {
   (*xsd_verror_handler)(erno,ap);
   va_end(ap);
 }
+
 static void verror_handler_rx(int erno,va_list ap) {(*xsd_verror_handler)(erno|ERBIT_RX,ap);}
 
+static void windup(void);
 static int initialized=0;
 void xsd_init(void) {
   if(!initialized) { initialized=1;
-    rx_init();
-    rxverror0=rx_verror_handler; rx_verror_handler=&verror_handler_rx;
+    rx_init(); rxverror0=rx_verror_handler; rx_verror_handler=&verror_handler_rx;
+    windup();
   }
+}
+
+void xsd_clear(void) {
+  windup();
+}
+
+static void windup(void) {
 }
 
 #define FCT_ENUMERATION 0
@@ -408,7 +417,7 @@ static int chkdbl(struct facets *fp,char *s,int n) {
 
 static int chktmlim(char *typ,char *fmt,char *val,int cmpmin,int cmpmax,struct xsd_tm *tmp) {
   struct xsd_tm tmf; int cmp;
-  if(!xsd_allows(typ,"",val,strlen(val))) {(*error_handler)(XSDER_PARVAL); return 0;}
+  if(!xsd_allows(typ,"",val,strlen(val))) {(*error_handler)(XSD_ER_PARVAL); return 0;}
   xsd_mktm(&tmf,fmt,val);
   cmp=xsd_tmcmp(tmp,&tmf);
   return cmpmin<=cmp&&cmp<=cmpmax;
@@ -501,22 +510,22 @@ int xsd_allows(char *typ,char *ps,char *s,int n) {
     while((n=strlen(ps))) {
       char *key=ps,*val=key+n+1,*end,i; 
       switch(i=strtab(key,fcttab,NFCT)) {
-      case FCT_LENGTH: fct.length=(int)strtol(val,&end,10); if(!*val||*end) (*error_handler)(XSDER_PARVAL,key,val); break;
-      case FCT_MAX_LENGTH: fct.maxLength=(int)strtol(val,&end,10); if(!*val||*end) (*error_handler)(XSDER_PARVAL,key,val); break;
-      case FCT_MIN_LENGTH: fct.minLength=(int)strtol(val,&end,10); if(!*val||*end) (*error_handler)(XSDER_PARVAL,key,val); break;
-      case FCT_FRACTION_DIGITS: fct.fractionDigits=(int)strtol(val,&end,10); if(!*val||*end) (*error_handler)(XSDER_PARVAL,key,val); break;
-      case FCT_TOTAL_DIGITS: fct.totalDigits=(int)strtol(val,&end,10); if(!*val||*end) (*error_handler)(XSDER_PARVAL,key,val); break;
+      case FCT_LENGTH: fct.length=(int)strtol(val,&end,10); if(!*val||*end) (*error_handler)(XSD_ER_PARVAL,key,val); break;
+      case FCT_MAX_LENGTH: fct.maxLength=(int)strtol(val,&end,10); if(!*val||*end) (*error_handler)(XSD_ER_PARVAL,key,val); break;
+      case FCT_MIN_LENGTH: fct.minLength=(int)strtol(val,&end,10); if(!*val||*end) (*error_handler)(XSD_ER_PARVAL,key,val); break;
+      case FCT_FRACTION_DIGITS: fct.fractionDigits=(int)strtol(val,&end,10); if(!*val||*end) (*error_handler)(XSD_ER_PARVAL,key,val); break;
+      case FCT_TOTAL_DIGITS: fct.totalDigits=(int)strtol(val,&end,10); if(!*val||*end) (*error_handler)(XSD_ER_PARVAL,key,val); break;
       case FCT_PATTERN: 
-	if(fct.npat==NPAT) (*error_handler)(XSDER_NPAT); else {
+	if(fct.npat==NPAT) (*error_handler)(XSD_ER_NPAT); else {
 	  fct.pattern[fct.npat++]=val;
 	} break;
       case FCT_MAX_EXCLUSIVE: fct.maxExclusive=val; break;
       case FCT_MAX_INCLUSIVE: fct.maxInclusive=val; break;
       case FCT_MIN_EXCLUSIVE: fct.minExclusive=val; break;
       case FCT_MIN_INCLUSIVE: fct.minInclusive=val; break;
-      case FCT_WHITE_SPACE: (*error_handler)(XSDER_WS); break;
-      case FCT_ENUMERATION: (*error_handler)(XSDER_ENUM); break;
-      case NFCT: (*error_handler)(XSDER_PAR,key); break;
+      case FCT_WHITE_SPACE: (*error_handler)(XSD_ER_WS); break;
+      case FCT_ENUMERATION: (*error_handler)(XSD_ER_ENUM); break;
+      case NFCT: (*error_handler)(XSD_ER_PAR,key); break;
       default: assert(0);
       }
       fct.set|=1<<i;
@@ -642,7 +651,7 @@ int xsd_allows(char *typ,char *ps,char *s,int n) {
     fct.pattern[fct.npat++]=PAT_NCNAMES;
     length=tokcntn(s,n);
     break;
-  case NTYP: (*error_handler)(XSDER_TYP,typ); break;
+  case NTYP: (*error_handler)(XSD_ER_TYP,typ); break;
   default: assert(0);
   }
 
@@ -716,7 +725,7 @@ static int qncmpn(char *s1,char *s2,int n2) { /* context is not passed over; com
 
 int xsd_equal(char *typ,char *val,char *s,int n) {
   if(!xsd_allows(typ,"",val,strlen(val))) {
-    (*error_handler)(XSDER_VAL,val);
+    (*error_handler)(XSD_ER_VAL,val);
     return 0;
   }
   if(!xsd_allows(typ,"",s,n)) return 0;
@@ -766,7 +775,7 @@ int xsd_equal(char *typ,char *val,char *s,int n) {
   case TYP_UNSIGNED_INT:
   case TYP_LONG:
   case TYP_UNSIGNED_LONG: return deccmp(val,strlen(val),s,n)==0;
-  case NTYP: (*error_handler)(XSDER_TYP,typ); return 0;
+  case NTYP: (*error_handler)(XSD_ER_TYP,typ); return 0;
   default: assert(0);
   }
   return 0;

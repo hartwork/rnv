@@ -2,9 +2,8 @@
 
 #include <stdlib.h> /*calloc,free*/
 #include <string.h> /*memcpy*/
-#include <assert.h> /*assert*/
-#include <stdarg.h> /*va_list,va_start,va_end*/
-#include "er.h"
+#include <stdio.h>
+#include <assert.h>
 #include "rn.h"
 #include "rnx.h"
 #include "rnd.h"
@@ -16,6 +15,23 @@ static int len_f,n_f,len_r,n_r;
 static int *flat;
 static int *refs;
 static int errors;
+
+#define err(msg) vfprintf(stderr,msg"\n",ap)
+static void default_verror_handler(int er_no,va_list ap) {
+  switch(er_no) {
+  case RND_ER_LOOPST: err("loop in start pattern"); break;
+  case RND_ER_LOOPEL: err("loop in pattern for element '%s'"); break;
+  case RND_ER_CTYPE: err("content of element '%s' does not have a content-type"); break;
+  case RND_ER_BADSTART: err("bad path in start pattern"); break;
+  case RND_ER_BADMORE: err("bad path before '*' or '+' in element '%s'"); break;
+  case RND_ER_BADEXPT: err("bad path after '-' in element '%s'"); break;
+  case RND_ER_BADLIST: err("bad path after 'list' in element '%s'"); break;
+  case RND_ER_BADATTR: err("bad path in attribute '%s' of element '%s'"); break;
+  default: assert(0);
+  }
+}
+
+void (*rnd_verror_handler)(int er_no,va_list ap)=&default_verror_handler;
 
 static int initialized=0;
 void rnd_init(void) {
@@ -33,7 +49,7 @@ int rnd_errors(void) {
 }
 
 static void error(int er_no,...) {
-  va_list ap; va_start(ap,er_no); (*ver_handler_p)(er_no,ap); va_end(ap);
+  va_list ap; va_start(ap,er_no); (*rnd_verror_handler)(er_no,ap); va_end(ap);
   ++errors;
 }
 
@@ -154,9 +170,9 @@ static void loops(void) {
   int i=0,p=flat[i],nc=-1,p1;
   for(;;) {
     if(loop(p)) {
-      if(i==0) error(ER_LOOPST); else {
+      if(i==0) error(RND_ER_LOOPST); else {
 	char *s=rnx_nc2str(nc);
-	error(ER_LOOPEL,s);
+	error(RND_ER_LOOPEL,s);
 	free(s);
       }
     }
@@ -208,7 +224,7 @@ static void ctypes(void) {
       ctype(p1);
       if(!contentType(p1)) {
 	char *s=rnx_nc2str(nc);
-	error(ER_CTYPE,s);
+	error(RND_ER_CTYPE,s);
 	free(s);
       }
     }
@@ -341,18 +357,18 @@ static void path(int p,int nc) {
   case P_INTERLEAVE: Interleave(p,p1,p2); goto BINARY;
   case P_GROUP: Group(p,p1,p2); goto BINARY;
   case P_DATA_EXCEPT: DataExcept(p,p1,p2); 
-    if(bad_data_except(p2)) {char *s=rnx_nc2str(nc); error(ER_BADEXPT,s); free(s);}
+    if(bad_data_except(p2)) {char *s=rnx_nc2str(nc); error(RND_ER_BADEXPT,s); free(s);}
     goto BINARY;
   BINARY: path(p1,nc); path(p2,nc); break;
 
   case P_ONE_OR_MORE: OneOrMore(p,p1); 
-    if(bad_one_or_more(p1,0)) {char *s=rnx_nc2str(nc); error(ER_BADMORE,s); free(s);}
+    if(bad_one_or_more(p1,0)) {char *s=rnx_nc2str(nc); error(RND_ER_BADMORE,s); free(s);}
     goto UNARY;
   case P_LIST: List(p,p1); 
-    if(bad_list(p1)) {char *s=rnx_nc2str(nc); error(ER_BADLIST,s); free(s);}
+    if(bad_list(p1)) {char *s=rnx_nc2str(nc); error(RND_ER_BADLIST,s); free(s);}
     goto UNARY;
   case P_ATTRIBUTE: Attribute(p,nc1,p1); 
-    if(bad_attribute(p1)) {char *s=rnx_nc2str(nc),*s1=rnx_nc2str(nc1); error(ER_BADATTR,s1,s); free(s1); free(s);}
+    if(bad_attribute(p1)) {char *s=rnx_nc2str(nc),*s1=rnx_nc2str(nc1); error(RND_ER_BADATTR,s1,s); free(s1); free(s);}
     goto UNARY;
   UNARY: path(p1,nc); break; 
 
@@ -362,7 +378,7 @@ static void path(int p,int nc) {
 
 static void paths(void) {
   int i,p,p1,nc;
-  if(bad_start(flat[0])) error(ER_BADSTART);
+  if(bad_start(flat[0])) error(RND_ER_BADSTART);
   for(i=1;i!=n_f;++i) {
     p=flat[i];
     if(P_IS(p,ELEMENT)) {

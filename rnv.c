@@ -2,145 +2,62 @@
 
 #include <stdarg.h>
 #include <stdlib.h> /*calloc,free*/
-#include <fcntl.h>  /*open,close*/
-#include UNISTD_H   /*open,read,close*/
-#include <stdio.h>  /*fprintf,stderr*/
 #include <string.h> /*strerror,strncpy,strrchr*/
+#include <stdio.h>
 #include <errno.h>
-#include EXPAT_H
 #include "xmlc.h" /*xmlc_white_space*/
 #include "erbit.h"
 #include "rn.h"
-#include "rnc.h"
-#include "rnd.h"
-#include "rnx.h"
 #include "drv.h"
-#include "xsd.h"
-#include "ll.h"
+#include "rnv.h"
 
-extern int rx_compact;
+static void (*drvverror0)(int erno,va_list ap);
 
-#define LEN_T RNV_LEN_T
-#define LIM_T RNV_LIM_T
+#define err(msg) vfprintf(stderr,msg"\n",ap);
+static void default_verror_handler(int erno,va_list ap) {
+  if(erno&ERBIT_DRV) {
+    (*drvverror0)(erno&~ERBIT_DRV,ap);
+  } else {
+    switch(erno) {
+    case RNV_ER_ELEM: err("element %s^%s not allowed"); break;
+    case RNV_ER_AKEY: err("attribute %s^%s not allowed"); break;
+    case RNV_ER_AVAL: err("attribute %s^%s with invalid value \"%s\""); break;
+    case RNV_ER_EMIS: err("incomplete content"); break;
+    case RNV_ER_AMIS: err("missing attributes of %s^%s"); break;
+    case RNV_ER_UFIN: err("unfinished content of element %s^%s"); break;
+    case RNV_ER_TEXT: err("invalid text or data"); break;
+    case RNV_ER_MIXT: err("text not allowed"); break;
+    default: assert(0);
+    }                
+  }
+}
 
-/* maximum number of candidates to display */
-#define NEXP 6
+void (*rnv_verror_handler)(int erno,va_list ap)=&default_verror_handler;
 
-#define RNVER_IO 0
-#define RNVER_XML 1
-#define RNVER_ELEM 10
-#define RNVER_AKEY 11
-#define RNVER_AVAL 12
-#define RNVER_EMIS 13
-#define RNVER_AMIS 14
-#define RNVER_UFIN 15
-#define RNVER_TEXT 16
-#define RNVER_MIXT 17
+static void error_handler(int erno,...) {
+  va_list ap; va_start(ap,erno); (*rnv_verror_handler)(erno,ap); va_end(ap);
+}
 
-static void (*xsdverror0)(int erno,va_list ap);
-
-static int peipe,explain;
-static char *xml;
-static XML_Parser expat=NULL;
-static int start,current,previous;
-static int mixed=0;
-static int lastline,lastcol,level;
-static int errors;
-
-/* Expat does not normalize strings on input unless the whole file is loaded into the buffer */
-static char *text; static int len_t;
-static int n_t;
-static char *suri=NULL,*sname; static int len_suri=-1; /* qname() splits, handlers use */
-
-static void verror(int erno,va_list ap);
-static void verror_handler_xsd(int erno,va_list ap) {verror(erno|ERBIT_XSD,ap);}
+static void verror_handler_drv(int erno,va_list ap) {(*rnv_verror_handler)(erno|ERBIT_DRV,ap);}
 
 static void windup(void);
 static int initialized=0;
-static void init(void) {
+void rnv_init(void) {
   if(!initialized) {initialized=1;
     rn_init();
-    rnc_init();
-    rnd_init();
-    rnx_init();
-    drv_init();
-    xsdverror0=xsd_verror_handler; xsd_verror_handler=&verror_handler_xsd;
-    text=(char*)calloc(len_t=LEN_T,sizeof(char));
+    drv_init(); drvverror0=drv_verror_handler; drv_verror_handler=&verror_handler_drv;
     windup();
   }
 }
 
-static void clear(void) {
-  if(len_t>LIM_T) {free(text); text=(char*)calloc(len_t=LEN_T,sizeof(char));}
+void rnv_clear(void) {
   windup();
 }
 
 static void windup(void) {
-  text[n_t=0]='\0';
-  errors=0; level=0; lastline=lastcol=-1;
 }
 
-static int load_rnc(char *fn) {
-  struct rnc_source *sp=rnc_alloc();
-  if(rnc_open(sp,fn)!=-1) start=rnc_parse(sp); rnc_close(sp); 
-  {int errors=rnc_errors(sp); rnc_free(sp); if(errors) return 0;}
-  
-  rnd_deref(start); if(rnd_errors()) return 0;
-  rnd_restrictions(); if(rnd_errors()) return 0;
-  rnd_traits();
-  start=rnd_release(); 
-
-  start=rn_compress_last(start);
-
-  return 1;
-}
-
-#define err(msg) vfprintf(stderr,msg,ap);
-
-static void error(int erno,...) {
-  va_list ap;
-  va_start(ap,erno);
-  verror(erno,ap);
-  va_end(ap);
-}
-
-static void verror(int erno,va_list ap) {
-  int line=XML_GetCurrentLineNumber(expat),col=XML_GetCurrentColumnNumber(expat);
-  ++errors;
-  if(line!=lastline||col!=lastcol) {
-    char *s;
-    fprintf(stderr,"error (%s,%i,%i): ",xml,lastline=line,lastcol=col);
-    if(erno&ERBIT_XSD) {
-      (*xsdverror0)(erno&~ERBIT_XSD,ap);
-    } else {
-      switch(erno) {
-      case RNVER_IO: err("%s"); break;
-      case RNVER_XML: err("%s"); break;
-      case RNVER_ELEM: err("element %s^%s not allowed"); break;
-      case RNVER_AKEY: err("attribute %s^%s not allowed"); break;
-      case RNVER_AVAL: err("attribute %s^%s with invalid value \"%s\""); break;
-      case RNVER_EMIS: err("incomplete content"); break;
-      case RNVER_AMIS: err("missing attributes of %s^%s"); break;
-      case RNVER_UFIN: err("unfinished content"); break;
-      case RNVER_TEXT: err("invalid text or data"); break;
-      case RNVER_MIXT: err("text not allowed"); break;
-      default: assert(0);
-      }                
-      if(explain) {
-	rnx_expected(previous);
-	if(rnx_n_exp!=0 && rnx_n_exp<=NEXP) {
-	  int i;
-	  fprintf(stderr,"\nexpected:");
-	  for(i=0;i!=rnx_n_exp;++i) {
-	    fprintf(stderr,"\n\t%s",s=rnx_p2str(rnx_exp[i]));
-	    free(s);
-	  }
-	}
-      }
-      fprintf(stderr,"\n");
-    }
-  }
-}
+static char *suri=NULL,*sname; static int len_suri=-1; /* qname() splits, handlers use */
 
 static void qname(char *name) {
   char *sep; int len;
@@ -151,7 +68,7 @@ static void qname(char *name) {
   suri[len-1]='\0';
 }
 
-static int whitespace(void) {
+static int whitespace(char *text,int n_t) {
   char *s=text,*end=text+n_t;
   for(;;) {
     if(s==end) return 1;
@@ -159,181 +76,69 @@ static int whitespace(void) {
   }
 }
 
-static void flush_text(void) {
+int rnv_flush_text(int current,char *text,int n_t,int mixed) {
+  int previous;
   if(mixed) {
-    if(!whitespace()) {
+    if(!whitespace(text,n_t)) {
       current=drv_mixed_text(previous=current);
       if(current==rn_notAllowed) {
 	current=drv_mixed_text_recover(previous);
-	error(RNVER_MIXT);
+	error_handler(RNV_ER_MIXT);
       }
     }
   } else {
     current=drv_text(previous=current,text,n_t);
     if(current==rn_notAllowed) {
       current=drv_text_recover(previous,text,n_t);
-      error(RNVER_TEXT);
+      error_handler(RNV_ER_TEXT);
     }
   }
-  text[n_t=0]='\0';
+  return current;
 }
 
-static void start_element(void *userData,const char *name,const char **attrs) {
-  if(current!=rn_notAllowed) { 
-    mixed=1;
-    flush_text();
-    qname((char*)name);
-    current=drv_start_tag_open(previous=current,suri,sname);
+int rnv_start_element(int current,char *name,char **attrs) {
+  int previous;
+  qname((char*)name);
+  current=drv_start_tag_open(previous=current,suri,sname);
+  if(current==rn_notAllowed) {
+    current=drv_start_tag_open_recover(previous,suri,sname);
+    error_handler(current==rn_notAllowed?RNV_ER_ELEM:RNV_ER_EMIS,suri,sname); 
+  }
+  while(current!=rn_notAllowed) {
+    if(!(*attrs)) break;
+    qname((char*)*attrs);
+    current=drv_attribute_open(previous=current,suri,sname);
+    ++attrs;
     if(current==rn_notAllowed) {
-      current=drv_start_tag_open_recover(previous,suri,sname);
-      error(current==rn_notAllowed?RNVER_ELEM:RNVER_EMIS,suri,sname); 
-    }
-    while(current!=rn_notAllowed) {
-      if(!(*attrs)) break;
-      qname((char*)*attrs);
-      current=drv_attribute_open(previous=current,suri,sname);
-      ++attrs;
-      if(current==rn_notAllowed) {
-	current=drv_attribute_open_recover(previous,suri,sname);
-	error(RNVER_AKEY,suri,name);
-      } else {
-	current=drv_text(previous=current,(char*)*attrs,strlen(*attrs));
-	if(current==rn_notAllowed || (current=drv_attribute_close(previous=current))==rn_notAllowed) {
-	  current=drv_attribute_close_recover(previous);
-	  error(RNVER_AVAL,suri,sname,*attrs);
-	}
-      }
-      ++attrs;
-    }
-    if(current!=rn_notAllowed) {
-      current=drv_start_tag_close(previous=current);
-      if(current==rn_notAllowed) {
-	current=drv_start_tag_close_recover(previous);
-	qname((char*)name);
-	error(RNVER_AMIS,suri,sname);
+      current=drv_attribute_open_recover(previous,suri,sname);
+      error_handler(RNV_ER_AKEY,suri,name);
+    } else {
+      current=drv_text(previous=current,(char*)*attrs,strlen(*attrs));
+      if(current==rn_notAllowed || (current=drv_attribute_close(previous=current))==rn_notAllowed) {
+	current=drv_attribute_close_recover(previous);
+	error_handler(RNV_ER_AVAL,suri,sname,*attrs);
       }
     }
-    mixed=0;
-  } else {
-    ++level;
+    ++attrs;
   }
-}
-
-static void end_element(void *userData,const char *name) {
   if(current!=rn_notAllowed) {
-    flush_text(); 
-    current=drv_end_tag(previous=current);
+    current=drv_start_tag_close(previous=current);
     if(current==rn_notAllowed) {
-      error(RNVER_UFIN);
-      current=drv_end_tag_recover(previous);
+      current=drv_start_tag_close_recover(previous);
+      qname((char*)name);
+      error_handler(RNV_ER_AMIS,suri,sname);
     }
-    mixed=1;
-  } else {
-    if(level==0) current=previous; else --level;
   }
+  return current;
 }
 
-static void characters(void *userData,const char *s,int len) {
-  if(current!=rn_notAllowed) {
-    int newlen_t=n_t+len+1;
-    if(newlen_t<=LIM_T&&LIM_T<len_t) newlen_t=LIM_T; 
-    else if(newlen_t<len_t) newlen_t=len_t;
-    if(len_t!=newlen_t) {
-      char *newtext=(char*)calloc(len_t=newlen_t,sizeof(char)); 
-      memcpy(newtext,text,n_t*sizeof(char)); free(text); 
-      text=newtext;
-    }
-    strncpy(text+n_t,s,len); n_t+=len; text[n_t]='\0'; /* '\0' guarantees that the text is bounded, and strto[ld] work for data */
+int rnv_end_element(int current,char *name) {
+  int previous;
+  current=drv_end_tag(previous=current);
+  if(current==rn_notAllowed) {
+    qname(name);
+    error_handler(RNV_ER_UFIN,suri,sname);
+    current=drv_end_tag_recover(previous);
   }
-}
-
-static int pipeout(void *buf,int len) {
-  int ofs=0,iw,lenw=len;
-  for(;;) {
-    if((iw=write(1,(char*)buf+ofs,lenw))==-1) {error(RNVER_IO,strerror(errno)); return 0;}
-    ofs+=iw; lenw-=iw; if(lenw==0) return 1;
-  }
-}
-
-static int validate(int fd) {
-  void *buf; int len;
-  previous=current=start;
-
-  expat=XML_ParserCreateNS(NULL,':');
-  XML_SetElementHandler(expat,&start_element,&end_element);
-  XML_SetCharacterDataHandler(expat,&characters);
-  for(;;) {
-    buf=XML_GetBuffer(expat,BUFSIZ);
-    len=read(fd,buf,BUFSIZ);
-    if(len<0) {
-      error(RNVER_IO,strerror(errno));
-      goto ERROR;
-    }
-    if(peipe) peipe=peipe&&pipeout(buf,len);
-    if(!XML_ParseBuffer(expat,len,len==0)) goto PARSE_ERROR;
-    if(len==0) break;
-  }
-  XML_ParserFree(expat);
-  return !errors;
-
-PARSE_ERROR:
-  error(RNVER_XML,XML_ErrorString(XML_GetErrorCode(expat)));
-  while(peipe&&(len=read(fd,buf,BUFSIZ))!=0) peipe=peipe&&pipeout(buf,len);
-ERROR:
-  return 0;
-}
-
-static void version(void) {fprintf(stderr,"rnv version %s\n",RNV_VERSION);}
-static void usage(void) {fprintf(stderr,"usage: rnv {-[qpsvh?]} schema.rnc {document.xml}\n");}
-
-int main(int argc,char **argv) {
-  int ok;
-
-  init();
-
-  peipe=0; explain=1;
-  while(*(++argv)&&**argv=='-') {
-    int i=1;
-    for(;;) {
-      switch(*(*argv+i)) {
-      case '\0': goto END_OF_OPTIONS;
-      case 'h': case '?': usage(); return 1;
-      case 'v': version(); break;
-      case 's': drv_compact=1; rx_compact=1; break;
-      case 'p': peipe=1; break;
-      case 'q': explain=0; break;
-      default: fprintf(stderr,"unknown option '-%c'\n",*(*argv+i)); break;
-      }
-      ++i;
-    }
-    END_OF_OPTIONS:;
-  }
-
-  if(!*(argv)) {
-    usage();
-    return 1;
-  }
-
-  if((ok=load_rnc(*(argv++)))) {
-    if(*argv) {
-      do {
-	int fd; xml=*argv;
-	if((fd=open(xml,O_RDONLY))==-1) {
-	  fprintf(stderr,"I/O error (%s): %s\n",xml,strerror(errno));
-	  ok=0;
-	  continue;
-	}
-	if(explain) fprintf(stderr,"%s\n",xml);
-	ok=validate(fd)&&ok;
-	close(fd);
-	clear();
-      } while(*(++argv));
-    } else { /* stdin */
-      xml="stdin";
-      ok=validate(0)&&ok;
-      clear();
-    }
-  }
-
-  return !ok;
+  return current;
 }

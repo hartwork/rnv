@@ -1,9 +1,12 @@
 /* $Id$ */
 
-1.3.1
-Mon Dec 29 01:58:38 AMT 2003
-dvd invalid elements are correctly skipped (they were supposed to before), but the code
-    contained a fallout that prevented them from doing so
+1.3.2
+Mon Dec 29 20:26:01 AMT 2003
+dvd: error handling refactored, validation logic separated from command-line interface
+
+1.3.1 Mon Dec 29 01:58:38 AMT 2003
+dvd: invalid elements are correctly skipped (they were supposed to before), but the code
+     contained a fallout that prevented them from doing so
 
 1.3.0 Mon Dec 29 01:57:46 AMT 2003
 dvd: pattern pools are now one-dimensional, pointer arithmetics is a little more

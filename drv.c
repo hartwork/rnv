@@ -2,13 +2,14 @@
 
 #include <string.h> /*strcmp*/
 #include <stdlib.h> /*calloc,free*/
+#include <stdio.h>
 #include "xmlc.h" /*xmlc_white_space*/
 #include "strops.h" /*tokcmpn*/
 #include "ht.h"
 #include "rn.h"
-#include "er.h"
 #include "xsd.h"
 #include "ll.h"
+#include "erbit.h"
 #include "drv.h"
 
 struct dtl {
@@ -39,6 +40,28 @@ static int len_dtl,n_dtl;
 static int (*memo)[M_SIZE];
 static int i_m,len_m;
 static struct hashtable ht_m;
+
+static void (*xsdverror0)(int erno,va_list ap);
+
+#define err(msg) vfprintf(stderr,msg"\n",ap);
+static void default_verror_handler(int erno,va_list ap) {
+  if(erno&ERBIT_XSD) {
+    (*xsdverror0)(erno&~ERBIT_XSD,ap);
+  } else {
+    switch(erno) {
+    case DRV_ER_NODTL: err("no datatype library for URI '%s'"); break;
+    default: assert(0);
+    }                
+  }
+}
+
+void (*drv_verror_handler)(int erno,va_list ap)=&default_verror_handler;
+
+static void error_handler(int erno,...) {
+  va_list ap; va_start(ap,erno); (*drv_verror_handler)(erno,ap); va_end(ap);
+}
+
+static void verror_handler_xsd(int erno,va_list ap) {(*drv_verror_handler)(erno|ERBIT_XSD,ap);}
 
 static void new_memo(int typ) {
   if(drv_compact && ht_get(&ht_m,i_m)==i_m) ht_del(&ht_m,i_m); 
@@ -122,7 +145,7 @@ static int initialized=0;
 void drv_init(void) {
   if(!initialized) { initialized=1;
     rn_init(); 
-    xsd_init();
+    xsd_init(); xsdverror0=xsd_verror_handler; xsd_verror_handler=&verror_handler_xsd;
     memo=(int (*)[M_SIZE])calloc(len_m=LEN_M,sizeof(int[M_SIZE]));
     dtl=(struct dtl*)calloc(len_dtl=LEN_DTL,sizeof(struct dtl));
     ht_init(&ht_m,LEN_M,&hash_m,&equal_m);
@@ -134,7 +157,7 @@ static void windup(void) {
   i_m=0; n_dtl=0;
   drv_add_dtl(rn_string+0,&fallback_equal,&fallback_allows); /* guard at 0 */
   drv_add_dtl(rn_string+0,&builtin_equal,&builtin_allows);
- drv_add_dtl(rn_string+rn_xsd_uri,&xsd_equal,&xsd_allows);
+  drv_add_dtl(rn_string+rn_xsd_uri,&xsd_equal,&xsd_allows);
 }
 
 void drv_clear(void) {
@@ -158,7 +181,7 @@ static struct dtl *getdtl(int uri) {
   int i;
   dtl[0].uri=uri; i=n_dtl;
   while(dtl[--i].uri!=uri);
-  if(i==0) er_handler(ER_NODTL,rn_string+uri);
+  if(i==0) error_handler(DRV_ER_NODTL,rn_string+uri);
   return dtl+i;
 }
 

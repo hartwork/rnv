@@ -1,8 +1,13 @@
 /* $Id$ */
 
+#include <stdarg.h>
+
 #ifndef DRV_H
 #define DRV_H 1
 
+#define DRV_ER_NODTL 0
+
+extern void (*drv_verror_handler)(int erno,va_list ap);
 extern int drv_compact;
 
 extern void drv_init(void);

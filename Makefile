@@ -1,6 +1,6 @@
 # $Id$
 #
-VERSION=1.3.1
+VERSION=1.3.2
 CC=cc
 
 EXPAT_H="<expat.h>"
@@ -26,15 +26,15 @@ LIBRNV=${LIBRNVA}
 SRC=\
 ll.h \
 erbit.h \
-rnv.c \
+xcl.c \
 rn.c rn.h \
 rnc.c rnc.h \
 rnd.c rnd.h \
+rnv.c rnv.h \
 rnx.c rnx.h \
 drv.c drv.h \
 xsd.c xsd.h \
 xsd_tm.c xsd_tm.h \
-er.c er.h \
 sc.c sc.h \
 ht.c ht.h \
 u.c u.h \
@@ -48,11 +48,11 @@ OBJ=\
 rn.o \
 rnc.o \
 rnd.o \
+rnv.o \
 rnx.o \
 drv.o \
 xsd.o \
 xsd_tm.o \
-er.o \
 sc.o \
 u.o \
 ht.o \
@@ -65,8 +65,8 @@ rx.o
 
 all: rnv
 
-rnv: rnv.o ${LIBRNV}
-	${CC} ${LFLAGS} -o rnv rnv.o ${LIBRNV} ${LIB} 
+rnv: xcl.o ${LIBRNV}
+	${CC} ${LFLAGS} -o rnv xcl.o ${LIBRNV} ${LIB} 
 
 rnd_test: ${OBJ} rnd_test.o
 	${CC} ${LFLAGS} -o rnd_test rnd_test.o ${OBJ} ${LIB} 
@@ -98,15 +98,15 @@ install: rnv-${VERSION}.zip readme.txt changes.txt
 
 # DO NOT DELETE
 
-rnv.o: xmlc.h erbit.h rn.h rnc.h rnd.h rnx.h drv.h xsd.h ll.h
+rnv.o: xmlc.h erbit.h rn.h drv.h rnv.h
+xcl.o: erbit.h rn.h rnc.h rnv.h rnx.h ll.h
 rn.o: strops.h ht.h ll.h rn.h
-rnc.o: u.h xmlc.h strops.h er.h rn.h sc.h rnc.h
-rnd.o: er.h rn.h rnx.h rnd.h
+rnc.o: u.h xmlc.h strops.h rn.h sc.h rnc.h
+rnd.o: rn.h rnx.h rnd.h
 rnx.o: strops.h rn.h ll.h rnx.h
-drv.o: xmlc.h strops.h ht.h rn.h er.h xsd.h ll.h drv.h
+drv.o: xmlc.h strops.h ht.h rn.h xsd.h ll.h erbit.h drv.h
 xsd.o: u.h xmlc.h strops.h erbit.h rx.h xsd_tm.h xsd.h
 xsd_tm.o: xsd_tm.h
-er.o: er.h
 sc.o: ll.h sc.h
 ht.o: ht.h
 u.o: u.h

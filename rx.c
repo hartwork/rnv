@@ -188,30 +188,27 @@ static int add_r(char *rx) {
 #define ERRPOS 
 
 #define err(msg) vfprintf(stderr,msg" in \"%s\" at offset %i\n",ap)
-
 static void default_verror_handler(int erno,va_list ap) {
   fprintf(stderr,"regular expressions: ");
   switch(erno) {
-  case RXER_BADCH: err("bad character"); break;
-  case RXER_UNFIN: err("unfinished expression"); break;
-  case RXER_NOLSQ: err("'[' expected"); break;
-  case RXER_NORSQ: err("']' expected"); break;
-  case RXER_NOLCU: err("'{' expected"); break;
-  case RXER_NORCU: err("'}' expected"); break;
-  case RXER_NOLPA: err("'(' expected"); break;
-  case RXER_NORPA: err("')' expected"); break;
-  case RXER_BADCL: err("unknown class"); break;
-  case RXER_NODGT: err("digit expected"); break;
+  case RX_ER_BADCH: err("bad character"); break;
+  case RX_ER_UNFIN: err("unfinished expression"); break;
+  case RX_ER_NOLSQ: err("'[' expected"); break;
+  case RX_ER_NORSQ: err("']' expected"); break;
+  case RX_ER_NOLCU: err("'{' expected"); break;
+  case RX_ER_NORCU: err("'}' expected"); break;
+  case RX_ER_NOLPA: err("'(' expected"); break;
+  case RX_ER_NORPA: err("')' expected"); break;
+  case RX_ER_BADCL: err("unknown class"); break;
+  case RX_ER_NODGT: err("digit expected"); break;
   default: assert(0);
   }
 }
+
 void (*rx_verror_handler)(int erno,va_list ap)=&default_verror_handler;
 
 static void error_handler(int erno,...) {
-  va_list ap;
-  va_start(ap,erno);
-  (*rx_verror_handler)(erno,ap);
-  va_end(ap);
+  va_list ap; va_start(ap,erno); (*rx_verror_handler)(erno,ap); va_end(ap);
 }
 
 #define LEN_M RX_LEN_M
@@ -272,7 +269,7 @@ void rx_init(void) {
   }
 }
 
-static void clear(void) {
+void rx_clear(void) {
   ht_clear(&ht_p); ht_clear(&ht_2); ht_clear(&ht_r); ht_clear(&ht_m);
   windup();
 }
@@ -291,10 +288,8 @@ static void windup(void) {
 static int r0,ri,sym,val,errors;
 
 static void error(int erno) {
-  if(!errors) {
-    error_handler(erno,regex+r0,u_strlen(regex+r0));
-  }
-  errors=1;
+  if(!errors) error_handler(erno,regex+r0,u_strlen(regex+r0));
+  ++errors;
 }
 
 #include "rx_cls_u.c"
@@ -302,13 +297,13 @@ static void error(int erno) {
 static int chclass(void) {
   int u,cl,rj;
   ri+=u_get(&u,regex+ri);
-  if(u=='\0') {--ri; error(RXER_NOLCU); return 0;}
-  if(u!='{') {error(RXER_NOLCU); return 0;}
+  if(u=='\0') {--ri; error(RX_ER_NOLCU); return 0;}
+  if(u!='{') {error(RX_ER_NOLCU); return 0;}
   rj=ri;
   for(;;) {
-    if(regex[rj]=='\0') {ri=rj; error(RXER_NORCU); return 0;}
+    if(regex[rj]=='\0') {ri=rj; error(RX_ER_NORCU); return 0;}
     if(regex[rj]=='}') {
-      if((cl=strntab(regex+ri,rj-ri,clstab,NUM_CLS_U))==NUM_CLS_U) {error(RXER_BADCL); cl=0;}
+      if((cl=strntab(regex+ri,rj-ri,clstab,NUM_CLS_U))==NUM_CLS_U) {error(RX_ER_BADCL); cl=0;}
       ri=rj+1;
       return cl;
     }
@@ -330,7 +325,7 @@ static void getsym(void) {
     if(u=='\\') {
       ri+=u_get(&u,regex+ri);
       switch(u) {
-      case '\0': --ri; error(RXER_UNFIN); sym=SYM_END; break;
+      case '\0': --ri; error(RX_ER_UNFIN); sym=SYM_END; break;
       case 'p': sym=SYM_CLS; val=chclass(); break;
       case 'P': sym=SYM_CLS; val=-chclass(); break;
       case 's': sym=SYM_CLS; val=CLS_S; break;
@@ -349,7 +344,7 @@ static void getsym(void) {
       case '\\': case '|': case '.': case '-': case '^': case '?': case '*': case '+':
       case '{': case '}': case '[': case ']': case '(': case ')':
         sym=SYM_ESC; val=u; break;
-      default: error(RXER_BADCH); sym=SYM_ESC; val=u; break;
+      default: error(RX_ER_BADCH); sym=SYM_ESC; val=u; break;
       }
     } else {
       switch(u) {
@@ -379,7 +374,7 @@ static int chgroup(void) {
 	  switch(sym) {
 	  case SYM_CHR:
 	  case SYM_ESC: p=choice(p,newRange(c,val)); getsym(); break;
-	  default: error(RXER_BADCH); getsym(); break;
+	  default: error(RX_ER_BADCH); getsym(); break;
 	  }
 	}
       } else {
@@ -387,7 +382,7 @@ static int chgroup(void) {
       }
       break;
     case SYM_CLS: p=choice(p,cls(val)); getsym(); break;
-    case SYM_END: error(RXER_NORSQ); goto END_OF_GROUP;
+    case SYM_END: error(RX_ER_NORSQ); goto END_OF_GROUP;
     default: assert(0);
     }
   }
@@ -403,7 +398,7 @@ static int chexpr(void) {
     p=chgroup();
   }
   if(sym==SYM_CHR&&val=='-') { getsym();
-    chk_get('[',RXER_NOLSQ); p=newExcept(p,chexpr()); chk_get(']',RXER_NORSQ);
+    chk_get('[',RX_ER_NOLSQ); p=newExcept(p,chexpr()); chk_get(']',RX_ER_NORSQ);
   }
   return p;
 }
@@ -414,16 +409,16 @@ static int atom(void) {
   switch(sym) {
   case SYM_CHR:
     switch(val) {
-    case '[': getsym(); p=chexpr(); chk_get(']',RXER_NORSQ); break;
-    case '(': getsym(); p=expression(); chk_get(')',RXER_NORPA); break;
+    case '[': getsym(); p=chexpr(); chk_get(']',RX_ER_NORSQ); break;
+    case '(': getsym(); p=expression(); chk_get(')',RX_ER_NORPA); break;
     case '{': case '?': case '*': case '+': case '|':
-    case ')': case ']': case '}': error(RXER_BADCH); getsym(); break;
+    case ')': case ']': case '}': error(RX_ER_BADCH); getsym(); break;
     default: p=newChar(val); getsym(); break;
     }
     break;
   case SYM_ESC: p=newChar(val); getsym(); break;
   case SYM_CLS: p=cls(val); getsym(); break;
-  default: error(RXER_BADCH); getsym(); break;
+  default: error(RX_ER_BADCH); getsym(); break;
   }
   return p;
 }
@@ -466,7 +461,7 @@ static int quantifier(int p0) {
 	while(n--) p=group(p,choice(empty,p0));
       }
     }
-  } else error(RXER_NODGT);
+  } else error(RX_ER_NODGT);
   return p;
 }
 
@@ -475,7 +470,7 @@ static int piece(void) {
   p=atom();
   if(sym==SYM_CHR) {
     switch(val) {
-    case '{': getsym(); p=quantifier(p); chk_get('}',RXER_NOLCU); break;
+    case '{': getsym(); p=quantifier(p); chk_get('}',RX_ER_NOLCU); break;
     case '?': getsym(); p=choice(empty,p); break;
     case '*': getsym(); p=choice(empty,one_or_more(p)); break;
     case '+': getsym(); p=one_or_more(p); break;
@@ -511,10 +506,10 @@ static int compile(char *rx) {
   int r=0,p=0,d_r;
   d_r=add_r(rx);
   if((r=ht_get(&ht_r,i_r))==-1) {
-    if(rx_compact&&i_p>=P_AVG_SIZE*LIM_P) {clear(); d_r=add_r(rx);}
+    if(rx_compact&&i_p>=P_AVG_SIZE*LIM_P) {rx_clear(); d_r=add_r(rx);}
     ht_put(&ht_r,r=i_r);
     i_r+=d_r;
-    bind(r); p=expression(); if(sym!=SYM_END) error(RXER_BADCH);
+    bind(r); p=expression(); if(sym!=SYM_END) error(RX_ER_BADCH);
     r2p[i_2][0]=r; r2p[i_2][1]=p;
     ht_put(&ht_2,i_2++);
     if(i_2==len_2) {
