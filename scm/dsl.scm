@@ -36,7 +36,7 @@
 		(and (<= (string-length s) (string->number (cdr p)))
 		  (params (cdr ps))))
 	      ((pattern)
-		(and #t
+		(and (rx-match (cdr p) s)
 		  (params (cdr ps))))
 	      (else #f)))
 	  #t)))
