@@ -426,12 +426,7 @@ int main(int argc,char **argv) {
 
   if(!(*(argv)&&*(argv+1))) {usage(); return 1;}
 
-  xml=*(argv++); valid=1;
-  if((fd=open(xml,O_RDONLY))==-1) {
-    fprintf(stderr,"error (%s): %s\n",xml,strerror(errno));
-    return EXIT_FAILURE;
-  }
-  close(fd);
+  xml=*(argv++); if((valid=(fd=open(xml,O_RDONLY))!=-1)) close(fd);
   do {
     if(arx(*(argv++))) {
       int i;
