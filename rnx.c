@@ -61,11 +61,13 @@ static void expected(int p,int first,int req) {
   }
 }
 void rnx_expected(int p,int req) {
-  if(len_exp>LIM_EXP) {
-    m_free(rnx_exp);
-    rnx_exp=(int*)m_alloc(len_exp=LIM_EXP,sizeof(int));
+  if(req) {
+    if(len_exp>LIM_EXP) {
+      m_free(rnx_exp);
+      rnx_exp=(int*)m_alloc(len_exp=LIM_EXP,sizeof(int));
+    }
+    rnx_n_exp=0;
   }
-  rnx_n_exp=0;
   expected(p,1,req);
 }
 

@@ -1,0 +1,21 @@
+#!/bin/sh
+
+RNDIR=/usr/local/share/rng-c
+HOME=/home/dvd
+FLAGS=${RNVFLAGS:-}
+
+for a in ${RNDIR}/*.rnc
+do
+	echo $a
+	rnv ${FLAGS} -c $a
+done
+
+rnv ${FLAGS} -c tst/g/paths.rnc
+
+rnv ${FLAGS} ${HOME}/Docu/RELAX-NG/testSuite/testSuite.rnc \
+    ${HOME}/Docu/RELAX-NG/testSuite/spectest.xml
+rnv ${FLAGS} ${RNDIR}/docbook.rnc ${HOME}/work/XEP/doc/docbook/*.dbx
+rnv ${FLAGS} ${RNDIR}/xslt.rnc ${HOME}/work/docbook/xsl/*/*.xsl
+rnv ${FLAGS} ${RNDIR}/xmlschema.rnc `find ${HOME}/Docu/mathml2 -name '*.xsd' -print`
+rnv ${FLAGS} ${RNDIR}/fo.rnc ${HOME}/work/XEP/Tests/*/*.fo
+rnv ${FLAGS} ${HOME}/work/TEI/P5/p5odds.rnc ${HOME}/work/TEI/P5/P5-driver.xml
