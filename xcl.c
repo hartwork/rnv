@@ -103,13 +103,13 @@ static void windup(void) {
 }
 
 static int load_rnc(char *fn) {
-  int ok;
   struct rnc_source *sp=rnc_alloc();
   if(rnc_open(sp,fn)!=-1) start=rnc_parse(sp); rnc_close(sp); 
-  ok=!rnc_errors(sp);
-  rnc_free(sp);
 
-  if(ok) {
+  if(rnc_errors(sp)) {
+    rnc_free(sp);
+  } else {
+    rnc_free(sp);
     rnd_deref(start); 
     if(!rnd_errors()) {
       rnd_restrictions(); 
