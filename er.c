@@ -24,6 +24,9 @@ static void default_er_handler(int er_no,...) {
   case ER_XESC:
     vfprintf(stderr,"unterminated escape (%s,%u,%u)\n",ap);
     break;
+  case ER_LEX:
+    vfprintf(stderr,"lexical error: expected '%c', got '%c' (%s,%u,%u)\n",ap);
+    break;
   default: assert(0);
   }
   va_end(ap);
@@ -31,6 +34,9 @@ static void default_er_handler(int er_no,...) {
 
 /*
  * $Log$
+ * Revision 1.3  2003/11/21 00:20:06  dvd
+ * lexer in progress
+ *
  * Revision 1.2  2003/11/20 23:28:50  dvd
  * getu,getv debugged
  *

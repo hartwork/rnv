@@ -6,6 +6,7 @@
 #define ER_IO 0
 #define ER_UTF 1
 #define ER_XESC 2
+#define ER_LEX 3
 
 extern void (*er_handler)(int er_no,...);
 
@@ -13,6 +14,9 @@ extern void (*er_handler)(int er_no,...);
 
 /*
  * $Log$
+ * Revision 1.3  2003/11/21 00:20:06  dvd
+ * lexer in progress
+ *
  * Revision 1.2  2003/11/20 23:28:50  dvd
  * getu,getv debugged
  *

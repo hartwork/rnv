@@ -136,8 +136,9 @@ keyword ::= "attribute"
 #define SYM_RSQU 33
 #define SYM_EXCEPT 34
 #define SYM_QNAME 35   /* : */
-#define SYM_NS_NAME 36 /* :* */
-#define SYM_ANY_NAME 37 /* * */
+#define SYM_CONCAT 36
+#define SYM_NS_NAME 37 /* :* */
+#define SYM_ANY_NAME SYM_ZERO_OR_MORE /* because they both are * */
 #define SYM_QUOTE 38  /* \ */
 #define SYM_ANNOTATION 39 /* >> */
 #define SYM_COMMENT 40 
@@ -204,7 +205,7 @@ static void rnc_init(struct utf_source *sp) {
   sp->complete=sp->fd=-1;
   sp->u=sp->v=0; sp->nx=-1;
   sp->flags=0;
-  sp->line=sp->col=1;
+  sp->line=1; sp->col=0;
 }
 
 static int rnc_read(struct utf_source *sp) {
@@ -322,47 +323,47 @@ static void getv(struct utf_source *sp) {
 }
 
 static int sym(struct utf_source *sp) {
+  int s;
   switch(sp->v) {
-  case -1: return SYM_EOF;
+  case -1: s=SYM_EOF;
   case '#':
     break;
-  case '=':
-    break;
-  case ',':
-    break;
-  case '|':
-    break;
-  case '&':
-    break;
-  case '?':
-    break;
-  case '*':
-    break;
-  case '+':
-    break;
-  case '-':
-    break;
-  case '(':
-    break;
-  case ')':
-    break;
-  case '{':
-    break;
-  case '}':
-    break;
-  case '"':
+  case '=': getv(sp); return SYM_ASGN;
+  case ',': getv(sp); return SYM_SEQ;
+  case '|': getv(sp); 
+    if(sp->v=='=') {
+      getv(sp); return SYM_ASGN_CHOICE;
+    } return SYM_CHOICE;
+  case '&': getv(sp);
+    if(sp->v=='=') {
+      getv(sp); return SYM_ASGN_ILEAVE;
+    } else return SYM_ILEAVE;
+  case '?': getv(sp); return SYM_OPTIONAL;
+  case '*': getv(sp); return SYM_ZERO_OR_MORE;
+  case '+': getv(sp); return SYM_ONE_OR_MORE;
+  case '-': getv(sp); return SYM_EXCEPT;
+  case '~': getv(sp); return SYM_CONCAT;	   
+  case '(': getv(sp); return SYM_LPAR;
+  case ')': getv(sp); return SYM_RPAR;
+  case '{': getv(sp); return SYM_LCUR;
+  case '}': getv(sp); return SYM_RCUR;
+  case '[': getv(sp); return SYM_LSQU;
+  case ']': getv(sp); return SYM_RSQU;
+  case ':': getv(sp);
+    if(sp->v=='*') {
+      getv(sp); return SYM_NS_NAME;
+    } return SYM_QNAME;
+  case '>':
+    getv(sp); if(v!='>') (*er_handler)(ER_LEX,'>',v,sp->fn,sp->line,sp->col);
+    getv(sp); return SYM_ANNOTATION;
+  case ':':
+  case '"': 
     break;
   case '\'':
     break;
-  case '~':	   
-    break;
-  case '[':
-    break;
-  case ']':
-    break;
-  case '>':
-    break;
   default:
+    { /* identifiers */
+    }
   }
 }
 
@@ -383,11 +384,8 @@ int main(int argc,char **argv) {
 
 /*
  * $Log$
- * Revision 1.6  2003/11/20 23:43:07  dvd
- * in progress
- *
- * Revision 1.5  2003/11/20 23:35:17  dvd
- * cleanups
+ * Revision 1.7  2003/11/21 00:20:06  dvd
+ * lexer in progress
  *
  * Revision 1.4  2003/11/20 23:28:50  dvd
  * getu,getv debugged
