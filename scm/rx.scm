@@ -6,40 +6,43 @@
 
 ; patterns: none empty any choice group more except range class char
 
-(define (rx-null p)
+(define (rx-null? p)
   (case (car p)
     ((empty) #t)
-    ((choice) (or (rx-null (cadr p)) (rx-null (cddr p))))
-    ((group) (and (rx-null (cadr p)) (rx-null (cddr p))))
-    ((more) (rx-null (cdr p)))
+    ((choice) (or (rx-null? (cadr p)) (rx-null? (cddr p))))
+    ((group) (and (rx-null? (cadr p)) (rx-null? (cddr p))))
+    ((more) (rx-null? (cdr p)))
     (else #f)))
 
+(define rx-none #f)
+(define rx-empty #f)
+
 (define rx-newpat ; #f flushes
-  (let (
+  (letrec (
       (cache '())
       (pat=?
 	(lambda (p1 p2)
-	  (and
-	    (eqv? (car p1) (car p2))
-	    (case (car p1)
-	      ((none empty any) #t)
-	      ((choice group except range except range)
-		(and (eqv? (cadr p1) (cadr p2)) (eqv? (cddr p1) (cddr p2))))
-	      ((more class char range)
-		(eqv? (cdr p1) (cdr p2)))))))	
+	  (case (car p1)
+	    ((none empty any) #t)
+	    ((choice group except range)
+	      (and (eqv? (cadr p1) (cadr p2)) (eqv? (cddr p1) (cddr p2))))
+	    ((more class char)
+	      (eqv? (cdr p1) (cdr p2))))))   
       (old
 	(lambda (p cache)
 	  (and (pair? cache)
 	    (or (and (pat=? p (car cache)) p)
 	      (old p (cdr cache)))))))
     (lambda (p)
-      (or p
+      (if p
 	(or (old p cache)
-	  (begin (set! cache (list p))
-	    p)
+	  (begin (set! cache (cons p cache))
+	    p))
 	(begin
 	  (set! cache '())
-	  #f))))))
+	  (set! rx-none (rx-newpat '(none)))
+	  (set! rx-empty (rx-newpat '(empty)))
+	  #f)))))
 	
 (define (rx-more p)
   (case (car p)
@@ -56,20 +59,20 @@
 	    (eqv? p1 p2)))))
     (lambda (p1 p2)
       (or
-	(and (eqv? 'none (car p1)) p2)
-	(and (eqv? 'none (car p2)) p1)
+	(and (eq? rx-none p1) p2)
+	(and (eqv? rx-none p2) p1)
 	(and (eqv? 'choice (car p2))
 	  (rx-choice (rx-choice p1 (cadr p2)) (cddr p2)))
 	(and (same p1 p2) p1)
-	(and (rx-null p1) (eqv? 'empty (car p2)) p1)
-	(and (rx-null p2) (eqv? 'empty (car p1)) p2)
+	(and (rx-null? p1) (eq? rx-empty p2) p1)
+	(and (rx-null? p2) (eq? rx-empty p1) p2)
 	(rx-newpat `(choice ,p1 . ,p2))))))
 
 (define (rx-group p1 p2)
   (cond
-    ((or (eqv? 'none (car p1)) (eqv? 'none (car p2))) (rx-newpat '(none)))
-    ((eqv? 'empty (car p1)) p2)
-    ((eqv? 'empty (car p2)) p1)
+    ((or (eq? rx-none p1) (eq? rx-none p2)) rx-none)
+    ((eq? rx-empty p1) p2)
+    ((eqv? rx-empty p2) p1)
     (else (rx-newpat `(group ,p1 . ,p2)))))
 
 ; parser symbols: chr esc cls ncl end
@@ -79,7 +82,7 @@
       (rxll (utf8->lazy-list regex))
       (nextc
 	(lambda ()
-	  (and (pair? rxll) 
+	  (and (pair? rxll)
 	    (let ((c (car rxll))) (set! rxll (force (cdr rxll))) c))))
       (newpat
 	(let ((cache '()))
@@ -153,17 +156,17 @@
 	       `(chr . ,c))))))
       (chgroup
         (let (
-	    (check-range 
-	      (lambda () 
+	    (check-range
+	      (lambda ()
 	        (and (eqv? (cdr sym) 'chr) (memv (cdr sym) '(45 91 93))
 		  (error! "illegal range") #t))))
           (lambda()
-	    (let range ((p (rx-newpat '(none))))
-	      (if 
+	    (let range ((p rx-none))
+	      (if
 	         (and (not (eqv? (car p) 'none))
-	           (and (or (equal? sym '(chr . 45)) (equal? sym '(chr . 93))))) 
+	           (and (or (equal? sym '(chr . 45)) (equal? sym '(chr . 93)))))
 	         p
-	      (case (car sym) 
+	      (case (car sym)
 	        ((chr esc)
 		  (check-range)
 		  (let ((c (cdr sym))) (getsym)
@@ -176,7 +179,7 @@
 			      (let ((p (rx-choice p `(range ,c . ,(cdr sym)))))
 				(getsym)
 				(range p)))
-		            (else (error! "illegal range") (getsym) 
+		            (else (error! "illegal range") (getsym)
 			      (range p)))))
 		      (range (rx-choice p `(char . ,c))))))
 	      ((cls) (range (rx-choice p `(class . (cdr sym)))))
@@ -184,16 +187,16 @@
       (chexpr
 	(lambda()
 	  (let (
-	      (p 
+	      (p
 		(if (equal? sym '(chr . 94))
 		  (begin (getsym) (rx-newpat `(except any . ,(chgroup))))
 		  (chgroup))))
 	    (if (equal? sym '(chr . 45))
-	      (begin (getsym) 
+	      (begin (getsym)
 	        (or (equal? sym '(chr . 91)) (error! "[ expected"))
 		(getsym)
 		(let ((p (rx-newpat `(except ,p . ,(chgroup)))))
-		  (getsym) 
+		  (getsym)
 	          (or (equal? sym '(chr . 93)) (error! "] expected"))
 		  p))
 	      p))))
@@ -214,9 +217,9 @@
 		    (or (equal? sym '(chr . 41)) (error! "missing )"))
 		    (getsym)
 		    p))
-		((41 42 43 63 93 123 124 125) 
-		  (error! "unescaped " (integer->char (cdr sym))) 
-		  (getsym) (rx-newpat '(none)))
+		((41 42 43 63 93 123 124 125)
+		  (error! "unescaped " (integer->char (cdr sym)))
+		  (getsym) rx-none)
 		(else
 		  (let ((p (rx-newpat `(char . ,(cdr sym))))) (getsym) p))))
 	    ((esc)
@@ -226,11 +229,11 @@
 	    ((ncl)
 	      (let ((p (rx-newpat `(except any .
 		      ,(rx-newpat `(class . ,(cdr sym))))))) (getsym) p))
-	    (else (error! sym) (getsym) (rx-newpat '(none))))))
+	    (else (error! sym) (getsym) rx-none))))
       (number
 	(lambda ()
 	  (let digit ((n 0))
-	    (or 
+	    (or
 	      (and (eqv? (car sym) 'chr)
 	        (let ((d (cdr sym)))
 		  (and (<= d 57) (>= d 48)
@@ -239,21 +242,21 @@
       (quantifier
 	(lambda (p0)
 	  (let ((n0 (number)))
-	    (let from ((p (rx-newpat '(empty))) (n n0))
+	    (let from ((p rx-empty) (n n0))
 	      (or (and (> n 0) (from (rx-group p p0) (- n 1)))
 		(and (eqv? (car sym) 'chr)
 		  (or (and (eqv? (cdr sym) 125) p)
-		    (and (eqv? (cdr sym) 44) 
+		    (and (eqv? (cdr sym) 44)
 		      (begin
 			(getsym)
 			(if (and (eqv? (car sym) 'chr) (eqv? (cdr sym) 125))
 			  (rx-group p
-			    (rx-choice (rx-newpat '(empty)) (rx-more p0)))
+			    (rx-choice rx-empty (rx-more p0)))
 			  (let till ((p p) (n (- (number) n0)))
 			    (if (> n 0)
 			      (till
-				(rx-group p 
-				  (rx-choice (rx-newpat '(empty)) p0))
+				(rx-group p
+				  (rx-choice rx-empty p0))
 				(- n 1))
 				p)))))))
 		 (begin (error! "bad quantifier") p))))))
@@ -263,9 +266,9 @@
 	    (if (eqv? (car sym) 'chr)
 	      (case (cdr sym)
 	        ((63) ; ?
-	  	  (getsym) (rx-choice p (rx-newpat '(empty))))
+	  	  (getsym) (rx-choice p rx-empty))
 	        ((42) ; *
-		  (getsym) (rx-choice (rx-more p) (rx-newpat '(empty))))
+		  (getsym) (rx-choice (rx-more p) rx-empty))
 	        ((43) ; +
 		  (getsym) (rx-more p))
 	        ((123) ; {
@@ -278,9 +281,9 @@
 	      p))))
       (branch
 	(lambda ()
-	  (let loop ((p (rx-newpat '(empty))))
+	  (let loop ((p rx-empty))
             (if(or (eqv? (car sym) 'end)
-              (and (eqv? (car sym) 'chr) 
+              (and (eqv? (car sym) 'chr)
                 (or (eqv? (cdr sym) 124) (eqv? (cdr sym) 41))))
               p
               (loop (rx-group p (piece)))))))
@@ -297,3 +300,41 @@
     (let ((p (expr)))
       (or (equal? sym '(end)) (error! "junk after end"))
       p)))
+
+(define (rx-deriv p c)
+  (let (
+      (in-class?
+        (let (
+            (in-rx-ranges (lambda (i) (u-in-ranges c (assv i rx-ranges)))))
+          (lambda (c id)
+	    (case (id)
+	      ((NL) (or (= c 13) (= c 10)))
+	      ((S) (or (= c 13) (= c 10) (= c 9) (= c 32)))
+	      ((I) #f)
+	      ((C) #f)
+	      ((W) (not 
+	             (or (in-class? 'P c) (in-class? 'Z c) (in-class? U c))))
+              ((U-C) (apply or (map in-rx-ranges '(Cc Cf Co))))
+              ((U-L) (apply or (map in-rx-ranges '(Lu Ll Lt Lm Lo))))
+              ((U-M) (apply or (map in-rx-ranges '(Mn Mc Me))))
+              ((U-N) (apply or (map in-rx-ranges '(Nd Nl No))))
+              ((U-P) (apply or (map in-rx-ranges '(Pc Pd Ps Pe))))
+              ((U-S) (apply or (map in-rx-ranges '(Sm Sc Sk So))))
+              ((U-Z) (apply or (map in-rx-ranges '(Zl Zs Zp))))
+	      (else (in-rx-ranges id)))))))
+    (case (car p)
+      ((none empty) rx-none)
+      ((any) rx-empty)
+      ((choice) (rx-choice (rx-deriv (cadr p) c) (rx-deriv (cddr p) c)))
+      ((group)
+	(let ((q (rx-group (rx-deriv (cadr p) c) (cddr p))))
+	  (if (rx-null? (cadr p)) (rx-choice q (rx-deriv (cddr p) c)) q)))
+      ((more) (rx-group (rx-deriv (car p) c) (rx-choice rx-empty p)))
+      ((except)
+	(if (and (rx-null? (rx-deriv (cadr p) c))
+	    (not (rx-null? (rx-deriv (cddr p) c))))
+	  rx-empty
+	  rx-none))
+      ((range) (if (and (<= (cadr p) c) (<= c (cddr p))) rx-empty rx-none))
+      ((class) (if (in-class? c (cdr p)) rx-empty rx-none))
+      ((char) (if (= (cdr p) c) rx-empty rx-none)))))
