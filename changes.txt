@@ -1,6 +1,11 @@
 /* $Id$ */
 
-1.5.0
+1.5.2
+
+
+1.5.1 Mon Jan 26 01:25:42 AMT 2004
+dvd: Internal release, regexp in Scheme implemented
+
 Sat Jan 24 22:42:58 AMT 2004
 dvd: fixed rx.c: upper bound in quantifier
 
