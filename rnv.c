@@ -103,24 +103,24 @@ static void characters(void *userData,const char *s,int len) {
 }
 
 static int validate(int fd) {
-  static char buf[BUFSIZ]; 
-  int len;
+  char *buf; int len;
   previous=current=start;
 
   expat=XML_ParserCreateNS(NULL,':');
   XML_SetElementHandler(expat,&start_element,&end_element);
   XML_SetCharacterDataHandler(expat,&characters);
   for(;;) {
+    buf=XML_GetBuffer(expat,BUFSIZ);
     len=read(fd,buf,BUFSIZ);
     if(len<0) {
       fprintf(stderr,"I/O error (%s): %s\n",xml,strerror(errno));
       goto ERROR;
     }
-    if(len==0) {
-      if(!XML_Parse(expat,buf,len,1)) goto PARSE_ERROR;
+    if(len!=BUFSIZ) {
+      if(!XML_ParseBuffer(expat,len,1)) goto PARSE_ERROR;
       break;
     } else {
-      if(!XML_Parse(expat,buf,len,0)) goto PARSE_ERROR;
+      if(!XML_ParseBuffer(expat,BUFSIZ,0)) goto PARSE_ERROR;
       if(current==rn_notAllowed) break;
     }
   }
@@ -151,12 +151,12 @@ int main(int argc,char **argv) {
 	  ok=0;
 	  continue;
 	}
-	ok=ok&&validate(fd);
+	ok=validate(fd)&&ok;
 	close(fd);
       } while(*(++argv));
     } else { /* stdin */
       xml="stdin";
-      ok=ok&&validate(0);
+      ok=validate(0)&&ok;
     }
 
     return !ok;
@@ -170,6 +170,9 @@ ERRORS:
 
 /*
  * $Log$
+ * Revision 1.11  2003/12/13 22:55:04  dvd
+ * cleanups
+ *
  * Revision 1.10  2003/12/13 22:03:31  dvd
  * rnv works
  *
