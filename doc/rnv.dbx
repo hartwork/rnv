@@ -148,9 +148,6 @@ Support for XSL Schema Part 2: Datatypes is partial.
 * ordering for <varname>duration</varname> is not implemented;
 </listitem>
 <listitem>
-* value equality for <varname>dateTime</varname> and derived types is not implemented (any two dates are equal);
-</listitem>
-<listitem>
 *  only local parts of <classname>QName</classname> values are checked for equality, <varname>ENTITY</varname> values are only checked for lexical validity.
 </listitem>
 </itemizedlist>

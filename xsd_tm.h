@@ -9,7 +9,7 @@ struct xsd_tm {int days,secs,mics,tz;};
 extern void xsd_mktm(struct xsd_tm *tmp,char *fmt,char *val);
 extern void xsd_mktmn(struct xsd_tm *tmp,char *fmt,char *s,int n);
 
-/* -1 - less, 0 - equal, 1 - greater, 2 - unknown */
+/* -1 - less, 0 - equal, 1 - greater, other - unknown */
 extern int xsd_tmcmp(struct xsd_tm *tmp1, struct xsd_tm *tmp2);
 
 #endif

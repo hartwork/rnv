@@ -168,8 +168,31 @@ static int add_r(char *rx) {
   return len+1;
 }
 
-static void default_error_handler(char *msg) {fprintf(stderr,"%s\n",msg);}
-void (*rx_error_handler)(char *msg)=&default_error_handler;
+#define ERRPOS " in \"%s\" at offset %i\n"
+
+static void default_verror_handler(int erno,va_list ap) {
+  switch(erno) {
+  case RXER_BADCH: vfprintf(stderr,"bad character"ERRPOS,ap); break;
+  case RXER_UNFIN: vfprintf(stderr,"unfinished expression"ERRPOS,ap); break;
+  case RXER_NOLSQ: vfprintf(stderr,"'[' expected"ERRPOS,ap); break;
+  case RXER_NORSQ: vfprintf(stderr,"']' expected"ERRPOS,ap); break;
+  case RXER_NOLCU: vfprintf(stderr,"'{' expected"ERRPOS,ap); break;
+  case RXER_NORCU: vfprintf(stderr,"'}' expected"ERRPOS,ap); break;
+  case RXER_NOLPA: vfprintf(stderr,"'(' expected"ERRPOS,ap); break;
+  case RXER_NORPA: vfprintf(stderr,"')' expected"ERRPOS,ap); break;
+  case RXER_BADCL: vfprintf(stderr,"unknown class"ERRPOS,ap); break;
+  case RXER_NODGT: vfprintf(stderr,"digit expected"ERRPOS,ap); break;
+  default: assert(0);
+  }
+}
+void (*rx_verror_handler)(int erno,va_list ap)=&default_verror_handler;
+
+static void error_handler(int erno,...) {
+  va_list ap;
+  va_start(ap,erno);
+  (*rx_verror_handler)(erno,ap);
+  va_end(ap);
+}
 
 #define LEN_M RX_LEN_M
 #define PRIME_M RX_PRIME_M
@@ -248,16 +271,9 @@ static void windup(void) {
 
 static int r0,ri,sym,val,errors;
 
-#define ERRMSG "bad character in \"%s\" at offset %i"
-
-static void error(void) {
+static void error(int erno) {
   if(!errors) {
-    int n=strlen(ERRMSG)+strlen(regex+r0)+12;
-    char *buf=(char*)calloc(n,sizeof(char));
-    fprintf(stderr,"r0=%i ri=%i\n",r0,ri);
-    sprintf(buf,ERRMSG,regex+r0,u_strlen(regex+r0)-u_strlen(regex+ri));
-    (*rx_error_handler)(buf);
-    free(buf);
+    error_handler(erno,regex+r0,u_strlen(regex+r0));
   }
   errors=1;
 }
@@ -267,13 +283,13 @@ static void error(void) {
 static int chclass(void) {
   int u,cl,rj;
   ri+=u_get(&u,regex+ri);
-  if(u=='\0') {--ri; error(); return 0;}
-  if(u!='{') {error(); return 0;}
+  if(u=='\0') {--ri; error(RXER_NOLCU); return 0;}
+  if(u!='{') {error(RXER_NOLCU); return 0;}
   rj=ri;
   for(;;) {
-    if(regex[rj]=='\0') {ri=rj; error(); return 0;}
+    if(regex[rj]=='\0') {ri=rj; error(RXER_NORCU); return 0;}
     if(regex[rj]=='}') {
-      if((cl=strntab(regex+ri,rj-ri,clstab,NUM_CLS_U))==NUM_CLS_U) {error(); cl=0;}
+      if((cl=strntab(regex+ri,rj-ri,clstab,NUM_CLS_U))==NUM_CLS_U) {error(RXER_BADCL); cl=0;}
       ri=rj+1;
       return cl;
     }
@@ -295,7 +311,7 @@ static void getsym(void) {
     if(u=='\\') {
       ri+=u_get(&u,regex+ri);
       switch(u) {
-      case '\0': --ri; error(); sym=SYM_END; break;
+      case '\0': --ri; error(RXER_UNFIN); sym=SYM_END; break;
       case 'p': sym=SYM_CLS; val=chclass(); break;
       case 'P': sym=SYM_CLS; val=-chclass(); break;
       case 's': sym=SYM_CLS; val=CLS_S; break;
@@ -314,7 +330,7 @@ static void getsym(void) {
       case '\\': case '|': case '.': case '-': case '^': case '?': case '*': case '+':
       case '{': case '}': case '[': case ']': case '(': case ')':
         sym=SYM_ESC; val=u; break;
-      default: error(); sym=SYM_ESC; val=u; break;
+      default: error(RXER_BADCH); sym=SYM_ESC; val=u; break;
       }
     } else {
       switch(u) {
@@ -325,7 +341,7 @@ static void getsym(void) {
   }
 }
 
-static void chk_get(int v) {if(sym!=SYM_CHR||val!=v) error(); getsym();}
+static void chk_get(int v,int erno) {if(sym!=SYM_CHR||val!=v) error(erno); getsym();}
 
 static int chgroup(void) {
   int p=notAllowed,c;
@@ -344,7 +360,7 @@ static int chgroup(void) {
 	  switch(sym) {
 	  case SYM_CHR:
 	  case SYM_ESC: p=choice(p,newRange(c,val)); getsym(); break;
-	  default: error(); getsym(); break;
+	  default: error(RXER_BADCH); getsym(); break;
 	  }
 	}
       } else {
@@ -352,7 +368,7 @@ static int chgroup(void) {
       }
       break;
     case SYM_CLS: p=choice(p,cls(val)); getsym(); break;
-    case SYM_END: error(); goto END_OF_GROUP;
+    case SYM_END: error(RXER_NORSQ); goto END_OF_GROUP;
     default: assert(0);
     }
   }
@@ -368,7 +384,7 @@ static int chexpr(void) {
     p=chgroup();
   }
   if(sym==SYM_CHR&&val=='-') { getsym();
-    chk_get('['); p=newExcept(p,chexpr()); chk_get(']');
+    chk_get('[',RXER_NOLSQ); p=newExcept(p,chexpr()); chk_get(']',RXER_NORSQ);
   }
   return p;
 }
@@ -379,16 +395,16 @@ static int atom(void) {
   switch(sym) {
   case SYM_CHR:
     switch(val) {
-    case '[': getsym(); p=chexpr(); chk_get(']'); break;
-    case '(': getsym(); p=expression(); chk_get(')'); break;
+    case '[': getsym(); p=chexpr(); chk_get(']',RXER_NORSQ); break;
+    case '(': getsym(); p=expression(); chk_get(')',RXER_NORPA); break;
     case '{': case '?': case '*': case '+': case '|':
-    case ')': case ']': case '}': error(); getsym(); break;
+    case ')': case ']': case '}': error(RXER_BADCH); getsym(); break;
     default: p=newChar(val); getsym(); break;
     }
     break;
   case SYM_ESC: p=newChar(val); getsym(); break;
   case SYM_CLS: p=cls(val); getsym(); break;
-  default: error(); getsym(); break;
+  default: error(RXER_BADCH); getsym(); break;
   }
   return p;
 }
@@ -431,7 +447,7 @@ static int quantifier(int p0) {
 	while(n--) p=group(p,choice(empty,p0));
       }
     }
-  } else error();
+  } else error(RXER_NODGT);
   return p;
 }
 
@@ -440,7 +456,7 @@ static int piece(void) {
   p=atom();
   if(sym==SYM_CHR) {
     switch(val) {
-    case '{': getsym(); p=quantifier(p); chk_get('}'); break;
+    case '{': getsym(); p=quantifier(p); chk_get('}',RXER_NOLCU); break;
     case '?': getsym(); p=choice(empty,p); break;
     case '*': getsym(); p=choice(empty,one_or_more(p)); break;
     case '+': getsym(); p=one_or_more(p); break;
@@ -479,7 +495,7 @@ static int compile(char *rx) {
     if(rx_compact&&i_p>=LIM_P) {clear(); d_r=add_r(rx);}
     ht_put(&ht_r,r=i_r);
     i_r+=d_r;
-    bind(r); p=expression(); if(sym!=SYM_END) error();
+    bind(r); p=expression(); if(sym!=SYM_END) error(RXER_BADCH);
     r2p[i_2][0]=r; r2p[i_2][1]=p;
     ht_put(&ht_2,i_2++);
     if(i_2==len_2) {

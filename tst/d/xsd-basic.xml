@@ -5,60 +5,60 @@
     duration="P1Y2M3DT2H3M1S"
     date="1969-04-30"
     time="02:15:01"
-    datetime="1969-12-30T02:01:01"
-    year="0001"
-    month="--11--"
-    day="---30"
-    yearmonth="1968-12"
-    monthday="--12-30"
+    dateTime="1969-12-30T02:01:01.12"
+    gYear="0001"
+    gMonth="--11--"
+    gDay="---30"
+    gYearMonth="1968-12"
+    gMonthDay="--12-30"
     />
     <!-- UTC -->
   <types 
     duration="P1Y2M3D"
     date="1969-04-30Z"
     time="02:15:01Z"
-    datetime="1969-12-30T02:01:01Z"
-    year="0001Z"
-    month="--11--Z"
-    day="---30Z"
-    yearmonth="1968-12Z"
-    monthday="--12-30Z"
+    dateTime="1969-12-30T02:01:01Z"
+    gYear="0001Z"
+    gMonth="--11--Z"
+    gDay="---30Z"
+    gYearMonth="1968-12Z"
+    gMonthDay="--12-30Z"
     />
     <!-- MSK -->
   <types 
     duration="PT20H32M11S"
     date="1969-04-30+03:00"
     time="02:15:01+03:00"
-    datetime="1969-12-30T02:01:01"
-    year="0001+03:00"
-    month="--11--+03:00"
-    day="---30+03:00"
-    yearmonth="1968-12+03:00"
-    monthday="--12-30+03:00"
+    dateTime="1969-12-30T02:01:01"
+    gYear="0001+03:00"
+    gMonth="--11--+03:00"
+    gDay="---30+03:00"
+    gYearMonth="1968-12+03:00"
+    gMonthDay="--12-30+03:00"
     />
     <!-- West -->
   <types 
     duration="-P1Y2M3DT2H3M1.25S"
     date="1969-04-30-07:30"
     time="02:15:01-07:30"
-    datetime="1969-12-30T02:01:01"
-    year="0001-07:30"
-    month="--11---07:30"
-    day="---30-07:30"
-    yearmonth="1968-12-07:30"
-    monthday="--12-30-07:30"
+    dateTime="1969-12-30T02:01:01"
+    gYear="0001-07:30"
+    gMonth="--11---07:30"
+    gDay="---30-07:30"
+    gYearMonth="1968-12-07:30"
+    gMonthDay="--12-30-07:30"
     />
    <!-- Fantasy -->
   <types 
     duration="-P13123412341234Y13443253DT3M111.2231231235S"
     date="-1969-04-30-07:11"
     time="02:15:01.30+14:59"
-    datetime="-1969-12-30T02:01:01.321123123-05:00"
-    year="0001-07:30"
-    month="--11---07:30"
-    day="---31-07:30"
-    yearmonth="1968-12-07:30"
-    monthday="--12-30-07:30"
+    dateTime="-1969-12-30T02:01:01.321123123-05:00"
+    gYear="0001-07:30"
+    gMonth="--11---07:30"
+    gDay="---31-07:30"
+    gYearMonth="1968-12-07:30"
+    gMonthDay="--12-30-07:30"
     />
 
   <types decimal=" 123." />
@@ -67,8 +67,8 @@
 
   <types float=" -4E50 " double=" 3E52 "/>
 
-  <types base64binary="ABCDEF/=" />
-  <types base64binary="1 2 3 4 5 6 = =" />
+  <types base64Binary="ABCDEF/=" />
+  <types base64Binary="1 2 3 4 5 6 = =" />
 
   <values double="NaN"/>
   <values double=" NaN "/>
@@ -81,19 +81,20 @@
   <values float=" -4E50 "/>
 
   <values
-    hexbinary=" ABc123A "
-    base64binary=" ABCDEE== "
+    hexBinary=" ABc123A "
+    base64Binary=" ABCDEE== "
     />
 
   <values
     duration= " -P1Y10.2S "
     />
 
-  <values qname = " block " />
-  <values qname = " fo:block " />
-  <values qname = " bar:block " />
-  <values qname2 = " block " />
-  <values qname2 = " fo:block " />
-  <values qname2 = " bar:block " />
-  <values qname2 = "fo:blok"/> <!-- error -->
+  <values QNameq = " block " />
+  <values QNameq = " fo:block " />
+  <values QNameq = " bar:block " />
+  <values QNameq = " bar:lock " /> <!-- error -->
+  <values QNameu = " block " />
+  <values QNameu = " fo:block " />
+  <values QNameu = " bar:block " />
+  <values QNameu = "fo:blok"/> <!-- error -->
 </typetest>

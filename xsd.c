@@ -10,6 +10,7 @@
 #include "xmlc.h"
 #include "strops.h"
 #include "rx.h"
+#include "xsd_tm.h"
 #include "xsd.h"
 
 static void default_error_handler(char *msg) {fprintf(stderr,"%s\n",msg);}
@@ -103,8 +104,9 @@ static char *typtab[NTYP]={
 "normalizedString", "positiveInteger", "short", "string", "time", "token",
 "unsignedByte", "unsignedInt", "unsignedLong", "unsignedShort"};
 
-#define ERR_INVALID_PARAMETER "invalid XML Schema datatype parameter '%s'"
-#define ERR_INVALID_DATATYPE "invalid XML Schema datatype name '%s'"
+#define ERR_PARAMETER "invalid XML Schema datatype parameter '%s'"
+#define ERR_DATATYPE "invalid XML Schema datatype name '%s'"
+#define ERR_VALUE "invalid value '%s' for XML Schema datatype '%s'"
 
 struct dura {int yr,mo,dy,hr,mi;double se;};
 static void durainit(struct dura *d) {d->yr=d->mo=d->dy=d->hr=d->mi=0; d->se=0.0;}
@@ -139,6 +141,12 @@ static int duracmp(char *s1,char *s2,int n) {
   if(d1.mi!=d2.mi) return d1.mi-d2.mi;
   if(d1.se!=d2.se) return d1.se<d2.se?-1:1;
   return 0;
+}
+
+static int dtcmpn(char *s1,char *s2,int n,char *fmt) {
+  struct xsd_tm tm1,tm2;
+  xsd_mktm(&tm1,fmt,s1); xsd_mktmn(&tm2,fmt,s2,n);
+  return xsd_tmcmp(&tm1,&tm2);
 }
 
 static int toklenn(char *s,int n) {
@@ -295,7 +303,7 @@ struct facets {
 #define PAT_DATE0 PAT_YEAR0"-"PAT_MONTH0"-"PAT_DAY0
 #define PAT_TIME0 "([0-1][0-9]|2[0-3]):[0-5][0-9]:([0-5][0-9]|60)"PAT_FRACTIONAL"?"
 #define PAT_DATE "-?"PAT_DATE0 PAT_ZONE"?"
-#define PAT_TIME "-?"PAT_TIME0 PAT_ZONE"?"
+#define PAT_TIME PAT_TIME0 PAT_ZONE"?"
 #define PAT_DATE_TIME "-?"PAT_DATE0"T"PAT_TIME0 PAT_ZONE"?"
 
 static int chki(struct facets *fp,char *s,int n) {
@@ -328,7 +336,6 @@ int xsd_allows(char *typ,char *ps,char *s,int n) {
   int ok=1,length;
   int dt=strtab(typ,typtab,NTYP);
   struct facets fct; fct.set=0; fct.npat=0;
-
   switch(dt) {
   case TYP_INTEGER:
     fct.pattern[fct.npat++]=PAT_INTEGER;
@@ -416,8 +423,8 @@ int xsd_allows(char *typ,char *ps,char *s,int n) {
       case FCT_WHITE_SPACE: (*xsd_error_handler)("'the builtin derived datatype that specifies the desired value for the whiteSpace facet should be used instead of 'whiteSpace'"); break;
       case FCT_ENUMERATION: (*xsd_error_handler)("'value' should be used instead of 'enumeration'"); break;
       case NFCT: 
-	{ char *buf=(char*)calloc(strlen(ERR_INVALID_PARAMETER)+strlen(val)+1,sizeof(char));
-	  sprintf(buf,ERR_INVALID_PARAMETER,val);
+	{ char *buf=(char*)calloc(strlen(ERR_PARAMETER)+strlen(val)+1,sizeof(char));
+	  sprintf(buf,ERR_PARAMETER,val);
 	  (*xsd_error_handler)(buf);
 	  free(buf);
 	} break;
@@ -547,8 +554,8 @@ int xsd_allows(char *typ,char *ps,char *s,int n) {
     if(fct.set&FCT_BOUNDS) ok=ok&&chki(&fct,s,n);
     break;
   case NTYP:
-    { char *buf=(char*)calloc(strlen(ERR_INVALID_DATATYPE)+strlen(typ)+1,sizeof(char));
-      sprintf(buf,ERR_INVALID_DATATYPE,typ);
+    { char *buf=(char*)calloc(strlen(ERR_DATATYPE)+strlen(typ)+1,sizeof(char));
+      sprintf(buf,ERR_DATATYPE,typ);
       (*xsd_error_handler)(buf);
       free(buf);
     } break;
@@ -625,7 +632,14 @@ static int qncmpn(char *s1,char *s2,int n2) { /* context is not passed over; com
 }
 
 int xsd_equal(char *typ,char *val,char *s,int n) {
-  if(!xsd_allows(typ,"",val,strlen(val))||!xsd_allows(typ,"",s,n)) return 0;
+  if(!xsd_allows(typ,"",val,strlen(val))) {
+    char *buf=(char*)calloc(strlen(ERR_VALUE)+strlen(val)+strlen(typ)+1,sizeof(char));
+    sprintf(buf,ERR_VALUE,val,typ);
+    (*xsd_error_handler)(buf);
+    free(buf);
+    return 0;
+  }
+  if(!xsd_allows(typ,"",s,n)) return 0;
   switch(strtab(typ,typtab,NTYP)) {
  /*primitive*/
   case TYP_STRING: return strcmpn(val,s,n)==0;
@@ -633,15 +647,14 @@ int xsd_equal(char *typ,char *val,char *s,int n) {
   case TYP_DECIMAL: return atof(val)==atof(s);
   case TYP_FLOAT: case TYP_DOUBLE: return dblcmpn(val,s,n)==0;
   case TYP_DURATION: return duracmp(val,s,n)==0;
-  case TYP_DATE_TIME:
-  case TYP_DATE:
-  case TYP_TIME:
-  case TYP_G_YEAR_MONTH:
-  case TYP_G_YEAR:
-  case TYP_G_MONTH_DAY:
-  case TYP_G_DAY:
-  case TYP_G_MONTH:
-    return 1;
+  case TYP_DATE_TIME: return dtcmpn(val,s,n,"ymdtz")==0;
+  case TYP_DATE: return dtcmpn(val,s,n,"ymdz")==0;
+  case TYP_TIME: return dtcmpn(val,s,n,"tz")==0;
+  case TYP_G_YEAR_MONTH: return dtcmpn(val,s,n,"ymz")==0;
+  case TYP_G_YEAR: return dtcmpn(val,s,n,"yz")==0;
+  case TYP_G_MONTH_DAY: return dtcmpn(val,s,n,"mdz")==0;
+  case TYP_G_DAY: return dtcmpn(val,s,n,"dz")==0;
+  case TYP_G_MONTH: return dtcmpn(val,s,n,"mz")==0;
   case TYP_HEX_BINARY: return hexcmpn(val,s,n)==0;
   case TYP_BASE64_BINARY: return b64cmpn(val,s,n)==0;
   case TYP_ANY_URI: return tokcmpn(val,s,n)==0;
@@ -674,8 +687,8 @@ int xsd_equal(char *typ,char *val,char *s,int n) {
   case TYP_LONG:
   case TYP_UNSIGNED_LONG: return atol(val)==atol(s);
   case NTYP:
-    { char *buf=(char*)calloc(strlen(ERR_INVALID_DATATYPE)+strlen(typ)+1,sizeof(char));
-      sprintf(buf,ERR_INVALID_DATATYPE,typ);
+    { char *buf=(char*)calloc(strlen(ERR_DATATYPE)+strlen(typ)+1,sizeof(char));
+      sprintf(buf,ERR_DATATYPE,typ);
       (*xsd_error_handler)(buf);
       free(buf);
     } return 0;

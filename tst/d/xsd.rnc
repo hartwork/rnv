@@ -46,7 +46,7 @@ types = element types { empty
   , attribute gMonth { xsd:gMonth } ?
 }
   
-values = element values { 
+values = element values {  empty
   , attribute string { xsd:string "  sample string " } ?
   , attribute boolean { xsd:boolean "true" } ?
   , attribute boolean_true { xsd:boolean " true " } ?
@@ -62,7 +62,12 @@ values = element values {
   , attribute double_-inf { xsd:double "-INF" } ?
   , attribute double_nan { xsd:double "NaN" } ?
   , attribute decimal { xsd:decimal "1234.56" } ?
-  , attribute dateTime { xsd:dateTime "1969-4-30:11:11:11" } ?
+  , attribute dateTime { xsd:dateTime "1969-04-30T14:00:11" } ?
+  , attribute dateTimeZ { xsd:dateTime "1969-04-30T14:00:11Z" } ?
+  , attribute dateTimeAMT { xsd:dateTime "1969-04-30T14:00:11-04:00" } ?
+  , attribute time { xsd:time "14:00:11" } ?
+  , attribute timeZ { xsd:time "14:00:11Z" } ?
+  , attribute timeAMT { xsd:time "14:00:11-04:00" } ?
   , attribute duration { xsd:duration "P1YT3.5S" } ?
   , attribute hexBinary { xsd:hexBinary "ABCDEF" } ?
   , attribute base64Binary { xsd:base64Binary "ABCDEF==" } ?
@@ -79,7 +84,8 @@ values = element values {
   , attribute NMTOKEN { xsd:NMTOKEN } ?
   , attribute NMTOKENS { xsd:NMTOKENS } ?
   , attribute Name { xsd:Name } ?
-  , attribute QName { xsd:QName } ?
+  , attribute QNameq { xsd:QName " fo:block " } ?
+  , attribute QNameu { xsd:QName "block" } ?
   , attribute NCName { xsd:NCName } ?
   , attribute integer { xsd:integer } ?
   , attribute nonNegativeInteger { xsd:nonNegativeInteger } ?

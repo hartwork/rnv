@@ -17,7 +17,7 @@ CFLAGS=${INC} ${DEF} ${WARN} ${OPT}
 LFLAGS=${OPT} ${LBL}
 
 LIBEXPAT=-lexpat
-LIB=${LIBEXPAT}
+LIB=${LIBEXPAT} -lm
 
 LIBRNVA=librnv.a
 LIBRNVSO=librnv.so
@@ -32,6 +32,7 @@ rnd.c rnd.h \
 rnx.c rnx.h \
 drv.c drv.h \
 xsd.c xsd.h \
+xsd_tm.c xsd_tm.h \
 er.c er.h \
 sc.c sc.h \
 ht.c ht.h \
@@ -49,6 +50,7 @@ rnd.o \
 rnx.o \
 drv.o \
 xsd.o \
+xsd_tm.o \
 er.o \
 sc.o \
 u.o \
@@ -102,6 +104,7 @@ rnd.o: er.h rn.h rnx.h rnd.h
 rnx.o: strops.h rn.h ll.h rnx.h
 drv.o: xmlc.h strops.h ht.h rn.h er.h xsd.h ll.h drv.h
 xsd.o: u.h xmlc.h strops.h rx.h xsd.h
+xsd_tm.o: xsd_tm.h
 er.o: er.h
 sc.o: ll.h sc.h
 ht.o: ht.h
