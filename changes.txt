@@ -1,6 +1,9 @@
 /* $Id$ */
 
 1.5.0
+Sat Jan 24 22:42:58 AMT 2004
+dvd: fixed rx.c: upper bound in quantifier
+
 Fri Jan 23 21:51:34 AMT 2004
 dvd: newRef+1 is initialized to 0 (bugfix, integrity check in ht)
 

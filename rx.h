@@ -15,7 +15,8 @@
 #define RX_ER_NORPA 7
 #define RX_ER_BADCL 8
 #define RX_ER_NODGT 9
-#define RX_ER_NOTRC 10
+#define RX_ER_DNUOB 10
+#define RX_ER_NOTRC 11
 
 extern void (*rx_verror_handler)(int erno,va_list ap);
 extern int rx_compact;

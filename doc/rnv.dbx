@@ -106,7 +106,7 @@ The command-line syntax is
 </para>
 <synopsis>
 
-	rnv {-q|-p|-s|-v|-h} grammar.rnc {document1.xml}
+	rnv {-q|-p|-c|-d|-e|-s|-v|-h} grammar.rnc {document1.xml}
 
 </synopsis>
 
@@ -370,7 +370,7 @@ number 0); if the number is omitted, 0 is assumed.
 
 <synopsis>
 
-	rvp {-q|-s|-v|-h} {schema.rnc}
+	rvp {-q|-s|-d|-e|-v|-h} {schema.rnc}
 
 </synopsis>
 

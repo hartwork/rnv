@@ -126,7 +126,7 @@ static int choice(int p1,int p2) {
   if(P_IS(p2,NOT_ALLOWED)) return p1;
   if(P_IS(p2,CHOICE)) {
     int p21,p22; Choice(p2,p21,p22);
-    p1=newChoice(p1,p21); return choice(p1,p22);
+    p1=choice(p1,p21); return choice(p1,p22);
   }
   if(samechoice(p1,p2)) return p1;
   if(nullable(p1) && (P_IS(p2,EMPTY))) return p1;
@@ -191,6 +191,7 @@ void rx_default_verror_handler(int erno,va_list ap) {
   case RX_ER_NORPA: err("')' expected"); break;
   case RX_ER_BADCL: err("unknown class"); break;
   case RX_ER_NODGT: err("digit expected"); break;
+  case RX_ER_DNUOB: err("reversed bounds"); break;
   case RX_ER_NOTRC: err("range or class expected"); break;
   default: assert(0);
   }
@@ -437,8 +438,8 @@ static int number(void) {
 }
 
 static int quantifier(int p0) {
-  int p=empty,n;
-  n=number();
+  int p=empty,n,n0;
+  n=n0=number();
   while(n--) p=group(p,p0);
   if(sym==SYM_CHR) {
     if(val==',') {
@@ -446,7 +447,7 @@ static int quantifier(int p0) {
       if(sym==SYM_CHR && val=='}') {
 	p=group(p,choice(empty,one_or_more(p0)));
       } else {
-	n=number();
+	n=number()-n0; if(n<0) {error(RX_ER_DNUOB); n=0;}
 	while(n--) p=group(p,choice(empty,p0));
       }
     }
