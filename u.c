@@ -11,16 +11,19 @@
 #define u5(t) ux(ux(ux(ux(t[0]&0x3,t[1]),t[2]),t[3]),t[4])
 #define u6(t) ux(ux(ux(ux(ux(t[0]&0x1,t[1]),t[2]),t[3]),t[4]),t[5])
 
-int u_get(int *u,char *s) {
+int u_get(int *up,char *s) {
   unsigned char *t=(unsigned char*)s;
-  if(*t<0x80) {*u=u1(t); return 1;}
+  if(*t<0x80) {*up=u1(t); return 1;}
   if(*t<0xC0) {return 0;}
-  if(*t<0xE0) {*u=u2(t); return 2;} 
-  if(*t<0xF0) {*u=u3(t); return 3;}
-  if(*t<0xF8) {*u=u4(t); return 4;}
-  if(*t<0xFC) {*u=u5(t); return 5;}
-  if(*t<0xFE) {*u=u6(t); return 6;}
+  if(*t<0xE0) {*up=u2(t); return 2;} 
+  if(*t<0xF0) {*up=u3(t); return 3;}
+  if(*t<0xF8) {*up=u4(t); return 4;}
+  if(*t<0xFC) {*up=u5(t); return 5;}
+  if(*t<0xFE) {*up=u6(t); return 6;}
   return 0;
+}
+
+int u_put(char *s,int u) {
 }
 
 /* sorted range arrays */
@@ -53,6 +56,9 @@ int inRange(int u,int r[][2],int len) {
 
 /*
  * $Log$
+ * Revision 1.8  2003/12/10 23:02:13  dvd
+ * prepared to add u_put
+ *
  * Revision 1.7  2003/11/25 10:33:53  dvd
  * documentation and comments
  *

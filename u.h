@@ -3,10 +3,15 @@
 #ifndef U_H
 #define U_H 1
 
+#define U_MAXLEN 6
+
 /* computes a unicode character u off the head of s; 
  returns number of bytes read. 0 means error.
  */
-extern int u_get(int *u,char *s);
+extern int u_get(int *up,char *s);
+
+/* encodes u in utf-8, returns number of octets taken */
+extern int u_put(char *s,int u);
 
 /* character classes required for parsing XML */
 extern int u_base_char(int u);
@@ -19,6 +24,9 @@ extern int u_extender(int u);
 
 /*
  * $Log$
+ * Revision 1.6  2003/12/10 23:02:14  dvd
+ * prepared to add u_put
+ *
  * Revision 1.5  2003/11/25 10:33:53  dvd
  * documentation and comments
  *

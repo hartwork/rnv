@@ -71,8 +71,8 @@ static char *kwdtab[NKWD]={
 #define SYM_DOCUMENTATION 41 /* ## */
 #define SYM_LITERAL 42
 
-#define BUFSIZE 1024
-#define BUFTAIL 6
+#define BUFSIZE 8+U_MAXLEN
+#define BUFTAIL U_MAXLEN
 
 #define SRC_FREE 1
 #define SRC_CLOSE 2
@@ -391,7 +391,7 @@ static void advance(struct rnc_source *sp) {
 	  do getv(sp); while(sp->v=='#');
 	  if(whitespace(sp->v)) getv(sp);
 	  for(;;) {
-	    if(i==NXT(sp).slen) realloc_s(&NXT(sp));
+	    if(i+U_MAXLEN>NXT(sp).slen) realloc_s(&NXT(sp));
 	    if(newline(sp->v)) {
 	      do getv(sp); while(whitespace(sp->v));
 	      if(sp->v=='#') {getv(sp);
@@ -443,16 +443,16 @@ static void advance(struct rnc_source *sp) {
 	    if(triple) {
 	      if(i>=2 && NXT(sp).s[i-2]==q && NXT(sp).s[i-1]==q) {
 		NXT(sp).s[i-2]='\0'; break;
-	      } else NXT(sp).s[i]=(char)sp->v; /* UNICODE */
+	      } else NXT(sp).s[i++]=(char)sp->v; /* UNICODE */
 	    } else {NXT(sp).s[i]='\0'; break;}
 	  } else if(sp->v<=0) {
 	    if(sp->v==-1 || !triple) {
 	      error(0,sp,ER_LLIT,sp->fn,sp->line,sp->col);
 	      NXT(sp).s[i]='\0'; break;
-	    } else NXT(sp).s[i]='\n';
-	  } else NXT(sp).s[i]=(char)sp->v; /* UNICODE */
+	    } else NXT(sp).s[i++]='\n';
+	  } else NXT(sp).s[i++]=(char)sp->v; /* UNICODE */
 	  getv(sp);
-	  if(++i==NXT(sp).slen) realloc_s(&NXT(sp));
+	  if(i+U_MAXLEN>NXT(sp).slen) realloc_s(&NXT(sp));
 	}
 	getv(sp); NXT(sp).sym=SYM_LITERAL; return;
       }
@@ -463,7 +463,7 @@ static void advance(struct rnc_source *sp) {
 	  int i=0;
 	  for(;;) {
 	    NXT(sp).s[i++]=sp->v; /* UNICODE */
-	    if(i==NXT(sp).slen) realloc_s(&NXT(sp));
+	    if(i+U_MAXLEN>NXT(sp).slen) realloc_s(&NXT(sp));
 	    getv(sp);
 	    if(!name_char(sp->v)) {NXT(sp).s[i]='\0'; break;}
 	    if(sp->v==':') prefixed=1;
@@ -1187,6 +1187,9 @@ int rnc_parse(struct rnc_source *sp) {
 
 /*
  * $Log$
+ * Revision 1.34  2003/12/10 23:02:13  dvd
+ * prepared to add u_put
+ *
  * Revision 1.33  2003/12/10 22:23:52  dvd
  * *** empty log message ***
  *
