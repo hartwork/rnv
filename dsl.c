@@ -25,7 +25,7 @@ static char *implpath(void) {
 }
 
 static void init_user_scm_dsl(void) {}
-static SCM  toplvl(void) {return scm_ldfile(dsl_scm)?BOOL_F:BOOL_T;}
+static SCM  toplvl(void) {return MAKINUM(scm_ldfile(dsl_scm));}
 
 void dsl_ld(char *dl) {
   assert(dsl_scm==NULL); dsl_scm=dl;
@@ -33,8 +33,9 @@ void dsl_ld(char *dl) {
   { char *argv[]={NULL,NULL}; argv[0]=dsl_scm; /*Init.scm wants args*/
     scm_init_from_argv(sizeof(argv)/sizeof(char*)-1,argv,0,0,0);
   }
-  if(BOOL_F==scm_top_level(implpath(),&toplvl)) {
+  if(BOOL_F==equal(MAKINUM(0),scm_top_level(implpath(),&toplvl))) {
     (*er_printf)("dsl: cannot load %s\n",dsl_scm);
+    dsl_scm=NULL;
   }
 }
 
