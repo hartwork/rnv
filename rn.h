@@ -116,6 +116,7 @@ extern int newValue(int dt,int s);
 extern int newAttribute(int nc,int p1);
 extern int newElement(int nc,int p1);
 extern int newAfter(int qn,int p1,int p2);
+extern int newRef();
 
 extern int rn_groupable(int p1,int p2);
 extern int rn_one_or_more(int p);
@@ -138,6 +139,9 @@ extern void rn_clear();
 
 /*
  * $Log$
+ * Revision 1.11  2003/12/05 14:28:39  dvd
+ * separate stacks for references
+ *
  * Revision 1.10  2003/12/04 22:02:20  dvd
  * refactoring
  *

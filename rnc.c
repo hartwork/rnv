@@ -178,15 +178,17 @@ static int rnc_read(struct rnc_source *sp) {
 #define DE_CHOICE 2
 #define DE_ILEAVE 4
 
-static struct sc_stack nss,dts,des;
+#define RE_
+
+static struct sc_stack nss,dts,defs,refs,prefs;
 
 static int initialized;
 void rnc_init() {
   if(!initialized) {
     rn_init();
     len_p=LEN_P; path=(char*)calloc(len_p,sizeof(char));
-    /* initialize scopes */ 
-    sc_init(&nss); sc_init(&dts); sc_init(&des);
+    /* initialize scopes */
+    sc_init(&nss); sc_init(&dts); sc_init(&defs); sc_init(&refs); sc_init(&prefs);
     initialized=1;
   }
 }
@@ -612,6 +614,18 @@ static int nsuri(struct rnc_source *sp) {
   return uri;
 }
 
+static void open_scope(struct rnc_source *sp) {
+  sc_open(&defs);
+  sc_open(&refs);
+  sc_open(&prefs);
+}
+
+static void close_scope(struct rnc_source *sp) {
+  sc_close(&defs);
+  sc_close(&refs);
+  sc_close(&prefs);
+}
+
 static void addns(struct rnc_source *sp,int pfx,int url) {
   int i;
   if(i=sc_find(&nss,pfx)) {
@@ -756,20 +770,33 @@ static int attribute(struct rnc_source *sp) {
   return p;
 }
 
+static int refname(struct rnc_source *sp,struct sc_stack *stp) {
+  int name=newString(CUR(sp).s),i,p;
+  if(i=sc_find(stp,name)) {
+    p=stp->tab[i][1];
+  } else {
+    p=newRef();
+    sc_add(stp,name,p,0);
+  }
+  return p;
+}
 
 static int ref(struct rnc_source *sp) {
-  switch(CUR(sp).sym) {
-  case SYM_PARENT:
-    getsym(sp);
-    if(!chksym(sp,SYM_IDENT)) return 0;
-  case SYM_IDENT:
-  }
+  int p=refname(sp,&refs);
   getsym(sp);
-  return 0;
+  return p;
+}
+
+static int parent(struct rnc_source *sp) {
+  int p=0;
+  getsym(sp);
+  if(chksym(sp,SYM_IDENT)) p=refname(sp,&prefs);
+  getsym(sp);
+  return p;
 }
 
 static int relpath(struct rnc_source *sp) {
-  int ret=0; 
+  int ret=0;
   if(ret=chksym(sp,SYM_LITERAL)) {
     int len=strlen(sp->fn)+strlen(CUR(sp).s)+1;
     if(len>len_p) {free(path); len_p=len; path=(char*)calloc(len_p,sizeof(char));}
@@ -805,18 +832,21 @@ static int external(struct rnc_source *sp) {
   int ret=0;
   if(relpath(sp)) {
     int nsuri=inherit(sp);
-    sc_open(&nss); sc_open(&des);
+    sc_open(&nss);
+    open_scope(sp);
     if((ret=file(sp,nsuri))==-1) { /* grammar */
       int i;
-      if(i=sc_find(&des,0)) {
-	ret=des.tab[i][1];
+      if(i=sc_find(&defs,0)) {
+	ret=defs.tab[i][1];
       }
-      sc_close(&nss); sc_close(&des);
+      close_scope(sp);
+      sc_close(&nss);
     } else {
       /* merge scope with parent */
-      sc_close(&nss); sc_close(&des);
+      close_scope(sp);
+      sc_close(&nss);
     }
-  } 
+  }
   return ret;
 }
 
@@ -889,14 +919,14 @@ static int grammarContent(struct rnc_source *sp);
 
 static int grammar(struct rnc_source *sp) {
   int start=0,i;
-  sc_open(&des);
+  open_scope(sp);
   chk_get(sp,SYM_LCUR);
   while(grammarContent(sp));
   chk_skip_get(sp,SYM_RCUR);
-  if(i=sc_find(&des,0)) {
-    start=des.tab[i][1];
+  if(i=sc_find(&defs,0)) {
+    start=defs.tab[i][1];
   } else error(sp,ER_NOSTART,sp->fn,CUR(sp).line,CUR(sp).col);
-  sc_close(&des);
+  close_scope(sp);
   return start;
 }
 
@@ -904,8 +934,8 @@ static int primary(struct rnc_source *sp) {
   switch(CUR(sp).sym) {
   case SYM_ELEMENT: getsym(sp); return element(sp);
   case SYM_ATTRIBUTE: getsym(sp); return attribute(sp);
-  case SYM_IDENT:
-  case SYM_PARENT: return ref(sp);
+  case SYM_IDENT: return ref(sp);
+  case SYM_PARENT: return parent(sp);
   case SYM_EXTERNAL: getsym(sp); return external(sp);
 
   case SYM_LIST: getsym(sp); return list(sp);
@@ -975,19 +1005,19 @@ static void define(struct rnc_source *sp,int name) {
   }
   getsym(sp);
   pat=pattern(sp);
-  i=sc_find(&des,name);
+  i=sc_find(&defs,name);
   if(i==0) {
-    if(sc_locked(&des)) error(sp,ER_OVRIDE,sp->fn,line,col);
-    sc_add(&des,name,pat,flags); 
+    if(sc_locked(&defs)) error(sp,ER_OVRIDE,sp->fn,line,col);
+    sc_add(&defs,name,pat,flags);
   } else {
-    int old_flags=des.tab[i][2];
+    int old_flags=defs.tab[i][2];
     if(DE_HEAD&flags&old_flags) error(sp,ER_2HEADS,sp->fn,line,col);
     if(((flags|old_flags)&(DE_CHOICE|DE_ILEAVE))==(DE_CHOICE|DE_ILEAVE)) error(sp,ER_COMBINE,sp->fn,line,col);
-    flags=des.tab[i][2]=old_flags|flags;
+    flags=defs.tab[i][2]=old_flags|flags;
     if(DE_CHOICE&flags) {
-      des.tab[i][1]=rn_choice(des.tab[i][1],pat);
+      defs.tab[i][1]=rn_choice(defs.tab[i][1],pat);
     } else if(DE_ILEAVE&flags) {
-      des.tab[i][1]=rn_ileave(des.tab[i][1],pat);
+      defs.tab[i][1]=rn_ileave(defs.tab[i][1],pat);
     }
   }
 }
@@ -1003,15 +1033,16 @@ static void include(struct rnc_source *sp) {
   int nsuri;
   if(relpath(sp)) {
     nsuri=inherit(sp);
-    sc_open(&nss); sc_open(&des);
+    sc_open(&nss); open_scope(sp);
     if(file(sp,nsuri)!=-1) error(sp,ER_NOTGR,sp->fn,CUR(sp).line,CUR(sp).col);
-    sc_lock(&des);
+    sc_lock(&defs);
     if(CUR(sp).sym==SYM_LCUR) {
       getsym(sp);
       while(grammarContent(sp));
       chk_skip_get(sp,SYM_RCUR);
     }
-    sc_close(&nss); sc_close(&des);
+    close_scope(sp);
+    sc_close(&nss);
   }
 }
 
@@ -1023,7 +1054,7 @@ static int grammarContent(struct rnc_source *sp) {
     case SYM_ASGN:
     case SYM_ASGN_CHOICE:
     case SYM_ASGN_ILEAVE: {
-	int name=newString(CUR(sp).s); getsym(sp); define(sp,name); 
+	int name=newString(CUR(sp).s); getsym(sp); define(sp,name);
 	return 1;
       }
     default: return 0;
@@ -1040,12 +1071,12 @@ static int grammarContent(struct rnc_source *sp) {
   }
 }
 
-/* returns -1 if it is a grammar, and a non-negative value if it is a pattern 
- and is not a grammar. the returned value is then used by external() 
+/* returns -1 if it is a grammar, and a non-negative value if it is a pattern
+ and is not a grammar. the returned value is then used by external()
  */
 static int topLevel(struct rnc_source *sp) {
   int ret=-1,is_grammar;
-  sc_open(&dts); 
+  sc_open(&dts);
   sc_add(&dts,newString("xsd"),newString("http://www.w3.org/2001/XMLSchema-datatypes"),0);
 
   getsym(sp); getsym(sp);
@@ -1067,18 +1098,20 @@ static int topLevel(struct rnc_source *sp) {
 int rnc_parse(struct rnc_source *sp) {
   int start,i;
 
-  sc_open(&nss); sc_open(&des);
+  sc_open(&nss);
+  open_scope(sp);
   sc_add(&nss,0,0,0); sc_add(&nss,-1,0,0); add_well_known_nss();
 
-  start=topLevel(sp); if(start!=-1) sc_add(&des,0,start,0);
+  start=topLevel(sp); if(start!=-1) sc_add(&defs,0,start,0);
 
  /* second pass here */
 
-  if(i=sc_find(&des,0)) {
-    start=des.tab[i][1];
+  if(i=sc_find(&defs,0)) {
+    start=defs.tab[i][1];
   } else start=0;
-  
-  sc_close(&nss); sc_close(&des);
+
+  close_scope(sp);
+  sc_close(&nss);
 
   return start;
 }
@@ -1098,6 +1131,9 @@ int main(int argc,char **argv) {
 
 /*
  * $Log$
+ * Revision 1.24  2003/12/05 14:28:39  dvd
+ * separate stacks for references
+ *
  * Revision 1.23  2003/12/04 22:09:30  dvd
  * bug in define
  *

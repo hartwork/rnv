@@ -136,6 +136,11 @@ int newAfter(int qn,int p1,int p2) { P_NEW(AFTER);
   return accept_p();
 }
 
+int newRef() { P_NEW(REF);
+  rn_pattern[i_p][1]=i_p; /* it is unique */
+  return accept_p();
+}
+
 #define NC_NEW(x) rn_nameclass[i_nc][0]=NC_##x
 
 int newAnyName() { NC_NEW(ANY_NAME);
@@ -286,6 +291,9 @@ static int equal_s(int s1,int s2) {return strcmp(rn_string+s1,rn_string+s2)==0;}
 
 /* 
  * $Log$
+ * Revision 1.9  2003/12/05 14:28:39  dvd
+ * separate stacks for references
+ *
  * Revision 1.8  2003/12/04 22:02:20  dvd
  * refactoring
  *
