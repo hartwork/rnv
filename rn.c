@@ -172,6 +172,7 @@ int rn_newAfter(int p1,int p2) { P_NEW(AFTER);
 }
 
 int rn_newRef(void) { P_NEW(REF);
+  rn_pattern[i_p+1]=0;
   rn_pattern[i_p+2]=i_ref++;
   return accept_p();
 }
@@ -506,8 +507,8 @@ static void compress_p(int *starts,int n_st,int since) {
 	assert(0);
       }
       if((q=xlat[p-since])!=p) {
-	int i;
-	for(i=0;i!=p_size[RN_P_TYP(p)];++i) rn_pattern[q+i]=rn_pattern[p+i];
+	int i,psiz=p_size[RN_P_TYP(p)];
+	for(i=0;i!=psiz;++i) rn_pattern[q+i]=rn_pattern[p+i];
       }
       ht_put(&ht_p,q);
     }

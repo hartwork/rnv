@@ -1,8 +1,7 @@
 ; $Id$
-; sample scheme datatype library for RVP
+; sample scheme datatype library for RNV
 
-; (define gc-hook (display "gc-hook\n"))
-; (verbose 10)
+(load (in-vicinity (program-vicinity) "rx.scm"))
 
 (define (dsl-string->token s)
   (let loop ((tl '()) (sl (string->list s)) (state #f))

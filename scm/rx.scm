@@ -1,8 +1,8 @@
 ; $Id$
 ; XML Schema Datatypes Regular Expressions
 
-(load "u.scm")
-(load "rx-ranges.scm")
+(load  (in-vicinity (program-vicinity) "u.scm"))
+(load  (in-vicinity (program-vicinity) "rx-ranges.scm"))
 
 ; patterns: none empty any choice group except range class char
 

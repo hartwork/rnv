@@ -2,7 +2,7 @@
 <article>
 
 <title>
-RNV &#x2014; Relax NG Compact Syntax Validator in C
+RNV — Relax NG Compact Syntax Validator in C
 </title>
 <subtitle>
 Version 1.4
@@ -345,7 +345,7 @@ simple protocol to perform validation. The protocol, in BNF, is:
 <itemizedlist>
 <listitem><para>
 RVP assumes that the last colon in a name separates the local
-part from the namespace URI (it is what one gets if specifies ':'
+part from the namespace URI (it is what one gets if specifies ‘:’
 as namespace separator to Expat).
 </para></listitem>
 <listitem><para>
