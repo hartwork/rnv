@@ -50,21 +50,21 @@ static void error(int er_no,...) {
 
 static int de(int p) {
   int p0=p,p1;
-  P_CHK(p,REF);
+  RN_P_CHK(p,REF);
   for(;;) {
-    if(!marked(p)) {
+    if(!rn_marked(p)) {
       if(n_r==len_r) refs=(int*)memstretch(refs,len_r=(n_r*2),n_r,sizeof(int));
       refs[n_r++]=p;
     }
-    mark(p);
-    Ref(p,p1);
-    if(!P_IS(p1,REF)||p1==p0) break;
+    rn_mark(p);
+    rn_Ref(p,p1);
+    if(!RN_P_IS(p1,REF)||p1==p0) break;
     p=p1;
   }
   return p1;
 }
 
-static void flatten(int p) { if(!marked(p)) {flat[n_f++]=p; mark(p);}}
+static void flatten(int p) { if(!rn_marked(p)) {flat[n_f++]=p; rn_mark(p);}}
 
 static void deref(int start) {
   int p,p1,p2,nc,i,changed;
@@ -72,80 +72,80 @@ static void deref(int start) {
   flat=(int*)memalloc(len_f=LEN_F,sizeof(int)); n_f=0;
   refs=(int*)memalloc(len_r=LEN_R,sizeof(int)); n_r=0;
 
-  if(P_IS(start,REF)) start=de(start);
+  if(RN_P_IS(start,REF)) start=de(start);
   flatten(start);
 
   i=0;
   do {
     p=flat[i++];
-    switch(P_TYP(p)) {
-    case P_EMPTY: case P_NOT_ALLOWED: case P_TEXT: case P_DATA: case P_VALUE:
+    switch(RN_P_TYP(p)) {
+    case RN_P_EMPTY: case RN_P_NOT_ALLOWED: case RN_P_TEXT: case RN_P_DATA: case RN_P_VALUE:
       break;
 
-    case P_CHOICE: Choice(p,p1,p2); goto BINARY;
-    case P_INTERLEAVE: Interleave(p,p1,p2); goto BINARY;
-    case P_GROUP: Group(p,p1,p2); goto BINARY;
-    case P_DATA_EXCEPT: DataExcept(p,p1,p2); goto BINARY;
+    case RN_P_CHOICE: rn_Choice(p,p1,p2); goto BINARY;
+    case RN_P_INTERLEAVE: rn_Interleave(p,p1,p2); goto BINARY;
+    case RN_P_GROUP: rn_Group(p,p1,p2); goto BINARY;
+    case RN_P_DATA_EXCEPT: rn_DataExcept(p,p1,p2); goto BINARY;
     BINARY:
       changed=0;
-      if(P_IS(p1,REF)) {p1=de(p1); changed=1;}
-      if(P_IS(p2,REF)) {p2=de(p2); changed=1;}
+      if(RN_P_IS(p1,REF)) {p1=de(p1); changed=1;}
+      if(RN_P_IS(p2,REF)) {p2=de(p2); changed=1;}
       if(changed) {rn_del_p(p); rn_pattern[p+1]=p1; rn_pattern[p+2]=p2; rn_add_p(p);}
       if(n_f+2>len_f) flat=(int*)memstretch(flat,len_f=2*(n_f+2),n_f,sizeof(int));
       flatten(p1); flatten(p2);
       break;
 
-    case P_ONE_OR_MORE: OneOrMore(p,p1); goto UNARY;
-    case P_LIST: List(p,p1); goto UNARY;
-    case P_ATTRIBUTE: Attribute(p,nc,p1); goto UNARY;
-    case P_ELEMENT: Element(p,nc,p1); goto UNARY;
+    case RN_P_ONE_OR_MORE: rn_OneOrMore(p,p1); goto UNARY;
+    case RN_P_LIST: rn_List(p,p1); goto UNARY;
+    case RN_P_ATTRIBUTE: rn_Attribute(p,nc,p1); goto UNARY;
+    case RN_P_ELEMENT: rn_Element(p,nc,p1); goto UNARY;
     UNARY:
       changed=0;
-      if(P_IS(p1,REF)) {p1=de(p1); changed=1;}
+      if(RN_P_IS(p1,REF)) {p1=de(p1); changed=1;}
       if(changed) {rn_del_p(p); rn_pattern[p+1]=p1; rn_add_p(p);}
       if(n_f+1>len_f) flat=(int*)memstretch(flat,len_f=2*(n_f+1),n_f,sizeof(int));
       flatten(p1);
       break;
 
-    case P_REF: /* because of a loop, but will be handled in rnd_loops */
+    case RN_P_REF: /* because of a loop, but will be handled in rnd_loops */
       break;
 
     default:
       assert(0);
     }
   } while(i!=n_f);
-  for(i=0;i!=n_f;++i) unmark(flat[i]);
-  for(i=0;i!=n_r;++i) {p=refs[i]; rn_pattern[p+1]=0; unmark(p);}
+  for(i=0;i!=n_f;++i) rn_unmark(flat[i]);
+  for(i=0;i!=n_r;++i) {p=refs[i]; rn_pattern[p+1]=0; rn_unmark(p);}
   memfree(refs);
 }
 
 static int loop(int p) {
   int nc,p1,p2,ret=1;
-  if(marked(p)) return 1;
-  mark(p);
-  switch(P_TYP(p)) {
-  case P_EMPTY: case P_NOT_ALLOWED: case P_TEXT: case P_DATA: case P_VALUE:
-  case P_ELEMENT:
+  if(rn_marked(p)) return 1;
+  rn_mark(p);
+  switch(RN_P_TYP(p)) {
+  case RN_P_EMPTY: case RN_P_NOT_ALLOWED: case RN_P_TEXT: case RN_P_DATA: case RN_P_VALUE:
+  case RN_P_ELEMENT:
     ret=0; break;
 
-  case P_CHOICE: Choice(p,p1,p2); goto BINARY;
-  case P_INTERLEAVE: Interleave(p,p1,p2); goto BINARY;
-  case P_GROUP: Group(p,p1,p2); goto BINARY;
-  case P_DATA_EXCEPT: DataExcept(p,p1,p2); goto BINARY;
+  case RN_P_CHOICE: rn_Choice(p,p1,p2); goto BINARY;
+  case RN_P_INTERLEAVE: rn_Interleave(p,p1,p2); goto BINARY;
+  case RN_P_GROUP: rn_Group(p,p1,p2); goto BINARY;
+  case RN_P_DATA_EXCEPT: rn_DataExcept(p,p1,p2); goto BINARY;
   BINARY:
     ret=loop(p1)||loop(p2); break;
 
-  case P_ONE_OR_MORE: OneOrMore(p,p1); goto UNARY;
-  case P_LIST: List(p,p1); goto UNARY;
-  case P_ATTRIBUTE:  Attribute(p,nc,p1); goto UNARY;
+  case RN_P_ONE_OR_MORE: rn_OneOrMore(p,p1); goto UNARY;
+  case RN_P_LIST: rn_List(p,p1); goto UNARY;
+  case RN_P_ATTRIBUTE:  rn_Attribute(p,nc,p1); goto UNARY;
   UNARY:
     ret=loop(p1); break;
 
-  case P_REF: ret=1; break;
+  case RN_P_REF: ret=1; break;
 
   default: assert(0);
   }
-  unmark(p);
+  rn_unmark(p);
   return ret;
 }
 
@@ -162,8 +162,8 @@ static void loops(void) {
     for(;;) {++i;
       if(i==n_f) return;
       p=flat[i];
-      if(P_IS(p,ELEMENT)) {
-	Element(p,nc,p1); p=p1;
+      if(RN_P_IS(p,ELEMENT)) {
+	rn_Element(p,nc,p1); p=p1;
 	break;
       }
     }
@@ -172,27 +172,27 @@ static void loops(void) {
 
 static void ctype(int p) {
   int p1,p2,nc;
-  if(!contentType(p)) {
-    switch(P_TYP(p)) {
-    case P_EMPTY: setContentType(p,P_FLG_CTE,0); break;
-    case P_NOT_ALLOWED: setContentType(p,P_FLG_CTE,0); break;
-    case P_TEXT: setContentType(p,P_FLG_CTC,0); break;
-    case P_CHOICE: Choice(p,p1,p2); ctype(p1); ctype(p2);
-      setContentType(p,contentType(p1),contentType(p2)); break;
-    case P_INTERLEAVE: Interleave(p,p1,p2); ctype(p1); ctype(p2);
-      if(rn_groupable(p1,p2)) setContentType(p,contentType(p1),contentType(p2)); break;
-    case P_GROUP: Group(p,p1,p2); ctype(p1); ctype(p2);
-      if(rn_groupable(p1,p2)) setContentType(p,contentType(p1),contentType(p2)); break;
-    case P_ONE_OR_MORE: OneOrMore(p,p1); ctype(p1);
-      if(rn_groupable(p1,p1)) setContentType(p,contentType(p1),0); break;
-    case P_LIST: setContentType(p,P_FLG_CTS,0); break;
-    case P_DATA: setContentType(p,P_FLG_CTS,0); break;
-    case P_DATA_EXCEPT: DataExcept(p,p1,p2); ctype(p1); ctype(p2);
-      if(contentType(p2)) setContentType(p,P_FLG_CTS,0); break;
-    case P_VALUE: setContentType(p,P_FLG_CTS,0); break;
-    case P_ATTRIBUTE: Attribute(p,nc,p1); ctype(p1);
-      if(contentType(p1)) setContentType(p,P_FLG_CTE,0); break;
-    case P_ELEMENT: setContentType(p,P_FLG_CTC,0); break;
+  if(!rn_contentType(p)) {
+    switch(RN_P_TYP(p)) {
+    case RN_P_EMPTY: rn_setContentType(p,RN_P_FLG_CTE,0); break;
+    case RN_P_NOT_ALLOWED: rn_setContentType(p,RN_P_FLG_CTE,0); break;
+    case RN_P_TEXT: rn_setContentType(p,RN_P_FLG_CTC,0); break;
+    case RN_P_CHOICE: rn_Choice(p,p1,p2); ctype(p1); ctype(p2);
+      rn_setContentType(p,rn_contentType(p1),rn_contentType(p2)); break;
+    case RN_P_INTERLEAVE: rn_Interleave(p,p1,p2); ctype(p1); ctype(p2);
+      if(rn_groupable(p1,p2)) rn_setContentType(p,rn_contentType(p1),rn_contentType(p2)); break;
+    case RN_P_GROUP: rn_Group(p,p1,p2); ctype(p1); ctype(p2);
+      if(rn_groupable(p1,p2)) rn_setContentType(p,rn_contentType(p1),rn_contentType(p2)); break;
+    case RN_P_ONE_OR_MORE: rn_OneOrMore(p,p1); ctype(p1);
+      if(rn_groupable(p1,p1)) rn_setContentType(p,rn_contentType(p1),0); break;
+    case RN_P_LIST: rn_setContentType(p,RN_P_FLG_CTS,0); break;
+    case RN_P_DATA: rn_setContentType(p,RN_P_FLG_CTS,0); break;
+    case RN_P_DATA_EXCEPT: rn_DataExcept(p,p1,p2); ctype(p1); ctype(p2);
+      if(rn_contentType(p2)) rn_setContentType(p,RN_P_FLG_CTS,0); break;
+    case RN_P_VALUE: rn_setContentType(p,RN_P_FLG_CTS,0); break;
+    case RN_P_ATTRIBUTE: rn_Attribute(p,nc,p1); ctype(p1);
+      if(rn_contentType(p1)) rn_setContentType(p,RN_P_FLG_CTE,0); break;
+    case RN_P_ELEMENT: rn_setContentType(p,RN_P_FLG_CTC,0); break;
     default: assert(0);
     }
   }
@@ -202,10 +202,10 @@ static void ctypes(void) {
   int i,p,p1,nc;
   for(i=0;i!=n_f;++i) {
     p=flat[i];
-    if(P_IS(p,ELEMENT)) {
-      Element(p,nc,p1);
+    if(RN_P_IS(p,ELEMENT)) {
+      rn_Element(p,nc,p1);
       ctype(p1);
-      if(!contentType(p1)) {
+      if(!rn_contentType(p1)) {
 	char *s=rnx_nc2str(nc);
 	error(RND_ER_CTYPE,s);
 	memfree(s);
@@ -216,16 +216,16 @@ static void ctypes(void) {
 
 static int bad_start(int p) {
   int p1,p2;
-  switch(P_TYP(p)) {
-  case P_EMPTY: case P_TEXT:
-  case P_INTERLEAVE: case P_GROUP: case P_ONE_OR_MORE:
-  case P_LIST: case P_DATA: case P_DATA_EXCEPT: case P_VALUE:
-  case P_ATTRIBUTE:
+  switch(RN_P_TYP(p)) {
+  case RN_P_EMPTY: case RN_P_TEXT:
+  case RN_P_INTERLEAVE: case RN_P_GROUP: case RN_P_ONE_OR_MORE:
+  case RN_P_LIST: case RN_P_DATA: case RN_P_DATA_EXCEPT: case RN_P_VALUE:
+  case RN_P_ATTRIBUTE:
     return 1;
-  case P_NOT_ALLOWED:
-  case P_ELEMENT:
+  case RN_P_NOT_ALLOWED:
+  case RN_P_ELEMENT:
     return 0;
-  case P_CHOICE: Choice(p,p1,p2);
+  case RN_P_CHOICE: rn_Choice(p,p1,p2);
     return bad_start(p1)||bad_start(p2);
   default: assert(0);
   }
@@ -234,19 +234,19 @@ static int bad_start(int p) {
 
 static int bad_data_except(int p) {
   int p1,p2;
-  switch(P_TYP(p)) {
-  case P_NOT_ALLOWED:
-  case P_VALUE: case P_DATA:
+  switch(RN_P_TYP(p)) {
+  case RN_P_NOT_ALLOWED:
+  case RN_P_VALUE: case RN_P_DATA:
     return 0;
 
-  case P_CHOICE: Choice(p,p1,p2); goto BINARY;
-  case P_DATA_EXCEPT: Choice(p,p1,p2); goto BINARY;
+  case RN_P_CHOICE: rn_Choice(p,p1,p2); goto BINARY;
+  case RN_P_DATA_EXCEPT: rn_Choice(p,p1,p2); goto BINARY;
   BINARY: return bad_data_except(p1)||bad_data_except(p2);
 
-  case P_EMPTY: case P_TEXT:
-  case P_INTERLEAVE: case P_GROUP: case P_ONE_OR_MORE:
-  case P_LIST:
-  case P_ATTRIBUTE: case P_ELEMENT:
+  case RN_P_EMPTY: case RN_P_TEXT:
+  case RN_P_INTERLEAVE: case RN_P_GROUP: case RN_P_ONE_OR_MORE:
+  case RN_P_LIST:
+  case RN_P_ATTRIBUTE: case RN_P_ELEMENT:
     return 1;
   default: assert(0);
   }
@@ -255,22 +255,22 @@ static int bad_data_except(int p) {
 
 static int bad_one_or_more(int p,int in_group) {
   int nc,p1,p2;
-  switch(P_TYP(p)) {
-  case P_EMPTY: case P_NOT_ALLOWED: case P_TEXT:
-  case P_DATA: case P_VALUE:
-  case P_ELEMENT:
+  switch(RN_P_TYP(p)) {
+  case RN_P_EMPTY: case RN_P_NOT_ALLOWED: case RN_P_TEXT:
+  case RN_P_DATA: case RN_P_VALUE:
+  case RN_P_ELEMENT:
     return 0;
 
-  case P_CHOICE: Choice(p,p1,p2); goto BINARY;
-  case P_INTERLEAVE: Interleave(p,p1,p2); in_group=1; goto BINARY;
-  case P_GROUP: Group(p,p1,p2); in_group=1; goto BINARY;
-  case P_DATA_EXCEPT: DataExcept(p,p1,p2); goto BINARY;
+  case RN_P_CHOICE: rn_Choice(p,p1,p2); goto BINARY;
+  case RN_P_INTERLEAVE: rn_Interleave(p,p1,p2); in_group=1; goto BINARY;
+  case RN_P_GROUP: rn_Group(p,p1,p2); in_group=1; goto BINARY;
+  case RN_P_DATA_EXCEPT: rn_DataExcept(p,p1,p2); goto BINARY;
   BINARY: return  bad_one_or_more(p1,in_group)||bad_one_or_more(p2,in_group);
 
-  case P_ONE_OR_MORE: OneOrMore(p,p1); goto UNARY;
-  case P_LIST: List(p,p1); goto UNARY;
-  case P_ATTRIBUTE: if(in_group) return 1;
-    Attribute(p,nc,p1); goto UNARY;
+  case RN_P_ONE_OR_MORE: rn_OneOrMore(p,p1); goto UNARY;
+  case RN_P_LIST: rn_List(p,p1); goto UNARY;
+  case RN_P_ATTRIBUTE: if(in_group) return 1;
+    rn_Attribute(p,nc,p1); goto UNARY;
   UNARY: return  bad_one_or_more(p1,in_group);
   default: assert(0);
   }
@@ -279,24 +279,24 @@ static int bad_one_or_more(int p,int in_group) {
 
 static int bad_list(int p) {
   int p1,p2;
-  switch(P_TYP(p)) {
-  case P_EMPTY: case P_NOT_ALLOWED:
-  case P_DATA: case P_VALUE:
+  switch(RN_P_TYP(p)) {
+  case RN_P_EMPTY: case RN_P_NOT_ALLOWED:
+  case RN_P_DATA: case RN_P_VALUE:
     return 0;
 
-  case P_CHOICE: Choice(p,p1,p2); goto BINARY;
-  case P_GROUP: Group(p,p1,p2); goto BINARY;
-  case P_DATA_EXCEPT: DataExcept(p,p1,p2); goto BINARY;
+  case RN_P_CHOICE: rn_Choice(p,p1,p2); goto BINARY;
+  case RN_P_GROUP: rn_Group(p,p1,p2); goto BINARY;
+  case RN_P_DATA_EXCEPT: rn_DataExcept(p,p1,p2); goto BINARY;
   BINARY: return bad_list(p1)||bad_list(p2);
 
-  case P_ONE_OR_MORE: OneOrMore(p,p1); goto UNARY;
-  case P_LIST: List(p,p1); goto UNARY;
+  case RN_P_ONE_OR_MORE: rn_OneOrMore(p,p1); goto UNARY;
+  case RN_P_LIST: rn_List(p,p1); goto UNARY;
   UNARY: return bad_list(p1);
 
-  case P_TEXT:
-  case P_INTERLEAVE:
-  case P_ATTRIBUTE:
-  case P_ELEMENT:
+  case RN_P_TEXT:
+  case RN_P_INTERLEAVE:
+  case RN_P_ATTRIBUTE:
+  case RN_P_ELEMENT:
     return 1;
   default: assert(0);
   }
@@ -305,23 +305,23 @@ static int bad_list(int p) {
 
 static int bad_attribute(int p) {
   int p1,p2;
-  switch(P_TYP(p)) {
-  case P_EMPTY: case P_NOT_ALLOWED: case P_TEXT:
-  case P_DATA: case P_VALUE:
+  switch(RN_P_TYP(p)) {
+  case RN_P_EMPTY: case RN_P_NOT_ALLOWED: case RN_P_TEXT:
+  case RN_P_DATA: case RN_P_VALUE:
     return 0;
 
-  case P_CHOICE: Choice(p,p1,p2); goto BINARY;
-  case P_INTERLEAVE: Interleave(p,p1,p2); goto BINARY;
-  case P_GROUP: Group(p,p1,p2); goto BINARY;
-  case P_DATA_EXCEPT: DataExcept(p,p1,p2); goto BINARY;
+  case RN_P_CHOICE: rn_Choice(p,p1,p2); goto BINARY;
+  case RN_P_INTERLEAVE: rn_Interleave(p,p1,p2); goto BINARY;
+  case RN_P_GROUP: rn_Group(p,p1,p2); goto BINARY;
+  case RN_P_DATA_EXCEPT: rn_DataExcept(p,p1,p2); goto BINARY;
   BINARY: return bad_attribute(p1)||bad_attribute(p2);
 
 
-  case P_ONE_OR_MORE: OneOrMore(p,p1); goto UNARY;
-  case P_LIST: List(p,p1); goto UNARY;
+  case RN_P_ONE_OR_MORE: rn_OneOrMore(p,p1); goto UNARY;
+  case RN_P_LIST: rn_List(p,p1); goto UNARY;
   UNARY: return bad_attribute(p1);
 
-  case P_ATTRIBUTE: case P_ELEMENT:
+  case RN_P_ATTRIBUTE: case RN_P_ELEMENT:
     return 1;
   default: assert(0);
   }
@@ -330,27 +330,27 @@ static int bad_attribute(int p) {
 
 static void path(int p,int nc) {
   int p1,p2,nc1;
-  switch(P_TYP(p)) {
-  case P_EMPTY: case P_NOT_ALLOWED: case P_TEXT:
-  case P_DATA: case P_VALUE:
-  case P_ELEMENT:
+  switch(RN_P_TYP(p)) {
+  case RN_P_EMPTY: case RN_P_NOT_ALLOWED: case RN_P_TEXT:
+  case RN_P_DATA: case RN_P_VALUE:
+  case RN_P_ELEMENT:
     break;
 
-  case P_CHOICE: Choice(p,p1,p2); goto BINARY;
-  case P_INTERLEAVE: Interleave(p,p1,p2); goto BINARY;
-  case P_GROUP: Group(p,p1,p2); goto BINARY;
-  case P_DATA_EXCEPT: DataExcept(p,p1,p2);
+  case RN_P_CHOICE: rn_Choice(p,p1,p2); goto BINARY;
+  case RN_P_INTERLEAVE: rn_Interleave(p,p1,p2); goto BINARY;
+  case RN_P_GROUP: rn_Group(p,p1,p2); goto BINARY;
+  case RN_P_DATA_EXCEPT: rn_DataExcept(p,p1,p2);
     if(bad_data_except(p2)) {char *s=rnx_nc2str(nc); error(RND_ER_BADEXPT,s); memfree(s);}
     goto BINARY;
   BINARY: path(p1,nc); path(p2,nc); break;
 
-  case P_ONE_OR_MORE: OneOrMore(p,p1);
+  case RN_P_ONE_OR_MORE: rn_OneOrMore(p,p1);
     if(bad_one_or_more(p1,0)) {char *s=rnx_nc2str(nc); error(RND_ER_BADMORE,s); memfree(s);}
     goto UNARY;
-  case P_LIST: List(p,p1);
+  case RN_P_LIST: rn_List(p,p1);
     if(bad_list(p1)) {char *s=rnx_nc2str(nc); error(RND_ER_BADLIST,s); memfree(s);}
     goto UNARY;
-  case P_ATTRIBUTE: Attribute(p,nc1,p1);
+  case RN_P_ATTRIBUTE: rn_Attribute(p,nc1,p1);
     if(bad_attribute(p1)) {char *s=rnx_nc2str(nc),*s1=rnx_nc2str(nc1); error(RND_ER_BADATTR,s1,s); memfree(s1); memfree(s);}
     goto UNARY;
   UNARY: path(p1,nc); break;
@@ -364,8 +364,8 @@ static void paths(void) {
   if(bad_start(flat[0])) error(RND_ER_BADSTART);
   for(i=1;i!=n_f;++i) {
     p=flat[i];
-    if(P_IS(p,ELEMENT)) {
-      Element(p,nc,p1);
+    if(RN_P_IS(p,ELEMENT)) {
+      rn_Element(p,nc,p1);
       path(p,nc);
     }
   }
@@ -383,22 +383,22 @@ static void nullables(void) {
     changed=0;
     for(i=0;i!=n_f;++i) {
       p=flat[i];
-      if(!nullable(p)) {
-	switch(P_TYP(p)) {
-	case P_NOT_ALLOWED:
-	case P_DATA: case P_DATA_EXCEPT: case P_VALUE: case P_LIST:
-	case P_ATTRIBUTE: case P_ELEMENT:
+      if(!rn_nullable(p)) {
+	switch(RN_P_TYP(p)) {
+	case RN_P_NOT_ALLOWED:
+	case RN_P_DATA: case RN_P_DATA_EXCEPT: case RN_P_VALUE: case RN_P_LIST:
+	case RN_P_ATTRIBUTE: case RN_P_ELEMENT:
 	  break;
 
-	case P_CHOICE: Choice(p,p1,p2); setNullable(p,nullable(p1)||nullable(p2)); break;
-	case P_INTERLEAVE: Interleave(p,p1,p2); setNullable(p,nullable(p1)&&nullable(p2)); break;
-	case P_GROUP: Group(p,p1,p2);  setNullable(p,nullable(p1)&&nullable(p2)); break;
+	case RN_P_CHOICE: rn_Choice(p,p1,p2); rn_setNullable(p,rn_nullable(p1)||rn_nullable(p2)); break;
+	case RN_P_INTERLEAVE: rn_Interleave(p,p1,p2); rn_setNullable(p,rn_nullable(p1)&&rn_nullable(p2)); break;
+	case RN_P_GROUP: rn_Group(p,p1,p2);  rn_setNullable(p,rn_nullable(p1)&&rn_nullable(p2)); break;
 
-	case P_ONE_OR_MORE: OneOrMore(p,p1); setNullable(p,nullable(p1)); break;
+	case RN_P_ONE_OR_MORE: rn_OneOrMore(p,p1); rn_setNullable(p,rn_nullable(p1)); break;
 
 	default: assert(0);
 	}
-	changed=changed||nullable(p);
+	changed=changed||rn_nullable(p);
       }
     }
   } while(changed);
@@ -410,21 +410,21 @@ static void cdatas(void) {
     changed=0;
     for(i=0;i!=n_f;++i) {
       p=flat[i];
-      if(!cdata(p)) {
-	switch(P_TYP(p)) {
-	case P_NOT_ALLOWED: case P_EMPTY:
-	case P_ATTRIBUTE: case P_ELEMENT:
+      if(!rn_cdata(p)) {
+	switch(RN_P_TYP(p)) {
+	case RN_P_NOT_ALLOWED: case RN_P_EMPTY:
+	case RN_P_ATTRIBUTE: case RN_P_ELEMENT:
 	  break;
 
-	case P_CHOICE: Choice(p,p1,p2); setCdata(p,cdata(p1)||cdata(p2)); break;
-	case P_INTERLEAVE: Interleave(p,p1,p2); setCdata(p,cdata(p1)||cdata(p2)); break;
-	case P_GROUP: Group(p,p1,p2);  setCdata(p,cdata(p1)||cdata(p2)); break;
+	case RN_P_CHOICE: rn_Choice(p,p1,p2); rn_setCdata(p,rn_cdata(p1)||rn_cdata(p2)); break;
+	case RN_P_INTERLEAVE: rn_Interleave(p,p1,p2); rn_setCdata(p,rn_cdata(p1)||rn_cdata(p2)); break;
+	case RN_P_GROUP: rn_Group(p,p1,p2);  rn_setCdata(p,rn_cdata(p1)||rn_cdata(p2)); break;
 
-	case P_ONE_OR_MORE: OneOrMore(p,p1); setCdata(p,cdata(p1)); break;
+	case RN_P_ONE_OR_MORE: rn_OneOrMore(p,p1); rn_setCdata(p,rn_cdata(p1)); break;
 
 	default: assert(0);
 	}
-	changed=changed||cdata(p);
+	changed=changed||rn_cdata(p);
       }
     }
   } while(changed);

@@ -21,8 +21,8 @@
 #define NC_AVG_SIZE 2
 #define S_AVG_SIZE 16
 
-#define erased(i) (rn_pattern[i]&P_FLG_ERS)
-#define erase(i) (rn_pattern[i]|=P_FLG_ERS)
+#define erased(i) (rn_pattern[i]&RN_P_FLG_ERS)
+#define erase(i) (rn_pattern[i]|=RN_P_FLG_ERS)
 
 static int p_size[]={1,1,1,1,3,3,3,2,2,3,3,3,3,3,3,3};
 static int nc_size[]={1,3,2,1,3,3,3};
@@ -43,9 +43,13 @@ void rn_new_schema(void) {base_p=i_p; i_ref=0;}
 void rn_del_p(int i) {ht_deli(&ht_p,i);}
 void rn_add_p(int i) {if(ht_get(&ht_p,i)==-1) ht_put(&ht_p,i);}
 
-void setNullable(int i,int x) {if(x) rn_pattern[i]|=P_FLG_NUL;}
-void setCdata(int i,int x) {if(x) rn_pattern[i]|=P_FLG_TXT;}
-void setContentType(int i,int t1,int t2) {rn_pattern[i]|=(t1>t2?t1:t2);}
+void rn_setNullable(int i,int x) {if(x) rn_pattern[i]|=RN_P_FLG_NUL;}
+
+int rn_contentType(int i) {return rn_pattern[i]&0x1C00;}
+void rn_setContentType(int i,int t1,int t2) {rn_pattern[i]|=(t1>t2?t1:t2);}
+
+int rn_cdata(int i) {return rn_pattern[i]&RN_P_FLG_TXT;}
+void rn_setCdata(int i,int x) {if(x) rn_pattern[i]|=RN_P_FLG_TXT;}
 
 static int add_s(char *s) {
   int len=strlen(s)+1;
@@ -54,7 +58,7 @@ static int add_s(char *s) {
   return len;
 }
 
-int newString(char *s) {
+int rn_newString(char *s) {
   int d_s,j;
   assert(!adding_ps);
   d_s=add_s(s);
@@ -65,7 +69,7 @@ int newString(char *s) {
   return j;
 }
 
-#define P_NEW(x) rn_pattern[i_p]=P_##x
+#define P_NEW(x) rn_pattern[i_p]=RN_P_##x
 
 #define P_LABEL "pattern"
 #define NC_LABEL "nameclass"
@@ -75,7 +79,7 @@ static int accept_##n(void) { \
   int j; \
   if((j=ht_get(&ht_##n,i_##n))==-1) { \
     ht_put(&ht_##n,j=i_##n); \
-    i_##n+=n##_size[N##_TYP(i_##n)]; \
+    i_##n+=n##_size[RN_##N##_TYP(i_##n)]; \
     if(i_##n+N##_SIZE>len_##n) rn_##name=(int *)memstretch(rn_##name,len_##n=2*(i_##n+N##_SIZE),i_##n,sizeof(int)); \
   } \
   return j; \
@@ -84,176 +88,176 @@ static int accept_##n(void) { \
 accept(pattern,p,P)
 accept(nameclass,nc,NC)
 
-int newEmpty(void) { P_NEW(EMPTY);
-  setNullable(i_p,1);
+int rn_newEmpty(void) { P_NEW(EMPTY);
+  rn_setNullable(i_p,1);
   return accept_p();
 }
 
-int newNotAllowed(void) { P_NEW(NOT_ALLOWED);
+int rn_newNotAllowed(void) { P_NEW(NOT_ALLOWED);
   return accept_p();
 }
 
-int newText(void) { P_NEW(TEXT);
-  setNullable(i_p,1); 
-  setCdata(i_p,1);
+int rn_newText(void) { P_NEW(TEXT);
+  rn_setNullable(i_p,1); 
+  rn_setCdata(i_p,1);
   return accept_p();
 }
 
-int newChoice(int p1,int p2) { P_NEW(CHOICE);
+int rn_newChoice(int p1,int p2) { P_NEW(CHOICE);
   rn_pattern[i_p+1]=p1; rn_pattern[i_p+2]=p2;
-  setNullable(i_p,nullable(p1)||nullable(p2)); 
-  setCdata(i_p,cdata(p1)||cdata(p2)); 
+  rn_setNullable(i_p,rn_nullable(p1)||rn_nullable(p2)); 
+  rn_setCdata(i_p,rn_cdata(p1)||rn_cdata(p2)); 
   return accept_p();
 }
 
-int newInterleave(int p1,int p2) { P_NEW(INTERLEAVE);
+int rn_newInterleave(int p1,int p2) { P_NEW(INTERLEAVE);
   rn_pattern[i_p+1]=p1; rn_pattern[i_p+2]=p2;
-  setNullable(i_p,nullable(p1)&&nullable(p2));
-  setCdata(i_p,cdata(p1)||cdata(p2)); 
+  rn_setNullable(i_p,rn_nullable(p1)&&rn_nullable(p2));
+  rn_setCdata(i_p,rn_cdata(p1)||rn_cdata(p2)); 
   return accept_p();
 }
 
-int newGroup(int p1,int p2) { P_NEW(GROUP);
+int rn_newGroup(int p1,int p2) { P_NEW(GROUP);
   rn_pattern[i_p+1]=p1; rn_pattern[i_p+2]=p2;
-  setNullable(i_p,nullable(p1)&&nullable(p2));
-  setCdata(i_p,cdata(p1)||cdata(p2)); 
+  rn_setNullable(i_p,rn_nullable(p1)&&rn_nullable(p2));
+  rn_setCdata(i_p,rn_cdata(p1)||rn_cdata(p2)); 
   return accept_p();
 }
 
-int newOneOrMore(int p1) { P_NEW(ONE_OR_MORE);
+int rn_newOneOrMore(int p1) { P_NEW(ONE_OR_MORE);
   rn_pattern[i_p+1]=p1;
-  setNullable(i_p,nullable(p1));
-  setCdata(i_p,cdata(p1));
+  rn_setNullable(i_p,rn_nullable(p1));
+  rn_setCdata(i_p,rn_cdata(p1));
   return accept_p();
 }
 
-int newList(int p1) { P_NEW(LIST);
+int rn_newList(int p1) { P_NEW(LIST);
   rn_pattern[i_p+1]=p1;
-  setCdata(i_p,1);
+  rn_setCdata(i_p,1);
   return accept_p();
 }
 
-int newData(int dt,int ps) { P_NEW(DATA);
+int rn_newData(int dt,int ps) { P_NEW(DATA);
   rn_pattern[i_p+1]=dt;
   rn_pattern[i_p+2]=ps;
-  setCdata(i_p,1);
+  rn_setCdata(i_p,1);
   return accept_p();
 }
 
-int newDataExcept(int p1,int p2) { P_NEW(DATA_EXCEPT);
+int rn_newDataExcept(int p1,int p2) { P_NEW(DATA_EXCEPT);
   rn_pattern[i_p+1]=p1; rn_pattern[i_p+2]=p2;
-  setCdata(i_p,1);
+  rn_setCdata(i_p,1);
   return accept_p();
 }
 
-int newValue(int dt,int s) { P_NEW(VALUE);
+int rn_newValue(int dt,int s) { P_NEW(VALUE);
   rn_pattern[i_p+1]=dt; rn_pattern[i_p+2]=s;
-  setCdata(i_p,1);
+  rn_setCdata(i_p,1);
   return accept_p();
 }
 
-int newAttribute(int nc,int p1) { P_NEW(ATTRIBUTE);
+int rn_newAttribute(int nc,int p1) { P_NEW(ATTRIBUTE);
   rn_pattern[i_p+2]=nc; rn_pattern[i_p+1]=p1;
   return accept_p();
 }
 
-int newElement(int nc,int p1) { P_NEW(ELEMENT);
+int rn_newElement(int nc,int p1) { P_NEW(ELEMENT);
   rn_pattern[i_p+2]=nc; rn_pattern[i_p+1]=p1; 
   return accept_p();
 }
 
-int newAfter(int p1,int p2) { P_NEW(AFTER);
+int rn_newAfter(int p1,int p2) { P_NEW(AFTER);
   rn_pattern[i_p+1]=p1; rn_pattern[i_p+2]=p2;
-  setCdata(i_p,cdata(p1));
+  rn_setCdata(i_p,rn_cdata(p1));
   return accept_p();
 }
 
-int newRef(void) { P_NEW(REF);
+int rn_newRef(void) { P_NEW(REF);
   rn_pattern[i_p+2]=i_ref++;
   return accept_p();
 }
 
 int rn_groupable(int p1,int p2) {
-  int ct1=contentType(p1),ct2=contentType(p2);
-  return ((ct1&ct2&P_FLG_CTC)||((ct1|ct2)&P_FLG_CTE));
+  int ct1=rn_contentType(p1),ct2=rn_contentType(p2);
+  return ((ct1&ct2&RN_P_FLG_CTC)||((ct1|ct2)&RN_P_FLG_CTE));
 }
 
 int rn_one_or_more(int p) {
-  if(P_IS(p,EMPTY)) return p;
-  if(P_IS(p,NOT_ALLOWED)) return p;
-  if(P_IS(p,TEXT)) return p;
-  return newOneOrMore(p);
+  if(RN_P_IS(p,EMPTY)) return p;
+  if(RN_P_IS(p,NOT_ALLOWED)) return p;
+  if(RN_P_IS(p,TEXT)) return p;
+  return rn_newOneOrMore(p);
 }
 
 int rn_group(int p1,int p2) {
-  if(P_IS(p1,NOT_ALLOWED)) return p1;
-  if(P_IS(p2,NOT_ALLOWED)) return p2;
-  if(P_IS(p1,EMPTY)) return p2;
-  if(P_IS(p2,EMPTY)) return p1;
-  return newGroup(p1,p2);
+  if(RN_P_IS(p1,NOT_ALLOWED)) return p1;
+  if(RN_P_IS(p2,NOT_ALLOWED)) return p2;
+  if(RN_P_IS(p1,EMPTY)) return p2;
+  if(RN_P_IS(p2,EMPTY)) return p1;
+  return rn_newGroup(p1,p2);
 }
 
 static int samechoice(int p1,int p2) {
-  if(P_IS(p1,CHOICE)) {
-    int p11,p12; Choice(p1,p11,p12);
+  if(RN_P_IS(p1,CHOICE)) {
+    int p11,p12; rn_Choice(p1,p11,p12);
     return p12==p2||samechoice(p11,p2);
   } else return p1==p2;
 }
 
 int rn_choice(int p1,int p2) {
-  if(P_IS(p1,NOT_ALLOWED)) return p2;
-  if(P_IS(p2,NOT_ALLOWED)) return p1;
-  if(P_IS(p2,CHOICE)) {
-    int p21,p22; Choice(p2,p21,p22);
+  if(RN_P_IS(p1,NOT_ALLOWED)) return p2;
+  if(RN_P_IS(p2,NOT_ALLOWED)) return p1;
+  if(RN_P_IS(p2,CHOICE)) {
+    int p21,p22; rn_Choice(p2,p21,p22);
     p1=rn_choice(p1,p21); return rn_choice(p1,p22);
   }
   if(samechoice(p1,p2)) return p1;
-  if(nullable(p1) && (P_IS(p2,EMPTY))) return p1;
-  if(nullable(p2) && (P_IS(p1,EMPTY))) return p2;
-  return newChoice(p1,p2); 
+  if(rn_nullable(p1) && (RN_P_IS(p2,EMPTY))) return p1;
+  if(rn_nullable(p2) && (RN_P_IS(p1,EMPTY))) return p2;
+  return rn_newChoice(p1,p2); 
 }
 
 int rn_ileave(int p1,int p2) {
-  if(P_IS(p1,NOT_ALLOWED)) return p1;
-  if(P_IS(p2,NOT_ALLOWED)) return p2;
-  if(P_IS(p1,EMPTY)) return p2;
-  if(P_IS(p2,EMPTY)) return p1;
-  return newInterleave(p1,p2);
+  if(RN_P_IS(p1,NOT_ALLOWED)) return p1;
+  if(RN_P_IS(p2,NOT_ALLOWED)) return p2;
+  if(RN_P_IS(p1,EMPTY)) return p2;
+  if(RN_P_IS(p2,EMPTY)) return p1;
+  return rn_newInterleave(p1,p2);
 }
 
 int rn_after(int p1,int p2) {
-  if(P_IS(p1,NOT_ALLOWED)) return p1;
-  if(P_IS(p2,NOT_ALLOWED)) return p2;
-  return newAfter(p1,p2);
+  if(RN_P_IS(p1,NOT_ALLOWED)) return p1;
+  if(RN_P_IS(p2,NOT_ALLOWED)) return p2;
+  return rn_newAfter(p1,p2);
 }
 
-#define NC_NEW(x) rn_nameclass[i_nc]=NC_##x
+#define NC_NEW(x) rn_nameclass[i_nc]=RN_NC_##x
 
-int newQName(int uri,int name) { NC_NEW(QNAME);
+int rn_newQName(int uri,int name) { NC_NEW(QNAME);
   rn_nameclass[i_nc+1]=uri; rn_nameclass[i_nc+2]=name;
   return accept_nc();
 }
 
-int newNsName(int uri) { NC_NEW(NSNAME);
+int rn_newNsName(int uri) { NC_NEW(NSNAME);
   rn_nameclass[i_nc+1]=uri;
   return accept_nc();
 }
 
-int newAnyName(void) { NC_NEW(ANY_NAME);
+int rn_newAnyName(void) { NC_NEW(ANY_NAME);
   return accept_nc();
 }
 
-int newNameClassExcept(int nc1,int nc2) { NC_NEW(EXCEPT);
+int rn_newNameClassExcept(int nc1,int nc2) { NC_NEW(EXCEPT);
   rn_nameclass[i_nc+1]=nc1; rn_nameclass[i_nc+2]=nc2;
   return accept_nc();
 }
 
-int newNameClassChoice(int nc1,int nc2) { NC_NEW(CHOICE);
+int rn_newNameClassChoice(int nc1,int nc2) { NC_NEW(CHOICE);
   rn_nameclass[i_nc+1]=nc1; rn_nameclass[i_nc+2]=nc2;
   return accept_nc();
 }
 
-int newDatatype(int lib,int typ) { NC_NEW(DATATYPE);
+int rn_newDatatype(int lib,int typ) { NC_NEW(DATATYPE);
   rn_nameclass[i_nc+1]=lib; rn_nameclass[i_nc+2]=typ;
   return accept_nc();
 }
@@ -296,17 +300,17 @@ void rn_clear(void) {
 static void windup(void) {
   i_p=i_nc=i_s=0;
   adding_ps=0;
-  rn_pattern[0]=P_ERROR;  accept_p(); 
-  rn_nameclass[0]=NC_ERROR; accept_nc();
-  newString("");
-  rn_empty=newEmpty(); rn_notAllowed=newNotAllowed(); rn_text=newText(); BASE_P=i_p;
-  rn_dt_string=newDatatype(0,newString("string")); rn_dt_token=newDatatype(0,newString("token"));
-  rn_xsd_uri=newString("http://www.w3.org/2001/XMLSchema-datatypes");
+  rn_pattern[0]=RN_P_ERROR;  accept_p(); 
+  rn_nameclass[0]=RN_NC_ERROR; accept_nc();
+  rn_newString("");
+  rn_empty=rn_newEmpty(); rn_notAllowed=rn_newNotAllowed(); rn_text=rn_newText(); BASE_P=i_p;
+  rn_dt_string=rn_newDatatype(0,rn_newString("string")); rn_dt_token=rn_newDatatype(0,rn_newString("token"));
+  rn_xsd_uri=rn_newString("http://www.w3.org/2001/XMLSchema-datatypes");
 }
 
 static int hash_p(int p) {
   int *pp=rn_pattern+p; int h=0;
-  switch(p_size[P_TYP(p)]) {
+  switch(p_size[RN_P_TYP(p)]) {
   case 1: h=pp[0]&0xF; break;
   case 2: h=(pp[0]&0xF)|(pp[1]<<4); break;
   case 3: h=(pp[0]&0xF)|((pp[1]^pp[2])<<4); break;
@@ -317,7 +321,7 @@ static int hash_p(int p) {
 
 static int hash_nc(int nc) {
   int *ncp=rn_nameclass+nc; int h=0;
-  switch(nc_size[NC_TYP(nc)]) {
+  switch(nc_size[RN_NC_TYP(nc)]) {
   case 1: h=ncp[0]&0x7; break;
   case 2: h=(ncp[0]&0x7)|(ncp[1]<<3); break;
   case 3: h=(ncp[0]&0x7)|((ncp[1]^ncp[2])<<3); break;
@@ -330,8 +334,8 @@ static int hash_s(int i) {return strhash(rn_string+i);}
 
 static int equal_p(int p1,int p2) {
   int *pp1=rn_pattern+p1,*pp2=rn_pattern+p2;
-  if(P_TYP(p1)!=P_TYP(p2)) return 0;
-  switch(p_size[P_TYP(p1)]) {
+  if(RN_P_TYP(p1)!=RN_P_TYP(p2)) return 0;
+  switch(p_size[RN_P_TYP(p1)]) {
   case 3: if(pp1[2]!=pp2[2]) return 0;
   case 2: if(pp1[1]!=pp2[1]) return 0;
   case 1: return 1;
@@ -342,8 +346,8 @@ static int equal_p(int p1,int p2) {
 
 static int equal_nc(int nc1,int nc2) {
   int *ncp1=rn_nameclass+nc1,*ncp2=rn_nameclass+nc2;
-  if(NC_TYP(nc1)!=NC_TYP(nc2)) return 0;
-  switch(nc_size[NC_TYP(nc1)]) {
+  if(RN_NC_TYP(nc1)!=RN_NC_TYP(nc2)) return 0;
+  switch(nc_size[RN_NC_TYP(nc1)]) {
   case 3: if(ncp1[2]!=ncp2[2]) return 0;
   case 2: if(ncp1[1]!=ncp2[1]) return 0;
   case 1: return 1;
@@ -360,28 +364,28 @@ static void mark_p(int start) {
   int n_f=0;
   int *flat=(int*)memalloc(i_p,sizeof(int));
 
-  flat[n_f++]=start; mark(start);
+  flat[n_f++]=start; rn_mark(start);
   i=0; 
   do {
     p=flat[i++];
-    switch(P_TYP(p)) {
-    case P_EMPTY: case P_NOT_ALLOWED: case P_TEXT: case P_DATA: case P_VALUE:
+    switch(RN_P_TYP(p)) {
+    case RN_P_EMPTY: case RN_P_NOT_ALLOWED: case RN_P_TEXT: case RN_P_DATA: case RN_P_VALUE:
       break;
 
-    case P_CHOICE: Choice(p,p1,p2); goto BINARY;
-    case P_INTERLEAVE: Interleave(p,p1,p2); goto BINARY;
-    case P_GROUP: Group(p,p1,p2); goto BINARY;
-    case P_DATA_EXCEPT: DataExcept(p,p1,p2); goto BINARY;
+    case RN_P_CHOICE: rn_Choice(p,p1,p2); goto BINARY;
+    case RN_P_INTERLEAVE: rn_Interleave(p,p1,p2); goto BINARY;
+    case RN_P_GROUP: rn_Group(p,p1,p2); goto BINARY;
+    case RN_P_DATA_EXCEPT: rn_DataExcept(p,p1,p2); goto BINARY;
     BINARY:
-      if(!marked(p2)) {flat[n_f++]=p2; mark(p2);}
+      if(!rn_marked(p2)) {flat[n_f++]=p2; rn_mark(p2);}
       goto UNARY;
 
-    case P_ONE_OR_MORE: OneOrMore(p,p1); goto UNARY;
-    case P_LIST: List(p,p1); goto UNARY;
-    case P_ATTRIBUTE: Attribute(p,nc,p1); goto UNARY;
-    case P_ELEMENT: Element(p,nc,p1); goto UNARY;
+    case RN_P_ONE_OR_MORE: rn_OneOrMore(p,p1); goto UNARY;
+    case RN_P_LIST: rn_List(p,p1); goto UNARY;
+    case RN_P_ATTRIBUTE: rn_Attribute(p,nc,p1); goto UNARY;
+    case RN_P_ELEMENT: rn_Element(p,nc,p1); goto UNARY;
     UNARY:
-      if(!marked(p1)) {flat[n_f++]=p1; mark(p1);}
+      if(!rn_marked(p1)) {flat[n_f++]=p1; rn_mark(p1);}
       break;
 
     default: 
@@ -397,11 +401,11 @@ static void sweep_p(int *starts,int n_st,int since) {
   int *xlat;
   xlat=(int*)memalloc(i_p-since,sizeof(int));
   changed=0;
-  for(p=since;p!=i_p;p+=p_size[P_TYP(p)]) {
-    if(!marked(p)) {
+  for(p=since;p!=i_p;p+=p_size[RN_P_TYP(p)]) {
+    if(!rn_marked(p)) {
       xlat[p-since]=-1;
     } else if((q=ht_get(&ht_p,p))!=p) {
-      unmark(p);
+      rn_unmark(p);
       xlat[p-since]=q;
       changed=1;
     } else {
@@ -410,17 +414,17 @@ static void sweep_p(int *starts,int n_st,int since) {
   }
   while(changed) {
     changed=0;
-    for(p=since;p!=i_p;p+=p_size[P_TYP(p)]) {
+    for(p=since;p!=i_p;p+=p_size[RN_P_TYP(p)]) {
       if(xlat[p-since]==p) {
 	touched=0;
-	switch(P_TYP(p)) {
-	case P_EMPTY: case P_NOT_ALLOWED: case P_TEXT: case P_DATA: case P_VALUE:
+	switch(RN_P_TYP(p)) {
+	case RN_P_EMPTY: case RN_P_NOT_ALLOWED: case RN_P_TEXT: case RN_P_DATA: case RN_P_VALUE:
 	  break;
 
-	case P_CHOICE: Choice(p,p1,p2); goto BINARY;
-	case P_INTERLEAVE: Interleave(p,p1,p2); goto BINARY;
-	case P_GROUP: Group(p,p1,p2); goto BINARY;
-	case P_DATA_EXCEPT: DataExcept(p,p1,p2); goto BINARY;
+	case RN_P_CHOICE: rn_Choice(p,p1,p2); goto BINARY;
+	case RN_P_INTERLEAVE: rn_Interleave(p,p1,p2); goto BINARY;
+	case RN_P_GROUP: rn_Group(p,p1,p2); goto BINARY;
+	case RN_P_DATA_EXCEPT: rn_DataExcept(p,p1,p2); goto BINARY;
 	BINARY:
 	  if(p2>=since && (q=xlat[p2-since])!=p2) {
 	    ht_deli(&ht_p,p); 
@@ -429,10 +433,10 @@ static void sweep_p(int *starts,int n_st,int since) {
 	  }
 	  goto UNARY;
 
-	case P_ONE_OR_MORE: OneOrMore(p,p1); goto UNARY;
-	case P_LIST: List(p,p1); goto UNARY;
-	case P_ATTRIBUTE: Attribute(p,nc,p1); goto UNARY;
-	case P_ELEMENT: Element(p,nc,p1); goto UNARY;
+	case RN_P_ONE_OR_MORE: rn_OneOrMore(p,p1); goto UNARY;
+	case RN_P_LIST: rn_List(p,p1); goto UNARY;
+	case RN_P_ATTRIBUTE: rn_Attribute(p,nc,p1); goto UNARY;
+	case RN_P_ELEMENT: rn_Element(p,nc,p1); goto UNARY;
 	UNARY:
 	  if(p1>=since && (q=xlat[p1-since])!=p1) {
 	    if(!touched) ht_deli(&ht_p,p);
@@ -449,7 +453,7 @@ static void sweep_p(int *starts,int n_st,int since) {
 	  if((q=ht_get(&ht_p,p))==-1) {
 	    ht_put(&ht_p,p);
 	  } else {
-	    unmark(p);
+	    rn_unmark(p);
 	    xlat[p-since]=q;
 	  }
 	}
@@ -462,9 +466,9 @@ static void sweep_p(int *starts,int n_st,int since) {
 
 static void unmark_p(int since) {
   int p; 
-  for(p=0;p!=since;p+=p_size[P_TYP(p)]) unmark(p);
-  for(p=since;p!=i_p;p+=p_size[P_TYP(p)]) {
-    if(marked(p)) unmark(p); else {ht_deli(&ht_p,p); erase(p);}
+  for(p=0;p!=since;p+=p_size[RN_P_TYP(p)]) rn_unmark(p);
+  for(p=since;p!=i_p;p+=p_size[RN_P_TYP(p)]) {
+    if(rn_marked(p)) rn_unmark(p); else {ht_deli(&ht_p,p); erase(p);}
   }
 }
 
@@ -472,34 +476,34 @@ static void compress_p(int *starts,int n_st,int since) {
   int p,p1,p2,q,nc,i_q;
   int *xlat=(int*)memalloc(i_p-since,sizeof(int));
   q=since;
-  for(p=since;p!=i_p;p+=p_size[P_TYP(p)]) {
+  for(p=since;p!=i_p;p+=p_size[RN_P_TYP(p)]) {
     if(erased(p)) {
       xlat[p-since]=-1;
     } else {
       ht_deli(&ht_p,p);
       xlat[p-since]=q; 
-      q+=p_size[P_TYP(p)];
+      q+=p_size[RN_P_TYP(p)];
     }
   }
   i_q=q;
-  for(p=since;p!=i_p;p+=p_size[P_TYP(p)]) {
+  for(p=since;p!=i_p;p+=p_size[RN_P_TYP(p)]) {
     if(xlat[p-since]!=-1) {
-      switch(P_TYP(p)) {
-      case P_EMPTY: case P_NOT_ALLOWED: case P_TEXT: case P_DATA: case P_VALUE:
+      switch(RN_P_TYP(p)) {
+      case RN_P_EMPTY: case RN_P_NOT_ALLOWED: case RN_P_TEXT: case RN_P_DATA: case RN_P_VALUE:
 	break;
 
-      case P_CHOICE: Choice(p,p1,p2); goto BINARY;
-      case P_INTERLEAVE: Interleave(p,p1,p2); goto BINARY;
-      case P_GROUP: Group(p,p1,p2); goto BINARY;
-      case P_DATA_EXCEPT: DataExcept(p,p1,p2); goto BINARY;
+      case RN_P_CHOICE: rn_Choice(p,p1,p2); goto BINARY;
+      case RN_P_INTERLEAVE: rn_Interleave(p,p1,p2); goto BINARY;
+      case RN_P_GROUP: rn_Group(p,p1,p2); goto BINARY;
+      case RN_P_DATA_EXCEPT: rn_DataExcept(p,p1,p2); goto BINARY;
       BINARY:
 	if(p2>=since && (q=xlat[p2-since])!=p2) rn_pattern[p+2]=q;
 	goto UNARY;
 
-      case P_ONE_OR_MORE: OneOrMore(p,p1); goto UNARY;
-      case P_LIST: List(p,p1); goto UNARY;
-      case P_ATTRIBUTE: Attribute(p,nc,p1); goto UNARY;
-      case P_ELEMENT: Element(p,nc,p1); goto UNARY;
+      case RN_P_ONE_OR_MORE: rn_OneOrMore(p,p1); goto UNARY;
+      case RN_P_LIST: rn_List(p,p1); goto UNARY;
+      case RN_P_ATTRIBUTE: rn_Attribute(p,nc,p1); goto UNARY;
+      case RN_P_ELEMENT: rn_Element(p,nc,p1); goto UNARY;
       UNARY:
 	if(p1>=since && (q=xlat[p1-since])!=p1) rn_pattern[p+1]=q;
 	break;
@@ -509,7 +513,7 @@ static void compress_p(int *starts,int n_st,int since) {
       }
       if((q=xlat[p-since])!=p) {
 	int i;
-	for(i=0;i!=p_size[P_TYP(p)];++i) rn_pattern[q+i]=rn_pattern[p+i];
+	for(i=0;i!=p_size[RN_P_TYP(p)];++i) rn_pattern[q+i]=rn_pattern[p+i];
       }
       ht_put(&ht_p,q);
     }

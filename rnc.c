@@ -624,7 +624,7 @@ static void chk_skip_get(struct rnc_source *sp,int sym) {
 static int nsuri(struct rnc_source *sp) {
   int uri=-1;
   switch(CUR(sp).sym) {
-  case SYM_LITERAL: uri=newString(CUR(sp).s); break;
+  case SYM_LITERAL: uri=rn_newString(CUR(sp).s); break;
   case SYM_INHERIT: uri=nss.tab[(sc_find(&nss,-1))][1]; break;
   default:
     error(0,sp,RNC_ER_SEXP,sp->fn,CUR(sp).line,CUR(sp).col,"literal or 'inherit'");	
@@ -735,7 +735,7 @@ static int decl(struct rnc_source *sp) {
   switch(CUR(sp).sym) {
   case SYM_NAMESPACE:
     getsym(sp);
-    if(chkwd(sp)) pfx=newString(CUR(sp).s); getsym(sp);
+    if(chkwd(sp)) pfx=rn_newString(CUR(sp).s); getsym(sp);
     chk_get(sp,SYM_ASGN);
     uri=nsuri(sp);
     if(uri!=-1&&pfx!=-1) addns(sp,pfx,uri);
@@ -743,16 +743,16 @@ static int decl(struct rnc_source *sp) {
   case SYM_DEFAULT:
     getsym(sp);
     chk_get(sp,SYM_NAMESPACE);
-    if(0<=CUR(sp).sym&&CUR(sp).sym<=SYM_IDENT) {pfx=newString(CUR(sp).s); getsym(sp);}
+    if(0<=CUR(sp).sym&&CUR(sp).sym<=SYM_IDENT) {pfx=rn_newString(CUR(sp).s); getsym(sp);}
     chk_get(sp,SYM_ASGN);
     uri=nsuri(sp);
     if(uri!=-1) {if(pfx!=-1) addns(sp,pfx,uri); addns(sp,0,uri);}
     return 1;
   case SYM_DATATYPES:
     getsym(sp);
-    if(chkwd(sp)) pfx=newString(CUR(sp).s); getsym(sp);
+    if(chkwd(sp)) pfx=rn_newString(CUR(sp).s); getsym(sp);
     chk_get(sp,SYM_ASGN);
-    if(chksym(sp,SYM_LITERAL)) uri=newString(CUR(sp).s); getsym(sp);
+    if(chksym(sp,SYM_LITERAL)) uri=rn_newString(CUR(sp).s); getsym(sp);
     if(pfx!=-1&&uri!=-1) adddt(sp,pfx,uri);
     return 1;
   default: return 0;
@@ -777,25 +777,25 @@ static int inherit(struct rnc_source *sp) {
   int uri=0;
   if(CUR(sp).sym==SYM_INHERIT) {
     getsym(sp); chk_get(sp,SYM_ASGN);
-    if(chkwd(sp)) uri=ns2uri(sp,newString(CUR(sp).s));
+    if(chkwd(sp)) uri=ns2uri(sp,rn_newString(CUR(sp).s));
     getsym(sp);
   } else uri=nss.tab[sc_find(&nss,0)][1];
   return uri;
 }
 
 static int name(struct rnc_source *sp,int p,int s) {
-  int nc=newQName(ns2uri(sp,p),s);
+  int nc=rn_newQName(ns2uri(sp,p),s);
   getsym(sp);
   return nc;
 }
 
 static int qname(struct rnc_source *sp) {
   char *s=CUR(sp).s; while(*s!=':') ++s; *(s++)='\0';
-  return name(sp,newString(CUR(sp).s),newString(s));
+  return name(sp,rn_newString(CUR(sp).s),rn_newString(s));
 }
 
 static int nsname(struct rnc_source *sp) {
-  int nc=newNsName(ns2uri(sp,newString(CUR(sp).s)));
+  int nc=rn_newNsName(ns2uri(sp,rn_newString(CUR(sp).s)));
   getsym(sp);
   return nc;
 }
@@ -807,11 +807,11 @@ static int simplenc(struct rnc_source *sp) {
   switch(CUR(sp).sym) {
   case SYM_QNAME: nc=qname(sp); break;
   case SYM_NSNAME: nc=nsname(sp); break;
-  case SYM_ANY_NAME: nc=newAnyName(); getsym(sp); break;
+  case SYM_ANY_NAME: nc=rn_newAnyName(); getsym(sp); break;
   case SYM_LPAR: getsym(sp); nc=nameclass(sp); chk_skip(sp,SYM_RPAR,SYM_LCUR); break;
   default:
     if(chkwd(sp)) {
-      nc=name(sp,0,newString(CUR(sp).s));
+      nc=name(sp,0,rn_newString(CUR(sp).s));
       break;
     } else skipto(sp,SYM_LCUR);
   }
@@ -826,19 +826,19 @@ static int nameclass(struct rnc_source *sp) {
       int nci;
       getsym(sp);
       nci=simplenc(sp);
-      if(nc==nci||NC_IS(nc,ANY_NAME)) {
+      if(nc==nci||RN_NC_IS(nc,ANY_NAME)) {
 	;
-      } else if(NC_IS(nci,ANY_NAME)) {
+      } else if(RN_NC_IS(nci,ANY_NAME)) {
 	nc=nci;
       } else {
-	nc=newNameClassChoice(nc,nci);
+	nc=rn_newNameClassChoice(nc,nci);
       }
     } while(CUR(sp).sym==SYM_CHOICE);
     break;
   case SYM_EXCEPT:
-    if(!(NC_IS(nc,ANY_NAME)||NC_IS(nc,NSNAME))) error(1,sp,RNC_ER_NCEX,sp->fn,CUR(sp).line,CUR(sp).col);
+    if(!(RN_NC_IS(nc,ANY_NAME)||RN_NC_IS(nc,NSNAME))) error(1,sp,RNC_ER_NCEX,sp->fn,CUR(sp).line,CUR(sp).col);
     getsym(sp);
-    nc=newNameClassExcept(nc,simplenc(sp));
+    nc=rn_newNameClassExcept(nc,simplenc(sp));
     break;
   }
   return nc;
@@ -848,23 +848,23 @@ static int pattern(struct rnc_source *sp);
 
 static int element(struct rnc_source *sp) {
   int nc,p;
-  nc=nameclass(sp); chk_get(sp,SYM_LCUR); p=newElement(nc,pattern(sp)); chk_skip_get(sp,SYM_RCUR);
+  nc=nameclass(sp); chk_get(sp,SYM_LCUR); p=rn_newElement(nc,pattern(sp)); chk_skip_get(sp,SYM_RCUR);
   return p;
 }
 
 static int attribute(struct rnc_source *sp) {
   int nc,p,i=sc_find(&nss,0),nsuri=nss.tab[i][1];
   nss.tab[i][1]=0; nc=nameclass(sp);  nss.tab[i][1]=nsuri;
-  chk_get(sp,SYM_LCUR); p=newAttribute(nc,pattern(sp)); chk_skip_get(sp,SYM_RCUR);
+  chk_get(sp,SYM_LCUR); p=rn_newAttribute(nc,pattern(sp)); chk_skip_get(sp,SYM_RCUR);
   return p;
 }
 
 static int refname(struct rnc_source *sp,struct sc_stack *stp) {
-  int name=newString(CUR(sp).s),i,p;
+  int name=rn_newString(CUR(sp).s),i,p;
   if((i=sc_find(stp,name))) {
     p=stp->tab[i][1];
   } else {
-    p=newRef();
+    p=rn_newRef();
     sc_add(stp,name,p,0);
   }
   return p;
@@ -898,8 +898,8 @@ static int relpath(struct rnc_source *sp) {
 static int topLevel(struct rnc_source *sp);
 
 static void add_well_known_nss(int dflt) {
-  sc_add(&nss,newString("xml"),newString("http://www.w3.org/XML/1998/namespace"),0);
-  sc_add(&nss,newString("xmlns"),newString("http://www.w3.org/2000/xmlns"),0);
+  sc_add(&nss,rn_newString("xml"),rn_newString("http://www.w3.org/XML/1998/namespace"),0);
+  sc_add(&nss,rn_newString("xmlns"),rn_newString("http://www.w3.org/2000/xmlns"),0);
   sc_add(&nss,0,dflt,PFX_INHERITED); sc_add(&nss,-1,dflt,PFX_INHERITED); 
 }
 
@@ -942,7 +942,7 @@ static int external(struct rnc_source *sp) {
 static int list(struct rnc_source *sp) {
   int p;
   chk_get(sp,SYM_LCUR);
-  p=newList(pattern(sp));
+  p=rn_newList(pattern(sp));
   chk_skip_get(sp,SYM_RCUR);
   return p;
 }
@@ -969,13 +969,13 @@ static int param(struct rnc_source *sp) {
 static int datatype(struct rnc_source *sp) {
   int dt=0;
   switch(CUR(sp).sym) {
-  case SYM_TOKEN: dt=newDatatype(0,rn_dt_token); break;
-  case SYM_STRING: dt=newDatatype(0,rn_dt_string); break;
+  case SYM_TOKEN: dt=rn_newDatatype(0,rn_dt_token); break;
+  case SYM_STRING: dt=rn_newDatatype(0,rn_dt_string); break;
   case SYM_QNAME: 
     { char *s=CUR(sp).s; while(*s!=':') ++s; *(s++)='\0';
-      dt=newDatatype(dt2uri(sp,newString(CUR(sp).s)),newString(s));
+      dt=rn_newDatatype(dt2uri(sp,rn_newString(CUR(sp).s)),rn_newString(s));
     } break;
-  case SYM_LITERAL: dt=newDatatype(0,newString("token")); return dt;
+  case SYM_LITERAL: dt=rn_newDatatype(0,rn_newString("token")); return dt;
   }
   getsym(sp);
   return dt;
@@ -995,14 +995,14 @@ static int params(struct rnc_source *sp) {
 
 static int data(struct rnc_source *sp) {
   int dt,ps; dt=datatype(sp); ps=params(sp);
-  return newData(dt,ps);
+  return rn_newData(dt,ps);
 }
 
 static int value(struct rnc_source *sp) {
   int dt,val=0; dt=datatype(sp);
-  if(chksym(sp,SYM_LITERAL)) val=newString(CUR(sp).s);
+  if(chksym(sp,SYM_LITERAL)) val=rn_newString(CUR(sp).s);
   getsym(sp);
-  return newValue(dt,val);
+  return rn_newValue(dt,val);
 }
 
 static int grammarContent(struct rnc_source *sp);
@@ -1078,9 +1078,9 @@ static int pattern(struct rnc_source *sp) {
     } while(CUR(sp).sym==op);
     break;
   case SYM_EXCEPT:
-    if(!P_IS(p,DATA)) error(1,sp,RNC_ER_EXPT,sp->fn,CUR(sp).line,CUR(sp).col);
+    if(!RN_P_IS(p,DATA)) error(1,sp,RNC_ER_EXPT,sp->fn,CUR(sp).line,CUR(sp).col);
     getsym(sp);
-    p=newDataExcept(p,primary(sp));
+    p=rn_newDataExcept(p,primary(sp));
   }
   return p;
 }
@@ -1130,7 +1130,7 @@ static int grammarContent(struct rnc_source *sp) {
     case SYM_ASGN:
     case SYM_ASGN_CHOICE:
     case SYM_ASGN_ILEAVE: {
-	int name=newString(CUR(sp).s); getsym(sp); define(sp,name);
+	int name=rn_newString(CUR(sp).s); getsym(sp); define(sp,name);
 	return 1;
       }
     default: return 0;
@@ -1153,7 +1153,7 @@ static int grammarContent(struct rnc_source *sp) {
 static int topLevel(struct rnc_source *sp) {
   int ret=-1,is_grammar;
   sc_open(&dts);
-  sc_add(&dts,newString("xsd"),rn_xsd_uri,PFX_DEFAULT);
+  sc_add(&dts,rn_newString("xsd"),rn_xsd_uri,PFX_DEFAULT);
 
   getsym(sp); getsym(sp);
   while(decl(sp));

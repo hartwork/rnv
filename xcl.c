@@ -7,17 +7,19 @@
 #include <stdio.h>  /*fprintf,stderr*/
 #include <string.h> /*strerror*/
 #include <errno.h>
+#include <assert.h>
 #include EXPAT_H
 #include "memops.h"
 #include "erbit.h"
-#include "rn.h"
 #include "rnc.h"
 #include "rnd.h"
 #include "rnv.h"
 #include "rnx.h"
 #include "ll.h"
 
-extern int rx_compact,drv_compact;
+extern int rn_notAllowed,rx_compact,drv_compact;
+
+extern int rn_compress_last(int start);
 
 #define LEN_T XCL_LEN_T
 #define LIM_T XCL_LIM_T
@@ -83,7 +85,6 @@ static void windup(void);
 static int initialized=0;
 static void init(void) {
   if(!initialized) {initialized=1;
-    rn_init();
     rnc_init(); rnc_verror_handler=&verror_handler_rnc;
     rnd_init(); rnd_verror_handler=&verror_handler_rnd;
     rnv_init(); rnv_verror_handler=&verror_handler_rnv;

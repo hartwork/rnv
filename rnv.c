@@ -2,12 +2,15 @@
 
 #include <string.h> /*strncpy,strrchr*/
 #include <stdio.h>
+#include <assert.h>
 #include "memops.h"
 #include "xmlc.h" /*xmlc_white_space*/
 #include "erbit.h"
-#include "rn.h"
 #include "drv.h"
 #include "rnv.h"
+
+extern int rn_notAllowed;
+extern int rn_cdata(int i);
 
 #define err(msg) vfprintf(stderr,msg"\n",ap);
 void rnv_default_verror_handler(int erno,va_list ap) {
@@ -40,7 +43,6 @@ static void windup(void);
 static int initialized=0;
 void rnv_init(void) {
   if(!initialized) {initialized=1;
-    rn_init();
     drv_init(); drv_verror_handler=&verror_handler_drv;
     windup();
   }
@@ -86,7 +88,7 @@ int rnv_text(int *curp,int *prevp,char *text,int n_t,int mixed) {
     *curp=drv_text(*prevp=*curp,text,n_t);
     if(*curp==rn_notAllowed) { ok=0;
       *curp=drv_text_recover(*prevp,text,n_t);
-      error_handler(cdata(*prevp)?RNV_ER_TEXT:RNV_ER_NOTX);
+      error_handler(rn_cdata(*prevp)?RNV_ER_TEXT:RNV_ER_NOTX);
     }
   }
   return ok;

@@ -27,17 +27,20 @@ comments start with # and continue till end of line
 #include <stdio.h>
 #include <stdarg.h>
 #include <errno.h>
+#include <assert.h>
 #include EXPAT_H
 #include "memops.h"
 #include "strops.h"
 #include "xmlc.h"
 #include "ht.h"
 #include "erbit.h"
-#include "rn.h"
 #include "rnc.h"
 #include "rnd.h"
 #include "rnv.h"
 #include "rx.h"
+
+extern int rn_notAllowed;
+extern int rn_compress_last(int start);
 
 /* rules */
 #define VALID 1
@@ -98,7 +101,7 @@ static void windup(void);
 static int initialized=0;
 static void init(void) {
   if(!initialized) {initialized=1;
-    rn_init(); rnc_init(); rnd_init(); rnv_init();
+    rnc_init(); rnd_init(); rnv_init();
     rnv_verror_handler=&silent_verror_handler;
     string=(char*)memalloc(len_v=LEN_S*S_AVG_SIZE,sizeof(char));
     t2s=(int(*)[2])memalloc(len_2=LEN_2,sizeof(int[2]));

@@ -122,7 +122,7 @@ static int fallback_equal(char *typ,char *val,char *s,int n) {return 1;}
 static int fallback_allows(char *typ,char *ps,char *s,int n) {return 1;}
 
 static int builtin_equal(char *typ,char *val,char *s,int n) {
-  int dt=newDatatype(0,typ-rn_string);
+  int dt=rn_newDatatype(0,typ-rn_string);
   if(dt==rn_dt_string) return strcmpn(val,s,n)==0;
   else if(dt==rn_dt_token) return tokcmpn(val,s,n)==0;
   else assert(0);
@@ -159,7 +159,7 @@ void drv_clear(void) {
 
 void drv_add_dtl(char *suri,int (*equal)(char *typ,char *val,char *s,int n),int (*allows)(char *typ,char *ps,char *s,int n)) {
   if(n_dtl==len_dtl) dtl=(struct dtl *)memstretch(dtl,len_dtl=n_dtl*2,n_dtl,sizeof(struct dtl));
-  dtl[n_dtl].uri=newString(suri);
+  dtl[n_dtl].uri=rn_newString(suri);
   dtl[n_dtl].equal=equal;
   dtl[n_dtl].allows=allows;
   ++n_dtl;
@@ -175,12 +175,12 @@ static struct dtl *getdtl(int uri) {
 
 static int ncof(int nc,int uri,int name) {
   int uri2,name2,nc1,nc2;
-  switch(NC_TYP(nc)) {
-  case NC_QNAME: QName(nc,uri2,name2); return uri2==uri&&name2==name;
-  case NC_NSNAME: NsName(nc,uri2); return uri2==uri;
-  case NC_ANY_NAME: return 1;
-  case NC_EXCEPT: NameClassExcept(nc,nc1,nc2); return ncof(nc1,uri,name)&&!ncof(nc2,uri,name);
-  case NC_CHOICE: NameClassChoice(nc,nc1,nc2); return ncof(nc1,uri,name)||ncof(nc2,uri,name);
+  switch(RN_NC_TYP(nc)) {
+  case RN_NC_QNAME: rn_QName(nc,uri2,name2); return uri2==uri&&name2==name;
+  case RN_NC_NSNAME: rn_NsName(nc,uri2); return uri2==uri;
+  case RN_NC_ANY_NAME: return 1;
+  case RN_NC_EXCEPT: rn_NameClassExcept(nc,nc1,nc2); return ncof(nc1,uri,name)&&!ncof(nc2,uri,name);
+  case RN_NC_CHOICE: rn_NameClassChoice(nc,nc1,nc2); return ncof(nc1,uri,name)||ncof(nc2,uri,name);
   default: assert(0);
   }
   return 0;
@@ -188,14 +188,14 @@ static int ncof(int nc,int uri,int name) {
 
 static int apply_after(int (*f)(int q1,int q2),int p1,int p0) {
   int p11,p12;
-  switch(P_TYP(p1)) {
-  case P_EMPTY: case P_NOT_ALLOWED: case P_TEXT:
-  case P_INTERLEAVE: case P_GROUP: case P_ONE_OR_MORE:
-  case P_LIST: case P_DATA: case P_DATA_EXCEPT: case P_VALUE:
-  case P_ATTRIBUTE: case P_ELEMENT:
+  switch(RN_P_TYP(p1)) {
+  case RN_P_EMPTY: case RN_P_NOT_ALLOWED: case RN_P_TEXT:
+  case RN_P_INTERLEAVE: case RN_P_GROUP: case RN_P_ONE_OR_MORE:
+  case RN_P_LIST: case RN_P_DATA: case RN_P_DATA_EXCEPT: case RN_P_VALUE:
+  case RN_P_ATTRIBUTE: case RN_P_ELEMENT:
     return rn_notAllowed;
-  case P_CHOICE: Choice(p1,p11,p12); return rn_choice(apply_after(f,p11,p0),apply_after(f,p12,p0));
-  case P_AFTER: After(p1,p11,p12); return rn_after(p11,(*f)(p12,p0));
+  case RN_P_CHOICE: rn_Choice(p1,p11,p12); return rn_choice(apply_after(f,p11,p0),apply_after(f,p12,p0));
+  case RN_P_AFTER: rn_After(p1,p11,p12); return rn_after(p11,(*f)(p12,p0));
   default: assert(0);
   }
   return 0;
@@ -207,31 +207,31 @@ static int start_tag_open(int p,int uri,int name,int recover) {
     m=newStartTagOpen(p,uri,name);
     if(m!=-1) return M_RET(m);
   }
-  switch(P_TYP(p)) {
-  case P_EMPTY: case P_NOT_ALLOWED: case P_TEXT: 
-  case P_LIST: case P_DATA: case P_DATA_EXCEPT: case P_VALUE:
-  case P_ATTRIBUTE:
+  switch(RN_P_TYP(p)) {
+  case RN_P_EMPTY: case RN_P_NOT_ALLOWED: case RN_P_TEXT: 
+  case RN_P_LIST: case RN_P_DATA: case RN_P_DATA_EXCEPT: case RN_P_VALUE:
+  case RN_P_ATTRIBUTE:
     ret=rn_notAllowed;
     break;
-  case P_CHOICE: Choice(p,p1,p2);
+  case RN_P_CHOICE: rn_Choice(p,p1,p2);
     ret=rn_choice(start_tag_open(p1,uri,name,recover),start_tag_open(p2,uri,name,recover));
     break;
-  case P_ELEMENT: Element(p,nc,p1); 
+  case RN_P_ELEMENT: rn_Element(p,nc,p1); 
     ret=ncof(nc,uri,name)?rn_after(p1,rn_empty):rn_notAllowed; 
     break;
-  case P_INTERLEAVE: Interleave(p,p1,p2); 
+  case RN_P_INTERLEAVE: rn_Interleave(p,p1,p2); 
     ret=rn_choice(
       apply_after(&rn_ileave,start_tag_open(p1,uri,name,recover),p2),
       apply_after(&rn_ileave,start_tag_open(p2,uri,name,recover),p1));
     break;
-  case P_GROUP: Group(p,p1,p2); 
+  case RN_P_GROUP: rn_Group(p,p1,p2); 
     { int p11=apply_after(&rn_group,start_tag_open(p1,uri,name,recover),p2);
-      ret=(nullable(p1)||recover)?rn_choice(p11,start_tag_open(p2,uri,name,recover)):p11;
+      ret=(rn_nullable(p1)||recover)?rn_choice(p11,start_tag_open(p2,uri,name,recover)):p11;
     } break;
-  case P_ONE_OR_MORE: OneOrMore(p,p1);
+  case RN_P_ONE_OR_MORE: rn_OneOrMore(p,p1);
     ret=apply_after(&rn_group,start_tag_open(p1,uri,name,recover),rn_choice(p,rn_empty));
     break;
-  case P_AFTER: After(p,p1,p2);
+  case RN_P_AFTER: rn_After(p,p1,p2);
     ret=apply_after(&rn_after,start_tag_open(p1,uri,name,recover),p2);
     break;
   default: assert(0);
@@ -243,8 +243,8 @@ static int start_tag_open(int p,int uri,int name,int recover) {
   return ret;
 }
 
-int drv_start_tag_open(int p,char *suri,char *sname) {return start_tag_open(p,newString(suri),newString(sname),0);}
-int drv_start_tag_open_recover(int p,char *suri,char *sname) {return start_tag_open(p,newString(suri),newString(sname),1);}
+int drv_start_tag_open(int p,char *suri,char *sname) {return start_tag_open(p,rn_newString(suri),rn_newString(sname),0);}
+int drv_start_tag_open_recover(int p,char *suri,char *sname) {return start_tag_open(p,rn_newString(suri),rn_newString(sname),1);}
 
 static int puorg_rn(int p2,int p1) {return rn_group(p1,p2);}
 
@@ -252,32 +252,32 @@ static int attribute_open(int p,int uri,int name) {
   int nc,p1,p2,m,ret=0;
   m=newAttributeOpen(p,uri,name);
   if(m!=-1) return M_RET(m);
-  switch(P_TYP(p)) {
-  case P_EMPTY: case P_NOT_ALLOWED: case P_TEXT: 
-  case P_LIST: case P_DATA: case P_DATA_EXCEPT: case P_VALUE:
-  case P_ELEMENT:
+  switch(RN_P_TYP(p)) {
+  case RN_P_EMPTY: case RN_P_NOT_ALLOWED: case RN_P_TEXT: 
+  case RN_P_LIST: case RN_P_DATA: case RN_P_DATA_EXCEPT: case RN_P_VALUE:
+  case RN_P_ELEMENT:
     ret=rn_notAllowed;
     break;
-  case P_CHOICE: Choice(p,p1,p2);
+  case RN_P_CHOICE: rn_Choice(p,p1,p2);
     ret=rn_choice(attribute_open(p1,uri,name),attribute_open(p2,uri,name));
     break;
-  case P_ATTRIBUTE: Attribute(p,nc,p1);
+  case RN_P_ATTRIBUTE: rn_Attribute(p,nc,p1);
     ret=ncof(nc,uri,name)?rn_after(p1,rn_empty):rn_notAllowed; 
     break;
-  case P_INTERLEAVE: Interleave(p,p1,p2); 
+  case RN_P_INTERLEAVE: rn_Interleave(p,p1,p2); 
     ret=rn_choice(
       apply_after(&rn_ileave,attribute_open(p1,uri,name),p2),
       apply_after(&rn_ileave,attribute_open(p2,uri,name),p1));
     break;
-  case P_GROUP: Group(p,p1,p2); 
+  case RN_P_GROUP: rn_Group(p,p1,p2); 
     ret=rn_choice(
       apply_after(&rn_group,attribute_open(p1,uri,name),p2),
       apply_after(&puorg_rn,attribute_open(p2,uri,name),p1));
     break;
-  case P_ONE_OR_MORE: OneOrMore(p,p1);
+  case RN_P_ONE_OR_MORE: rn_OneOrMore(p,p1);
     ret=apply_after(&rn_group,attribute_open(p1,uri,name),rn_choice(p,rn_empty));
     break;
-  case P_AFTER: After(p,p1,p2);
+  case RN_P_AFTER: rn_After(p,p1,p2);
     ret=apply_after(&rn_after,attribute_open(p1,uri,name),p2);
     break;
   default: assert(0);
@@ -287,7 +287,7 @@ static int attribute_open(int p,int uri,int name) {
   return ret;
 }
 
-int drv_attribute_open(int p,char *suri,char *sname) {return attribute_open(p,newString(suri),newString(sname));}
+int drv_attribute_open(int p,char *suri,char *sname) {return attribute_open(p,rn_newString(suri),rn_newString(sname));}
 int drv_attribute_open_recover(int p,char *suri,char *sname) {return p;}
 
 extern int drv_attribute_close(int p) {return drv_end_tag(p);}
@@ -299,28 +299,28 @@ static int start_tag_close(int p,int recover) {
     m=newStartTagClose(p);
     if(m!=-1) return M_RET(m);
   }
-  switch(P_TYP(p)) {
-  case P_EMPTY: case P_NOT_ALLOWED: case P_TEXT:
-  case P_LIST: case P_DATA: case P_DATA_EXCEPT: case P_VALUE:
-  case P_ELEMENT:
+  switch(RN_P_TYP(p)) {
+  case RN_P_EMPTY: case RN_P_NOT_ALLOWED: case RN_P_TEXT:
+  case RN_P_LIST: case RN_P_DATA: case RN_P_DATA_EXCEPT: case RN_P_VALUE:
+  case RN_P_ELEMENT:
     ret=p;
     break;
-  case P_CHOICE: Choice(p,p1,p2);
+  case RN_P_CHOICE: rn_Choice(p,p1,p2);
     ret=rn_choice(start_tag_close(p1,recover),start_tag_close(p2,recover));
     break;
-  case P_INTERLEAVE: Interleave(p,p1,p2);
+  case RN_P_INTERLEAVE: rn_Interleave(p,p1,p2);
     ret=rn_ileave(start_tag_close(p1,recover),start_tag_close(p2,recover));
     break;
-  case P_GROUP: Group(p,p1,p2);
+  case RN_P_GROUP: rn_Group(p,p1,p2);
     ret=rn_group(start_tag_close(p1,recover),start_tag_close(p2,recover));
     break;
-  case P_ONE_OR_MORE: OneOrMore(p,p1);
+  case RN_P_ONE_OR_MORE: rn_OneOrMore(p,p1);
     ret=rn_one_or_more(start_tag_close(p1,recover));
     break;
-  case P_ATTRIBUTE: 
+  case RN_P_ATTRIBUTE: 
     ret=recover?rn_empty:rn_notAllowed;
     break;
-  case P_AFTER: After(p,p1,p2);
+  case RN_P_AFTER: rn_After(p,p1,p2);
     ret=rn_after(start_tag_close(p1,recover),p2);
     break;
   default: assert(0);
@@ -350,40 +350,40 @@ static int list(int p,char *s,int n) {
 
 static int text(int p,char *s,int n) { /* matches text, including whitespace */
   int p1,p2,dt,ps,lib,typ,val,ret=0;
-  switch(P_TYP(p)) {
-  case P_EMPTY: case P_NOT_ALLOWED:
-  case P_ATTRIBUTE: case P_ELEMENT:
+  switch(RN_P_TYP(p)) {
+  case RN_P_EMPTY: case RN_P_NOT_ALLOWED:
+  case RN_P_ATTRIBUTE: case RN_P_ELEMENT:
     ret=rn_notAllowed;
     break;
-  case P_TEXT:
+  case RN_P_TEXT:
     ret=p;
     break;
-  case P_AFTER: After(p,p1,p2); 
+  case RN_P_AFTER: rn_After(p,p1,p2); 
     ret=rn_after(text(p1,s,n),p2);
     break;
-  case P_CHOICE: Choice(p,p1,p2);
+  case RN_P_CHOICE: rn_Choice(p,p1,p2);
     ret=rn_choice(text(p1,s,n),text(p2,s,n));
     break;
-  case P_INTERLEAVE: Interleave(p,p1,p2);
+  case RN_P_INTERLEAVE: rn_Interleave(p,p1,p2);
     ret=rn_choice(rn_ileave(text(p1,s,n),p2),rn_ileave(p1,text(p2,s,n)));
     break;
-  case P_GROUP: Group(p,p1,p2);
+  case RN_P_GROUP: rn_Group(p,p1,p2);
     { int p11=rn_group(text(p1,s,n),p2);
-      ret=nullable(p1)?rn_choice(p11,text(p2,s,n)):p11;
+      ret=rn_nullable(p1)?rn_choice(p11,text(p2,s,n)):p11;
     } break;
-  case P_ONE_OR_MORE: OneOrMore(p,p1);
+  case RN_P_ONE_OR_MORE: rn_OneOrMore(p,p1);
     ret=rn_group(text(p1,s,n),rn_choice(p,rn_empty));
     break;
-  case P_LIST: List(p,p1);
-    ret=nullable(list(p1,s,n))?rn_empty:rn_notAllowed;
+  case RN_P_LIST: rn_List(p,p1);
+    ret=rn_nullable(list(p1,s,n))?rn_empty:rn_notAllowed;
     break;
-  case P_DATA: Data(p,dt,ps); Datatype(dt,lib,typ);
+  case RN_P_DATA: rn_Data(p,dt,ps); rn_Datatype(dt,lib,typ);
     ret=getdtl(lib)->allows(rn_string+typ,rn_string+ps,s,n)?rn_empty:rn_notAllowed;
     break;
-  case P_DATA_EXCEPT: DataExcept(p,p1,p2);
-    ret=text(p1,s,n)==rn_empty&&!nullable(text(p2,s,n))?rn_empty:rn_notAllowed;
+  case RN_P_DATA_EXCEPT: rn_DataExcept(p,p1,p2);
+    ret=text(p1,s,n)==rn_empty&&!rn_nullable(text(p2,s,n))?rn_empty:rn_notAllowed;
     break;
-  case P_VALUE: Value(p,dt,val); Datatype(dt,lib,typ);
+  case RN_P_VALUE: rn_Value(p,dt,val); rn_Datatype(dt,lib,typ);
     ret=getdtl(lib)->equal(rn_string+typ,rn_string+val,s,n)?rn_empty:rn_notAllowed;
     break;
   default: assert(0);
@@ -404,29 +404,29 @@ static int mixed_text(int p) { /* matches text in mixed context */
   int p1,p2,ret=0,m;
   m=newMixedText(p);
   if(m!=-1) return M_RET(m);
-  switch(P_TYP(p)) {
-  case P_EMPTY: case P_NOT_ALLOWED:
-  case P_ATTRIBUTE: case P_ELEMENT:
-  case P_LIST: case P_DATA: case P_DATA_EXCEPT: case P_VALUE:
+  switch(RN_P_TYP(p)) {
+  case RN_P_EMPTY: case RN_P_NOT_ALLOWED:
+  case RN_P_ATTRIBUTE: case RN_P_ELEMENT:
+  case RN_P_LIST: case RN_P_DATA: case RN_P_DATA_EXCEPT: case RN_P_VALUE:
     ret=rn_notAllowed;
     break;
-  case P_TEXT:
+  case RN_P_TEXT:
     ret=p;
     break;
-  case P_AFTER: After(p,p1,p2); 
+  case RN_P_AFTER: rn_After(p,p1,p2); 
     ret=rn_after(mixed_text(p1),p2);
     break;
-  case P_CHOICE: Choice(p,p1,p2);
+  case RN_P_CHOICE: rn_Choice(p,p1,p2);
     ret=rn_choice(mixed_text(p1),mixed_text(p2));
     break;
-  case P_INTERLEAVE: Interleave(p,p1,p2);
+  case RN_P_INTERLEAVE: rn_Interleave(p,p1,p2);
     ret=rn_choice(rn_ileave(mixed_text(p1),p2),rn_ileave(p1,mixed_text(p2)));
     break;
-  case P_GROUP: Group(p,p1,p2);
+  case RN_P_GROUP: rn_Group(p,p1,p2);
     { int p11=rn_group(mixed_text(p1),p2);
-      ret=nullable(p1)?rn_choice(p11,mixed_text(p2)):p11;
+      ret=rn_nullable(p1)?rn_choice(p11,mixed_text(p2)):p11;
     } break;
-  case P_ONE_OR_MORE: OneOrMore(p,p1);
+  case RN_P_ONE_OR_MORE: rn_OneOrMore(p,p1);
     ret=rn_group(mixed_text(p1),rn_choice(p,rn_empty));
     break;
   default: assert(0);
@@ -444,18 +444,18 @@ static int end_tag(int p,int recover) {
     m=newEndTag(p);
     if(m!=-1) return M_RET(m);
   }
-  switch(P_TYP(p)) {
-  case P_EMPTY: case P_NOT_ALLOWED: case P_TEXT:
-  case P_INTERLEAVE: case P_GROUP: case P_ONE_OR_MORE:
-  case P_LIST: case P_DATA: case P_DATA_EXCEPT: case P_VALUE:
-  case P_ATTRIBUTE: case P_ELEMENT:
+  switch(RN_P_TYP(p)) {
+  case RN_P_EMPTY: case RN_P_NOT_ALLOWED: case RN_P_TEXT:
+  case RN_P_INTERLEAVE: case RN_P_GROUP: case RN_P_ONE_OR_MORE:
+  case RN_P_LIST: case RN_P_DATA: case RN_P_DATA_EXCEPT: case RN_P_VALUE:
+  case RN_P_ATTRIBUTE: case RN_P_ELEMENT:
     ret=rn_notAllowed;
     break;
-  case P_CHOICE: Choice(p,p1,p2);
+  case RN_P_CHOICE: rn_Choice(p,p1,p2);
     ret=rn_choice(end_tag(p1,recover),end_tag(p2,recover));
     break;
-  case P_AFTER: After(p,p1,p2);
-    ret=(nullable(p1)||recover)?p2:rn_notAllowed;
+  case RN_P_AFTER: rn_After(p,p1,p2);
+    ret=(rn_nullable(p1)||recover)?p2:rn_notAllowed;
     break;
   default: assert(0);
   }

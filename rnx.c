@@ -26,26 +26,26 @@ void rnx_clear(void) {}
 
 static void expected(int p,int first) {
   int p1,p2,px=0,i;
-  switch(P_TYP(p)) {
-  case P_ERROR: break;
-  case P_EMPTY: break;
-  case P_NOT_ALLOWED: break;
-  case P_TEXT: px=p; break;
-  case P_CHOICE: Choice(p,p1,p2); expected(p1,first); expected(p2,first); break;
-  case P_INTERLEAVE: Interleave(p,p1,p2); expected(p1,first); expected(p2,first); break;
-  case P_GROUP: Group(p,p1,p2); expected(p1,first); expected(p2,first&&nullable(p1)); break;
-  case P_ONE_OR_MORE: OneOrMore(p,p1); expected(p1,first); break;
-  case P_LIST: List(p,p1); expected(p1,first); break;
-  case P_DATA: px=p; break;
-  case P_DATA_EXCEPT: DataExcept(p,p1,p2); expected(p1,first); break;
-  case P_VALUE: px=p; break;
-  case P_ATTRIBUTE: px=p; break;
-  case P_ELEMENT: px=p; break;
-  case P_AFTER: After(p,p1,p2); expected(p1,first); if(nullable(p1)) px=p; break;
-  case P_REF: break;
+  switch(RN_P_TYP(p)) {
+  case RN_P_ERROR: break;
+  case RN_P_EMPTY: break;
+  case RN_P_NOT_ALLOWED: break;
+  case RN_P_TEXT: px=p; break;
+  case RN_P_CHOICE: rn_Choice(p,p1,p2); expected(p1,first); expected(p2,first); break;
+  case RN_P_INTERLEAVE: rn_Interleave(p,p1,p2); expected(p1,first); expected(p2,first); break;
+  case RN_P_GROUP: rn_Group(p,p1,p2); expected(p1,first); expected(p2,first&&rn_nullable(p1)); break;
+  case RN_P_ONE_OR_MORE: rn_OneOrMore(p,p1); expected(p1,first); break;
+  case RN_P_LIST: rn_List(p,p1); expected(p1,first); break;
+  case RN_P_DATA: px=p; break;
+  case RN_P_DATA_EXCEPT: rn_DataExcept(p,p1,p2); expected(p1,first); break;
+  case RN_P_VALUE: px=p; break;
+  case RN_P_ATTRIBUTE: px=p; break;
+  case RN_P_ELEMENT: px=p; break;
+  case RN_P_AFTER: rn_After(p,p1,p2); expected(p1,first); if(rn_nullable(p1)) px=p; break;
+  case RN_P_REF: break;
   default: assert(0);
   }
-  if(px&&(first||P_IS(px,ATTRIBUTE))) {
+  if(px&&(first||RN_P_IS(px,ATTRIBUTE))) {
     for(i=0;i!=rnx_n_exp;++i) {
       if(rnx_exp[i]==px) {px=0; break;}
     }
@@ -67,43 +67,43 @@ void rnx_expected(int p) {
 char *rnx_p2str(int p) {
   char *s=NULL,*s1;
   int dt,ps,val,nc,p1;
-  switch(P_TYP(p)) {
-  case P_ERROR: s=strclone("error"); break;
-  case P_EMPTY: s=strclone("empty"); break;
-  case P_NOT_ALLOWED: s=strclone("notAllowed"); break;
-  case P_TEXT: s=strclone("text"); break;
-  case P_CHOICE: s=strclone("choice (|)"); break;
-  case P_INTERLEAVE: s=strclone("interleave (&)"); break;
-  case P_GROUP: s=strclone("group (,)"); break;
-  case P_ONE_OR_MORE: s=strclone("one or more (+)"); break;
-  case P_LIST: s=strclone("list"); break;
-  case P_DATA: Data(p,dt,ps);
+  switch(RN_P_TYP(p)) {
+  case RN_P_ERROR: s=strclone("error"); break;
+  case RN_P_EMPTY: s=strclone("empty"); break;
+  case RN_P_NOT_ALLOWED: s=strclone("notAllowed"); break;
+  case RN_P_TEXT: s=strclone("text"); break;
+  case RN_P_CHOICE: s=strclone("choice (|)"); break;
+  case RN_P_INTERLEAVE: s=strclone("interleave (&)"); break;
+  case RN_P_GROUP: s=strclone("group (,)"); break;
+  case RN_P_ONE_OR_MORE: s=strclone("one or more (+)"); break;
+  case RN_P_LIST: s=strclone("list"); break;
+  case RN_P_DATA: rn_Data(p,dt,ps);
     s1=rnx_nc2str(dt);
     s=(char*)memalloc(strlen("data ")+1+strlen(s1),sizeof(char));
     strcpy(s,"data "); strcat(s,s1);
     memfree(s1);
     break;
-  case P_DATA_EXCEPT: s=strclone("dataExcept (-)");  break;
-  case P_VALUE: Value(p,dt,val);
+  case RN_P_DATA_EXCEPT: s=strclone("dataExcept (-)");  break;
+  case RN_P_VALUE: rn_Value(p,dt,val);
     s1=rnx_nc2str(dt);
     s=(char*)memalloc(strlen("value \"\" ")+1+strlen(s1)+strlen(rn_string+val),sizeof(char));
     strcpy(s,"value "); strcat(s,s1); strcat(s," \""); strcat(s,rn_string+val); strcat(s,"\"");
     memfree(s1);
     break;
-  case P_ATTRIBUTE: Attribute(p,nc,p1);
+  case RN_P_ATTRIBUTE: rn_Attribute(p,nc,p1);
     s1=rnx_nc2str(nc);
     s=(char*)memalloc(strlen("attribute ")+1+strlen(s1),sizeof(char));
     strcpy(s,"attribute "); strcat(s,s1);
     memfree(s1);
     break;
-  case P_ELEMENT: Element(p,nc,p1);
+  case RN_P_ELEMENT: rn_Element(p,nc,p1);
     s1=rnx_nc2str(nc);
     s=(char*)memalloc(strlen("element ")+1+strlen(s1),sizeof(char));
     strcpy(s,"element "); strcat(s,s1);
     memfree(s1);
     break;
-  case P_REF: s=strclone("ref"); break;
-  case P_AFTER: s=strclone("after"); break;
+  case RN_P_REF: s=strclone("ref"); break;
+  case RN_P_AFTER: s=strclone("after"); break;
   default: assert(0);
   }
   return s;
@@ -112,35 +112,35 @@ char *rnx_p2str(int p) {
 char *rnx_nc2str(int nc) {
   char *s=NULL,*s1,*s2;
   int nc1,nc2,uri,name;
-  switch(NC_TYP(nc)) {
-  case NC_ERROR: s=strclone("?"); break;
-  case NC_NSNAME:
-    NsName(nc,uri);
+  switch(RN_NC_TYP(nc)) {
+  case RN_NC_ERROR: s=strclone("?"); break;
+  case RN_NC_NSNAME:
+    rn_NsName(nc,uri);
     s=(char*)memalloc(strlen(rn_string+uri)+3,sizeof(char));
     strcpy(s,rn_string+uri); strcat(s,":*");
     break;
-  case NC_QNAME:
-    QName(nc,uri,name); 
+  case RN_NC_QNAME:
+    rn_QName(nc,uri,name); 
     s=(char*)memalloc(strlen(rn_string+uri)+strlen(rn_string+name)+2,sizeof(char));
     strcpy(s,rn_string+uri); strcat(s,"^"); strcat(s,rn_string+name);
     break;
-  case NC_ANY_NAME: s=strclone("*"); break;
-  case NC_EXCEPT:
-    NameClassExcept(nc,nc1,nc2);
+  case RN_NC_ANY_NAME: s=strclone("*"); break;
+  case RN_NC_EXCEPT:
+    rn_NameClassExcept(nc,nc1,nc2);
     s1=rnx_nc2str(nc1); s2=rnx_nc2str(nc2);
     s=(char*)memalloc(strlen(s1)+strlen(s2)+2,sizeof(char));
     strcpy(s,s1); strcat(s,"-"); strcat(s,s2);
     memfree(s1); memfree(s2);
     break;
-  case NC_CHOICE:
-    NameClassChoice(nc,nc1,nc2);
+  case RN_NC_CHOICE:
+    rn_NameClassChoice(nc,nc1,nc2);
     s1=rnx_nc2str(nc1); s2=rnx_nc2str(nc2);
     s=(char*)memalloc(strlen(s1)+strlen(s2)+2,sizeof(char));
     strcpy(s,s1); strcat(s,"|"); strcat(s,s2);
     memfree(s1); memfree(s2);
     break;
-  case NC_DATATYPE:
-    Datatype(nc,uri,name); 
+  case RN_NC_DATATYPE:
+    rn_Datatype(nc,uri,name); 
     s=(char*)memalloc(strlen(rn_string+uri)+strlen(rn_string+name)+2,sizeof(char));
     strcpy(s,rn_string+uri); strcat(s,"^"); strcat(s,rn_string+name);
     break;
