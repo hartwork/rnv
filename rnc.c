@@ -96,6 +96,7 @@ static void default_verror_handler(int er_no,va_list ap) {
   case RNC_ER_COMBINE: err("conflicting combine methods in define or start"); break;
   case RNC_ER_OVRIDE: err("'%s' overrides nothing"); break;
   case RNC_ER_EXPT: err("first argument for '-' is not data"); break;
+  case RNC_ER_INCONT: err("include inside include"); break;
   case RNC_ER_NOSTART: err("missing start"); break;
   case RNC_ER_UNDEF: err("undefined reference to '%s'"); break;
   default: assert(0);
@@ -1137,6 +1138,7 @@ static void division(struct rnc_source *sp) {
 
 static void include(struct rnc_source *sp) {
   int nsuri;
+  if(sc_locked(&defs)) warning(1,sp,RNC_ER_INCONT,sp->fn,CUR(sp).line,CUR(sp).col);
   if(relpath(sp)) {
     nsuri=inherit(sp);
     sc_open(&nss); open_scope(sp);

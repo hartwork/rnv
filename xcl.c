@@ -49,7 +49,7 @@ static void verror_handler(int erno,va_list ap) {
   if(erno&ERBIT_RNC) {
     (*rncverror0)(erno&~ERBIT_RNC,ap);
   } else if(erno&ERBIT_RND) {
-    (*rncverror0)(erno&~ERBIT_RND,ap);
+    (*rndverror0)(erno&~ERBIT_RND,ap);
   } else {
     int line=XML_GetCurrentLineNumber(expat),col=XML_GetCurrentColumnNumber(expat);
     if(line!=lastline||col!=lastcol) {

@@ -98,11 +98,11 @@ install: rnv-${VERSION}.zip readme.txt changes.txt
 
 # DO NOT DELETE
 
-rnv.o: xmlc.h erbit.h rn.h drv.h rnv.h
-xcl.o: erbit.h rn.h rnc.h rnv.h rnx.h ll.h
+xcl.o: erbit.h rn.h rnc.h rnd.h rnv.h rnx.h ll.h
 rn.o: strops.h ht.h ll.h rn.h
 rnc.o: u.h xmlc.h strops.h rn.h sc.h rnc.h
-rnd.o: rn.h rnx.h rnd.h
+rnd.o: rn.h rnx.h ll.h rnd.h
+rnv.o: xmlc.h erbit.h rn.h drv.h rnv.h
 rnx.o: strops.h rn.h ll.h rnx.h
 drv.o: xmlc.h strops.h ht.h rn.h xsd.h ll.h erbit.h drv.h
 xsd.o: u.h xmlc.h strops.h erbit.h rx.h xsd_tm.h xsd.h

@@ -26,6 +26,7 @@
 #define RNC_ER_COMBINE 59
 #define RNC_ER_OVRIDE 60
 #define RNC_ER_EXPT 61
+#define RNC_ER_INCONT 62
 #define RNC_ER_NOSTART 70
 #define RNC_ER_UNDEF 71
 
