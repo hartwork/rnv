@@ -1,3 +1,5 @@
+/* $Id$ */
+
 #ifndef U_H
 #define U_H
 
@@ -6,7 +8,18 @@
  */
 extern int u_get(int *u,char *s);
 
-extern int u_letter(int u);
+/* character classes required for parsing XML */
+extern int u_base_char(int u);
+extern int u_ideographic(int u);
+extern int u_combining_char(int u);
 extern int u_digit(int u);
+extern int u_extender(int u);
 
 #endif
+
+/*
+ * $Log$
+ * Revision 1.2  2003/11/19 11:05:55  dvd
+ * binary search for u.c
+ *
+ */
