@@ -3,7 +3,7 @@
 #ifndef U_H
 #define U_H 1
 
-#define U_MAXLEN 5
+#define U_MAXLEN 6
 
 /* computes a unicode character u off the head of s; 
  returns number of bytes read. 0 means error.
@@ -24,6 +24,9 @@ extern int u_extender(int u);
 
 /*
  * $Log$
+ * Revision 1.8  2003/12/11 23:35:15  dvd
+ * unicode mess
+ *
  * Revision 1.7  2003/12/11 17:01:32  dvd
  * utf8 is handled properly
  *
