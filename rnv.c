@@ -82,17 +82,10 @@ static void qname(char *name) {
 static char *msg=NULL;
 static int len_msg=-1;
 
-static void not_allowed(char *what,char *suri,char *sname,char *val) {
-  int len=strlen(what)+strlen(suri)+strlen(sname);
-  if(len>len_msg) {len_msg=len; free(msg); msg=(char*)calloc(len_msg,sizeof(char));}
-  msg[sprintf(msg,what,suri,sname,val)]='\0';
-  error(msg);
-}
-
 #define ELEMENT_NOT_ALLOWED "element '%s^%s' not allowed"
 #define ATTRIBUTE_NOT_ALLOWED "attribute '%s^%s=\"%s\"' not allowed"
 #define ELEMENTS_MISSING "required elements missing"
-#define ATTRIBUTES_MISSING "required attributes missing"
+#define ATTRIBUTES_MISSING "required attributes of element '%s^%s' missing"
 #define TEXT_NOT_ALLOWED "text not allowed"
 
 static void flush_text(void) {
@@ -114,7 +107,10 @@ static void start_element(void *userData,const char *name,const char **attrs) {
     qname((char*)name);
     current=drv_start_tag_open(previous=current,suri,sname);
     if(current==rn_notAllowed) {
-      not_allowed(ELEMENT_NOT_ALLOWED,suri,sname,0);
+      int len=strlen(ELEMENT_NOT_ALLOWED)+strlen(suri)+strlen(sname);
+      if(len>len_msg) {len_msg=len; free(msg); msg=(char*)calloc(len_msg,sizeof(char));}
+      msg[sprintf(msg,ELEMENT_NOT_ALLOWED,suri,sname)]='\0';
+      error(msg);
       current=drv_start_tag_open_recover(previous,suri,sname);
     }
     while(current!=rn_notAllowed) {
@@ -123,7 +119,10 @@ static void start_element(void *userData,const char *name,const char **attrs) {
       ++attrs;
       current=drv_attribute(previous=current,suri,sname,(char*)*attrs);
       if(current==rn_notAllowed) {
-	not_allowed(ATTRIBUTE_NOT_ALLOWED,suri,sname,(char*)*attrs);
+	int len=strlen(ATTRIBUTE_NOT_ALLOWED)+strlen(suri)+strlen(sname)+strlen(*attrs);
+	if(len>len_msg) {len_msg=len; free(msg); msg=(char*)calloc(len_msg,sizeof(char));}
+	msg[sprintf(msg,ATTRIBUTE_NOT_ALLOWED,suri,sname,*attrs)]='\0';
+	error(msg);
 	current=drv_attribute_recover(previous,suri,sname,(char*)*attrs);
       }
       ++attrs;
@@ -131,7 +130,12 @@ static void start_element(void *userData,const char *name,const char **attrs) {
     if(current!=rn_notAllowed) {
       current=drv_start_tag_close(previous=current);
       if(current==rn_notAllowed) {
-	error(ATTRIBUTES_MISSING);
+	int len;
+	qname((char*)name);
+	len=strlen(ATTRIBUTES_MISSING)+strlen(suri)+strlen(sname);
+	if(len>len_msg) {len_msg=len; free(msg); msg=(char*)calloc(len_msg,sizeof(char));}
+	msg[sprintf(msg,ATTRIBUTES_MISSING,suri,sname)]='\0';
+	error(msg);
 	current=drv_start_tag_close_recover(previous);
       }
     }
