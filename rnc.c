@@ -193,8 +193,8 @@ void rnc_init() {
   }
 }
 
-static void error(struct rnc_source *sp,int er_no,...) {
-  if(sp->line!=sp->prevline) {
+static void error(int force,struct rnc_source *sp,int er_no,...) {
+  if(force || sp->line == sp->prevline) {
     va_list ap; va_start(ap,er_no); (*ver_handler_p)(er_no,ap); va_end(ap);
     sp->prevline=sp->line;
   }
@@ -206,7 +206,7 @@ static void getu(struct rnc_source *sp) {
   int n,u0=sp->u;
   for(;;) {
     if(!sp->complete&&sp->i>sp->n-BUFTAIL) {
-      if(rnc_read(sp)==-1) {error(sp,ER_IO,sp->fn);}
+      if(rnc_read(sp)==-1) {error(1,sp,ER_IO,sp->fn);}
     }
     if(sp->i==sp->n) {
       sp->u=(u0=='\n'||u0=='\r'||u0==-1)?-1:'\n';
@@ -215,11 +215,11 @@ static void getu(struct rnc_source *sp) {
     } /* eof */
     n=u_get(&sp->u,sp->buf+sp->i);
     if(n==0) {
-      error(sp,ER_UTF,sp->fn,sp->line,sp->col);
+      error(0,sp,ER_UTF,sp->fn,sp->line,sp->col);
       ++sp->i;
       continue;
     } else if(n+sp->i>sp->n) {
-      error(sp,ER_UTF,sp->fn,sp->line,sp->col);
+      error(0,sp,ER_UTF,sp->fn,sp->line,sp->col);
       sp->i=sp->n;
       continue;
     } else {
@@ -280,7 +280,7 @@ static void getv(struct rnc_source *sp) {
 	    case 'E': case 'e': sp->v+=14; break;
 	    case 'F': case 'f': sp->v+=15; break;
             default:
-	      error(sp,ER_XESC,sp->fn,CUR(sp).line,CUR(sp).col);
+	      error(0,sp,ER_XESC,sp->fn,CUR(sp).line,CUR(sp).col);
 	      goto END_OF_HEX_DIGITS;
             }
 	  } END_OF_HEX_DIGITS:;
@@ -412,7 +412,7 @@ static void advance(struct rnc_source *sp) {
     case '[': getv(sp); NXT(sp).sym=SYM_LSQU; return;
     case ']': getv(sp); NXT(sp).sym=SYM_RSQU; return;
     case '>': getv(sp);
-      if(sp->v!='>') error(sp,ER_LEXP,'>',sp->fn,sp->line,sp->col);
+      if(sp->v!='>') error(0,sp,ER_LEXP,'>',sp->fn,sp->line,sp->col);
       getv(sp); NXT(sp).sym=SYM_FOLLOW_ANNOTATION; return;
     case '"': case '\'':
       { int q=sp->v;
@@ -435,7 +435,7 @@ static void advance(struct rnc_source *sp) {
 	    } else {NXT(sp).s[i]='\0'; break;}
 	  } else if(sp->v<=0) {
 	    if(sp->v==-1 || !triple) {
-	      error(sp,ER_LLIT,sp->fn,sp->line,sp->col);
+	      error(0,sp,ER_LLIT,sp->fn,sp->line,sp->col);
 	      NXT(sp).s[i]='\0'; break;
 	    } else NXT(sp).s[i]='\n';
 	  } else NXT(sp).s[i]=(char)sp->v;
@@ -473,7 +473,7 @@ static void advance(struct rnc_source *sp) {
 	  } else NXT(sp).sym=SYM_IDENT;
 	  return;
 	} else {
-	  error(sp,ER_LILL,sp->v,sp->fn,sp->line,sp->col);
+	  error(0,sp,ER_LILL,sp->v,sp->fn,sp->line,sp->col);
 	  getv(sp);
 	  continue;
 	}
@@ -498,7 +498,7 @@ static void skipAnnotationContent(struct rnc_source *sp) {
 	  advance(sp);
 	  break;
 	} else {
-	  error(sp,ER_SILL,sym2str(CUR(sp).sym),sp->fn,CUR(sp).line,CUR(sp).col);
+	  error(0,sp,ER_SILL,sym2str(CUR(sp).sym),sp->fn,CUR(sp).line,CUR(sp).col);
 	  return;
 	}
       }
@@ -516,11 +516,11 @@ static void getsym(struct rnc_source *sp) {
       continue;
     case SYM_FOLLOW_ANNOTATION: advance(sp);
       if(CUR(sp).sym<0||CUR(sp).sym>SYM_QNAME) {
-	error(sp,ER_SEXP,"identifier, prefixed name or keyword",sym2str(CUR(sp).sym),sp->fn,CUR(sp).line,CUR(sp).col);
+	error(0,sp,ER_SEXP,"identifier, prefixed name or keyword",sym2str(CUR(sp).sym),sp->fn,CUR(sp).line,CUR(sp).col);
 	while(CUR(sp).sym!=SYM_LSQU&&CUR(sp).sym!=SYM_EOF) advance(sp);
       } else {
 	advance(sp);
-        if(CUR(sp).sym!=SYM_LSQU) error(sp,ER_SEXP,sym2str(SYM_LSQU),sym2str(CUR(sp).sym),sp->fn,CUR(sp).line,CUR(sp).col);
+        if(CUR(sp).sym!=SYM_LSQU) error(0,sp,ER_SEXP,sym2str(SYM_LSQU),sym2str(CUR(sp).sym),sp->fn,CUR(sp).line,CUR(sp).col);
       }
     case SYM_LSQU:
       skipAnnotationContent(sp);
@@ -535,7 +535,7 @@ static void getsym(struct rnc_source *sp) {
       if(NXT(sp).sym==SYM_CONCAT) {
 	sp->cur=!sp->cur; advance(sp);
 	if(NXT(sp).sym!=SYM_LITERAL) {
-	  error(sp,ER_SEXP,sym2str(SYM_LITERAL),sym2str(CUR(sp).sym),sp->fn,NXT(sp).line,NXT(sp).col);
+	  error(0,sp,ER_SEXP,sym2str(SYM_LITERAL),sym2str(CUR(sp).sym),sp->fn,NXT(sp).line,NXT(sp).col);
 	  break;
 	}
 	{ int newslen=strlen(CUR(sp).s)+strlen(NXT(sp).s);
@@ -563,7 +563,7 @@ static void skipto(struct rnc_source *sp,int sym) {
 
 static int chkskip(struct rnc_source *sp,int symc,int syms) {
   if(CUR(sp).sym!=symc) {
-    error(sp,ER_SEXP,sym2str(symc),sym2str(CUR(sp).sym),sp->fn,CUR(sp).line,CUR(sp).col);
+    error(0,sp,ER_SEXP,sym2str(symc),sym2str(CUR(sp).sym),sp->fn,CUR(sp).line,CUR(sp).col);
     skipto(sp,syms);
     return 0;
   } else {
@@ -579,7 +579,7 @@ static int chkwd(struct rnc_source *sp) {
   if(0<=CUR(sp).sym&&CUR(sp).sym<=SYM_IDENT) {
     return 1;
   } else {
-    error(sp,ER_SEXP,"identifier or keyword",sym2str(CUR(sp).sym),sp->fn,CUR(sp).line,CUR(sp).col);
+    error(0,sp,ER_SEXP,"identifier or keyword",sym2str(CUR(sp).sym),sp->fn,CUR(sp).line,CUR(sp).col);
     return 0;
   }
 }
@@ -607,7 +607,7 @@ static int nsuri(struct rnc_source *sp) {
   case SYM_LITERAL: uri=newString(CUR(sp).s); break;
   case SYM_INHERIT: uri=nss.tab[(sc_find(&nss,-1))][1]; break;
   default:
-    error(sp,ER_SEXP,"literal or 'inherit'",sp->fn,CUR(sp).line,CUR(sp).col);	
+    error(0,sp,ER_SEXP,"literal or 'inherit'",sp->fn,CUR(sp).line,CUR(sp).col);	
     break;
   }
   getsym(sp);
@@ -621,9 +621,49 @@ static void open_scope(struct rnc_source *sp) {
 }
 
 static void close_scope(struct rnc_source *sp) {
-  sc_close(&defs);
-  sc_close(&refs);
+  int i,j,name;
+  for(i=refs.base+1;i!=refs.top;++i) {
+    name=refs.tab[i][0];
+    if(j=sc_find(&defs,name)) {
+      rn_pattern[refs.tab[i][1]][1]=defs.tab[j][1];
+    } else {
+      error(1,sp,ER_UNDEF,rn_string+name,sp->fn,CUR(sp).line,CUR(sp).col);
+    }
+  }
+  sc_close(&defs); sc_close(&refs);
+  for(i=prefs.base+1;i!=prefs.top;++i) {
+    if(refs.base==0) error(1,sp,ER_UNDEF,rn_string+prefs.tab[i][0],sp->fn,CUR(sp).line,CUR(sp).col);
+    sc_add(&refs,prefs.tab[i][0],prefs.tab[i][1],prefs.tab[i][2]);
+  }
   sc_close(&prefs);
+}
+
+static void fold_efs(struct rnc_source *sp,struct sc_stack *stp,void (*fold)(struct rnc_source *sp,struct sc_stack *rp,int key,int val,int flags)) {
+  int len=stp->top-stp->base-1;
+  if(len!=0) {
+    int i;
+    int (*tab)[SC_RECSIZE]=(int(*)[])calloc(len,sizeof(int[SC_RECSIZE]));
+    memcpy(tab,stp->tab+stp->base+1,len*sizeof(int[SC_RECSIZE]));
+    sc_close(stp);
+    for(i=0;i!=len;++i) fold(sp,stp,tab[i][0],tab[i][1],tab[i][2]);
+    free(tab);
+  } else sc_close(stp);
+}
+
+static void adddef(struct rnc_source *sp,int name,int pat,int flags);
+
+static void folddef(struct rnc_source *sp,struct sc_stack *rp,int key,int val,int flags) {
+  adddef(sp,key,val,flags);
+}
+
+static void foldref(struct rnc_source *sp,struct sc_stack *rp,int key,int val,int flags) {
+  sc_add(rp,key,val,flags);
+}
+
+static void fold_scope(struct rnc_source *sp) {
+  fold_efs(sp,&defs,&folddef);
+  fold_efs(sp,&refs,&foldref); 
+  fold_efs(sp,&prefs,&foldref);
 }
 
 static void addns(struct rnc_source *sp,int pfx,int url) {
@@ -631,14 +671,32 @@ static void addns(struct rnc_source *sp,int pfx,int url) {
   if(i=sc_find(&nss,pfx)) {
     if(nss.tab[i][2]&NS_INHERITED) {
       nss.tab[i][1]=url; nss.tab[i][2]&=~NS_INHERITED;
-    } else error(sp,ER_DUPNS,rn_string+pfx,sp->fn,CUR(sp).line,CUR(sp).col);
+    } else error(1,sp,ER_DUPNS,rn_string+pfx,sp->fn,CUR(sp).line,CUR(sp).col);
   } else sc_add(&nss,pfx,url,0);
 }
 
 static void adddt(struct rnc_source *sp,int pfx,int url) {
   if(sc_find(&dts,pfx)) {
-    error(sp,ER_DUPDT,rn_string+pfx,sp->fn,CUR(sp).line,CUR(sp).col);
+    error(1,sp,ER_DUPDT,rn_string+pfx,sp->fn,CUR(sp).line,CUR(sp).col);
   } else sc_add(&dts,pfx,url,0);
+}
+
+static void adddef(struct rnc_source *sp,int name,int pat,int flags) {
+  int i;
+  if(i=sc_find(&defs,name)) {
+    int old_flags=defs.tab[i][2];
+    if(DE_HEAD&flags&old_flags) error(1,sp,ER_2HEADS,sp->fn,CUR(sp).line,CUR(sp).col);
+    if(((flags|old_flags)&(DE_CHOICE|DE_ILEAVE))==(DE_CHOICE|DE_ILEAVE)) error(1,sp,ER_COMBINE,sp->fn,CUR(sp).line,CUR(sp).col);
+    flags=defs.tab[i][2]=old_flags|flags;
+    if(DE_CHOICE&flags) {
+      defs.tab[i][1]=rn_choice(defs.tab[i][1],pat);
+    } else if(DE_ILEAVE&flags) {
+      defs.tab[i][1]=rn_ileave(defs.tab[i][1],pat);
+    }
+  } else {
+    if(sc_locked(&defs)) error(1,sp,ER_OVRIDE,name!=0?rn_string+name:"start",sp->fn,CUR(sp).line,CUR(sp).col);
+    else sc_add(&defs,name,pat,flags);
+  }
 }
 
 static int decl(struct rnc_source *sp) {
@@ -673,14 +731,14 @@ static int decl(struct rnc_source *sp) {
 static int ns2uri(struct rnc_source *sp,int p) {
   int i=sc_find(&nss,p);
   if(!i) {
-    error(sp,ER_NONS,rn_string+p,sp->fn,CUR(sp).line,CUR(sp).col);
+    error(1,sp,ER_NONS,rn_string+p,sp->fn,CUR(sp).line,CUR(sp).col);
   }
   return i?nss.tab[i][1]:0;
 }
 
 static int dt2uri(struct rnc_source *sp,int p) {
   int i=sc_find(&dts,p);
-  if(!i) error(sp,ER_NODT,rn_string+p,sp->fn,CUR(sp).line,CUR(sp).col);
+  if(!i) error(1,sp,ER_NODT,rn_string+p,sp->fn,CUR(sp).line,CUR(sp).col);
   return i?dts.tab[i][1]:0;
 }
 
@@ -747,7 +805,7 @@ static int nameclass(struct rnc_source *sp) {
     } while(CUR(sp).sym==SYM_CHOICE);
     break;
   case SYM_EXCEPT:
-    if(!(NC_IS(nc,ANY_NAME)||NC_IS(nc,NSNAME))) error(sp,ER_NCEX,sp->fn,CUR(sp).line,CUR(sp).col);
+    if(!(NC_IS(nc,ANY_NAME)||NC_IS(nc,NSNAME))) error(1,sp,ER_NCEX,sp->fn,CUR(sp).line,CUR(sp).col);
     getsym(sp);
     nc=newNsNameExcept(nc,simplenc(sp));
     break;
@@ -822,7 +880,7 @@ static int file(struct rnc_source *sp,int nsuri) {
     ret=topLevel(&src);
     sp->flags|=src.flags&SRC_ERRORS;
   } else {
-    error(sp,ER_EXT,path,sp->fn,CUR(sp).line,CUR(sp).col);
+    error(1,sp,ER_EXT,path,sp->fn,CUR(sp).line,CUR(sp).col);
   }
   rnc_close(&src);
   return ret;
@@ -842,8 +900,7 @@ static int external(struct rnc_source *sp) {
       close_scope(sp);
       sc_close(&nss);
     } else {
-      /* merge scope with parent */
-      close_scope(sp);
+      fold_scope(sp);
       sc_close(&nss);
     }
   }
@@ -925,7 +982,7 @@ static int grammar(struct rnc_source *sp) {
   chk_skip_get(sp,SYM_RCUR);
   if(i=sc_find(&defs,0)) {
     start=defs.tab[i][1];
-  } else error(sp,ER_NOSTART,sp->fn,CUR(sp).line,CUR(sp).col);
+  } else error(1,sp,ER_NOSTART,sp->fn,CUR(sp).line,CUR(sp).col);
   close_scope(sp);
   return start;
 }
@@ -955,7 +1012,7 @@ static int primary(struct rnc_source *sp) {
   case SYM_LPAR: getsym(sp); {int ret=pattern(sp); chk_skip(sp,SYM_RPAR,SYM_RCUR); return ret;}
 
   default:
-    error(sp,ER_SILL,sym2str(CUR(sp).sym),sp->fn,CUR(sp).line,CUR(sp).col);
+    error(0,sp,ER_SILL,sym2str(CUR(sp).sym),sp->fn,CUR(sp).line,CUR(sp).col);
     getsym(sp);
     return 0;
   }
@@ -988,7 +1045,7 @@ static int pattern(struct rnc_source *sp) {
     } while(CUR(sp).sym==op);
     break;
   case SYM_EXCEPT:
-    if(!P_IS(p,DATA)) error(sp,ER_EXPT,sp->fn,CUR(sp).line,CUR(sp).col);
+    if(!P_IS(p,DATA)) error(1,sp,ER_EXPT,sp->fn,CUR(sp).line,CUR(sp).col);
     getsym(sp);
     p=newDataExcept(p,primary(sp));
   }
@@ -996,30 +1053,16 @@ static int pattern(struct rnc_source *sp) {
 }
 
 static void define(struct rnc_source *sp,int name) {
-  int flags=0,pat=0,i,line=CUR(sp).line,col=CUR(sp).col;
+  int pat=0,flags=0;
   switch(CUR(sp).sym) {
   case SYM_ASGN: flags=DE_HEAD; break;
   case SYM_ASGN_CHOICE: flags=DE_CHOICE; break;
   case SYM_ASGN_ILEAVE: flags=DE_ILEAVE; break;
-  default: error(sp,ER_SEXP,"assign method",sym2str(CUR(sp).sym),sp->fn,CUR(sp).line,CUR(sp).col);
+  default: error(0,sp,ER_SEXP,"assign method",sym2str(CUR(sp).sym),sp->fn,CUR(sp).line,CUR(sp).col);
   }
   getsym(sp);
   pat=pattern(sp);
-  i=sc_find(&defs,name);
-  if(i==0) {
-    if(sc_locked(&defs)) error(sp,ER_OVRIDE,sp->fn,line,col);
-    sc_add(&defs,name,pat,flags);
-  } else {
-    int old_flags=defs.tab[i][2];
-    if(DE_HEAD&flags&old_flags) error(sp,ER_2HEADS,sp->fn,line,col);
-    if(((flags|old_flags)&(DE_CHOICE|DE_ILEAVE))==(DE_CHOICE|DE_ILEAVE)) error(sp,ER_COMBINE,sp->fn,line,col);
-    flags=defs.tab[i][2]=old_flags|flags;
-    if(DE_CHOICE&flags) {
-      defs.tab[i][1]=rn_choice(defs.tab[i][1],pat);
-    } else if(DE_ILEAVE&flags) {
-      defs.tab[i][1]=rn_ileave(defs.tab[i][1],pat);
-    }
-  }
+  adddef(sp,name,pat,flags);
 }
 
 static void division(struct rnc_source *sp) {
@@ -1034,14 +1077,14 @@ static void include(struct rnc_source *sp) {
   if(relpath(sp)) {
     nsuri=inherit(sp);
     sc_open(&nss); open_scope(sp);
-    if(file(sp,nsuri)!=-1) error(sp,ER_NOTGR,sp->fn,CUR(sp).line,CUR(sp).col);
+    if(file(sp,nsuri)!=-1) error(1,sp,ER_NOTGR,sp->fn,CUR(sp).line,CUR(sp).col);
     sc_lock(&defs);
     if(CUR(sp).sym==SYM_LCUR) {
       getsym(sp);
       while(grammarContent(sp));
       chk_skip_get(sp,SYM_RCUR);
     }
-    close_scope(sp);
+    fold_scope(sp);
     sc_close(&nss);
   }
 }
@@ -1131,6 +1174,9 @@ int main(int argc,char **argv) {
 
 /*
  * $Log$
+ * Revision 1.25  2003/12/05 23:58:44  dvd
+ * parses docbook
+ *
  * Revision 1.24  2003/12/05 14:28:39  dvd
  * separate stacks for references
  *

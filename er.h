@@ -25,6 +25,7 @@
 #define ER_OVRIDE 58
 #define ER_EXPT 59
 #define ER_NOSTART 60
+#define ER_UNDEF 61
 
 extern void er_handler(int er_no,...);
 extern void (*ver_handler_p)(int er_no,va_list ap);
@@ -33,6 +34,9 @@ extern void (*ver_handler_p)(int er_no,va_list ap);
 
 /*
  * $Log$
+ * Revision 1.12  2003/12/05 23:58:44  dvd
+ * parses docbook
+ *
  * Revision 1.11  2003/12/01 14:44:53  dvd
  * patterns in progress
  *

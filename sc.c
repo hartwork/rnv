@@ -38,11 +38,11 @@ void sc_lock(struct sc_stack *stp) {
 }
 
 int sc_locked(struct sc_stack *stp) {
-  return stp->tab[stp->top-1][1]==LOCK;
+  return stp->tab[stp->base][1]==LOCK;
 }
 
 void sc_close(struct sc_stack *stp) {
-  stp->top=stp->base; while(stp->tab[--stp->base][1]>=0);
+  stp->top=stp->base; while(stp->tab[--stp->base][1]>BASE);
 }
 
 int sc_find(struct sc_stack *stp,int key) {
@@ -61,6 +61,9 @@ int sc_add(struct sc_stack *stp,int key,int val,int aux) {
 
 /*
  * $Log$
+ * Revision 1.5  2003/12/05 23:58:44  dvd
+ * parses docbook
+ *
  * Revision 1.4  2003/12/04 22:02:20  dvd
  * refactoring
  *
