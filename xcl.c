@@ -25,7 +25,7 @@ extern int rn_compress_last(int start);
 #define LIM_T XCL_LIM_T
 
 /* maximum number of candidates to display */
-#define NEXP 6
+#define NEXP 16
 
 #define XCL_ER_IO 0
 #define XCL_ER_XML 1
