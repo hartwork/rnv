@@ -333,11 +333,10 @@ struct facets {
 
 static void anchdec(int *plus,int *zero,char **beg,char **dp,char **end,char *s,int n) {
   char *end0=s+n;
-  *beg=s; *end=end0; *zero=1;
-  *plus=1;
+  *beg=s; *zero=1; *plus=1;
   for(;;) { if(end0==*beg) break;
     --end0;
-    if(!xmlc_white_space(**end)) {++end0; break;}
+    if(!xmlc_white_space(*end0)) {++end0; break;}
   }
   *end=end0;
   for(;;) { if(*end==*beg) break;
@@ -803,6 +802,7 @@ void xsd_test() {
   assert(fdiglenn("0",1)==0);
 
   assert(deccmp("0",1,"0.0",3)==0);
+  assert(deccmp("1 ",2," 1",2)==0);
   assert(deccmp("0.",2,".0",2)==0);
   assert(deccmp("1",1,"1.0",3)==0);
   assert(deccmp("01.1",4,"1.10",4)==0);
