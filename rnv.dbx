@@ -52,7 +52,7 @@ Installation
 </title>
 
 <para>
-On Unix and similar systems, execute <command>make</command>. If you use Expat 1.2, define <varname>EXPAT_H</varname> as <filename>xmlparse.h</filename> (instead of <filename>expat.h</filename>).
+On Unix-like systems, run <command>make</command>. If you are using Expat 1.2, define <varname>EXPAT_H</varname> as <filename>xmlparse.h</filename> (instead of <filename>expat.h</filename>).
 </para>
 
 <para>
@@ -133,7 +133,7 @@ The schema parser does not check that all restrictions are obeyed, in particular
 
 <listitem>
 <para>
-RNV for Win32 platforms is a Unix program compiled on WIn32. It expects file paths to be written with normal slashes; if a schema is in a different directory and includes or refers external files, then the schema's path must be written in the Unix way for the relative paths to work. For example, under Windows, rnv that uses <filename>..\schema\docbook.rnc</filename> to validate <filename>userguide.dbx</filename> should be invoked as:
+RNV for Win32 platforms is a Unix program compiled on Win32. It expects file paths to be written with normal slashes; if a schema is in a different directory and includes or refers external files, then the schema's path must be written in the Unix way for the relative paths to work. For example, under Windows, rnv that uses <filename>..\schema\docbook.rnc</filename> to validate <filename>userguide.dbx</filename> should be invoked as:
 </para>
 
 <informalexample>

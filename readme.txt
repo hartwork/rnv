@@ -36,8 +36,8 @@ Package Contents
 
 Installation
 
-   On Unix and similar systems, execute make. If you use Expat 1.2,
-   define EXPAT_H as xmlparse.h (instead of expat.h).
+   On Unix-like systems, run make. If you are using Expat 1.2, define
+   EXPAT_H as xmlparse.h (instead of expat.h).
 
    On Windows, use rnv.exe. To recompile from the sources, either use
    compile.bat with Borland C/C++ Compiler or modify the Makefile for
@@ -75,7 +75,7 @@ Limitations
        work.
      * The schema parser does not check that all restrictions are obeyed,
        in particular, restrictions 7.3 and 7.4 are not checked.
-     * RNV for Win32 platforms is a Unix program compiled on WIn32. It
+     * RNV for Win32 platforms is a Unix program compiled on Win32. It
        expects file paths to be written with normal slashes; if a schema
        is in a different directory and includes or refers external files,
        then the schema's path must be written in the Unix way for the
