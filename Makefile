@@ -39,7 +39,8 @@ u.c u.h \
 xmlc.c xmlc.h \
 strops.c strops.h \
 rx.c rx.h \
-rx_cls_u.c
+rx_cls_u.c \
+rx_cls_ranges.c 
 
 OBJ=\
 rn.o \
