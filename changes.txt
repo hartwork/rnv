@@ -1,6 +1,9 @@
 /* $Id$ */
 
-1.3.4 
+1.3.4 Mon Jan  5 22:43:05 AMT 2004
+dvd: grammar samples added to the distribution, entries for other grammars 
+     commented out in tools/arx.conf
+     
 Mon Jan  5 17:00:57 AMT 2004
 dvd: isany is now ary_isany (ary is helpers for arx)
 
