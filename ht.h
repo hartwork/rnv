@@ -1,7 +1,7 @@
 /* $Id$ */
 
-#ifndef PRETI_HT_H
-#define PRETI_HT_H 1
+#ifndef HT_H
+#define HT_H 1
 
 struct hashtable {
   int (*hash)(int i);
@@ -21,6 +21,9 @@ extern int ht_del(struct hashtable *ht,int i);
 
 /*
  * $Log$
+ * Revision 1.2  2003/11/20 07:46:16  dvd
+ * +er, rnc in progress
+ *
  * Revision 1.1  2003/11/17 21:33:28  dvd
  * +cimpl
  *

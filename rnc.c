@@ -1,5 +1,14 @@
 /* $Id$ */
 
+#include <fcntl.h> /* open, read, close */
+#include <string.h> /* memcpy */
+#include <stdlib.h> /* calloc,malloc,free */
+
+#include "u.h"
+#include "rn.h"
+#include "er.h"
+#include "rnc.h"
+
 /* taken from the specification:
 
 topLevel ::= decl* (pattern | grammarContent*)
@@ -131,18 +140,88 @@ keyword ::= "attribute"
 #define SYM_QUOTE 38  /* \ */
 #define SYM_ANNOTATION 39 /* >> */
 #define SYM_COMMENT 40 
-#define SYM_DOCUMENTATION 41 /* >> */
+#define SYM_DOCUMENTATION 41 /* ## */
 #define SYM_IDENT 42
 #define SYM_LITERAL 43
 
-static void sym() {
-  int cc;
+#define BUFSIZE 1024
+#define BUFTAIL 6
 
+struct utf_source {
+  char *fn; int fd;
+  char *buf; int i,n;
+  int complete;
+  int line,col;
+};
+
+static int rnc_stropen(struct utf_source *src,char *s,int len) {
+  src->fn="";
+  src->buf=s; src->i=0; src->n=len; src->complete=1; src->fd=-1;
+  return 0;
 }
 
+static int rnc_open(struct utf_source *src,char *fn) {
+  src->fn=fn; 
+  src->buf=(char*)calloc(BUFSIZE,sizeof(char));
+  src->fd=open(fn,O_RDONLY);
+  src->i=src->n=0;
+  src->complete=src->fd==-1;
+  return src->fd;
+}
+
+static int rnc_read(struct utf_source *src) {
+  int ni;
+  memcpy(src->buf,src->buf+src->i,src->n-=src->i);
+  src->n=src->i=ni=0;
+  for(;;) {
+    ni=read(src->fd,src->buf+src->n,BUFSIZE);
+    if(ni>0) {
+      src->n+=ni;
+      if(src->n>=BUFTAIL) break;
+    } else {
+      if(ni==-1) er_handler(ER_IO,src->fn);
+      close(src->fd); src->fd=-1;
+      src->complete=1;
+      break;
+    }
+  }
+  return ni;
+}
+
+static int rnc_close(struct utf_source *src) {
+  int ret=0;
+  free(src->buf); src->buf=NULL;
+  src->complete=-1;
+  if(src->fd!=-1) {
+    ret=close(src->fd); src->fd=-1;
+  }
+  return ret;
+}
+
+static int getuc(struct utf_source *src) {
+  int u,n;
+  if(!src->complete&&src->i>BUFSIZE-BUFTAIL) {
+    /* fill the buffer */
+  }
+  n=u_get(&u,src->buf+src->i);
+  if(n==0) { 
+    er_handler(ER_UTF,src->fn,src->line,src->col);
+  } else if(n+src->n>sizeof(src->buf)) { 
+    er_handler(ER_UTF,src->fn,src->line,src->col);
+  } else {
+  }
+  return u;
+}
+
+static void sym() {
+  int cc;
+}
 
 /*
  * $Log$
+ * Revision 1.2  2003/11/20 07:46:16  dvd
+ * +er, rnc in progress
+ *
  * Revision 1.1  2003/11/19 00:28:57  dvd
  * back to lists of ranges
  *
