@@ -36,6 +36,8 @@ struct rnc_source;
 extern struct rnc_source *rnc_alloc(void);
 extern void rnc_free(struct rnc_source *sp);
 
+extern void rnc_default_verror_handler(int erno,va_list ap);
+
 extern void rnc_init(void);
 extern void rnc_clear(void);
 

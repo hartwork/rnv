@@ -16,6 +16,8 @@
 
 extern void (*rnd_verror_handler)(int er_no,va_list ap);
 
+extern void rnd_default_verror_handler(int erno,va_list ap);
+
 extern void rnd_init(void);
 extern void rnd_clear(void);
 

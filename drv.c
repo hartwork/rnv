@@ -43,7 +43,7 @@ static struct hashtable ht_m;
 static void (*xsdverror0)(int erno,va_list ap);
 
 #define err(msg) vfprintf(stderr,msg"\n",ap);
-static void default_verror_handler(int erno,va_list ap) {
+void drv_default_verror_handler(int erno,va_list ap) {
   if(erno&ERBIT_XSD) {
     (*xsdverror0)(erno&~ERBIT_XSD,ap);
   } else {
@@ -54,7 +54,7 @@ static void default_verror_handler(int erno,va_list ap) {
   }
 }
 
-void (*drv_verror_handler)(int erno,va_list ap)=&default_verror_handler;
+void (*drv_verror_handler)(int erno,va_list ap)=&drv_default_verror_handler;
 
 static void error_handler(int erno,...) {
   va_list ap; va_start(ap,erno); (*drv_verror_handler)(erno,ap); va_end(ap);

@@ -12,7 +12,7 @@
 static void (*drvverror0)(int erno,va_list ap);
 
 #define err(msg) vfprintf(stderr,msg"\n",ap);
-static void default_verror_handler(int erno,va_list ap) {
+void rnv_default_verror_handler(int erno,va_list ap) {
   if(erno&ERBIT_DRV) {
     (*drvverror0)(erno&~ERBIT_DRV,ap);
   } else {
@@ -30,7 +30,7 @@ static void default_verror_handler(int erno,va_list ap) {
   }
 }
 
-void (*rnv_verror_handler)(int erno,va_list ap)=&default_verror_handler;
+void (*rnv_verror_handler)(int erno,va_list ap)=&rnv_default_verror_handler;
 
 static void error_handler(int erno,...) {
   va_list ap; va_start(ap,erno); (*rnv_verror_handler)(erno,ap); va_end(ap);

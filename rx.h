@@ -19,6 +19,8 @@
 extern void (*rx_verror_handler)(int erno,va_list ap);
 extern int rx_compact;
 
+extern void rx_default_verror_handler(int erno,va_list ap);
+
 extern void rx_init(void);
 extern void rx_clear(void);
 

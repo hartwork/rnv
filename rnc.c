@@ -73,7 +73,7 @@ static char *kwdtab[NKWD]={
 
 #define err(msg) vfprintf(stderr,"error (%s,%i,%i): "msg"\n",ap)
 #define warn(msg) vfprintf(stderr,"warning (%s,%i,%i): "msg"\n",ap)
-static void default_verror_handler(int er_no,va_list ap) {
+void rnc_default_verror_handler(int er_no,va_list ap) {
   switch(er_no) {
   case RNC_ER_IO: err("I/O error: %s\n"); break;
   case RNC_ER_UTF: err("invalid UTF-8 sequence"); break;
@@ -103,9 +103,9 @@ static void default_verror_handler(int er_no,va_list ap) {
   }
 }
 
-void (*rnc_verror_handler)(int er_no,va_list ap)=&default_verror_handler;
+void (*rnc_verror_handler)(int er_no,va_list ap)=&rnc_default_verror_handler;
     
-#define BUFSIZE 128+U_MAXLEN
+#define BUFSIZE BUFSIZ+U_MAXLEN
 #define BUFTAIL U_MAXLEN
 
 #define SRC_FREE 1

@@ -17,7 +17,7 @@
 static void (*rxverror0)(int erno,va_list ap);
 
 #define err(msg) vfprintf(stderr,msg"\n",ap)
-static void default_verror_handler(int erno,va_list ap) {
+void xsd_default_verror_handler(int erno,va_list ap) {
   fprintf(stderr,"XML Schema datatypes: ");
   if(erno&ERBIT_RX) {
     rxverror0(erno&~ERBIT_RX,ap);
@@ -35,7 +35,7 @@ static void default_verror_handler(int erno,va_list ap) {
   }
 }
 
-void (*xsd_verror_handler)(int erno,va_list ap)=&default_verror_handler;
+void (*xsd_verror_handler)(int erno,va_list ap)=&xsd_default_verror_handler;
 
 static void error_handler(int erno,...) {
   va_list ap;

@@ -10,11 +10,12 @@
 extern void (*drv_verror_handler)(int erno,va_list ap);
 extern int drv_compact;
 
+extern void drv_default_verror_handler(int erno,va_list ap);
+
 extern void drv_init(void);
 extern void drv_clear(void);
 
 /* Expat passes character data unterminated.  Hence functions that can deal with cdata expect the length of the data */
-
 extern void drv_add_dtl(char *suri,int (*equal)(char *typ,char *val,char *s,int n),int (*allows)(char *typ,char *ps,char *s,int n));
 
 extern int drv_start_tag_open(int p,char *suri,char *sname);

@@ -180,7 +180,7 @@ static int add_r(char *rx) {
 #define ERRPOS 
 
 #define err(msg) vfprintf(stderr,msg" in \"%s\" at offset %i\n",ap)
-static void default_verror_handler(int erno,va_list ap) {
+void rx_default_verror_handler(int erno,va_list ap) {
   fprintf(stderr,"regular expressions: ");
   switch(erno) {
   case RX_ER_BADCH: err("bad character"); break;
@@ -197,7 +197,7 @@ static void default_verror_handler(int erno,va_list ap) {
   }
 }
 
-void (*rx_verror_handler)(int erno,va_list ap)=&default_verror_handler;
+void (*rx_verror_handler)(int erno,va_list ap)=&rx_default_verror_handler;
 
 static void error_handler(int erno,...) {
   va_list ap; va_start(ap,erno); (*rx_verror_handler)(erno,ap); va_end(ap);

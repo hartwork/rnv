@@ -15,6 +15,8 @@
 
 extern void (*xsd_verror_handler)(int erno,va_list ap);
 
+extern void xsd_default_verror_handler(int erno,va_list ap);
+
 extern void xsd_init(void);
 extern void xsd_clear(void);
 

@@ -17,7 +17,7 @@ static int *refs;
 static int errors;
 
 #define err(msg) vfprintf(stderr,"error: "msg"\n",ap)
-static void default_verror_handler(int er_no,va_list ap) {
+void rnd_default_verror_handler(int er_no,va_list ap) {
   switch(er_no) {
   case RND_ER_LOOPST: err("loop in start pattern"); break;
   case RND_ER_LOOPEL: err("loop in pattern for element '%s'"); break;
@@ -31,7 +31,7 @@ static void default_verror_handler(int er_no,va_list ap) {
   }
 }
 
-void (*rnd_verror_handler)(int er_no,va_list ap)=&default_verror_handler;
+void (*rnd_verror_handler)(int er_no,va_list ap)=&rnd_default_verror_handler;
 
 static int initialized=0;
 void rnd_init(void) {
