@@ -93,7 +93,7 @@ int rnv_text(int *curp,int *prevp,char *text,int n_t,int mixed) {
   return ok;
 }
 
-int rnv_start_tag(int *curp,int *prevp,char *name,char **attrs) {
+int rnv_start_tag_open(int *curp,int *prevp,char *name) {
   int ok=1;
   qname((char*)name);
   *curp=drv_start_tag_open(*prevp=*curp,suri,sname);
@@ -101,31 +101,46 @@ int rnv_start_tag(int *curp,int *prevp,char *name,char **attrs) {
     *curp=drv_start_tag_open_recover(*prevp,suri,sname);
     error_handler(*curp==rn_notAllowed?RNV_ER_ELEM:RNV_ER_EMIS,suri,sname); 
   }
+  return ok;
+}
+
+int rnv_attribute(int *curp,int *prevp,char *name,char *val) {
+  int ok=1;
+  qname((char*)name);
+  *curp=drv_attribute_open(*prevp=*curp,suri,sname);
+  if(*curp==rn_notAllowed) { ok=0;
+    *curp=drv_attribute_open_recover(*prevp,suri,sname);
+    error_handler(RNV_ER_AKEY,suri,sname);
+  } else {
+    *curp=drv_text(*prevp=*curp,(char*)val,strlen(val));
+    if(*curp==rn_notAllowed || (*curp=drv_attribute_close(*prevp=*curp))==rn_notAllowed) { ok=0;
+      *curp=drv_attribute_close_recover(*prevp);
+      error_handler(RNV_ER_AVAL,suri,sname,val);
+    }
+  }
+  return ok;
+}
+
+int rnv_start_tag_close(int *curp,int *prevp,char *name) {
+  int ok=1;
+  *curp=drv_start_tag_close(*prevp=*curp);
+  if(*curp==rn_notAllowed) { ok=0;
+    *curp=drv_start_tag_close_recover(*prevp);
+    qname((char*)name);
+    error_handler(RNV_ER_AMIS,suri,sname);
+  }
+  return ok;
+}
+
+int rnv_start_tag(int *curp,int *prevp,char *name,char **attrs) {
+  int ok=1;
+  ok=rnv_start_tag_open(curp,prevp,name)&&ok;
   while(*curp!=rn_notAllowed) {
     if(!(*attrs)) break;
-    qname((char*)*attrs);
-    *curp=drv_attribute_open(*prevp=*curp,suri,sname);
-    ++attrs;
-    if(*curp==rn_notAllowed) { ok=0;
-      *curp=drv_attribute_open_recover(*prevp,suri,sname);
-      error_handler(RNV_ER_AKEY,suri,sname);
-    } else {
-      *curp=drv_text(*prevp=*curp,(char*)*attrs,strlen(*attrs));
-      if(*curp==rn_notAllowed || (*curp=drv_attribute_close(*prevp=*curp))==rn_notAllowed) { ok=0;
-	*curp=drv_attribute_close_recover(*prevp);
-	error_handler(RNV_ER_AVAL,suri,sname,*attrs);
-      }
-    }
-    ++attrs;
+    ok = rnv_attribute(curp,prevp,*attrs,*(attrs+1))&&ok;
+    attrs+=2;
   }
-  if(*curp!=rn_notAllowed) {
-    *curp=drv_start_tag_close(*prevp=*curp);
-    if(*curp==rn_notAllowed) { ok=0;
-      *curp=drv_start_tag_close_recover(*prevp);
-      qname((char*)name);
-      error_handler(RNV_ER_AMIS,suri,sname);
-    }
-  }
+  if(*curp!=rn_notAllowed) ok=rnv_start_tag_close(curp,prevp,name)&&ok;
   return ok;
 }
 

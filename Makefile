@@ -96,7 +96,7 @@ clean:
 DIST=rnv+arx
 DISTFILES=license.txt ${SRC} Makefile Makefile.bcc readme.txt changes.txt src.txt
 DISTWIN32=rnv.exe arx.exe readme32.txt license.txt
-DISTTOOLS=tools/rnv.vim tools/arx.conf /usr/local/share/rng-c/xslt.rnc /usr/local/share/rng-c/fo.rnc /usr/local/share/rng-c/none.rnc /usr/local/share/rng-c/relaxng.rnc
+DISTTOOLS=tools/xck tools/rnv.vim tools/arx.conf /usr/local/share/rng-c/xslt.rnc /usr/local/share/rng-c/fo.rnc /usr/local/share/rng-c/none.rnc /usr/local/share/rng-c/relaxng.rnc
 zip: ${DIST}-${VERSION}.zip
 ${DIST}-${VERSION}.zip: ${DISTFILES} ${DISTWIN32} ${DISTTOOLS}
 	-rm -rf rnv.zip ${DIST}-[0-9]*.[0-9]*.[0-9]*

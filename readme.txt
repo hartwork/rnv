@@ -47,18 +47,25 @@ News since 1.1
 
 Package Contents
 
+Note
+
+   I have put rnv.exe and arx.exe, Win32 executables statically linked
+   with a current version of Expat from
+   http://expat.sourceforge.net/, into a separate distribution
+   archive (with name ending in -win32bin). It contains only the program
+   binaries and should be available from the same location as the source
+   distribution.
+
    The package consists of:
      * the license, license.txt;
      * the source code, *.[ch];
      * the source code map, src.txt;
      * Makefile for unix-like systems;
      * Makefile.bcc for Win32 and Borland C/C++ Compiler;
+     * tools/xck, a simple shell script I am using to validate documents;
      * tools/rnv.vim, a plugin for Vim;
      * tools/arx.conf, ARX configuration file;
      * tools/*.rnc, sample Relax NG grammars;
-     * win32/rnv.exe and win32/arx.exe, Win32 executables statically
-       linked with a current version of Expat from
-       http://expat.sourceforge.net/;
      * the log of changes, changes.txt;
      * this file, readme.txt.
 
@@ -85,16 +92,16 @@ Invocation
           messages, expected elements and attributes are not listed;
 
    -p
-          xml input is copied to the output;
+          copies the input to the output;
 
    -s
-          rnv uses less memory and runs slower.
+          uses less memory and runs slower;
 
    -v
-          rnv version is displayed
+          prints version number;
 
    -h or -?
-          RNV displays usage summary and exits.
+          displays usage summary and exits.
 
 Limitations
 

@@ -23,6 +23,9 @@ extern void rnv_clear(void);
 
 extern int rnv_text(int *curp,int *prevp,char *text,int n_t,int mixed);
 extern int rnv_start_tag(int *curp,int *prevp,char *name,char **attrs);
+  extern int rnv_start_tag_open(int *curp,int *prevp,char *name);
+  extern int rnv_attribute(int *curp,int *prevp,char *name,char *val);
+  extern int rnv_start_tag_close(int *curp,int *prevp,char *name);
 extern int rnv_end_tag(int *curp,int *prevp,char *name);
 
 #endif

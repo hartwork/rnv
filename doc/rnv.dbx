@@ -67,9 +67,11 @@ The package consists of:
 - <filename>Makefile.bcc</filename> for Win32 and Borland C/C++ Compiler;
 </listitem>
 <listitem>
-- <filename>tools/rnv.vim</filename>, a plugin for Vim;
+- <filename>tools/xck</filename>, a simple shell script I am using to validate documents;
 </listitem>
 <listitem>
+- <filename>tools/rnv.vim</filename>, a plugin for Vim;
+</listitem><listitem>
 - <filename>tools/arx.conf</filename>, <application>ARX</application> configuration file;
 </listitem>
 <listitem>
@@ -129,7 +131,7 @@ names of files being processed are not printed; in error messages, expected elem
 <option>-p</option>
 </term>
 <listitem>
-xml input is copied to the output;
+copies the input to the output;
 </listitem>
 </varlistentry>
 <varlistentry>
@@ -137,7 +139,7 @@ xml input is copied to the output;
 <option>-s</option>
 </term>
 <listitem>
-rnv uses less memory and runs slower.
+uses less memory and runs slower;
 </listitem>
 </varlistentry>
 <varlistentry>
@@ -145,7 +147,7 @@ rnv uses less memory and runs slower.
 <option>-v</option>
 </term>
 <listitem>
-rnv version is displayed
+prints version number;
 </listitem>
 </varlistentry>
 <varlistentry>
@@ -153,7 +155,7 @@ rnv version is displayed
 <option>-h or -?</option>
 </term>
 <listitem>
-<application>RNV</application> displays usage summary and exits.
+displays usage summary and exits.
 </listitem>
 </varlistentry>
 </variablelist>
