@@ -12,7 +12,7 @@
 
 namespace local = ""
 default namespace xsl = "http://www.w3.org/1999/XSL/Transform"
-datatypes dxl = "http://davidashen.net/relaxng/scheme-datatypes"
+datatypes dsl = "http://davidashen.net/relaxng/scheme-datatypes"
 
 start =
   stylesheet.element
@@ -84,7 +84,7 @@ stylesheet.element = element stylesheet { stylesheet.model }
 transform.element = element transform { stylesheet.model }
 stylesheet.model =
   extension.atts,
-  attribute id { dxl:NCName }?,
+  attribute id { dsl:NCName }?,
   attribute extension-element-prefixes { prefixes.datatype }?,
   attribute exclude-result-prefixes { prefixes.datatype }?,
   attribute version { version },
@@ -92,12 +92,12 @@ stylesheet.model =
 include.element =
   element include {
     extension.atts,
-    attribute href { dxl:anyURI }
+    attribute href { dsl:anyURI }
   }
 import.element =
   element import {
     extension.atts,
-    attribute href { dxl:anyURI }
+    attribute href { dsl:anyURI }
   }
 strip-space.element =
   element strip-space {
@@ -142,7 +142,7 @@ element.element =
   element element {
     extension.atts,
     attribute name { qname.datatype | expr-avt.datatype },
-    attribute namespace { dxl:anyURI | brace-avt.datatype }?,
+    attribute namespace { dsl:anyURI | brace-avt.datatype }?,
     attribute use-attribute-sets { qnames.datatype }?,
     template.model
   }
@@ -150,7 +150,7 @@ attribute.element =
   element attribute {
     extension.atts,
     attribute name { qname.datatype | expr-avt.datatype },
-    attribute namespace { dxl:anyURI | brace-avt.datatype }?,
+    attribute namespace { dsl:anyURI | brace-avt.datatype }?,
     template.model
   }
 attribute-set.element =
@@ -164,14 +164,14 @@ text.element =
   element text {
     extension.atts,
     attribute disable-output-escaping {
-      dxl:string "yes" | dxl:string "no"
+      dsl:string "yes" | dsl:string "no"
     }?,
     text
   }
 processing-instruction.element =
   element processing-instruction {
     extension.atts,
-    attribute name { dxl:NCName | expr-avt.datatype },
+    attribute name { dsl:NCName | expr-avt.datatype },
     template.model
   }
 comment.element = element comment { extension.atts, template.model }
@@ -186,23 +186,23 @@ value-of.element =
     extension.atts,
     attribute select { expression.datatype },
     attribute disable-output-escaping {
-      dxl:string "yes" | dxl:string "no"
+      dsl:string "yes" | dsl:string "no"
     }?
   }
 number.element =
   element number {
     extension.atts,
     attribute level {
-      dxl:string "single" | dxl:string "multiple" | dxl:string "any"
+      dsl:string "single" | dsl:string "multiple" | dsl:string "any"
     }?,
     attribute count { pattern.datatype }?,
     attribute from { pattern.datatype }?,
     attribute value { expression.datatype }?,
     attribute format { avt.datatype }?,
-    attribute lang { dxl:NMTOKEN | expr-avt.datatype }?,
+    attribute lang { dsl:NMTOKEN | expr-avt.datatype }?,
     attribute letter-value {
-      dxl:string "alphabetic"
-      | dxl:string "traditional"
+      dsl:string "alphabetic"
+      | dsl:string "traditional"
       | expr-avt.datatype
     }?,
     attribute grouping-separator { char.datatype | expr-avt.datatype }?,
@@ -233,21 +233,21 @@ sort.element =
   element sort {
     extension.atts,
     attribute select { expression.datatype }?,
-    attribute lang { dxl:NMTOKEN | expr-avt.datatype }?,
+    attribute lang { dsl:NMTOKEN | expr-avt.datatype }?,
     attribute data-type {
-      dxl:string "text"
-      | dxl:string "number"
+      dsl:string "text"
+      | dsl:string "number"
       | qname-but-not-ncname.datatype
       | expr-avt.datatype
     }?,
     attribute order {
-      dxl:string "ascending"
-      | dxl:string "descending"
+      dsl:string "ascending"
+      | dsl:string "descending"
       | expr-avt.datatype
     }?,
     attribute case-order {
-      dxl:string "upper-first"
-      | dxl:string "lower-first"
+      dsl:string "upper-first"
+      | dsl:string "lower-first"
       | expr-avt.datatype
     }?
   }
@@ -302,7 +302,7 @@ decimal-format.element =
 message.element =
   element message {
     extension.atts,
-    attribute terminate { dxl:string "yes" | dxl:string "no" }?,
+    attribute terminate { dsl:string "yes" | dsl:string "no" }?,
     template.model
   }
 fallback.element = element fallback { extension.atts, template.model }
@@ -310,52 +310,52 @@ output.element =
   element output {
     extension.atts,
     attribute method {
-      dxl:string "xml"
-      | dxl:string "html"
-      | dxl:string "text"
+      dsl:string "xml"
+      | dsl:string "html"
+      | dsl:string "text"
       | qname-but-not-ncname.datatype
     }?,
-    attribute version { dxl:NMTOKEN }?,
+    attribute version { dsl:NMTOKEN }?,
     attribute encoding { text }?,
     attribute omit-xml-declaration {
-      dxl:string "yes" | dxl:string "no"
+      dsl:string "yes" | dsl:string "no"
     }?,
-    attribute standalone { dxl:string "yes" | dxl:string "no" }?,
+    attribute standalone { dsl:string "yes" | dsl:string "no" }?,
     attribute doctype-public { text }?,
     attribute doctype-system { text }?,
     attribute cdata-section-elements { qnames.datatype }?,
-    attribute indent { dxl:string "yes" | dxl:string "no" }?,
+    attribute indent { dsl:string "yes" | dsl:string "no" }?,
     attribute media-type { text }?
   }
-prefixes.datatype = list { (dxl:NCName | "#default")* }
-prefix.datatype = dxl:NCName | "#default"
+prefixes.datatype = list { (dsl:NCName | "#default")* }
+prefix.datatype = dsl:NCName | "#default"
 wildcards.datatype =
   list {
-    (dxl:QName
-     | dxl:token { pattern = "\*|\i\c*:\*" })*
+    (dsl:QName
+     | dsl:token { pattern = "\*|\i\c*:\*" })*
   }
-qname.datatype = dxl:QName
-qnames.datatype = list { dxl:QName* }
-char.datatype = dxl:string { length = "1" }
-number.datatype = dxl:decimal
+qname.datatype = dsl:QName
+qnames.datatype = list { dsl:QName* }
+char.datatype = dsl:string { length = "1" }
+number.datatype = dsl:decimal
 expression.datatype = text
 pattern.datatype = text
-qname-but-not-ncname.datatype = dxl:QName { pattern = ".*:.*" }
+qname-but-not-ncname.datatype = dsl:QName { pattern = ".*:.*" }
 # An AVT containing at least one expression.
 expr-avt.datatype =
-  dxl:string {
+  dsl:string {
     pattern =
       """([^\{\}]|\{\{|\}\})*\{([^"'\{\}]|"[^"]*"|'[^']*')+\}([^\{\}]|\{\{|\}\}|\{([^"'\{\}]|"[^"]*"|'[^']*')+\})*"""
   }
 # An AVT containing at least one brace; ie where instantiated AVT
 # is not the same as the literal AVT.
 brace-avt.datatype =
-  dxl:string {
+  dsl:string {
     pattern =
       """[^\{\}]*(\{\{|\}\}|\{([^"'\{\}]|"[^"]*"|'[^']*')+\})([^\{\}]|\{\{|\}\}|\{([^"'\{\}]|"[^"]*"|'[^']*')+\})*"""
   }
 avt.datatype =
-  dxl:string {
+  dsl:string {
     pattern =
       """([^\{\}]|\{\{|\}\}|\{([^"'\{\}]|"[^"]*"|'[^']*')+\})*"""
   }
