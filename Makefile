@@ -20,7 +20,7 @@ util.o
 .c.o:
 	${CC} ${INC} ${OPT} -c -o $@ $<
 
-all: rnd_test
+all: rnv
 
 rnv: ${OBJ} rnv.o
 	${CC} ${OPT} ${LBL} -o rnv rnv.o ${OBJ} ${LIB} 
@@ -28,7 +28,13 @@ rnv: ${OBJ} rnv.o
 rnd_test: ${OBJ} rnd_test.o
 	${CC} ${OPT} ${LBL} -o rnd_test rnd_test.o ${OBJ} ${LIB} 
 
+clean: 
+	-rm -f *.o rnv rnd_test
+
 # $Log$
+# Revision 1.15  2003/12/13 22:31:54  dvd
+# a few bugfixes
+#
 # Revision 1.14  2003/12/11 23:37:58  dvd
 # derivative in progress
 #

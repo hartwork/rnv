@@ -27,7 +27,7 @@ static int fallback_equal(char *typ,char *val,char *s,int n) {return 1;}
 static int fallback_allows(char *typ,char *ps,char *s,int n) {return 1;}
 
 static int builtin_equal(char *typ,char *val,char *s,int n) {
-  int dt=typ-rn_string;
+  int dt=newDatatype(0,typ-rn_string);
   if(dt==rn_dt_string) return strncmp(val,s,n)==0;
   else if(dt==rn_dt_token) return tokncmp(val,s,n)==0;
   else assert(0);
@@ -344,6 +344,9 @@ void drv_expected(int p) {
 
 /*
  * $Log$
+ * Revision 1.7  2003/12/13 22:31:54  dvd
+ * a few bugfixes
+ *
  * Revision 1.6  2003/12/13 22:03:30  dvd
  * rnv works
  *
