@@ -1,6 +1,6 @@
 # $Id$
 #
-VERSION=1.3.0
+VERSION=1.3.1
 CC=cc
 
 EXPAT_H="<expat.h>"
@@ -13,7 +13,7 @@ DEF=-DEXPAT_H=${EXPAT_H} -DUNISTD_H=${UNISTD_H} -DRNV_VERSION="\"${VERSION}\""
 WARN=-Wall -Wstrict-prototypes  -Wmissing-prototypes -Wcast-align
 OPT=-O2
 
-CFLAGS=${INC} ${DEF} ${WARN} ${OPT}
+CFLAGS=${INC} ${DEF} ${WARN} ${OPT} -x c++
 LFLAGS=${OPT} ${LBL}
 
 LIBEXPAT=-lexpat
