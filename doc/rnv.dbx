@@ -5,7 +5,7 @@
 RNV — Relax NG Compact Syntax Validator in C
 </title>
 <subtitle>
-Version 1.5
+Version 1.6
 </subtitle>
 
 <abstract>
@@ -18,6 +18,18 @@ RNV is a part of an on-going work, and the current code can have bugs and shortc
  </abstract>
 
 <section>
+<title>
+New since 1.5
+</title>
+<para>Better reporting: required and permitted content is reported 
+separately; it helps debug grammars. Several bugfixes; I relied on
+an acquired test suite and published schemata, but have found that I
+can make more bugs than they cover, thus a reworked an extended test
+suite is now used for testing. The code has also been cleanup and
+simplified in places during porting to Plan9.
+</para>
+</section>
+<section>
 <title>News since 1.4</title>
 <para>Two ways to use extension datatype libraries are implemented for RNV;
 they allow to extend type-checking capabilities of Relax NG for data 
@@ -25,21 +37,6 @@ far beyond the scope of XML Schema datatypes. RNV now parses external system
 entities, it was my omission not to implement this earlier, and I am glad 
 it is done now. Memory usage and diagnostics have been improved, and the source
 code has been rearranged again for better modularity.
-</para>
-</section>
-<section>
-<title>
-New since 1.3
-</title>
-<para> To facilitate the embedding of RNV into heterogeneous
-environments, I have developed <link linkend="RVP">RVP</link>, a
-pipe that expects validation primitives on one end and emits
-validation diagnostics from the other. Embedding examples in Perl
-and Python are provided; I believe that, on the day of writing it,
-these are the fastest and most conforming (if not the only) Relax
-NG validation solutions for these languages. Several changes have
-been made to the core modules, mostly to provide better separation
- of layers.
 </para>
 </section>
 
