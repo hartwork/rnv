@@ -47,12 +47,16 @@ static void default_ver_handler(int er_no,va_list ap) {
   case ER_UNDEF: cerr("undefined reference to '%s'"); break;
   case ER_LOOPST: derr("loop in start pattern"); break;
   case ER_LOOPEL: derr("loop in pattern for element '%s'"); break;
+  case ER_CTYPE: derr("content of element '%s' does not have a content-type"); break;
   default: assert(0);
   }
 }
 
 /*
  * $Log$
+ * Revision 1.16  2003/12/08 18:54:51  dvd
+ * content-type checks
+ *
  * Revision 1.15  2003/12/07 20:41:42  dvd
  * bugfixes, loops, traits
  *

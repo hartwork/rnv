@@ -14,8 +14,9 @@ int main(int argc,char **argv) {
   free(sp);
   fprintf(stderr,"dereferencing\n");
   rnd_deref(start); if(rnd_errors()) goto ERRORS;
-  fprintf(stderr,"checking loops\n");
+  fprintf(stderr,"checking restrictions\n");
   rnd_restrictions(); if(rnd_errors()) goto ERRORS;
+  fprintf(stderr,"computing auxiliary traits\n");
   rnd_traits();
   rnd_release();
   return 0;

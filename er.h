@@ -28,7 +28,7 @@
 #define ER_UNDEF 71
 #define ER_LOOPST 80
 #define ER_LOOPEL 81
-
+#define ER_CTYPE 82
 
 extern void er_handler(int er_no,...);
 extern void (*ver_handler_p)(int er_no,va_list ap);
@@ -37,6 +37,9 @@ extern void (*ver_handler_p)(int er_no,va_list ap);
 
 /*
  * $Log$
+ * Revision 1.15  2003/12/08 18:54:51  dvd
+ * content-type checks
+ *
  * Revision 1.14  2003/12/07 20:41:42  dvd
  * bugfixes, loops, traits
  *

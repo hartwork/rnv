@@ -42,7 +42,9 @@ void rn_add_p(int i) {ht_put(&ht_p,i);}
 
 void setNullable(int i,int x) {if(x) rn_pattern[i][0]|=P_FLG_NUL;}
 void setCdata(int i,int x) {if(x) rn_pattern[i][0]|=P_FLG_TXT;}
-void setContentType(int i,int t1,int t2) {rn_pattern[i][0]|=(t1>t2?t1:t2);}
+void setContentType(int i,int t1,int t2) {
+  rn_pattern[i][0]|=(t1>t2?t1:t2);
+}
 
 #define accept(name,n,N)  \
 static int accept_##n() { \
@@ -340,6 +342,9 @@ static int equal_s(int s1,int s2) {return strcmp(rn_string+s1,rn_string+s2)==0;}
 
 /* 
  * $Log$
+ * Revision 1.13  2003/12/08 18:54:51  dvd
+ * content-type checks
+ *
  * Revision 1.12  2003/12/07 20:41:42  dvd
  * bugfixes, loops, traits
  *

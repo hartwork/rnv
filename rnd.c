@@ -130,7 +130,6 @@ static void loops() {
 	error(ER_LOOPEL,s);
 	free(s);
       }
-      return;
     }
     for(;;) {++i;
       if(i==n_f) return;
@@ -143,8 +142,54 @@ static void loops() {
   }
 }
 
+static void ctype(int p) {
+  int p1,p2,nc;
+  if(!contentType(p)) {
+    switch(P_TYP(p)) {
+    case P_EMPTY: setContentType(p,P_FLG_CTE,0); break;
+    case P_NOT_ALLOWED: setContentType(p,P_FLG_CTE,0); break;
+    case P_TEXT: setContentType(p,P_FLG_CTC,0); break;
+    case P_CHOICE: Choice(p,p1,p2); ctype(p1); ctype(p2); 
+      setContentType(p,contentType(p1),contentType(p2)); break;
+    case P_INTERLEAVE: Interleave(p,p1,p2); ctype(p1); ctype(p2); 
+      if(rn_groupable(p1,p2)) setContentType(p,contentType(p1),contentType(p2)); break;
+    case P_GROUP: Group(p,p1,p2); ctype(p1); ctype(p2); 
+      if(rn_groupable(p1,p2)) setContentType(p,contentType(p1),contentType(p2)); break;
+    case P_ONE_OR_MORE: OneOrMore(p,p1); ctype(p1);
+      if(rn_groupable(p1,p1)) setContentType(p,contentType(p1),0); break;
+    case P_LIST: setContentType(p,P_FLG_CTS,0); break;
+    case P_DATA: setContentType(p,P_FLG_CTS,0); break;
+    case P_DATA_EXCEPT: DataExcept(p,p1,p2); ctype(p1); ctype(p2);
+      if(contentType(p2)) setContentType(p,P_FLG_CTS,0); break;
+    case P_VALUE: setContentType(p,P_FLG_CTS,0); break;
+    case P_ATTRIBUTE: Attribute(p,nc,p1); ctype(p1);
+      if(contentType(p1)) setContentType(p,P_FLG_CTE,0); break;
+    case P_ELEMENT: setContentType(p,P_FLG_CTC,0); break;
+    case P_REF: setContentType(p,P_FLG_CTE,0); break;
+    default: assert(0);
+    }
+  }
+}
+
+static void ctypes() {
+  int i=0,p,p1,nc;
+  for(i=0;i!=n_f;++i) {
+    p=flat[i];
+    if(P_IS(p,ELEMENT)) {
+      Element(p,nc,p1);
+      ctype(p1);
+      if(!contentType(p1)) {
+	char *s=nc2str(nc);
+	error(ER_CTYPE,s);
+	free(s);
+      }
+    }
+  }
+}
+
 void rnd_restrictions() {
-  loops();
+  loops(); if(errors) return; /* loops can cause endless loops in subsequent calls */
+  ctypes();
 }
 
 static void nullables() {
@@ -211,6 +256,9 @@ void rnd_release() {
 
 /* 
  * $Log$
+ * Revision 1.4  2003/12/08 18:54:51  dvd
+ * content-type checks
+ *
  * Revision 1.3  2003/12/07 20:41:42  dvd
  * bugfixes, loops, traits
  *
