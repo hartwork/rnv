@@ -14,7 +14,6 @@ drv.c drv.h -- derivative of RNG patterns, validation core
 xsd.c xsd.h -- xml schema datatypes
 xsd_tm.c xsd_tm.h -- dateTime datatype implementation
 sc.c sc.h -- scope tables for rnc
-er.c er.h  -- error reporting (RNC parser and validator)
 ht.c ht.h -- hash table  
 strops.c strops.h  -- common string operations
 xmlc.c xmlc.h -- xml character classifiers
@@ -24,7 +23,7 @@ rx_cls_u.c rx_cls_ranges.c -- auto-generated tables; included by rx.c
 
 # hierarchy
 
-... er,ht,strops,xmlc,u -- used in many places
+... ht,strops,xmlc,u -- used in many places
 
 xcl
 . rnv
