@@ -41,6 +41,7 @@ drv.c drv.h \
 xsd.c xsd.h \
 xsd_tm.c xsd_tm.h \
 dxl.c dxl.h \
+dsl.c dsl.h \
 sc.c sc.h \
 ht.c ht.h \
 u.c u.h \
@@ -63,6 +64,7 @@ ary.o \
 xsd.o \
 xsd_tm.o \
 dxl.o \
+dsl.o \
 sc.o \
 u.o \
 ht.o \

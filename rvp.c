@@ -8,7 +8,8 @@
  reads from 0, writes to 1, 2 for grammar parse errors only, then redirected.
    -q switches to numerical error codes
    -s takes less space but more time
-   -d command plugs in an external type checker
+   -d plugs in an external type checker
+   -e the argument is a Scheme program providing a datatype library
    -v displays version
    -h help message
  exit code: 0 on valid, non-zero on invalid
@@ -52,6 +53,7 @@
 #include "rnl.h"
 #include "rnv.h"
 #include "dxl.h"
+#include "dsl.h"
 
 extern int rn_notAllowed, drv_compact, rx_compact;
 
@@ -99,6 +101,7 @@ static void init(void) {
     rnl_init();
     rnv_init(); rnv_verror_handler=&verror_handler_rnv;
     drv_add_dtl(DXL_URL,&dxl_equal,&dxl_allows);
+    drv_add_dtl(DSL_URL,&dsl_equal,&dsl_allows);
     quebuf=(char*)memalloc(len_q=LEN_B,sizeof(char));
   }
 }
@@ -222,6 +225,7 @@ int main(int argc,char **argv) {
       case 'v': version(); break;
       case 's': drv_compact=1; rx_compact=1; break;
       case 'd': dxl_cmd=*(argv+1); if(dxl_cmd) ++argv; goto END_OF_OPTIONS;
+      case 'e': dsl_scm=*(argv+1); if(dsl_scm) ++argv; goto END_OF_OPTIONS;
       case 'q': explain=0; break;
       default: fprintf(stderr,"unknown option '-%c'\n",*(*argv+i)); break;
       }
