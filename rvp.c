@@ -127,31 +127,33 @@ static int endtok(int i) {
   }
 }
 
+static void writeall(int fd,char *buf,int len) {
+  int ofs=0;
+  do {
+    int n=write(fd,buf+ofs,len);
+    if(n==-1) longjmp(IOER,1);
+    ofs+=n; len-=n;
+  } while(len);
+}
+
 static void resp(int ok,int patno,int prevno) {
-  int len,ofs;
+  int len;
   static char buf[LEN_B];
   char *f=(char*)(ok?OK:explain?ERROR:ER);
   len=sprintf(buf,f,patno); assert(len<LEN_B);
-  write(1,buf,len);
+  writeall(1,buf,len);
   if(!ok) {
     len=sprintf(buf," %u",lasterr); assert(len<LEN_B);
-    write(1,buf,len);
-    if(explain) {buf[0]=' '; write(1,buf,1);}
+    writeall(1,buf,len);
+    if(explain) {buf[0]=' '; writeall(1,buf,1);}
   }
   for(;;) { /* read always, write if verbose */
     len=read(erp[0],buf,LEN_B);
     if(len<0) {if(errno==EAGAIN) break; else longjmp(IOER,1);}
     if(len==0) break;
-    if(!ok&&explain&&prevno!=rn_notAllowed) {
-      ofs=0;
-      do {
-	int n=write(1,buf+ofs,len);
-	if(n==-1) longjmp(IOER,1);
-	ofs+=n; len-=n;
-      } while(len);
-    }
+    if(!ok&&explain&&prevno!=rn_notAllowed) writeall(1,buf,len);
   }
-  buf[0]='\0'; write(1,buf,1);
+  buf[0]='\0'; writeall(1,buf,1);
 }
 
 static int query(void) {

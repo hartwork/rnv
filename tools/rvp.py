@@ -9,7 +9,7 @@
 
 import sys, os, string, re, xml.parsers.expat
 
-global rvpin,rvpout,pat,errors,parser,text,mixed,prevline,prevcol
+global rvpin,rvpout,pat,errors,parser,text,ismixed,prevline,prevcol
 
 # raised by resp if it gets something the module does not understand
 class ProtocolError(Exception):
@@ -98,30 +98,30 @@ def quit():
 # text nodes; therefore CharDataHandler just concatenates them into
 # text, and then flush_text passes the text to the validator
 def flush_text():
-  global mixed,pat,text
+  global ismixed,pat,text
 
-  if(pat==mixed):
-    mixed(pat,text)
+  if(ismixed):
+    pat=mixed(pat,text)
   else:
-    textonly(pat,text)
+    pat=textonly(pat,text)
   text=''
 
 def start_element(name,attrs):
-  global mixed,pat
+  global ismixed,pat
 
-  mixed=1
+  ismixed=1
   flush_text()
   pat=start_tag_open(pat,name)
-  mixed=0
+  ismixed=0
   for n,v in attrs.items(): pat=attribute(pat,n,v)
   pat=start_tag_close(pat,name)
 
 def end_element(name):
-  global mixed,pat
+  global ismixed,pat
 
   flush_text()
   pat=end_tag(pat,name)
-  mixed=1
+  ismixed=1
 
 def characters(data):
   global text

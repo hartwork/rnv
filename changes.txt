@@ -1,5 +1,9 @@
 /* $Id$ */
 
+1.7.2 Tue Nov  9 15:28:23 AMT 2004
+dvd: fixed a bug in rvp.py, didn't update the current pattern after
+     text or mixed
+
 1.7.1 Thu Aug 19 00:58:58 AMST 2004
 dvd: discovered and fixed a bug with parsing of builtin datatypes,
      noone seems to use them explicitely.
