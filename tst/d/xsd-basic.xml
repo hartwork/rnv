@@ -81,7 +81,11 @@
   <values float=" -4E50 "/>
 
   <values
-    hexBinary=" ABc123A "
+    hexBinary=" ABC123 "
+    />
+
+
+  <values
     base64Binary=" ABCDEE== "
     />
 
