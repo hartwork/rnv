@@ -1,6 +1,6 @@
 # $Id$
 #
-VERSION=1.4.0
+VERSION=1.4.1
 CC=bcc32
 
 EXPAT_H="<expat.h>"
@@ -28,6 +28,7 @@ ary.c ary.h \
 rn.c rn.h \
 rnc.c rnc.h \
 rnd.c rnd.h \
+rnl.c rnc.h \
 rnv.c rnv.h \
 rnx.c rnx.h \
 drv.c drv.h \
@@ -47,6 +48,7 @@ OBJ=\
 rn.obj \
 rnc.obj \
 rnd.obj \
+rnl.obj \
 rnv.obj \
 rnx.obj \
 drv.obj \

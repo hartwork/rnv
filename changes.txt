@@ -1,5 +1,9 @@
 /* $Id$ */
 
+1.4.1 Tue Jan 13 14:29:08 AMT 2004
+dvd: added sys/types.h where appropriate; fixed Makefile.bcc
+     to include rnl.{c,h,obj}
+
 1.4.0 Mon Jan 12 17:39:58 AMT 2004
 dvd: changed rvp.py to use os.read|os.write for performance
 

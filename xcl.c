@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <stdarg.h>
 #include <fcntl.h>  /*open,close*/
+#include <sys/types.h>
 #include UNISTD_H   /*open,read,close*/
 #include <stdio.h>  /*fprintf,stderr*/
 #include <string.h> /*strerror*/

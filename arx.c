@@ -22,6 +22,7 @@ comments start with # and continue till end of line
 
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
 #include UNISTD_H
 #include <fcntl.h>
 #include <stdio.h>
