@@ -111,7 +111,7 @@ rx.o
 .c.o:
 	${CC} ${CFLAGS} -c -o $@ $<
 
-all: rnv arx rvp xsdck
+all: rnv arx rvp xsdck test
 
 rnv: xcl.o ${LIBRNV}
 	${CC} ${LFLAGS} -o rnv xcl.o ${LIBRNV} ${LIB}
@@ -124,6 +124,9 @@ rvp: rvp.o ${LIBRNV}
 
 xsdck: xsdck.o ${LIBRNV}
 	${CC} ${LFLAGS} -o xsdck xsdck.o ${LIBRNV} ${LIB}
+
+test: test.o ${LIBRNV}
+	${CC} ${LFLAGS} -o test test.o ${LIBRNV} ${LIB}
 
 ${LIBRNVA}: ${OBJ}
 	ar rc $@ ${OBJ}

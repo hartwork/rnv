@@ -1,17 +1,17 @@
 /* $Id$ */
 
 #include <string.h> /*strcpy,strlen*/
+#include <assert.h>
 #include "xmlc.h"
 #include "m.h"
 #include "s.h"
 
 int s_cmpn(char *s1,char *s2,int n2) {
   char *end=s2+n2;
-  for(;;) {
+  for(;;++s1,++s2) {
     if(s2==end) return *s1;
     if(*s1=='\0') return -*s2;
     if(*s1!=*s2) return *s1-*s2;
-    ++s1; ++s2;
   }
 }
 
@@ -71,4 +71,33 @@ int s_ntab(char *s,int len,char *tab[],int size) {
     i=(n+m)/2;
     if((cmp=s_cmpn(tab[i],s,len))==0) return i; else {if(cmp>0) m=i-1; else n=i+1;}
   }
+}
+
+void s_test() {
+  assert(s_cmpn("","",0)==0);
+  assert(s_cmpn("/xyz","/xyz",4)==0);
+  assert(s_cmpn("xyz","yz",2)<0);
+  assert(s_cmpn("xyz","xxyz",4)>0);
+
+  { char r[256];
+    s_abspath(strcpy(r,"/x"),"/y");
+    assert(strcmp(r,"/x")==0);
+    s_abspath(strcpy(r,"x"),"/y");
+    assert(strcmp(r,"/x")==0);
+    s_abspath(strcpy(r,"x"),"/y/");
+    assert(strcmp(r,"/y/x")==0);
+    s_abspath(strcpy(r,"x"),"y/");
+    assert(strcmp(r,"y/x")==0);
+    s_abspath(strcpy(r,"x"),"y");
+    assert(strcmp(r,"x")==0);
+    s_abspath(strcpy(r,""),"y");
+    assert(strcmp(r,"")==0);
+  }
+
+  assert(s_tokcmpn("","",0)==0);
+  assert(s_tokcmpn(""," ",1)==0);
+  assert(s_tokcmpn("A","A",1)==0);
+  assert(s_tokcmpn(" A   B","A B  ",5)==0);
+  assert(s_tokcmpn("AB","A B",3)>0);
+  assert(s_tokcmpn("","A",1)<0);
 }

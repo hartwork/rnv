@@ -250,7 +250,7 @@ static int fdiglenn(char *s,int n) {
 static int diglenn(char *s,int n) {
   char *end=s+n; int len=0;
   for(;;) { if(s==end) break;
-    if(!xmlc_white_space(*s)&&*s!='+'&&*s!='-'&&*s!='0') break;
+    if(!(xmlc_white_space(*s)||*s=='+'||*s=='-'||*s=='0')) break;
     ++s;
   }
   for(;;) { if(s==end||*s=='.'||xmlc_white_space(*s)) break;
@@ -342,12 +342,17 @@ static void anchdec(int *plus,int *zero,char **beg,char **dp,char **end,char *s,
   *end=end0;
   for(;;) { if(*end==*beg) break;
     --*end;
-    if(**end!='0') {*zero=0; ++*end; break;}
+    if(!(**end=='0'||**end=='+'||**end=='-')) {
+      if(**end!='.') *zero=0; 
+      ++*end; 
+      break;
+    }
   }
   *dp=*end;
   for(;;) { if(*beg==*end) break;
-    if(!xmlc_white_space(**beg)&&**beg!='0') {*zero=0;
-      *plus=(**beg!='-'); if(**beg=='-'||**beg=='+') ++*beg;
+    if(**beg=='-') *plus=0;
+    else if(!(**beg=='0'||**beg=='+'||xmlc_white_space(**beg))) {
+      if(**beg!='.') *zero=0;
       for(;;) {
 	if(*dp==*beg) {*dp=*end=end0; break;}
 	--*dp;
@@ -375,6 +380,7 @@ static int deccmp(char *s1,int n1,char *s2,int n2) {
     ++c1; ++c2;
   }
   if(cmp!=0) return p1?cmp:-cmp;
+  if(c1!=e1) ++c1; if(c2!=e2) ++c2;
   for(;;) {
     if(c1==e1) {cmp=-(c2!=e2); break;}
     if(c2==e2) {cmp=1; break;}
@@ -680,9 +686,8 @@ static int hexcmpn(char *s1,char *s2,int n) {
     case 'd': case 'D': if(*s2=='d'||*s2=='D') continue;
     case 'e': case 'E': if(*s2=='e'||*s2=='E') continue;
     case 'f': case 'F': if(*s2=='f'||*s2=='F') continue;
-    default: if(*s1==*s2) continue;
+    default: if(*s1!=*s2) return *s1-*s2;
     }
-    return *s1-*s2;
   }
 }
 
@@ -693,8 +698,7 @@ static int b64cmpn(char *s1,char *s2,int n) {
     while(s2!=end&&xmlc_white_space(*s2)) ++s2;
     if(s2==end) return *s1;
     if(!*s1) return -*s2;
-    if(*s1==*s2) continue;
-    return *s1-*s2;
+    if(*s1!=*s2) return *s1-*s2;
   }
 }
 
@@ -703,9 +707,8 @@ static int nrmcmpn(char *s1,char *s2,int n) {
   for(;;++s1,++s2) {
     if(s2==end) return *s1;
     if(!*s1) return -*s2;
-    if(*s1==*s2) continue;
-    if(xmlc_white_space(*s1)&&xmlc_white_space(*s2)) continue;
-    return *s1-*s2;
+    if(!(*s1==*s2&&xmlc_white_space(*s1)&&xmlc_white_space(*s2))) 
+      return *s1-*s2;
   }
 }
 
@@ -777,4 +780,51 @@ int xsd_equal(char *typ,char *val,char *s,int n) {
   default: assert(0);
   }
   return 0;
+}
+
+void xsd_test() {
+  assert(toklenn("",0)==0);
+  assert(toklenn("A",1)==1);
+  assert(toklenn(" A  ",4)==1);
+  assert(toklenn(" A  B  ",7)==3);
+
+  assert(tokcntn("",0)==0);
+  assert(tokcntn("A",1)==1);
+  assert(tokcntn("AB CD",5)==2);
+  assert(tokcntn("   AB  C ",9)==2);
+
+  assert(diglenn(" +14.25",7)==4);
+  assert(diglenn("1",1)==1);
+  assert(diglenn("0",1)==1);
+  assert(diglenn("+00.0",5)==1);
+
+  assert(fdiglenn(".1",2)==1);
+  assert(fdiglenn("+0.0140",7)==3);
+  assert(fdiglenn("0",1)==0);
+
+  assert(deccmp("0",1,"0.0",3)==0);
+  assert(deccmp("0.",2,".0",2)==0);
+  assert(deccmp("1",1,"1.0",3)==0);
+  assert(deccmp("01.1",4,"1.10",4)==0);
+  assert(deccmp("+1",2,"1.0",3)==0);
+  assert(deccmp("+0.",3,"-0",2)==0);
+  assert(deccmp("0",1,"0.1",3)<0);
+  assert(deccmp("1.",2,".0",2)>0);
+  assert(deccmp("+1",2,"-1",2)>0);
+
+  assert(hexcmpn("","",0)==0);
+  assert(hexcmpn("ABC123","ABC123",6)==0);
+  assert(hexcmpn("aBCd","AbCd",4)==0);
+  assert(hexcmpn("ABC 123"," ABC123",7)==0);
+  assert(hexcmpn("ABC124","ABC123",6)>0);
+
+  assert(b64cmpn("","",0)==0);
+  assert(b64cmpn("ABC123","ABC123",6)==0);
+  assert(b64cmpn("ABC 123"," ABC123",7)==0);
+  assert(b64cmpn("ABC124","ABC123",6)>0);
+  assert(b64cmpn("ABC123","abc123",6)<0);
+
+  assert(nrmcmpn("A B","A B",3)==0);
+  assert(nrmcmpn("A B","A\nB",3)==0);
+  assert(nrmcmpn(" A","A ",2)<0);
 }
