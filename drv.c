@@ -122,6 +122,8 @@ static void windup(void);
 static int initialized=0;
 void drv_init(void) {
   if(!initialized) { initialized=1;
+    rn_init(); 
+    xsd_init();
     memo=(int (*)[M_SIZE])calloc(len_m=LEN_M,sizeof(int[M_SIZE]));
     dtl=(struct dtl*)calloc(len_dtl=LEN_DTL,sizeof(struct dtl));
     ht_init(&ht_m,len_m,&hash_m,&equal_m);

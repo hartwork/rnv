@@ -37,7 +37,9 @@ sc.c sc.h \
 ht.c ht.h \
 u.c u.h \
 xmlc.c xmlc.h \
-strops.c strops.h
+strops.c strops.h \
+rx.c rx.h \
+rx_cls_u.c
 
 OBJ=\
 rn.o \
@@ -51,7 +53,8 @@ sc.o \
 u.o \
 ht.o \
 xmlc.o \
-strops.o 
+strops.o \
+rx.o 
 
 .c.o:
 	${CC} ${CFLAGS} -c -o $@ $<
