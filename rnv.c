@@ -74,69 +74,63 @@ static int whitespace(char *text,int n_t) {
   }
 }
 
-int rnv_text(int current,char *text,int n_t,int mixed) {
-  int previous;
+void rnv_text(int *curp,int *prevp,char *text,int n_t,int mixed) {
   if(mixed) {
     if(!whitespace(text,n_t)) {
-      current=drv_mixed_text(previous=current);
-      if(current==rn_notAllowed) {
-	current=drv_mixed_text_recover(previous);
+      *curp=drv_mixed_text(*prevp=*curp);
+      if(*curp==rn_notAllowed) {
+	*curp=drv_mixed_text_recover(*prevp);
 	error_handler(RNV_ER_MIXT);
       }
     }
   } else {
-    current=drv_text(previous=current,text,n_t);
-    if(current==rn_notAllowed) {
-      current=drv_text_recover(previous,text,n_t);
+    *curp=drv_text(*prevp=*curp,text,n_t);
+    if(*curp==rn_notAllowed) {
+      *curp=drv_text_recover(*prevp,text,n_t);
       error_handler(RNV_ER_TEXT);
     }
   }
-  return current;
 }
 
-int rnv_start_tag(int current,char *name,char **attrs) {
-  int previous;
+void rnv_start_tag(int *curp,int *prevp,char *name,char **attrs) {
   qname((char*)name);
-  current=drv_start_tag_open(previous=current,suri,sname);
-  if(current==rn_notAllowed) {
-    current=drv_start_tag_open_recover(previous,suri,sname);
-    error_handler(current==rn_notAllowed?RNV_ER_ELEM:RNV_ER_EMIS,suri,sname); 
+  *curp=drv_start_tag_open(*prevp=*curp,suri,sname);
+  if(*curp==rn_notAllowed) {
+    *curp=drv_start_tag_open_recover(*prevp,suri,sname);
+    error_handler(*curp==rn_notAllowed?RNV_ER_ELEM:RNV_ER_EMIS,suri,sname); 
   }
-  while(current!=rn_notAllowed) {
+  while(*curp!=rn_notAllowed) {
     if(!(*attrs)) break;
     qname((char*)*attrs);
-    current=drv_attribute_open(previous=current,suri,sname);
+    *curp=drv_attribute_open(*prevp=*curp,suri,sname);
     ++attrs;
-    if(current==rn_notAllowed) {
-      current=drv_attribute_open_recover(previous,suri,sname);
-      error_handler(RNV_ER_AKEY,suri,name);
+    if(*curp==rn_notAllowed) {
+      *curp=drv_attribute_open_recover(*prevp,suri,sname);
+      error_handler(RNV_ER_AKEY,suri,sname);
     } else {
-      current=drv_text(previous=current,(char*)*attrs,strlen(*attrs));
-      if(current==rn_notAllowed || (current=drv_attribute_close(previous=current))==rn_notAllowed) {
-	current=drv_attribute_close_recover(previous);
+      *curp=drv_text(*prevp=*curp,(char*)*attrs,strlen(*attrs));
+      if(*curp==rn_notAllowed || (*curp=drv_attribute_close(*prevp=*curp))==rn_notAllowed) {
+	*curp=drv_attribute_close_recover(*prevp);
 	error_handler(RNV_ER_AVAL,suri,sname,*attrs);
       }
     }
     ++attrs;
   }
-  if(current!=rn_notAllowed) {
-    current=drv_start_tag_close(previous=current);
-    if(current==rn_notAllowed) {
-      current=drv_start_tag_close_recover(previous);
+  if(*curp!=rn_notAllowed) {
+    *curp=drv_start_tag_close(*prevp=*curp);
+    if(*curp==rn_notAllowed) {
+      *curp=drv_start_tag_close_recover(*prevp);
       qname((char*)name);
       error_handler(RNV_ER_AMIS,suri,sname);
     }
   }
-  return current;
 }
 
-int rnv_end_tag(int current,char *name) {
-  int previous;
-  current=drv_end_tag(previous=current);
-  if(current==rn_notAllowed) {
+void rnv_end_tag(int *curp,int *prevp,char *name) {
+  *curp=drv_end_tag(*prevp=*curp);
+  if(*curp==rn_notAllowed) {
     qname(name);
     error_handler(RNV_ER_UFIN,suri,sname);
-    current=drv_end_tag_recover(previous);
+    *curp=drv_end_tag_recover(*prevp);
   }
-  return current;
 }

@@ -23,24 +23,24 @@ void rnx_init(void) {
 
 void rnx_clear(void) {}
 
-static void expected(int p) {
+static void expected(int p,int first) {
   int p1,p2,px=0,i;
   switch(P_TYP(p)) {
   case P_ERROR: break;
   case P_EMPTY: break;
   case P_NOT_ALLOWED: break;
   case P_TEXT: px=p; break;
-  case P_CHOICE: Choice(p,p1,p2); expected(p1); expected(p2); break;
-  case P_INTERLEAVE: Interleave(p,p1,p2); expected(p1); expected(p2); break;
-  case P_GROUP: Group(p,p1,p2); expected(p1); if(nullable(p1)) expected(p2); break;
-  case P_ONE_OR_MORE: OneOrMore(p,p1); expected(p1); break;
-  case P_LIST: List(p,p1); expected(p1); break;
+  case P_CHOICE: Choice(p,p1,p2); expected(p1,first); expected(p2,first); break;
+  case P_INTERLEAVE: Interleave(p,p1,p2); expected(p1,first); expected(p2,first); break;
+  case P_GROUP: Group(p,p1,p2); expected(p1,first); expected(p2,first||nullable(p1)); break;
+  case P_ONE_OR_MORE: OneOrMore(p,p1); expected(p1,first); break;
+  case P_LIST: List(p,p1); expected(p1,first); break;
   case P_DATA: px=p; break;
-  case P_DATA_EXCEPT: DataExcept(p,p1,p2); expected(p1); break;
+  case P_DATA_EXCEPT: DataExcept(p,p1,p2); expected(p1,first); break;
   case P_VALUE: px=p; break;
   case P_ATTRIBUTE: px=p; break;
   case P_ELEMENT: px=p; break;
-  case P_AFTER: After(p,p1,p2); expected(p1); if(nullable(p1)) px=p; break;
+  case P_AFTER: After(p,p1,p2); expected(p1,first); if(nullable(p1)) px=p; break;
   case P_REF: break;
   default: assert(0);
   }
@@ -64,7 +64,7 @@ void rnx_expected(int p) {
     rnx_exp=(int*)calloc(len_exp=LIM_EXP,sizeof(int));
   }
   rnx_n_exp=0;
-  expected(p);
+  expected(p,1);
 }
 
 char *rnx_p2str(int p) {
