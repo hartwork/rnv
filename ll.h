@@ -14,6 +14,8 @@
 #define RN_PRIME_NC 0xfb
 #define RN_LEN_S 4096
 
+#define SC_LEN 64
+
 #define DRV_LEN_M 4096
 #define DRV_PRIME_M 0xffd
 #define DRV_LIM_M 8*DRV_LEN_M
@@ -22,7 +24,7 @@
 #define RNX_LIM_EXP 64
 
 #define RNV_LEN_T 1024
-#define RNV_LIM_T 65536
+#define RNV_LIM_T 16384
 
 #define RX_LEN_P 256
 #define RX_PRIME_P 0xfb
@@ -31,7 +33,5 @@
 #define RX_PRIME_R 0xfb
 #define RX_LEN_2 32
 #define RX_PRIME_2 0xf1
-
-#define SC_LEN 64
 
 #endif

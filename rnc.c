@@ -1105,7 +1105,6 @@ static void division(struct rnc_source *sp) {
 }
 
 static void include(struct rnc_source *sp) {
- /* check for include inside includeContent */
   int nsuri;
   if(relpath(sp)) {
     nsuri=inherit(sp);

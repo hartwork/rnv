@@ -5,11 +5,11 @@
 #include "strops.h"
 #include "xsd.h"
 
-static void default_nodt_handler(char *typ) {
-  fprintf(stderr,"unknown datatype 'xsd:%s'\n",typ);
+static void default_error_handler(char *msg) {
+  fprintf(stderr,"msg\n");
 }
 
-void (*xsd_nodt_handler)(char *typ)=&default_nodt_handler;
+void (*xsd_error_handler)(char *msg)=&default_error_handler;
 
 int xsd_allows(char *typ,char *ps,char *s,int n) {
   if(strlen(ps)) {
