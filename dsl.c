@@ -30,7 +30,7 @@ static SCM  toplvl(void) {return scm_ldfile(dsl_scm)?BOOL_F:BOOL_T;}
 void dsl_ld(char *dl) {
   assert(dsl_scm==NULL); dsl_scm=dl;
   init_user_scm=&init_user_scm_dsl;
-  { char *argv[]={dsl_scm,NULL};  /*Init.scm wants args*/
+  { char *argv[]={NULL,NULL}; argv[0]=dsl_scm; /*Init.scm wants args*/
     scm_init_from_argv(sizeof(argv)/sizeof(char*)-1,argv,0,0,0);
   }
   if(BOOL_F==scm_top_level(implpath(),&toplvl)) {
