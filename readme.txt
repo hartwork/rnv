@@ -1,7 +1,7 @@
 
 RNV -- Relax NG Compact Syntax Validator in C
 
-Version 1.0 
+Version 1.1 
 
    Table of Contents
 
@@ -47,11 +47,23 @@ Invocation
 
    The command-line syntax is
 
-     rnv {-q|-v} grammar.rnc {document1.xml}
+        rnv {-q|-s|-v|-h} grammar.rnc {document1.xml}
 
    If no documents are specified, RNV attempts to read the XML document
-   from the standard input. When -q is specified, expected elements and
-   attributes are not listed. -v prints version of the program.
+   from the standard input. The options are:
+
+   -q
+          in error messages, expected elements and attributes are not
+          listed.
+
+   -s
+          rnv uses less memory and runs slower.
+
+   -v
+          rnv version is displayed
+
+   -h or -?
+          RNV displays usage summary and exits.
 
 Limitations
 
@@ -70,8 +82,7 @@ Limitations
        relative paths to work. For example, under Windows, rnv that uses
        ..\schema\docbook.rnc to validate userguide.dbx should be invoked
        as:
-
-     rnv.exe ../schema/docbook.rnc userguide.dbx
+       rnv.exe ../schema/docbook.rnc userguide.dbx
 
 New versions
 
