@@ -5,7 +5,7 @@
 #include <fcntl.h>  /*open,close*/
 #include UNISTD_H   /*open,read,close*/
 #include <stdio.h>  /*fprintf,stderr*/
-#include <string.h> /*strerror,strncpy,strrchr*/
+#include <string.h> /*strerror,strncpy*/
 #include <errno.h>
 #include EXPAT_H
 #include "erbit.h"
@@ -128,7 +128,7 @@ static void error(int erno,...) {
 }
 
 static void flush_text(void) {
-  current=rnv_flush_text(previous=current,text,n_t,mixed);
+  current=rnv_text(previous=current,text,n_t,mixed);
   text[n_t=0]='\0';
 }
 
@@ -136,7 +136,7 @@ static void start_element(void *userData,const char *name,const char **attrs) {
   if(current!=rn_notAllowed) { 
     mixed=1;
     flush_text();
-    current=rnv_start_element(previous=current,(char*)name,(char**)attrs);
+    current=rnv_start_tag(previous=current,(char*)name,(char**)attrs);
     mixed=0;
   } else {
     ++level;
@@ -146,7 +146,7 @@ static void start_element(void *userData,const char *name,const char **attrs) {
 static void end_element(void *userData,const char *name) {
   if(current!=rn_notAllowed) {
     flush_text(); 
-    current=rnv_end_element(previous=current,(char*)name);
+    current=rnv_end_tag(previous=current,(char*)name);
     mixed=1;
   } else {
     if(level==0) current=previous; else --level;
@@ -163,7 +163,7 @@ static void characters(void *userData,const char *s,int len) {
       memcpy(newtext,text,n_t*sizeof(char)); free(text); 
       text=newtext;
     }
-    strncpy(text+n_t,s,len); n_t+=len; text[n_t]='\0'; /* '\0' guarantees that the text is bounded, and strto[ld] work for data */
+    memcpy(text+n_t,s,len); n_t+=len; text[n_t]='\0'; /* '\0' guarantees that the text is bounded, and strto[ld] work for data */
   }
 }
 

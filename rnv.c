@@ -1,10 +1,8 @@
 /* $Id$ */
 
-#include <stdarg.h>
 #include <stdlib.h> /*calloc,free*/
 #include <string.h> /*strerror,strncpy,strrchr*/
 #include <stdio.h>
-#include <errno.h>
 #include "xmlc.h" /*xmlc_white_space*/
 #include "erbit.h"
 #include "rn.h"
@@ -76,7 +74,7 @@ static int whitespace(char *text,int n_t) {
   }
 }
 
-int rnv_flush_text(int current,char *text,int n_t,int mixed) {
+int rnv_text(int current,char *text,int n_t,int mixed) {
   int previous;
   if(mixed) {
     if(!whitespace(text,n_t)) {
@@ -96,7 +94,7 @@ int rnv_flush_text(int current,char *text,int n_t,int mixed) {
   return current;
 }
 
-int rnv_start_element(int current,char *name,char **attrs) {
+int rnv_start_tag(int current,char *name,char **attrs) {
   int previous;
   qname((char*)name);
   current=drv_start_tag_open(previous=current,suri,sname);
@@ -132,7 +130,7 @@ int rnv_start_element(int current,char *name,char **attrs) {
   return current;
 }
 
-int rnv_end_element(int current,char *name) {
+int rnv_end_tag(int current,char *name) {
   int previous;
   current=drv_end_tag(previous=current);
   if(current==rn_notAllowed) {
