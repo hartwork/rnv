@@ -1,7 +1,8 @@
 /* $Id$ */
 
-#include <stdlib.h> /*calloc,free*/
+#include <stdlib.h>
 #include <string.h> /*memcpy*/
+#include "memops.h"
 #include "strops.h"
 #include "rn.h"
 #include "ll.h"
@@ -17,7 +18,7 @@ static int len_exp;
 static int initialized=0;
 void rnx_init(void) {
   if(!initialized) { initialized=1;
-    rnx_exp=(int*)calloc(len_exp=LEN_EXP,sizeof(int));
+    rnx_exp=(int*)memalloc(len_exp=LEN_EXP,sizeof(int));
   }
 }
 
@@ -49,19 +50,15 @@ static void expected(int p,int first) {
       if(rnx_exp[i]==px) {px=0; break;}
     }
     if(px) {
-      if(rnx_n_exp==len_exp) {
-	int *newexp=(int*)calloc(len_exp*=2,sizeof(int));
-	memcpy(newexp,rnx_exp,rnx_n_exp*sizeof(int)); free(rnx_exp);
-	rnx_exp=newexp;
-      }
+      if(rnx_n_exp==len_exp) rnx_exp=(int*)memstretch(rnx_exp,len_exp=2*rnx_n_exp,rnx_n_exp,sizeof(int));
       rnx_exp[rnx_n_exp++]=px;
     }
   }
 }
 void rnx_expected(int p) {
   if(len_exp>LIM_EXP) {
-    free(rnx_exp);
-    rnx_exp=(int*)calloc(len_exp=LIM_EXP,sizeof(int));
+    memfree(rnx_exp);
+    rnx_exp=(int*)memalloc(len_exp=LIM_EXP,sizeof(int));
   }
   rnx_n_exp=0;
   expected(p,1);
@@ -82,28 +79,28 @@ char *rnx_p2str(int p) {
   case P_LIST: s=strclone("list"); break;
   case P_DATA: Data(p,dt,ps);
     s1=rnx_nc2str(dt);
-    s=(char*)calloc(strlen("data ")+1+strlen(s1),sizeof(char));
+    s=(char*)memalloc(strlen("data ")+1+strlen(s1),sizeof(char));
     strcpy(s,"data "); strcat(s,s1);
-    free(s1);
+    memfree(s1);
     break;
   case P_DATA_EXCEPT: s=strclone("dataExcept (-)");  break;
   case P_VALUE: Value(p,dt,val);
     s1=rnx_nc2str(dt);
-    s=(char*)calloc(strlen("value \"\" ")+1+strlen(s1)+strlen(rn_string+val),sizeof(char));
+    s=(char*)memalloc(strlen("value \"\" ")+1+strlen(s1)+strlen(rn_string+val),sizeof(char));
     strcpy(s,"value "); strcat(s,s1); strcat(s," \""); strcat(s,rn_string+val); strcat(s,"\"");
-    free(s1);
+    memfree(s1);
     break;
   case P_ATTRIBUTE: Attribute(p,nc,p1);
     s1=rnx_nc2str(nc);
-    s=(char*)calloc(strlen("attribute ")+1+strlen(s1),sizeof(char));
+    s=(char*)memalloc(strlen("attribute ")+1+strlen(s1),sizeof(char));
     strcpy(s,"attribute "); strcat(s,s1);
-    free(s1);
+    memfree(s1);
     break;
   case P_ELEMENT: Element(p,nc,p1);
     s1=rnx_nc2str(nc);
-    s=(char*)calloc(strlen("element ")+1+strlen(s1),sizeof(char));
+    s=(char*)memalloc(strlen("element ")+1+strlen(s1),sizeof(char));
     strcpy(s,"element "); strcat(s,s1);
-    free(s1);
+    memfree(s1);
     break;
   case P_REF: s=strclone("ref"); break;
   case P_AFTER: s=strclone("after"); break;
@@ -119,32 +116,32 @@ char *rnx_nc2str(int nc) {
   case NC_ERROR: s=strclone("?"); break;
   case NC_NSNAME:
     NsName(nc,uri);
-    s=(char*)calloc(strlen(rn_string+uri)+3,sizeof(char));
+    s=(char*)memalloc(strlen(rn_string+uri)+3,sizeof(char));
     strcpy(s,rn_string+uri); strcat(s,":*");
     break;
   case NC_QNAME:
     QName(nc,uri,name); 
-    s=(char*)calloc(strlen(rn_string+uri)+strlen(rn_string+name)+2,sizeof(char));
+    s=(char*)memalloc(strlen(rn_string+uri)+strlen(rn_string+name)+2,sizeof(char));
     strcpy(s,rn_string+uri); strcat(s,"^"); strcat(s,rn_string+name);
     break;
   case NC_ANY_NAME: s=strclone("*"); break;
   case NC_EXCEPT:
     NameClassExcept(nc,nc1,nc2);
     s1=rnx_nc2str(nc1); s2=rnx_nc2str(nc2);
-    s=(char*)calloc(strlen(s1)+strlen(s2)+2,sizeof(char));
+    s=(char*)memalloc(strlen(s1)+strlen(s2)+2,sizeof(char));
     strcpy(s,s1); strcat(s,"-"); strcat(s,s2);
-    free(s1); free(s2);
+    memfree(s1); memfree(s2);
     break;
   case NC_CHOICE:
     NameClassChoice(nc,nc1,nc2);
     s1=rnx_nc2str(nc1); s2=rnx_nc2str(nc2);
-    s=(char*)calloc(strlen(s1)+strlen(s2)+2,sizeof(char));
+    s=(char*)memalloc(strlen(s1)+strlen(s2)+2,sizeof(char));
     strcpy(s,s1); strcat(s,"|"); strcat(s,s2);
-    free(s1); free(s2);
+    memfree(s1); memfree(s2);
     break;
   case NC_DATATYPE:
     Datatype(nc,uri,name); 
-    s=(char*)calloc(strlen(rn_string+uri)+strlen(rn_string+name)+2,sizeof(char));
+    s=(char*)memalloc(strlen(rn_string+uri)+strlen(rn_string+name)+2,sizeof(char));
     strcpy(s,rn_string+uri); strcat(s,"^"); strcat(s,rn_string+name);
     break;
   default: assert(0);

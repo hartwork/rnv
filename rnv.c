@@ -1,8 +1,9 @@
 /* $Id$ */
 
-#include <stdlib.h> /*calloc,free*/
+#include <stdlib.h>
 #include <string.h> /*strerror,strncpy,strrchr*/
 #include <stdio.h>
+#include "memops.h"
 #include "xmlc.h" /*xmlc_white_space*/
 #include "erbit.h"
 #include "rn.h"
@@ -61,7 +62,7 @@ static void qname(char *name) {
   char *sep; int len;
   if((sep=strrchr(name,':'))) sname=sep+1; else sep=sname=name;
   len=sep-name+1;
-  if(len>len_suri) {len_suri=len; free(suri); suri=(char*)calloc(len_suri,sizeof(char));}
+  if(len>len_suri) {len_suri=len; memfree(suri); suri=(char*)memalloc(len_suri,sizeof(char));}
   strncpy(suri,name,len-1);
   suri[len-1]='\0';
 }

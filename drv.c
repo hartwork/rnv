@@ -1,9 +1,10 @@
 /* $Id$ */
 
 #include <string.h> /*strcmp*/
-#include <stdlib.h> /*calloc,free*/
+#include <stdlib.h> 
 #include <stdio.h>
 #include "xmlc.h" /*xmlc_white_space*/
+#include "memops.h"
 #include "strops.h" /*tokcmpn*/
 #include "ht.h"
 #include "rn.h"
@@ -119,11 +120,7 @@ static void accept_m(void) {
   }
   ht_put(&ht_m,i_m++);
   if(drv_compact&&i_m==LIM_M) i_m=0;
-  if(i_m==len_m) {
-    int (*newmemo)[M_SIZE]=(int (*)[M_SIZE])calloc(len_m*=2,sizeof(int[M_SIZE]));
-    memcpy(newmemo,memo,i_m*sizeof(int[M_SIZE]));
-    free(memo); memo=newmemo;
-  } 
+  if(i_m==len_m) memo=(int(*)[M_SIZE])memstretch(memo,len_m=2*i_m,i_m,sizeof(int[M_SIZE]));
 }
 
 static int fallback_equal(char *typ,char *val,char *s,int n) {return 1;}
@@ -146,8 +143,8 @@ void drv_init(void) {
   if(!initialized) { initialized=1;
     rn_init(); 
     xsd_init(); xsdverror0=xsd_verror_handler; xsd_verror_handler=&verror_handler_xsd;
-    memo=(int (*)[M_SIZE])calloc(len_m=LEN_M,sizeof(int[M_SIZE]));
-    dtl=(struct dtl*)calloc(len_dtl=LEN_DTL,sizeof(struct dtl));
+    memo=(int (*)[M_SIZE])memalloc(len_m=LEN_M,sizeof(int[M_SIZE]));
+    dtl=(struct dtl*)memalloc(len_dtl=LEN_DTL,sizeof(struct dtl));
     ht_init(&ht_m,LEN_M,&hash_m,&equal_m);
     windup();
   }
@@ -166,11 +163,7 @@ void drv_clear(void) {
 }
 
 void drv_add_dtl(char *suri,int (*equal)(char *typ,char *val,char *s,int n),int (*allows)(char *typ,char *ps,char *s,int n)) {
-  if(n_dtl==len_dtl) {
-    struct dtl *newdtl=(struct dtl*)calloc(len_dtl*=2,sizeof(struct dtl)); 
-    memcpy(newdtl,dtl,n_dtl*sizeof(struct dtl)); free(dtl);
-    dtl=newdtl;
-  }
+  if(n_dtl==len_dtl) dtl=(struct dtl *)memstretch(dtl,len_dtl=n_dtl*2,n_dtl,sizeof(struct dtl));
   dtl[n_dtl].uri=newString(suri);
   dtl[n_dtl].equal=equal;
   dtl[n_dtl].allows=allows;

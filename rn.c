@@ -1,8 +1,9 @@
 /* $Id$ */
 
-#include <stdlib.h> /* calloc */
+#include <stdlib.h>
 #include <string.h> /* strcmp,memcmp,strlen,strcpy,strclone,memcpy,memset */
 
+#include "memops.h"
 #include "strops.h"
 #include "ht.h"
 #include "ll.h"
@@ -48,14 +49,10 @@ void setCdata(int i,int x) {if(x) rn_pattern[i]|=P_FLG_TXT;}
 void setContentType(int i,int t1,int t2) {rn_pattern[i]|=(t1>t2?t1:t2);}
 
 static int add_s(char *s) {
-  int len=strlen(s);
-  if(i_s+len>=len_s) {
-    char *newstring=(char*)calloc(len_s=2*(i_s+len),sizeof(char));
-    memcpy(newstring,rn_string,i_s*sizeof(char)); free(rn_string);
-    rn_string=newstring;
-  }
+  int len=strlen(s)+1;
+  if(i_s+len>len_s) rn_string=(char*)memstretch(rn_string,len_s=2*(i_s+len),i_s,sizeof(char));
   strcpy(rn_string+i_s,s);
-  return len+1;
+  return len;
 }
 
 int newString(char *s) {
@@ -80,11 +77,7 @@ static int accept_##n(void) { \
   if((j=ht_get(&ht_##n,i_##n))==-1) { \
     ht_put(&ht_##n,j=i_##n); \
     i_##n+=n##_size[N##_TYP(i_##n)]; \
-    if(i_##n+N##_SIZE>len_##n) { \
-      int *name=(int *)calloc(len_##n=2*(i_##n+N##_SIZE),sizeof(int)); \
-      memcpy(name,rn_##name,i_##n*sizeof(int)); \
-      free(rn_##name); rn_##name=name; \
-    } \
+    if(i_##n+N##_SIZE>len_##n) rn_##name=(int *)memstretch(rn_##name,len_##n=2*(i_##n+N##_SIZE),i_##n,sizeof(int)); \
   } \
   return j; \
 }
@@ -284,9 +277,9 @@ static void windup(void);
 static int initialized=0;
 void rn_init(void) {
   if(!initialized) { initialized=1;
-    rn_pattern=(int *)calloc(len_p=P_AVG_SIZE*LEN_P,sizeof(int));
-    rn_nameclass=(int *)calloc(len_nc=NC_AVG_SIZE*LEN_NC,sizeof(int));
-    rn_string=(char*)calloc(len_s=S_AVG_SIZE*LEN_S,sizeof(char));
+    rn_pattern=(int *)memalloc(len_p=P_AVG_SIZE*LEN_P,sizeof(int));
+    rn_nameclass=(int *)memalloc(len_nc=NC_AVG_SIZE*LEN_NC,sizeof(int));
+    rn_string=(char*)memalloc(len_s=S_AVG_SIZE*LEN_S,sizeof(char));
 
     ht_init(&ht_p,LEN_P,&hash_p,&equal_p);
     ht_init(&ht_nc,LEN_NC,&hash_nc,&equal_nc);
@@ -366,7 +359,7 @@ static int equal_s(int s1,int s2) {return strcmp(rn_string+s1,rn_string+s2)==0;}
 static void mark_p(int start) {
   int p,p1,p2,nc,i;
   int n_f=0;
-  int *flat=(int*)calloc(i_p,sizeof(int));
+  int *flat=(int*)memalloc(i_p,sizeof(int));
 
   flat[n_f++]=start; mark(start);
   i=0; 
@@ -396,14 +389,14 @@ static void mark_p(int start) {
       assert(0);
     }
   } while(i!=n_f);
-  free(flat);
+  memfree(flat);
 }
 
 /* assumes that used patterns are marked */
 static void sweep_p(int *starts,int n_st,int since) {
   int p,p1,p2,nc,q,changed,touched;
   int *xlat;
-  xlat=(int*)calloc(i_p-since,sizeof(int));
+  xlat=(int*)memalloc(i_p-since,sizeof(int));
   changed=0;
   for(p=since;p!=i_p;p+=p_size[P_TYP(p)]) {
     if(!marked(p)) {
@@ -466,7 +459,7 @@ static void sweep_p(int *starts,int n_st,int since) {
     }
   }
   while(n_st--!=0) {if(*starts>=since) *starts=xlat[*starts-since]; ++starts;}
-  free(xlat);
+  memfree(xlat);
 }
 
 static void unmark_p(int since) {
@@ -479,7 +472,7 @@ static void unmark_p(int since) {
 
 static void compress_p(int *starts,int n_st,int since) {
   int p,p1,p2,q,nc,i_q,touched;
-  int *xlat=(int*)calloc(i_p-since,sizeof(int));
+  int *xlat=(int*)memalloc(i_p-since,sizeof(int));
   q=since;
   for(p=since;p!=i_p;p+=p_size[P_TYP(p)]) {
     if(erased(p)) {
@@ -534,11 +527,7 @@ static void compress_p(int *starts,int n_st,int since) {
   if(i_q!=i_p) {
     int len_q=i_q*2;
     i_p=i_q;
-    if(len_p>P_AVG_SIZE*LIM_P&&len_q<len_p) {
-      int *newpattern=(int *)calloc(len_p=len_q>P_AVG_SIZE*LEN_P?len_q:P_AVG_SIZE*LEN_P,sizeof(int));
-      memcpy(newpattern,rn_pattern,i_p*sizeof(int)); free(rn_pattern);
-      rn_pattern=newpattern;
-    }
+    if(len_p>P_AVG_SIZE*LIM_P&&len_q<len_p) rn_pattern=(int*)memstretch(rn_pattern,len_p=len_q>P_AVG_SIZE*LEN_P?len_q:P_AVG_SIZE*LEN_P,i_p,sizeof(int));
   }
 }
 

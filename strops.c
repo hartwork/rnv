@@ -1,8 +1,8 @@
 /* $Id$ */
 
-#include <stdlib.h> /*calloc*/
 #include <string.h> /*strcpy,strlen*/
 #include "xmlc.h"
+#include "memops.h"
 #include "strops.h"
 
 int strcmpn(char *s1,char *s2,int n2) {
@@ -46,7 +46,7 @@ int strhash(char *s) {
 }
 
 char *strclone(char *s) {
-  return strcpy((char*)calloc(strlen(s)+1,sizeof(char)),s);
+  return strcpy((char*)memalloc(strlen(s)+1,sizeof(char)),s);
 }
 
 char *abspath(char *r,char *b) {

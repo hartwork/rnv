@@ -11,8 +11,8 @@ struct hashtable {
 };
 
 extern void ht_init(struct hashtable *ht,int len,int (*hash)(int),int (*equal)(int,int));
-extern void ht_free(struct hashtable *ht);
 extern void ht_clear(struct hashtable *ht);
+extern void ht_dispose(struct hashtable *ht);
 extern int ht_get(struct hashtable *ht,int i);
 extern void ht_put(struct hashtable *ht,int i);
 extern int ht_del(struct hashtable *ht,int i);

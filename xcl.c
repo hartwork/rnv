@@ -1,13 +1,14 @@
 /* $Id$ */
 
 #include <stdarg.h>
-#include <stdlib.h> /*calloc,free*/
+#include <stdlib.h>
 #include <fcntl.h>  /*open,close*/
 #include UNISTD_H   /*open,read,close*/
 #include <stdio.h>  /*fprintf,stderr*/
 #include <string.h> /*strerror,strncpy*/
 #include <errno.h>
 #include EXPAT_H
+#include "memops.h"
 #include "erbit.h"
 #include "rn.h"
 #include "rnc.h"
@@ -65,7 +66,7 @@ static void verror_handler(int erno,va_list ap) {
 	    fprintf(stderr,"expected:\n");
 	    for(i=0;i!=rnx_n_exp;++i) {
 	      fprintf(stderr,"\t%s\n",s=rnx_p2str(rnx_exp[i]));
-	      free(s);
+	      memfree(s);
 	    }
 	  }
 	}
@@ -93,13 +94,13 @@ static void init(void) {
     rnd_init(); rndverror0=rnd_verror_handler; rnd_verror_handler=&verror_handler_rnd;
     rnv_init(); rnvverror0=rnv_verror_handler; rnv_verror_handler=&verror_handler_rnv;
     rnx_init();
-    text=(char*)calloc(len_t=LEN_T,sizeof(char));
+    text=(char*)memalloc(len_t=LEN_T,sizeof(char));
     windup();
   }
 }
 
 static void clear(void) {
-  if(len_t>LIM_T) {free(text); text=(char*)calloc(len_t=LEN_T,sizeof(char));}
+  if(len_t>LIM_T) {memfree(text); text=(char*)memalloc(len_t=LEN_T,sizeof(char));}
   windup();
 }
 
@@ -158,11 +159,7 @@ static void characters(void *userData,const char *s,int len) {
     int newlen_t=n_t+len+1;
     if(newlen_t<=LIM_T&&LIM_T<len_t) newlen_t=LIM_T; 
     else if(newlen_t<len_t) newlen_t=len_t;
-    if(len_t!=newlen_t) {
-      char *newtext=(char*)calloc(len_t=newlen_t,sizeof(char)); 
-      memcpy(newtext,text,n_t*sizeof(char)); free(text); 
-      text=newtext;
-    }
+    if(len_t!=newlen_t) text=(char*)memstretch(text,len_t=newlen_t,n_t,sizeof(char));
     memcpy(text+n_t,s,len); n_t+=len; text[n_t]='\0'; /* '\0' guarantees that the text is bounded, and strto[ld] work for data */
   }
 }

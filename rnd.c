@@ -1,9 +1,10 @@
 /* $Id$ */
 
-#include <stdlib.h> /*calloc,free*/
+#include <stdlib.h>
 #include <string.h> /*memcpy*/
 #include <stdio.h>
 #include <assert.h>
+#include "memops.h"
 #include "rn.h"
 #include "rnx.h"
 #include "ll.h"
@@ -54,25 +55,14 @@ static void error(int er_no,...) {
   ++errors;
 }
 
-static void realloc_f(void) {
-  int *newflat;
-  newflat=(int*)calloc(len_f*=2,sizeof(int));
-  memcpy(newflat,flat,n_f*sizeof(int)); free(flat);
-  flat=newflat;
-}
-
-static void realloc_r(void) {
-  int *newrefs;
-  newrefs=(int*)calloc(len_r*=2,sizeof(int));
-  memcpy(newrefs,refs,n_r*sizeof(int)); free(refs);
-  refs=newrefs;
-}
-
 static int deref(int p) {
   int p0=p,p1;
   P_CHK(p,REF);
   for(;;) {
-    if(!marked(p)) {if(n_r==len_r) realloc_r(); refs[n_r++]=p;}
+    if(!marked(p)) {
+      if(n_r==len_r) refs=(int*)memstretch(refs,len_r=(n_r*2),n_r,sizeof(int));
+      refs[n_r++]=p;
+    }
     mark(p);
     Ref(p,p1);
     if(!P_IS(p1,REF)||p1==p0) break;
@@ -109,7 +99,7 @@ void rnd_deref(int start) {
       if(P_IS(p1,REF)) {p1=deref(p1); changed=1;}
       if(P_IS(p2,REF)) {p2=deref(p2); changed=1;}
       if(changed) {rn_del_p(p); rn_pattern[p+1]=p1; rn_pattern[p+2]=p2; rn_add_p(p);}
-      if(n_f+2>len_f) realloc_f();
+      if(n_f+2>len_f) flat=(int*)memstretch(flat,len_f=2*(n_f+2),n_f,sizeof(int));
       flatten(p1); flatten(p2);
       break;
 
@@ -121,7 +111,7 @@ void rnd_deref(int start) {
       changed=0;
       if(P_IS(p1,REF)) {p1=deref(p1); changed=1;}
       if(changed) {rn_del_p(p); rn_pattern[p+1]=p1; rn_add_p(p);}
-      if(n_f+1>len_f) realloc_f();
+      if(n_f+1>len_f) flat=(int*)memstretch(flat,len_f=2*(n_f+1),n_f,sizeof(int));
       flatten(p1);
       break;
 

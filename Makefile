@@ -40,6 +40,7 @@ ht.c ht.h \
 u.c u.h \
 xmlc.c xmlc.h \
 strops.c strops.h \
+memops.c memops.h \
 rx.c rx.h \
 rx_cls_u.c \
 rx_cls_ranges.c 
@@ -58,6 +59,7 @@ u.o \
 ht.o \
 xmlc.o \
 strops.o \
+memops.o \
 rx.o 
 
 .SUFFIXES: .c .o

@@ -2,7 +2,7 @@
 
 #include <fcntl.h> /* open, close */
 #include UNISTD_H /* open,read,close */
-#include <stdlib.h> /* calloc,malloc,free */
+#include <stdlib.h>
 #include <string.h> /* memcpy,strlen,strcpy,strcat,strclone */
 #include <stdio.h> /*stderr,fprintf*/
 #include <errno.h> /*errno*/
@@ -10,6 +10,7 @@
 
 #include "u.h"
 #include "xmlc.h"
+#include "memops.h"
 #include "strops.h"
 #include "rn.h"
 #include "sc.h"
@@ -135,11 +136,11 @@ struct rnc_source {
 };
 
 struct rnc_source *rnc_alloc(void) {
-  return (struct rnc_source *)malloc(sizeof(struct rnc_source));
+  return (struct rnc_source *)memalloc(1,sizeof(struct rnc_source));
 }
 void rnc_free(struct rnc_source *sp) {
   memset(sp,0xff,sizeof(struct rnc_source));
-  free(sp);
+  memfree(sp);
 }
 
 static int len_p;
@@ -158,7 +159,7 @@ int rnc_stropen(struct rnc_source *sp,char *fn,char *s,int len) {
 int rnc_bind(struct rnc_source *sp,char *fn,int fd) {
   rnc_source_init(sp);
   sp->fn=strclone(fn); sp->fd=fd;
-  sp->buf=(char*)calloc(BUFSIZE,sizeof(char)); sp->flags=SRC_FREE;
+  sp->buf=(char*)memalloc(BUFSIZE,sizeof(char)); sp->flags=SRC_FREE;
   if(!(sp->complete=sp->fd==-1)) rnc_read(sp);
   return sp->fd;
 }
@@ -173,9 +174,9 @@ int rnc_open(struct rnc_source *sp,char *fn) {
 
 int rnc_close(struct rnc_source *sp) {
   int ret=0,i;
-  for(i=0;i!=2;++i) {free(sp->sym[i].s); sp->sym[i].s=NULL;}
+  for(i=0;i!=2;++i) {memfree(sp->sym[i].s); sp->sym[i].s=NULL;}
   if(sp->flags&SRC_FREE) {
-    sp->flags&=~SRC_FREE; free(sp->buf);
+    sp->flags&=~SRC_FREE; memfree(sp->buf);
   } 
   sp->buf=NULL;
   sp->complete=-1;
@@ -183,7 +184,7 @@ int rnc_close(struct rnc_source *sp) {
     sp->flags&=~SRC_CLOSE; 
     if(sp->fd!=-1) {ret=close(sp->fd); sp->fd=-1;}
   }
-  free(sp->fn); sp->fn=NULL;
+  memfree(sp->fn); sp->fn=NULL;
   return ret;
 }
 
@@ -196,7 +197,7 @@ static void rnc_source_init(struct rnc_source *sp) {
   sp->line=1; sp->col=1; sp->prevline=-1;
   sp->u=-1; sp->v=0;  sp->nx=-1;
   sp->cur=0;
-  for(i=0;i!=2;++i) sp->sym[i].s=(char*)calloc(sp->sym[i].slen=BUFSIZE,sizeof(char));
+  for(i=0;i!=2;++i) sp->sym[i].s=(char*)memalloc(sp->sym[i].slen=BUFSIZE,sizeof(char));
 }
 
 static int rnc_read(struct rnc_source *sp) {
@@ -233,7 +234,7 @@ static int initialized=0;
 void rnc_init(void) {
   if(!initialized) { initialized=1;
     rn_init();
-    len_p=LEN_P; path=(char*)calloc(len_p,sizeof(char));
+    len_p=LEN_P; path=(char*)memalloc(len_p,sizeof(char));
     /* initialize scopes */
     sc_init(&nss); sc_init(&dts); sc_init(&defs); sc_init(&refs); sc_init(&prefs);
   }
@@ -360,11 +361,9 @@ static void getv(struct rnc_source *sp) {
 #define name_char(v) (name_start(v)||xmlc_digit(v)||xmlc_combining_char(v)||xmlc_extender(v)||(v)=='.'||(v)=='-'||(v)==':')
 #define skip_comment(sp) while(!newline(sp->v)) getv(sp); getv(sp)
 
-static void realloc_s(struct cym *symp) {
-  char *s; int slen=symp->slen*2;
-  s=(char*)calloc(slen,sizeof(char));
-  memcpy(s,symp->s,symp->slen*sizeof(char)); free(symp->s);
-  symp->s=s; symp->slen=slen;
+static void realloc_s(struct cym *symp,int newslen) {
+  symp->s=(char*)memstretch(symp->s,newslen,symp->slen,sizeof(char));
+  symp->slen=newslen;
 }
 
 static char *sym2str(int sym) {
@@ -433,7 +432,7 @@ static void advance(struct rnc_source *sp) {
 	  do getv(sp); while(sp->v=='#');
 	  if(whitespace(sp->v)) getv(sp);
 	  for(;;) {
-	    if(i+U_MAXLEN>NXT(sp).slen) realloc_s(&NXT(sp));
+	    if(i+U_MAXLEN>NXT(sp).slen) realloc_s(&NXT(sp),2*(i+U_MAXLEN));
 	    if(newline(sp->v)) {
 	      do getv(sp); while(whitespace(sp->v));
 	      if(sp->v=='#') {getv(sp);
@@ -494,7 +493,7 @@ static void advance(struct rnc_source *sp) {
 	    } else NXT(sp).s[i++]='\n';
 	  } else i+=u_put(NXT(sp).s+i,sp->v);
 	  getv(sp);
-	  if(i+U_MAXLEN>NXT(sp).slen) realloc_s(&NXT(sp));
+	  if(i+U_MAXLEN>NXT(sp).slen) realloc_s(&NXT(sp),2*(i+U_MAXLEN));
 	}
 	getv(sp); NXT(sp).sym=SYM_LITERAL; return;
       }
@@ -505,7 +504,7 @@ static void advance(struct rnc_source *sp) {
 	  int i=0;
 	  for(;;) {
 	    i+=u_put(NXT(sp).s+i,sp->v);
-	    if(i+U_MAXLEN>NXT(sp).slen) realloc_s(&NXT(sp));
+	    if(i+U_MAXLEN>NXT(sp).slen) realloc_s(&NXT(sp),2*(i+U_MAXLEN));
 	    getv(sp);
 	    if(!name_char(sp->v)) {NXT(sp).s[i]='\0'; break;}
 	    if(sp->v==':') prefixed=1;
@@ -590,15 +589,10 @@ static void getsym(struct rnc_source *sp) {
 	  error(0,sp,RNC_ER_SEXP,sp->fn,NXT(sp).line,NXT(sp).col,sym2str(SYM_LITERAL),sym2str(CUR(sp).sym));
 	  break;
 	}
-	{ int newslen=strlen(CUR(sp).s)+strlen(NXT(sp).s);
-	  char *s;
-	  if(newslen>CUR(sp).slen) {
-	    s=(char*)calloc(newslen+1,sizeof(char));
-	    strcpy(s,CUR(sp).s); free(CUR(sp).s);
-	    CUR(sp).s=s;
-	  } else s=CUR(sp).s;
-	  strcat(s,NXT(sp).s);
+	{ int newslen=strlen(CUR(sp).s)+strlen(NXT(sp).s)+1;
+	  if(newslen>CUR(sp).slen) realloc_s(&CUR(sp),newslen);
 	}
+	strcat(CUR(sp).s,NXT(sp).s);
 	sp->cur=!sp->cur; advance(sp);
 	continue;
       }
@@ -698,7 +692,7 @@ static void fold_efs(struct rnc_source *sp,struct sc_stack *stp,void (*fold)(str
     memcpy(tab,stp->tab+stp->base+1,len*sizeof(int[SC_RECSIZE]));
     sc_close(stp);
     for(i=0;i!=len;++i) fold(sp,stp,tab[i][0],tab[i][1],tab[i][2]);
-    free(tab);
+    memfree(tab);
   } else sc_close(stp);
 }
 
@@ -920,7 +914,7 @@ static int relpath(struct rnc_source *sp) {
   int ret;
   if((ret=chksym(sp,SYM_LITERAL))) {
     int len=strlen(sp->fn)+strlen(CUR(sp).s)+1;
-    if(len>len_p) {free(path); path=(char*)calloc(len_p=len,sizeof(char));}
+    if(len>len_p) {memfree(path); path=(char*)memalloc(len_p=len,sizeof(char));}
     strcpy(path,CUR(sp).s); abspath(path,sp->fn);
   }
   getsym(sp);

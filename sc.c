@@ -1,8 +1,9 @@
 /* $Id$ */
 
-#include <stdlib.h> /*calloc,free*/
+#include <stdlib.h>
 #include <string.h> /*memcpy*/
 #include <assert.h> /*assert*/
+#include "memops.h"
 #include "ll.h"
 #include "sc.h"
 
@@ -17,7 +18,7 @@ static void windup(struct sc_stack *stp) {
 }
 
 void sc_init(struct sc_stack *stp) {
-  stp->tab=(int(*)[SC_RECSIZE])calloc(stp->len=LEN,sizeof(int[SC_RECSIZE]));
+  stp->tab=(int(*)[SC_RECSIZE])memalloc(stp->len=LEN,sizeof(int[SC_RECSIZE]));
   windup(stp);
 }
 
@@ -25,14 +26,9 @@ void sc_clear(struct sc_stack *stp) {
   windup(stp);
 }
 
-static void realloc_sc(struct sc_stack *stp) {
-  int (*tab)[SC_RECSIZE]=(int(*)[SC_RECSIZE])calloc(stp->len*=2,sizeof(int[SC_RECSIZE]));
-  memcpy(tab,stp->tab,stp->top*sizeof(int[SC_RECSIZE])); free(stp->tab);
-  stp->tab=tab;
-}
-
 void sc_open(struct sc_stack *stp) {
-  stp->tab[stp->base=stp->top++][1]=BASE; if(stp->top==stp->len) realloc_sc(stp);
+  stp->tab[stp->base=stp->top++][1]=BASE; 
+  if(stp->top==stp->len) stp->tab=(int(*)[SC_RECSIZE])memstretch(stp->tab,stp->len*=stp->top*2,stp->top,sizeof(int[SC_RECSIZE]));
 }
 
 int sc_void(struct sc_stack *stp) {
@@ -61,6 +57,6 @@ int sc_add(struct sc_stack *stp,int key,int val,int aux) {
   int i=stp->top;
   assert(!sc_locked(stp));
   stp->tab[i][0]=key; stp->tab[i][1]=val; stp->tab[i][2]=aux;
-  if(++stp->top==stp->len) realloc_sc(stp);
+  if(++stp->top==stp->len) stp->tab=(int(*)[SC_RECSIZE])memstretch(stp->tab,stp->len*=stp->top*2,stp->top,sizeof(int[SC_RECSIZE]));
   return i;
 }
