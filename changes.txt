@@ -1,5 +1,8 @@
 /* $Id$ */
 
+1.4.2 Fri Jan 23 21:51:34 AMT 2004
+dvd: newRef+1 is initialized to 0 (bugfix, integrity check in ht)
+
 1.4.1 Tue Jan 13 14:29:08 AMT 2004
 dvd: added sys/types.h where appropriate; fixed Makefile.bcc
      to include rnl.{c,h,obj}
