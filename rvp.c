@@ -30,4 +30,8 @@
     -q?er:error    
 */
 
+
+
+int main(int argc,char **argv) {
+}
  
