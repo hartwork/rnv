@@ -227,15 +227,16 @@ static int chclass(void) {
       ri=rj+1;
       return cl;
     }
+    ++rj;
   }
 }
 
-#define CLS_NL NUM_CLS_U+1
-#define CLS_S NUM_CLS_U+2
-#define CLS_I NUM_CLS_U+3
-#define CLS_C NUM_CLS_U+4
-#define CLS_W NUM_CLS_U+5
-#define NUM_CLS NUM_CLS_U+6
+#define CLS_NL (NUM_CLS_U+1)
+#define CLS_S (NUM_CLS_U+2)
+#define CLS_I (NUM_CLS_U+3)
+#define CLS_C (NUM_CLS_U+4)
+#define CLS_W (NUM_CLS_U+5)
+#define NUM_CLS (NUM_CLS_U+6)
 
 static void getsym(void) {
   int u;
@@ -244,9 +245,9 @@ static void getsym(void) {
     if(u=='\\') {
       ri+=u_get(&u,regex+ri);
       switch(u) {
-      case '\0': --ri; error(); sym=SYM_END;
-      case 'p': sym=SYM_CLS; val=u==chclass(); break;
-      case 'P': sym=SYM_CLS; val=u==-chclass(); break;
+      case '\0': --ri; error(); sym=SYM_END; break;
+      case 'p': sym=SYM_CLS; val=chclass(); break;
+      case 'P': sym=SYM_CLS; val=-chclass(); break;
       case 's': sym=SYM_CLS; val=CLS_S; break;
       case 'S': sym=SYM_CLS; val=-CLS_S; break;
       case 'i': sym=SYM_CLS; val=CLS_I; break;

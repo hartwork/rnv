@@ -11,4 +11,6 @@ extern int xmlc_combining_char(int u);
 extern int xmlc_digit(int u);
 extern int xmlc_extender(int u);
 
+extern int u_in_ranges(int u,int r[][2],int len);
+
 #endif

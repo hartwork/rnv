@@ -1,5 +1,6 @@
 /* $Id$ */
 
+#include "u.h"
 #include "xmlc.h"
 
 /* sorted range arrays */
@@ -11,7 +12,7 @@ int EXTENDER[][2]={{0xb7,0xb7},{0x2d0,0x2d1},{0x387,0x387},{0x640,0x640},{0xe46,
 
 static int inRange(int u,int r[][2],int len);
 
-#define isa(u,CHAR_CLASS) inRange(u,CHAR_CLASS,sizeof(CHAR_CLASS)/sizeof(int([2])))
+#define isa(u,CHAR_CLASS) u_in_ranges(u,CHAR_CLASS,sizeof(CHAR_CLASS)/sizeof(int([2])))
 
 int xmlc_white_space(int u) {return u=='\t'||u=='\n'||u=='\r'||u==' ';}
 int xmlc_base_char(int u) {return isa(u,BASE_CHAR);}
@@ -19,14 +20,3 @@ int xmlc_ideographic(int u) {return isa(u,IDEOGRAPHIC);}
 int xmlc_combining_char(int u) {return isa(u,COMBINING_CHAR);}
 int xmlc_digit(int u) {return isa(u,DIGIT);}
 int xmlc_extender(int u) {return isa(u,EXTENDER);}
-
-static int inRange(int u,int r[][2],int len) {
-  int n=0,m=len-1,i;
-  for(;;) {
-    if(n>m) return 0;
-    i=(n+m)/2;
-    if(u<r[i][0]) m=i-1; 
-    else if(u>r[i][1]) n=i+1;
-    else return 1;
-  }
-}

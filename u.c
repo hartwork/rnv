@@ -63,3 +63,13 @@ int u_strlen(char *s) {
   return n;
 }
 
+int u_in_ranges(int u,int r[][2],int len) {
+  int n=0,m=len-1,i;
+  for(;;) {
+    if(n>m) return 0;
+    i=(n+m)/2;
+    if(u<r[i][0]) m=i-1; 
+    else if(u>r[i][1]) n=i+1;
+    else return 1;
+  }
+}
