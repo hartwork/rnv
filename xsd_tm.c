@@ -58,8 +58,9 @@ void xsd_mktmn(struct xsd_tm *tmp,char *fmt,char *s,int n) {
       case 'z': ++fmt; ++s; zh=strtol(s,&s,10); ++s; zm=strtol(s,&s,10); continue;
       }
       break;
-    case '+': assert(*(fmt++)=='z'); zh=-strtol(s,&s,10); ++s; zm=-strtol(s,&s,10); continue;
-    case 'Z': assert(*(fmt++)=='z'); zh=0; zm=0; ++s; continue;
+    case '+': assert(*fmt=='z'); ++fmt; 
+          zh=-strtol(s,&s,10); ++s; zm=-strtol(s,&s,10); continue;
+    case 'Z': assert(*fmt=='z'); ++fmt; zh=0; zm=0; ++s; continue;
     case '0': case '1': case '2': case '3': case '4':
     case '5': case '6': case '7': case '8': case '9':
       switch(*(fmt++)) {
