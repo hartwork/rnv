@@ -5,25 +5,27 @@
 
 #include "strops.h"
 #include "ht.h"
+#include "ll.h"
 #include "rn.h"
 
-#define LEN_P 1024
-#define LIM_P 4096
-#define PRIME_P 0x3fd
-#define LEN_NC 256
-#define PRIME_NC 0xfb
-#define LEN_S 16384
-#define LEN_PS 1024
+#define LEN_P RN_LEN_P
+#define PRIME_P RN_PRIME_P
+#define LIM_P RN_LIM_P
+#define LEN_NC RN_LEN_NC
+#define PRIME_NC RN_PRIME_NC
+#define LEN_S RN_LEN_S
+#define S_LEN 16 /* LEN_S/S_LEN -> ht->tablen */
 
 int (*rn_pattern)[P_SIZE];
 int (*rn_nameclass)[NC_SIZE];
-char *rn_string,*rn_params;
+char *rn_string;
 int rn_empty,rn_text,rn_notAllowed,rn_dt_string,rn_dt_token,rn_xsd_uri;
 
 static struct hashtable ht_p, ht_nc, ht_s;
 
-static int i_p,i_nc,i_s,BASE_P,base_p,i_ref,i_ps;
-static int len_p,len_nc,len_s,len_ps;
+static int i_p,i_nc,i_s,BASE_P,base_p,i_ref;
+static int len_p,len_nc,len_s;
+static int adding_ps;
 
 void rn_new_schema(void) {base_p=i_p; i_ref=0;}
 
@@ -34,16 +36,24 @@ void setNullable(int i,int x) {if(x) rn_pattern[i][0]|=P_FLG_NUL;}
 void setCdata(int i,int x) {if(x) rn_pattern[i][0]|=P_FLG_TXT;}
 void setContentType(int i,int t1,int t2) {rn_pattern[i][0]|=(t1>t2?t1:t2);}
 
-int newString(char *s) {
-  int len=strlen(s)+1, j;
-  if(i_s+len>len_s) {
-    char *string=(char*)calloc(len_s=(i_s+len)*2,sizeof(char));
-    memcpy(string,rn_string,i_s*sizeof(char)); free(rn_string); rn_string=string;
+static int add_s(char *s) {
+  int len=strlen(s);
+  if(i_s+len>=len_s) {
+    char *newstring=(char*)calloc(len_s=2*(i_s+len),sizeof(char));
+    memcpy(newstring,rn_string,i_s*sizeof(char)); free(rn_string);
+    rn_string=newstring;
   }
   strcpy(rn_string+i_s,s);
+  return len+1;
+}
+
+int newString(char *s) {
+  int d_s,j;
+  assert(!adding_ps);
+  d_s=add_s(s);
   if((j=ht_get(&ht_s,i_s))==-1) {
     ht_put(&ht_s,j=i_s);
-    i_s+=len;
+    i_s+=d_s;
   }
   return j;
 }
@@ -328,20 +338,10 @@ char *nc2str(int nc) {
   return s;
 }
 
-int rn_i_ps(void) {return i_ps;}
-static void add_ps(char *s) {
-  int len=strlen(s)+1;
-  if(i_ps+len>len_ps) {
-    char *newparams=(char*)calloc(len_ps*=2,sizeof(char));
-    memcpy(newparams,rn_params,i_ps*sizeof(char)); free(rn_params);
-    rn_params=newparams;
-  }
-  memcpy(rn_params+i_ps,s,(len+1)*sizeof(char));
-  i_ps+=len;
-}
-void rn_add_pskey(char *s) {add_ps(s);}
-void rn_add_psval(char *s) {add_ps(s);}
-void rn_end_ps(void) {add_ps("");}
+int rn_i_ps(void) {adding_ps=1; return i_s;}
+void rn_add_pskey(char *s) {i_s+=add_s(s);}
+void rn_add_psval(char *s) {i_s+=add_s(s);}
+void rn_end_ps(void) {i_s+=add_s(""); adding_ps=0;}
 
 static int hash_p(int i);
 static int hash_nc(int i);
@@ -359,11 +359,10 @@ void rn_init(void) {
     rn_pattern=(int (*)[P_SIZE])calloc(len_p=LEN_P,sizeof(int[P_SIZE]));
     rn_nameclass=(int (*)[NC_SIZE])calloc(len_nc=LEN_NC,sizeof(int[NC_SIZE]));
     rn_string=(char*)calloc(len_s=LEN_S,sizeof(char));
-    rn_params=(char*)calloc(len_ps=LEN_PS,sizeof(char));
 
     ht_init(&ht_p,len_p,&hash_p,&equal_p);
     ht_init(&ht_nc,len_nc,&hash_nc,&equal_nc);
-    ht_init(&ht_s,len_s,&hash_s,&equal_s);
+    ht_init(&ht_s,len_s/S_LEN,&hash_s,&equal_s);
 
     windup();
   }
@@ -375,7 +374,8 @@ void rn_clear(void) {
 }
 
 static void windup(void) {
-  i_p=i_nc=i_s=i_ps=0;
+  i_p=i_nc=i_s=0;
+  adding_ps=0;
   memset(rn_pattern[0],0,sizeof(int[P_SIZE]));
   memset(rn_nameclass[0],0,sizeof(int[NC_SIZE]));
   rn_pattern[0][0]=P_ERROR;  accept_p(); 
@@ -384,7 +384,6 @@ static void windup(void) {
   rn_empty=newEmpty(); rn_notAllowed=newNotAllowed(); rn_text=newText(); BASE_P=i_p;
   rn_dt_string=newDatatype(0,newString("string")); rn_dt_token=newDatatype(0,newString("token"));
   rn_xsd_uri=newString("http://www.w3.org/2001/XMLSchema-datatypes");
-  rn_end_ps();
 }
 
 static int hash_p(int p) {
@@ -576,9 +575,10 @@ static void compress_p(int *starts,int n_st,int since) {
   }
   while(n_st--!=0) {if(*starts>=since) *starts=xlat[*starts-since]; ++starts;}
   if(i_q!=i_p) {
+    int len_q=i_q*2;
     i_p=i_q;
-    if(i_p<LIM_P && len_p>LIM_P) {
-      int (*newpattern)[P_SIZE]=(int(*)[P_SIZE])calloc(len_p=LIM_P,sizeof(int[P_SIZE]));
+    if(len_p>LIM_P&&len_q<len_p) {
+      int (*newpattern)[P_SIZE]=(int(*)[P_SIZE])calloc(len_p=len_q>LEN_P?len_q:LEN_P,sizeof(int[P_SIZE]));
       memcpy(newpattern,rn_pattern,i_p*sizeof(int[P_SIZE])); free(rn_pattern);
       rn_pattern=newpattern;
     }

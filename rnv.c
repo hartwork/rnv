@@ -13,9 +13,10 @@
 #include "rnd.h"
 #include "rnx.h"
 #include "drv.h"
+#include "ll.h"
 
-#define LEN_T 1024
-#define LIM_T 65536
+#define LEN_T RNV_LEN_T
+#define LIM_T RNV_LIM_T
 
 #define ELEMENT_NOT_ALLOWED "element '%s^%s' not allowed"
 #define ATTRIBUTE_NOT_ALLOWED "attribute '%s^%s' not allowed"

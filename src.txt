@@ -2,6 +2,7 @@
 
 # source files
 
+ll.h -- lengths of arrays
 rnv.c -- command-line validator
 rn.c rn.h -- RNG patterns
 rnc.c rnc.h -- RNC parser 
@@ -22,10 +23,17 @@ rx.c rx.h -- regular expressions engine
 ... er,ht,strops,xmlc,uc -- used in many places
 
 rnv
+. ll
 . rn
+.. ll
 . rnc
 .. sc
+... ll
 . rnd
 . rnx
+.. ll
 . drv
+.. ll
 .. xsd
+... rx
+.... ll

@@ -3,9 +3,11 @@
 #include <stdlib.h> /*calloc,free*/
 #include <string.h> /*memcpy*/
 #include "rn.h"
+#include "ll.h"
 #include "rnx.h"
 
-#define LEN_EXP 16
+#define LEN_EXP RNX_LEN_EXP
+#define LIM_EXP RNX_LIM_EXP
 
 int *rnx_exp=NULL;
 int rnx_n_exp;
@@ -56,6 +58,10 @@ static void expected(int p) {
   }
 }
 void rnx_expected(int p) {
+  if(len_exp>LIM_EXP) {
+    free(rnx_exp);
+    rnx_exp=(int*)calloc(len_exp=LIM_EXP,sizeof(int));
+  }
   rnx_n_exp=0;
   expected(p);
 }

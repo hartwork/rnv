@@ -3,12 +3,13 @@
 #include <stdlib.h> /*calloc,free*/
 #include <string.h> /*memcpy*/
 #include <assert.h> /*assert*/
+#include "ll.h"
 #include "sc.h"
 
 #define BASE -1
 #define LOCK -2
 
-#define LEN 64
+#define LEN SC_LEN
 
 static void windup(struct sc_stack *stp) {
   stp->top=0;

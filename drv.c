@@ -8,6 +8,7 @@
 #include "rn.h"
 #include "er.h"
 #include "xsd.h"
+#include "ll.h"
 #include "drv.h"
 
 struct dtl {
@@ -17,10 +18,11 @@ struct dtl {
 };
 
 #define LEN_DTL 4
+#define LEN_M DRV_LEN_M
+#define PRIME_M DRV_PRIME_M
+#define LIM_M DRV_LIM_M
+
 #define M_SIZE 5
-#define LEN_M 4096
-#define LIM_M 32768
-#define PRIME_M 0xffd
 
 #define M_STO 0
 #define M_STC 1
@@ -362,7 +364,7 @@ static int text(int p,char *s,int n) { /* matches text, including whitespace */
     ret=nullable(list(p1,s,n))?rn_empty:rn_notAllowed;
     break;
   case P_DATA: Data(p,dt,ps); Datatype(dt,lib,typ);
-    ret=getdtl(lib)->allows(rn_string+typ,rn_params+ps,s,n)?rn_empty:rn_notAllowed;
+    ret=getdtl(lib)->allows(rn_string+typ,rn_string+ps,s,n)?rn_empty:rn_notAllowed;
     break;
   case P_DATA_EXCEPT: DataExcept(p,p1,p2);
     ret=text(p1,s,n)==rn_empty&&!nullable(text(p2,s,n))?rn_empty:rn_notAllowed;

@@ -1,4 +1,9 @@
 /* $Id$ */
+1.2.0 
+
+Fri Dec 19 22:19:05 AMT 2003
+dvd: rn_params joined with rn_string
+
 1.1.0 Fri Dec 19 03:56:46 AMT 2003
 dvd: drv_attribute_open|drv_attribute_close and memoization implemented; 
      hash values are multiplied by large primes - helps with current hashing

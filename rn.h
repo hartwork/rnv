@@ -101,7 +101,6 @@ extern char *rn_string;
 
 extern int (*rn_pattern)[P_SIZE];
 extern int (*rn_nameclass)[NC_SIZE];
-extern char *rn_params;
 
 extern void rn_new_schema(void);
 

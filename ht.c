@@ -4,12 +4,13 @@
 #include <assert.h> /*assert*/
 #include "ht.h"
 
-#define LOAD_FACTOR 0.5
+#define LOAD_FACTOR 2
 
 void ht_init(struct hashtable *ht,int len,int (*hash)(int),int (*equal)(int,int)) {
-  ht->tablen=1; len=(int)((len+1)/LOAD_FACTOR);
+  assert(len>0);
+  ht->tablen=1; len*=LOAD_FACTOR;
   while(ht->tablen<len) ht->tablen<<=1;
-  ht->limit=(int)(ht->tablen*LOAD_FACTOR);
+  ht->limit=ht->tablen/LOAD_FACTOR;
   ht->table=(int*)calloc(ht->tablen<<1,sizeof(int)); /* the second half is hash values */
   ht->hash=hash; ht->equal=equal;
   ht_clear(ht);
