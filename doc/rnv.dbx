@@ -112,7 +112,7 @@ The command-line syntax is
 If no documents are specified, <application>RNV</application> attempts to read the XML document from the standard input. The options are:
 </para>
 <variablelist>
-<varlistentry>
+<?dbfo term-width="24pt"?><varlistentry>
 <term>
 <option>-q</option>
 </term>
@@ -146,7 +146,7 @@ prints version number;
 </varlistentry>
 <varlistentry>
 <term>
-<option>-h or -?</option>
+<option>-h</option>
 </term>
 <listitem><para>
 displays usage summary and exits.
@@ -220,7 +220,7 @@ ARX
 <para><application>ARX</application> either prints a string corresponding to the document's type or nothing if the type cannot be determined. The options are:
 </para>
 <variablelist>
-<varlistentry>
+<?dbfo term-width="24pt"?><varlistentry>
 <term>
 <option>-n</option>
 </term>
@@ -238,7 +238,7 @@ prints current version;
 </varlistentry>
 <varlistentry>
 <term>
-<option>-h or -?</option>
+<option>-h</option>
 </term>
 <listitem><para>
 displays usage summary and exits.
@@ -366,6 +366,7 @@ number 0); if the number is omitted, 0 is assumed.
 <para>The options are:
 </para>
 <variablelist>
+<?dbfo term-width="24pt"?>
 <varlistentry>
 <term>
 <option>-q</option>
@@ -388,7 +389,7 @@ prints current version;
 </varlistentry>
 <varlistentry>
 <term>
-<option>-h or -?</option>
+<option>-h</option>
 </term>
 <listitem><para>
 displays usage summary and exits.
@@ -413,8 +414,8 @@ following commands validate <filename>rnv.dbx</filename> against
 <para>The scripts are  kept simple and unobscured to illustrate the
 technique, rather than being designed as general-purpose modules.
 Programmers using Perl, Python, Ruby and other languages are
-encouraged to implement and share general-purpose modules for their
-languages of choice.
+encouraged to implement and share reusable RVP-based components for
+their languages of choice.
 </para>
 </section>
 </section>

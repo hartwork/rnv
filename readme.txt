@@ -1,19 +1,19 @@
 
 RNV -- Relax NG Compact Syntax Validator in C
 
-Version 1.3 
+Version 1.4 
 
    Table of Contents
 
+   New since 1.3 
    News since 1.2 
-   News since 1.1 
    Package Contents 
    Installation 
    Invocation 
    Limitations 
-   ARX 
    Applications
 
+        ARX 
         RVP 
 
    New versions 
@@ -30,6 +30,17 @@ Version 1.3
    and shortcomings; however, it validates documents against a number of
    grammars. I use it.
 
+New since 1.3
+
+   To facilitate the embedding of RNV into heterogeneous environments, I
+   have developed RVP, a pipe that expects validation primitives on
+   one end and emits validation diagnostics from the other. Embedding
+   examples in Perl and Python are provided; I believe that, on the day
+   of writing it, these are the fastest and most conformant (if not the
+   only) Relax NG validation solutions for these languages. Several
+   changes have been made to the core modules, mostly to provide better
+   separation of layers.
+
 News since 1.2
 
    This release has many performance and convenience enhancements.
@@ -40,14 +51,6 @@ News since 1.2
    details are below. A simple plug-in for vim, http://www.vim.org/,
    is provided to use RNV with the editor. The script uses ARX to
    automatically choose the grammar for a document.
-
-News since 1.1
-
-   I have implemented XML Schema datatypes checking. The support is not
-   complete (details are in the list of limitations). On the bright side,
-   the utility now includes a complete and sufficiently fast
-   implementation of Unicode regular expressions (with ugly XML Schema
-   syntax, but still useful).
 
 Package Contents
 
@@ -67,8 +70,6 @@ Note
      * Makefile for unix-like systems;
      * Makefile.bcc for Win32 and Borland C/C++ Compiler;
      * tools/xck, a simple shell script I am using to validate documents;
-     * tools/rnv.vim, a plug-in for Vim;
-     * tools/arx.conf, ARX configuration file;
      * tools/*.rnc, sample Relax NG grammars;
      * the log of changes, changes.txt;
      * this file, readme.txt.
@@ -105,7 +106,7 @@ Invocation
    -v
           prints version number;
 
-   -h or -?
+   -h
           displays usage summary and exits.
 
 Limitations
@@ -126,6 +127,11 @@ Limitations
        as
 
       rnv.exe ../schema/docbook.rnc userguide.dbx
+
+Applications
+
+   The distribution includes several utilities built upon RNV; they are
+   listed and described in the following sections.
 
 ARX
 
@@ -154,7 +160,7 @@ ARX
    -v
           prints current version;
 
-   -h or -?
+   -h
           displays usage summary and exits.
 
    The configuration file must confrom to the following grammar:
@@ -203,11 +209,6 @@ ARX
    ARX can also be used to link documents to any type of information or
    processing.
 
-Applications
-
-   The distribution includes several utilities built upon RNV; they are
-   listed and described in the section.
-
 RVP
 
    RVP is abbreviation for Relax NG Validation Pipe. It reads validation
@@ -217,19 +218,23 @@ RVP
    RVP as a parallel process and use a simple protocol to perform
    validation. The protocol, in BNF, is:
 
-     query ::= (start | start-tag-open | attribute | start-tag-close | text | e
-nd-tag) z.
+     query ::= (start
+       | start-tag-open
+       | attribute
+       | start-tag-close
+       | text
+       | end-tag) z.
      start ::= "start" [gramno].
      start-tag-open ::= "start-tag-open" patno name.
      attribute ::= "attribute" patno name value.
      start-tag-close :: = "start-tag-close" patno name.
      text ::= ("text"|"mixed") patno text.
      end-tag ::= "end-tag" patno name.
-    response ::= (ok | er | error) z.
+     response ::= (ok | er | error) z.
      ok ::= "ok" patno.
      er ::= "er" patno erno.
      error ::= "error" patno erno error.
-    z ::= "\0" .
+     z ::= "\0" .
 
      * RVP assumes that the last colon in a name separates the local part
        from the namespace URI (it is what one gets if specifies ':' as
@@ -240,8 +245,9 @@ nd-tag) z.
      * Either "er" or "error" responses are returned, not both; -q
        chooses between concise and verbose forms (invocation syntax
        described later).
-     * start passes the index of grammar (first grammar in the list is
-       number 0); if the number is omitted, 0 is assumed.
+     * start passes the index of a grammar (first grammar in the list of
+       command-line arguments has number 0); if the number is omitted, 0
+       is assumed.
 
    The command-line syntax is:
 
@@ -258,19 +264,24 @@ nd-tag) z.
    -v
           prints current version;
 
-   -h or -?
+   -h
           displays usage summary and exits.
 
-   To assist embedding RVP, a sample in perl is provided, tools/rvp.pl.
-   The script uses XML::Parser::Expat; it takes a Relax NG grammar (in
-   the compact syntax) as the command line argument and reads the XML
-   from the standard input. The script is not designed as a
-   general-purpose module, instead, it is kept simple and unobscured to
-   illustrate the technique.
+   To assist embedding RVP, samples in Perl (tools/rvp.pl) and Python
+   (tools/rvp.py) are provided. The scripts use Expat wrappers for each
+   of the languages to parse documents; they take a Relax NG grammar (in
+   the compact syntax) as the command line argument and read the XML from
+   the standard input. For example, the following commands validate
+   rnv.dbx against docbook.rnc:
 
-   Perl (as well as Python, Ruby and other) programmers are encouraged to
-   implement and share general-purpose modules for their languages of
-   choice.
+      perl rvp.pl docbook.rnc < rnv.dbx
+      python rvp.py docbook.rnc < rnv.dbx
+
+   The scripts are kept simple and unobscured to illustrate the
+   technique, rather than being designed as general-purpose modules.
+   Programmers using Perl, Python, Ruby and other languages are
+   encouraged to implement and share reusable RVP-based components for
+   their languages of choice.
 
 New versions
 
