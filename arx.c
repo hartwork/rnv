@@ -17,7 +17,7 @@ valid = "valid" "{" rng "}" "=>" type
 invalid = "!valid" "{" rng "}" "=>" type
 
 comments start with # and continue till the end of line
-delimiters in regexp and literal must be quoted by \ inside strings
+delimiters of regexp and literal must be quoted by \ inside the tokens
 
 */
 
@@ -31,6 +31,7 @@ delimiters in regexp and literal must be quoted by \ inside strings
 #include EXPAT_H
 #include "memops.h"
 #include "strops.h"
+#include "xmlc.h"
 #include "ht.h"
 #include "erbit.h"
 #include "rn.h"
@@ -62,7 +63,7 @@ static char *string; static struct hashtable ht_s;
 
 /* arx parser */
 static char *arxfn;
-static int arxfd, i_b,len_b, cc, line,col,prevline, sym,len_v, errors;
+static int arxfd, i_b,len_b, cc, line,col,prevline,rnc, sym,len_v, errors;
 static char buf[BUFSIZ];
 static char *value;
 
@@ -70,7 +71,7 @@ static char *value;
 static XML_Parser expat=NULL;
 static int current,previous;
 static int mixed=0;
-static int ok,valid;
+static int ok,wf;
 static char *text; static int len_t;
 static int n_t;
 
@@ -134,6 +135,7 @@ static void windup(void) {
 #define SYM_LCUR 10
 #define SYM_RCUR 11
 #define SYM_ASGN 12
+#define SYM_INVL 13
 
 static char *sym2str(int sym) {
   switch(sym) {
@@ -150,6 +152,7 @@ static char *sym2str(int sym) {
   case SYM_LCUR: return "'{'";
   case SYM_RCUR: return "'}'";
   case SYM_ASGN: return "'='";
+  case SYM_INVL: return "invalid character"; 
   default: assert(0);
   }
   return NULL;
@@ -196,14 +199,18 @@ static void getcc(void) {
   }
 }
 
-static void getid(void) {
-  int i=0;
-  while(cc>' '&&!strchr("#=!\"{",cc)) {
-    value[i++]=cc;
-    if(i==len_v) value=(char*)memstretch(value,len_v=2*i,i,sizeof(char));
-    getcc();
-  }
-  value[i]='\0';
+static int nmtoken(int cc) {return xmlc_base_char(cc)||xmlc_ideographic(cc)||(cc)=='_'||xmlc_digit(cc)||xmlc_combining_char(cc)||xmlc_extender(cc)||(cc)=='.'||(cc)=='-'||(cc)==':';}
+static int getid(void) {
+  if(nmtoken(cc)) {
+    int i=0;
+    do {
+      value[i++]=cc;
+      if(i==len_v) value=(char*)memstretch(value,len_v=2*i,i,sizeof(char));
+      getcc();
+    } while(nmtoken(cc));
+    value[i]='\0';
+    return 1;
+  } else return 0;
 }
 
 static void getq(void) {
@@ -253,7 +260,9 @@ static void getsym(void) {
       if(cc=='~') {
 	getcc(); sym=SYM_NMTC;
       } else {
-        getid(); if(strcmp("valid",value)!=0) error(ARX_ER_EXP,sym2str(SYM_NVAL),value); sym=SYM_NVAL;
+	if(getid()) {
+          if(strcmp("valid",value)!=0) {error(ARX_ER_EXP,sym2str(SYM_NVAL),value);} sym=SYM_NVAL;
+	} else {error(ARX_ER_SYN); sym=SYM_INVL;}
       }
       return;
     case '=': getcc();
@@ -264,9 +273,11 @@ static void getsym(void) {
       }
     case '"': getq(); sym=SYM_LTRL; return;
     case '/': getq(); sym=SYM_RGXP; return;
-    default: getid();
-      sym=strcmp("grammars",value)==0?SYM_GRMS
-         : strcmp("valid",value)==0?SYM_VALD:SYM_IDNT;
+    default: 
+      if(getid()) {
+	sym=strcmp("grammars",value)==0?SYM_GRMS
+	 : strcmp("valid",value)==0?SYM_VALD:SYM_IDNT;
+      } else {getcc(); error(ARX_ER_SYN); sym=SYM_INVL;}
       return;
     }
   }
@@ -295,7 +306,7 @@ static int arx(char *fn) {
   } else {
     errors=0;
     i_b=len_b=0; 
-    prevline=-1; line=1; col=0; 
+    prevline=-1; line=1; col=0; rnc=0;
     cc=' '; getsym();
     chk_get(SYM_GRMS); chk_get(SYM_LCUR);
     do {
@@ -330,7 +341,10 @@ static int arx(char *fn) {
       RNG: getsym();
 	if(chksym(SYM_RENG)) {
 	  struct rnc_source src; int start;
-	  rnc_stropen(&src,"embedded",value,strlen(value));
+	  char *rncfn=(char*)memalloc(strlen(arxfn)+strlen("#rnc[]")+12,sizeof(char));
+	  sprintf(rncfn,"%s#rnc[%i]",arxfn,rnc++);
+	  rnc_stropen(&src,rncfn,value,strlen(value));
+	  free(rncfn);
 	  start=rnc_parse(&src); rnc_close(&src); 
 	  if(!rnc_errors(&src)&&(start=rnd_fixup(start))) {
 	    rules[i_r][1]=rn_compress_last(start); 
@@ -393,9 +407,9 @@ static void validate(int start,int fd) {
     len=read(fd,buf,BUFSIZ);
     if(len<0) {
       fprintf(stderr,"error (%s): %s\n",xml,strerror(errno));
-      valid=ok=0; break;
+      wf=ok=0; break;
     }
-    if(!XML_ParseBuffer(expat,len,len==0)) valid=ok=0;
+    if(!XML_ParseBuffer(expat,len,len==0)) wf=ok=0;
     if(!ok) break;
     if(len==0) break;
   }
@@ -426,14 +440,14 @@ int main(int argc,char **argv) {
 
   if(!(*(argv)&&*(argv+1))) {usage(); return 1;}
 
-  xml=*(argv++); if((valid=(fd=open(xml,O_RDONLY))!=-1)) close(fd);
+  xml=*(argv++); if((wf=(fd=open(xml,O_RDONLY))!=-1)) close(fd);
   do {
     if(arx(*(argv++))) {
       int i;
       for(i=0;i!=i_r;++i) {
 	switch(rules[i][0]) {
-        case VALID: if((ok=valid)) {ok=1; validate(rules[i][1],fd=open(xml,O_RDONLY)); close(fd);} break;
-	case INVAL: if((ok=valid)) {ok=1; validate(rules[i][1],fd=open(xml,O_RDONLY)); close(fd); ok=valid&&!ok;} break;
+        case VALID: if((ok=wf)) {ok=1; validate(rules[i][1],fd=open(xml,O_RDONLY)); close(fd);} break;
+	case INVAL: if((ok=wf)) {ok=1; validate(rules[i][1],fd=open(xml,O_RDONLY)); close(fd); ok=wf&&!ok;} break;
 	case MATCH: ok=rx_match(string+rules[i][1],xml,strlen(xml)); break;
 	case NOMAT: ok=!rx_match(string+rules[i][1],xml,strlen(xml)); break;
 	default: assert(0);

@@ -1,6 +1,6 @@
 # $Id$
 #
-VERSION=1.3.2
+VERSION=1.3.3
 CC=cc
 
 EXPAT_H="<expat.h>"
@@ -27,6 +27,7 @@ SRC=\
 ll.h \
 erbit.h \
 xcl.c \
+arx.c \
 rn.c rn.h \
 rnc.c rnc.h \
 rnd.c rnd.h \
