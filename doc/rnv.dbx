@@ -525,7 +525,7 @@ XSLT 1.0 modified to use RNV Pluggable Datatypes Library instead of XML Schema D
 <title>Scheme Datatypes</title>
 <para>Another way to add custom datatypes to RNV is to use the built-in Scheme interpeter
 (SCM, <ulink url="http://www.swiss.ai.mit.edu/~jaffer/SCM.html">http://www.swiss.ai.mit.edu/~jaffer/SCM.html</ulink>) to implement the library in Scheme, a dialect of Lisp. This solution
-more flexible and robust, then the previous one,  but requires knowledge of a particular 
+is more flexible and robust than the previous one,  but requires knowledge of a particular 
 programming language (or at least desire to learn it, and the result is definitely worth
 the effort).
 </para>

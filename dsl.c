@@ -23,7 +23,7 @@ static char *implpath(void) {
 static void init_user_scm_dsl(void) {}
 static SCM  toplvl(void) {return MAKINUM(scm_ldfile(dsl_scm));}
 
-void dsl_ld(char *dl) {
+void dsl_ld(char *execpath,char *dl) {
   assert(dsl_scm==NULL); dsl_scm=dl;
   init_user_scm=&init_user_scm_dsl;
   { char *argv[]={NULL,NULL}; argv[0]=dsl_scm; /*Init.scm wants args*/
@@ -100,7 +100,7 @@ int dsl_equal(char *typ,char *val,char *s,int n) {
 
 #else
 
-void dsl_ld(char *dl) {}
+void dsl_ld(char *execpath,char *dl) {}
 int dsl_allows(char *typ,char *ps,char *s,int n) {return 0;}
 int dsl_equal(char *typ,char *val,char *s,int n) {return 0;}
 
