@@ -18,7 +18,8 @@
 #define PRIME_2 RX_PRIME_2
 #define LEN_R RX_LEN_R
 #define PRIME_R RX_PRIME_R
-#define R_LEN 16
+
+#define R_AVG_SIZE 16
 
 /* it is good to have few patterns when deltas are memoized */
 #define P_ERROR 0
@@ -34,13 +35,16 @@
 #define P_CHAR 10
 
 #define P_SIZE 3
+#define P_AVG_SIZE 2
 
-#define P_TYP(i) (pattern[i][0]&0xF)
+static int p_size[]={1,1,1,3,3,2,3,3,2,1,2};
+
+#define P_TYP(i) (pattern[i]&0xF)
 #define P_IS(i,x)  (P_##x==P_TYP(i))
 #define P_CHK(i,x)  assert(P_IS(i,x))
 
-#define P_binop(TYP,p,p1,p2) P_CHK(p,TYP); p1=pattern[p][1]; p2=pattern[p][2]
-#define P_unop(TYP,p,p1) P_CHK(p,TYP); p1=pattern[p][1]
+#define P_binop(TYP,p,p1,p2) P_CHK(p,TYP); p1=pattern[p+1]; p2=pattern[p+2]
+#define P_unop(TYP,p,p1) P_CHK(p,TYP); p1=pattern[p+1]
 #define Empty(p) P_CHK(p,Empty)
 #define NotAllowed(p) P_CHK(p,NotAllowed)
 #define Any(p) P_CHK(p,Empty)
@@ -54,8 +58,8 @@
 
 #define P_NUL 0x100
 
-#define setNullable(x) if(x) pattern[i_p][0]|=P_NUL
-#define nullable(p) (pattern[p][0]&P_NUL)
+#define setNullable(x) if(x) pattern[i_p]|=P_NUL
+#define nullable(p) (pattern[p]&P_NUL)
 
 int rx_compact=0;
 /* 'compact' in drv and rx do different things.
@@ -65,7 +69,7 @@ int rx_compact=0;
  */
 
 static char *regex;
-static int (*pattern)[P_SIZE];
+static int *pattern;
 static int (*r2p)[2];
 static struct hashtable ht_r,ht_p,ht_2;
 static int i_p,len_p,i_r,len_r,i_2,len_2;
@@ -74,21 +78,21 @@ static int empty,notAllowed,any;
 static int accept_p(void) {
   int j;
   if((j=ht_get(&ht_p,i_p))==-1) {
-    ht_put(&ht_p,j=i_p++);
-    if(i_p==len_p) {
-      int (*newpattern)[P_SIZE]=(int (*)[P_SIZE])calloc(len_p*=2,sizeof(int[P_SIZE]));
-      memcpy(newpattern,pattern,i_p*sizeof(int[P_SIZE])); free(pattern);
+    ht_put(&ht_p,j=i_p);
+    i_p+=p_size[P_TYP(i_p)];
+    if(i_p+P_SIZE>len_p) {
+      int *newpattern=(int*)calloc(len_p=2*(i_p+P_SIZE),sizeof(int));
+      memcpy(newpattern,pattern,i_p*sizeof(int)); free(pattern);
       pattern=newpattern;
     }
   }
-  memset(pattern[i_p],0,sizeof(int[P_SIZE]));
   return j;
 }
 
-#define P_NEW(x) (pattern[i_p][0]=P_##x)
+#define P_NEW(x) (pattern[i_p]=P_##x)
 
-#define P_newbinop(TYP,p1,p2) P_NEW(TYP); pattern[i_p][1]=p1; pattern[i_p][2]=p2
-#define P_newunop(TYP,p1) P_NEW(TYP); pattern[i_p][1]=p1
+#define P_newbinop(TYP,p1,p2) P_NEW(TYP); pattern[i_p+1]=p1; pattern[i_p+2]=p2
+#define P_newunop(TYP,p1) P_NEW(TYP); pattern[i_p+1]=p1
 static int newEmpty(void) {P_NEW(EMPTY); setNullable(1); return accept_p();}
 static int newAny(void) {P_NEW(ANY); return accept_p();}
 static int newNotAllowed(void) {P_NEW(NOT_ALLOWED); return accept_p();}
@@ -146,12 +150,25 @@ static int equal_r(int r1,int r2) {return strcmp(regex+r1,regex+r2)==0;}
 static int hash_r(int r) {return strhash(regex+r);}
 
 static int equal_p(int p1,int p2) {
-  int *pp1=pattern[p1],*pp2=pattern[p2];
-  return (pp1[0]&0xF)==(pp2[0]&0xF) && pp1[1] == pp2[1]&&pp1[2] == pp2[2];
+  int *pp1=pattern+p1,*pp2=pattern+p2;
+  if(P_TYP(p1)!=P_TYP(p2)) return 0;
+  switch(p_size[P_TYP(p1)]) {
+  case 3: if(pp1[2]!=pp2[2]) return 0;
+  case 2: if(pp1[1]!=pp2[1]) return 0;
+  case 1: return 1;
+  default: assert(0);
+  }
+  return 0;
 }
 static int hash_p(int p) {
-  int *pp=pattern[p];
-  return ((pp[0]&0xF)|((pp[1]^pp[2])<<4))*PRIME_P;
+  int *pp=pattern+p; int h=0;
+  switch(p_size[P_TYP(p)]) {
+  case 1: h=pp[0]&0xF; break;
+  case 2: h=(pp[0]&0xF)|(pp[1]<<4); break;
+  case 3: h=(pp[0]&0xF)|((pp[1]^pp[2])<<4); break;
+  default: assert(0);
+  }
+  return h*PRIME_P;
 }
 
 static int equal_2(int x1,int x2) {return r2p[x1][0]==r2p[x2][0];}
@@ -229,7 +246,7 @@ static int hash_m(int m) {
 static void accept_m(void) {
   if(ht_get(&ht_m,i_m)!=-1) ht_del(&ht_m,i_m);
   ht_put(&ht_m,i_m++);
-  if(i_m==LIM_M) i_m=0;
+  if(i_m>=LIM_M) i_m=0;
   if(i_m==len_m) {
     int (*newmemo)[M_SIZE]=(int (*)[M_SIZE])calloc(len_m*=2,sizeof(int[M_SIZE]));
     memcpy(newmemo,memo,i_m*sizeof(int[M_SIZE]));
@@ -241,15 +258,15 @@ static void windup(void);
 static int initialized=0;
 void rx_init(void) {
   if(!initialized) { initialized=1;
-    pattern=(int (*)[P_SIZE])calloc(len_p=LEN_P,sizeof(int[P_SIZE]));
+    pattern=(int *)calloc(len_p=P_AVG_SIZE*LEN_P,sizeof(int));
     r2p=(int (*)[2])calloc(len_2=LEN_2,sizeof(int[2]));
-    regex=(char*)calloc(len_r=LEN_R,sizeof(char));
+    regex=(char*)calloc(len_r=R_AVG_SIZE*LEN_R,sizeof(char));
     memo=(int (*)[M_SIZE])calloc(len_m=LEN_M,sizeof(int[M_SIZE]));
 
-    ht_init(&ht_p,len_p,&hash_p,&equal_p);
-    ht_init(&ht_2,len_2,&hash_2,&equal_2);
-    ht_init(&ht_r,len_r/R_LEN,&hash_r,&equal_r);
-    ht_init(&ht_m,len_m,&hash_m,&equal_m);
+    ht_init(&ht_p,LEN_P,&hash_p,&equal_p);
+    ht_init(&ht_2,LEN_2,&hash_2,&equal_2);
+    ht_init(&ht_r,LEN_R,&hash_r,&equal_r);
+    ht_init(&ht_m,LEN_M,&hash_m,&equal_m);
 
     windup();
   }
@@ -262,8 +279,7 @@ static void clear(void) {
 
 static void windup(void) {
   i_p=i_r=i_2=i_m=0;
-  memset(pattern[0],0,sizeof(int[P_SIZE]));
-  pattern[0][0]=P_ERROR;  accept_p();
+  pattern[0]=P_ERROR;  accept_p();
   empty=newEmpty(); notAllowed=newNotAllowed(); any=newAny();
 }
 
@@ -495,7 +511,7 @@ static int compile(char *rx) {
   int r=0,p=0,d_r;
   d_r=add_r(rx);
   if((r=ht_get(&ht_r,i_r))==-1) {
-    if(rx_compact&&i_p>=LIM_P) {clear(); d_r=add_r(rx);}
+    if(rx_compact&&i_p>=P_AVG_SIZE*LIM_P) {clear(); d_r=add_r(rx);}
     ht_put(&ht_r,r=i_r);
     i_r+=d_r;
     bind(r); p=expression(); if(sym!=SYM_END) error(RXER_BADCH);

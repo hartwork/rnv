@@ -81,7 +81,7 @@ static int accept_##n(void) { \
     ht_put(&ht_##n,j=i_##n); \
     i_##n+=n##_size[N##_TYP(i_##n)]; \
     if(i_##n+N##_SIZE>len_##n) { \
-      int *name=(int *)calloc(len_##n=(i_##n+N##_SIZE)*2,sizeof(int)); \
+      int *name=(int *)calloc(len_##n=2*(i_##n+N##_SIZE),sizeof(int)); \
       memcpy(name,rn_##name,i_##n*sizeof(int)); \
       free(rn_##name); rn_##name=name; \
     } \
@@ -347,6 +347,7 @@ static int equal_p(int p1,int p2) {
   }
   return 0;
 }
+
 static int equal_nc(int nc1,int nc2) {
   int *ncp1=rn_nameclass+nc1,*ncp2=rn_nameclass+nc2;
   if(NC_TYP(nc1)!=NC_TYP(nc2)) return 0;
@@ -358,6 +359,7 @@ static int equal_nc(int nc1,int nc2) {
   }
   return 0;
 }
+
 static int equal_s(int s1,int s2) {return strcmp(rn_string+s1,rn_string+s2)==0;}
 
 /* marks patterns reachable from start, assumes that the references are resolved */

@@ -125,7 +125,7 @@ void drv_init(void) {
     xsd_init();
     memo=(int (*)[M_SIZE])calloc(len_m=LEN_M,sizeof(int[M_SIZE]));
     dtl=(struct dtl*)calloc(len_dtl=LEN_DTL,sizeof(struct dtl));
-    ht_init(&ht_m,len_m,&hash_m,&equal_m);
+    ht_init(&ht_m,LEN_M,&hash_m,&equal_m);
     windup();
   }
 }
@@ -134,7 +134,7 @@ static void windup(void) {
   i_m=0; n_dtl=0;
   drv_add_dtl(rn_string+0,&fallback_equal,&fallback_allows); /* guard at 0 */
   drv_add_dtl(rn_string+0,&builtin_equal,&builtin_allows);
-  drv_add_dtl(rn_string+rn_xsd_uri,&xsd_equal,&xsd_allows);
+ drv_add_dtl(rn_string+rn_xsd_uri,&xsd_equal,&xsd_allows);
 }
 
 void drv_clear(void) {

@@ -1,4 +1,4 @@
 <typetest>
-  <types  dateTimeMinMax="1969-04-30T14:00:00Z"/>
-  <values  time="14:00:12.34"/>
+  <types  dateTimeMinMax="1969-04-30t14:00:00Z"/>
+  <values  time="14:00:22.34"/>
 </typetest>
