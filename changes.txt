@@ -1,5 +1,9 @@
 /* $Id$ */
 
+
+Thu Jan  6 15:46:55 AMT 2005
+dvd: base64 regular expression checks full syntax of RFC2045.
+
 1.7.5 Thu Jan  6 02:18:51 AMT 2005
 dvd: build error fixed
 
