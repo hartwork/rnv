@@ -36,6 +36,7 @@
 #include UNISTD_H   /*open,read,close*/
 #include <stdio.h>  /*fprintf,stderr*/
 #include <string.h> /*strerror*/
+#include <setjmp.h>
 #include <errno.h>
 #include <assert.h>
 ##include "memops.h"
@@ -70,25 +71,35 @@ static void init() {
 #define ENT 5
 
 static int erp[2]; /* *erp to read error messages */
-static char *buf=NULL;
-static int len_b=-1;
+static FILE *nstderr=stderr;
+static jmp_buf IOER;
 
 #define OK "ok %u"
 #define ER "er %u"
 #define ERROR "error %u %s"
 
+#define LEN_B 1024
+
 static void resp(int ok,int patno) {
   int max,len,ofs;
+  static char buf[LEN_B];
   char *f=ok?OK:explain?ERROR:ER;
-  max=strlen(f)+strlen(buf)+9;
-  if(max>len_b) {memfree(buf); buf=(char*)memalloc(len_b=max,sizeof(char));}
-  len=sprintf(stdout,f,patno,msg)+1; assert(len<=max);
-  ofs=0;
-  while(len) {
-    int n=write(1,buf,len);
-    if(n==-1) break; /* silently */
-    ofs+=n; len-=n;
+  len=sprintf(buf,f,patno); assert(len<=LEN_B);
+  write(1,buf,len);
+  if(!ok&&explain) {
+    buf[0]=' '; write(1,buf,1);
+    for(;;) {
+      len=read(0,buf,LEN_B);
+      if(len<0) longjmp(IOER,1);
+      if(len==0) goto Z;
+      do {
+        int n=write(1,buf,len);
+        if(n==-1) longjmp(IOER,1);
+        ofs+=n; len-=n;
+      } while(len);
+    }
   }
+  Z: buf[0]='\0'; write(1,buf,1);
 }
 
 int main(int argc,char **argv) {
@@ -108,10 +119,17 @@ int main(int argc,char **argv) {
   }
 
   if(*argv==NULL || *(argv+1)!=NULL) {usage(); return 1;}
-  
-  if(start=rnl_fn(*(argv)) {
-    if(pipe(erp)==-1&&close(2)==-1&&dup2(erp[1],2)==-1) return EXIT_FAILURE; /*no stderr*/
+
+  if(setjmp(IOER)) {
+    fprintf(nstderr,"I/O error: %s\n",strerror(erno));
+    return EXIT_FAILURE;
   }
 
+  if(start=rnl_fn(*(argv)) {
+    int fd2;
+    if((fd2=dup(2))==-1) longjmp(IOER,1);
+    nstderr=fdopen(fd2,"w");
+    if(pipe(erp)==-1||dup2(erp[1],2)==-1) longjmp(IOER,1);
+  }
   return EXIT_FAILURE;
 }
