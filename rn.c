@@ -29,9 +29,7 @@ void rn_add_p(int i) {if(ht_get(&ht_p,i)==-1) ht_put(&ht_p,i);}
 
 void setNullable(int i,int x) {if(x) rn_pattern[i][0]|=P_FLG_NUL;}
 void setCdata(int i,int x) {if(x) rn_pattern[i][0]|=P_FLG_TXT;}
-void setContentType(int i,int t1,int t2) {
-  rn_pattern[i][0]|=(t1>t2?t1:t2);
-}
+void setContentType(int i,int t1,int t2) {rn_pattern[i][0]|=(t1>t2?t1:t2);}
 
 int newString(char *s) {
   int len=strlen(s)+1, j;
@@ -350,6 +348,9 @@ static int equal_s(int s1,int s2) {return strcmp(rn_string+s1,rn_string+s2)==0;}
 
 /* 
  * $Log$
+ * Revision 1.17  2003/12/10 09:51:34  dvd
+ * rn_end_schema is removed again, but the result is good -- bugs debugged
+ *
  * Revision 1.16  2003/12/10 09:38:43  dvd
  * rn_end_schema is removed again, but the result is good -- bugs debugged
  *
