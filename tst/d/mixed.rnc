@@ -1,0 +1,7 @@
+start = para
+para = element para { inline.content+ }
+#inline.content = text | bold | italic 
+# Next line have the same meaning for 'rnv' but not for 'jing'
+inline.content = mixed { bold | italic }
+italic = element i { inline.content+ }
+bold = element b { inline.content+ }
