@@ -1,5 +1,7 @@
 /* $Id$ */
 
+#include <stdarg.h> /*va_list*/
+
 #ifndef ER_H
 #define ER_H
 
@@ -9,13 +11,18 @@
 #define ER_LEXP 3
 #define ER_LLIT 4
 #define ER_LILL 5
+#define ER_SEXP 6
 
-extern void (*er_handler)(int er_no,...);
+extern void er_handler(int er_no,...);
+extern void (*ver_handler_p)(int er_no,va_list ap);
 
 #endif
 
 /*
  * $Log$
+ * Revision 1.6  2003/11/26 00:37:47  dvd
+ * parser in progress, documentation handling removed
+ *
  * Revision 1.5  2003/11/25 13:14:21  dvd
  * scanner ready
  *

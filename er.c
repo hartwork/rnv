@@ -7,13 +7,18 @@
 #include <assert.h> /*assert*/
 #include "er.h"
 
-static void default_er_handler(int er_no,...);
+static void default_ver_handler(int er_no,va_list ap);
 
-void (*er_handler)(int er_no,...)=&default_er_handler;
+void (*ver_handler_p)(int er_no,va_list ap)=&default_ver_handler;
 
-static void default_er_handler(int er_no,...) {
+void er_handler(int er_no,...) {
   va_list ap;
   va_start(ap,er_no);
+  (*ver_handler_p)(er_no,ap);
+  va_end(ap);
+}
+
+static void default_ver_handler(int er_no,va_list ap) {
   switch(er_no) {
   case ER_IO:
     fprintf(stderr,"I/O error (%s): %s\n",va_arg(ap,char*),strerror(errno));
@@ -25,7 +30,7 @@ static void default_er_handler(int er_no,...) {
     vfprintf(stderr,"unterminated escape (%s,%u,%u)\n",ap);
     break;
   case ER_LEXP:
-    vfprintf(stderr,"lexical error: expected '%c', got \\x{%x} (%s,%u,%u)\n",ap);
+    vfprintf(stderr,"lexical error: '%c' expected (%s,%u,%u)\n",ap);
     break;
   case ER_LLIT:
     vfprintf(stderr,"lexical error: unterminated literal (%s,%u,%u)\n",ap);
@@ -33,13 +38,17 @@ static void default_er_handler(int er_no,...) {
   case ER_LILL:
     vfprintf(stderr,"lexical error: illegal character \\x{%x} (%s,%u,%u)\n",ap);
     break;
+  case ER_SEXP:
+    vfprintf(stderr,"syntax error: %s expected (%s,%u<%u)\n",ap);
   default: assert(0);
   }
-  va_end(ap);
 }
 
 /*
  * $Log$
+ * Revision 1.6  2003/11/26 00:37:47  dvd
+ * parser in progress, documentation handling removed
+ *
  * Revision 1.5  2003/11/25 13:14:21  dvd
  * scanner ready
  *

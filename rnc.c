@@ -5,106 +5,24 @@
 #include <string.h> /* memcpy */
 #include <stdlib.h> /* calloc,malloc,free */
 #include <stdio.h> /*stderr*/
+#include <stdarg.h> /*va_list,va_arg,va_end*/
 
 #include "u.h"
 #include "rn.h"
 #include "er.h"
 #include "rnc.h"
 
-/* taken from the specification:
-
-topLevel ::= decl* (pattern | grammarContent*)
-decl ::= "namespace" identifierOrKeyword "=" namespaceURILiteral
-| "default" "namespace" [identifierOrKeyword] "=" namespaceURILiteral
-| "datatypes" identifierOrKeyword "=" literal
-pattern ::= "element" nameClass "{" pattern "}"
-| "attribute" nameClass "{" pattern "}"
-| pattern ("," pattern)+
-| pattern ("&" pattern)+
-| pattern ("|" pattern)+
-| pattern "?"
-| pattern "*"
-| pattern "+"
-| "list" "{" pattern "}"
-| "mixed" "{" pattern "}"
-| identifier
-| "parent" identifier
-| "empty"
-| "text"
-| [datatypeName] datatypeValue
-| datatypeName ["{" param* "}"] [exceptPattern]
-| "notAllowed"
-| "external" anyURILiteral [inherit]
-| "grammar" "{" grammarContent* "}"
-| "(" pattern ")"
-param ::= identifierOrKeyword "=" literal
-exceptPattern ::= "-" pattern
-grammarContent ::= start
-| define
-| "div" "{" grammarContent* "}"
-| "include" anyURILiteral [inherit] ["{" includeContent* "}"]
-includeContent ::= define
-| start
-| "div" "{" includeContent* "}"
-start ::= "start" assignMethod pattern
-define ::= identifier assignMethod pattern
-assignMethod ::= "="
-| "|="
-| "&="
-nameClass ::= name
-| nsName [exceptNameClass]
-| anyName [exceptNameClass]
-| nameClass "|" nameClass
-| "(" nameClass ")"
-name ::= identifierOrKeyword
-| CName
-exceptNameClass ::= "-" nameClass
-datatypeName ::= CName
-| "string"
-| "token"
-datatypeValue ::= literal
-anyURILiteral ::= literal
-namespaceURILiteral ::= literal
-| "inherit"
-inherit ::= "inherit" "=" identifierOrKeyword
-identifierOrKeyword ::= identifier
-| keyword
-identifier ::= (NCName - keyword)
-| quotedIdentifier
-quotedIdentifier ::= "\" NCName
-CName ::= NCName ":" NCName
-nsName ::= NCName ":*"
-anyName ::= "*"
-literal ::= literalSegment ("~" literalSegment)+
-literalSegment ::= '"' (Char - ('"' | newline))* '"'
-| "'" (Char - ("'" | newline))* "'"
-| '"""' (['"'] ['"'] (Char - '"'))* '"""'
-| "'''" (["'"] ["'"] (Char - "'"))* "'''"
-keyword ::= "attribute"
-| "default"
-| "datatypes"
-| "div"
-| "element"
-| "empty"
-| "external"
-| "grammar"
-| "include"
-| "inherit"
-| "list"
-| "mixed"
-| "namespace"
-| "notAllowed"
-| "parent"
-| "start"
-| "string"
-| "text"
-| "token"
-*/
+#define NKWD 19
+static char *kwdtab[NKWD]={
+  "attribute", "datatypes", "default", "div", "element", "empty", "external", 
+  "grammar", "include", "inherit", "list", "mixed", "namespace", "notAllowed", 
+  "parent", "start", "string", "text", "token"};
 
 #define SYM_EOF -1
+
 #define SYM_ATTRIBUTE 0
 #define SYM_DEFAULT 1
-#define SYM_DATATYPE 2
+#define SYM_DATATYPES 2
 #define SYM_DIV 3
 #define SYM_ELEMENT 4
 #define SYM_EMPTY 5
@@ -121,59 +39,63 @@ keyword ::= "attribute"
 #define SYM_STRING 16
 #define SYM_TEXT 17
 #define SYM_TOKEN 18
-#define SYM_ASGN 19
-#define SYM_ASGN_ILEAVE 20
-#define SYM_ASGN_CHOICE 21
-#define SYM_SEQ 22 /* , */
-#define SYM_CHOICE 23 
-#define SYM_ILEAVE 24
-#define SYM_OPTIONAL 25
-#define SYM_ZERO_OR_MORE 26
-#define SYM_ONE_OR_MORE 27
-#define SYM_LPAR 28
-#define SYM_RPAR 29
-#define SYM_LCUR 30
-#define SYM_RCUR 31
-#define SYM_LSQU 32
-#define SYM_RSQU 33
-#define SYM_EXCEPT 34
-#define SYM_QNAME 35   /* : */
-#define SYM_CONCAT 36
-#define SYM_NS_NAME 37 /* :* */
+
+#define SYM_IDENT 19
+
+#define SYM_ASGN 20
+#define SYM_ASGN_ILEAVE 21
+#define SYM_ASGN_CHOICE 22
+#define SYM_SEQ 23 /* , */
+#define SYM_CHOICE 24 
+#define SYM_ILEAVE 25
+#define SYM_OPTIONAL 26
+#define SYM_ZERO_OR_MORE 27
+#define SYM_ONE_OR_MORE 28
+#define SYM_LPAR 29
+#define SYM_RPAR 30
+#define SYM_LCUR 31
+#define SYM_RCUR 32
+#define SYM_LSQU 33
+#define SYM_RSQU 34
+#define SYM_EXCEPT 35
+#define SYM_QNAME 36   /* : */
+#define SYM_CONCAT 37
+#define SYM_NS_NAME 38 /* :* */
 #define SYM_ANY_NAME SYM_ZERO_OR_MORE /* because they both are * */
-#define SYM_QUOTE 38  /* \ */
-#define SYM_ANNOTATION 39 /* >> */
-#define SYM_COMMENT 40 
-#define SYM_DOCUMENTATION 41 /* ## */
-#define SYM_IDENT 42
-#define SYM_LITERAL 43
+#define SYM_QUOTE 39  /* \ */
+#define SYM_FOLLOW_ANNOTATION 40 /* >> */
+#define SYM_COMMENT 41 
+#define SYM_LITERAL 42
 
 #define BUFSIZE 1024
 #define BUFTAIL 6
 
 #define SRC_FREE 1
 #define SRC_CLOSE 2
+#define SRC_ERRORS 4
 
-struct utf_source {
+struct rnc_source {
+  int flags;
   char *fn; int fd;
   char *buf; int i,n;
   int complete;
   int line,col;
   int u,v,w; int nx;
   char *s; int slen;
-  int flags;
+  int symline,symcol,nxtline,nxtcol;
+  int sym,nxt;
 };
 
-static void rnc_init(struct utf_source *sp);
-static int rnc_read(struct utf_source *sp);
+static void rnc_init(struct rnc_source *sp);
+static int rnc_read(struct rnc_source *sp);
 
-int rnc_stropen(struct utf_source *sp,char *fn,char *s,int len) {
+int rnc_stropen(struct rnc_source *sp,char *fn,char *s,int len) {
   rnc_init(sp);
   sp->buf=s; sp->n=len; sp->complete=1; 
   return 0;
 }
 
-int rnc_bind(struct utf_source *sp,char *fn,int fd) {
+int rnc_bind(struct rnc_source *sp,char *fn,int fd) {
   rnc_init(sp);
   sp->fn=fn; sp->fd=fd;
   sp->buf=(char*)calloc(BUFSIZE,sizeof(char));
@@ -183,12 +105,12 @@ int rnc_bind(struct utf_source *sp,char *fn,int fd) {
   return sp->fd;
 }
 
-int rnc_open(struct utf_source *sp,char *fn) {
+int rnc_open(struct rnc_source *sp,char *fn) {
   sp->flags|=SRC_CLOSE;
   return rnc_bind(sp,fn,open(fn,O_RDONLY));
 }
 
-int rnc_close(struct utf_source *sp) {
+int rnc_close(struct rnc_source *sp) {
   int ret=0;
   if(sp->s) free(sp->s);
   if(sp->flags&SRC_FREE) free(sp->buf); 
@@ -202,17 +124,18 @@ int rnc_close(struct utf_source *sp) {
   return ret;
 }
 
-static void rnc_init(struct utf_source *sp) {
+static void rnc_init(struct rnc_source *sp) {
+  sp->flags=0;
   sp->fn=sp->buf=NULL;
   sp->i=sp->n=0; 
   sp->complete=sp->fd=-1;
   sp->nx=-1;
-  sp->flags=0;
-  sp->u=-1; sp->line=1; sp->col=1;
+  sp->u=-1; sp->v=0; sp->line=1; sp->col=1;
   sp->s=(char*)calloc(sp->slen=BUFSIZE,sizeof(char));
+  sp->nxt=sp->sym=-2;
 }
 
-static int rnc_read(struct utf_source *sp) {
+static int rnc_read(struct rnc_source *sp) {
   int ni;
   memcpy(sp->buf,sp->buf+sp->i,sp->n-=sp->i);
   sp->i=0;
@@ -230,12 +153,20 @@ static int rnc_read(struct utf_source *sp) {
   return ni;
 }
 
+static void error(struct rnc_source *sp,int er_no,...) {
+  va_list ap;
+  va_start(ap,er_no);
+  (*ver_handler_p)(er_no,ap);
+  va_end(ap);
+  sp->flags|=SRC_ERRORS;
+}
+
 /* read utf8 */
-static void getu(struct utf_source *sp) {
+static void getu(struct rnc_source *sp) {
   int n,u0=sp->u;
   for(;;) {
     if(!sp->complete&&sp->i>sp->n-BUFTAIL) {
-      if(rnc_read(sp)==-1) (*er_handler)(ER_IO,sp->fn);
+      if(rnc_read(sp)==-1) {error(sp,ER_IO,sp->fn);}
     }
     if(sp->i==sp->n) {
       sp->u=(u0=='\n'||u0=='\r'||u0==-1)?-1:'\n'; 
@@ -244,11 +175,11 @@ static void getu(struct utf_source *sp) {
     } /* eof */
     n=u_get(&sp->u,sp->buf+sp->i);
     if(n==0) { 
-      (*er_handler)(ER_UTF,sp->fn,sp->line,sp->col);
+      error(sp,ER_UTF,sp->fn,sp->line,sp->col);
       ++sp->i;
       continue;
     } else if(n+sp->i>sp->n) { 
-      (*er_handler)(ER_UTF,sp->fn,sp->line,sp->col);
+      error(sp,ER_UTF,sp->fn,sp->line,sp->col);
       sp->i=sp->n;
       continue;
     } else {
@@ -266,7 +197,7 @@ static void getu(struct utf_source *sp) {
 /* newlines are replaced with \0; \x{<hex>+} are unescaped.
 the result is in sp->v
 */
-static void getv(struct utf_source *sp) {
+static void getv(struct rnc_source *sp) {
   if(sp->nx>0) {
     sp->v='x'; --sp->nx;
   } else if(sp->nx==0) {
@@ -309,7 +240,7 @@ static void getv(struct utf_source *sp) {
 	    case 'E': case 'e': sp->v+=14; break;
 	    case 'F': case 'f': sp->v+=15; break;
             default: 
-	      (*er_handler)(ER_XESC,sp->fn,sp->line,sp->col);
+	      error(sp,ER_XESC,sp->fn,sp->symline,sp->symcol);
 	      goto END_OF_HEX_DIGITS;
             }
 	  } END_OF_HEX_DIGITS:;
@@ -328,80 +259,103 @@ static void getv(struct utf_source *sp) {
   }
 }
 
-#define skip_comment(sp) {while(!newline((sp)->v)) getv(sp); getv(sp);}
+#define skip_comment(sp) 
 /* why \r is not a new line by itself when escaped? it is when not. */
 #define newline(v) ((v)==0||(v)=='\n')
 #define whitespace(v) ((v)==' '||(v)=='\t')
 #define name_start(v) (u_base_char(v)||u_ideographic(v)||(v)=='_')
 #define name_char(v) (name_start(v)||u_digit(v)||u_combining_char(v)||u_extender(v)||(v)=='.'||(v)=='-')
 
-#define NKWD 19
-static char *kwdtab[NKWD]={
-  "attribute", "datatypes", "default", "div", "element", "empty", "external", 
-  "grammar", "include", "inherit", "list", "mixed", "namespace", "notAllowed", 
-  "parent", "start", "string", "text", "token"};
-
-static void realloc_s(struct utf_source *sp) {
+static void realloc_s(struct rnc_source *sp) {
   char *s; int slen=sp->slen*2;
   s=(char*)calloc(slen,sizeof(char));
   memcpy(s,sp->s,sp->slen); free(sp->s); 
   sp->s=s; sp->slen=slen;
 }
 
-static int sym(struct utf_source *sp) {
+static char *sym2str(int sym) {
+  switch(sym) {
+  case SYM_EOF: return "EOF"; 
+  case SYM_ATTRIBUTE: return "\"attribute\"";
+  case SYM_DEFAULT: return "\"default\"";
+  case SYM_DATATYPES: return "\"datatypes\"";
+  case SYM_DIV: return "\"div\"";
+  case SYM_ELEMENT: return "\"element\"";
+  case SYM_EMPTY: return "\"empty\"";
+  case SYM_EXTERNAL: return "\"external\"";
+  case SYM_GRAMMAR: return "\"grammar\"";
+  case SYM_INCLUDE: return "\"include\"";
+  case SYM_INHERIT: return "\"inherit\"";
+  case SYM_LIST: return "\"list\"";
+  case SYM_MIXED: return "\"mixed\"";
+  case SYM_NAMESPACE: return "\"namespace\"";
+  case SYM_NOT_ALLOWED: return "\"notAllowed\"";
+  case SYM_PARENT: return "\"parent\"";
+  case SYM_START: return "\"start\"";
+  case SYM_STRING: return "\"string\"";
+  case SYM_TEXT: return "\"text\"";
+  case SYM_TOKEN: return "\"token\"";
+  case SYM_IDENT: return "identifier"; 
+  case SYM_ASGN: return "\"=\"";
+  case SYM_ASGN_ILEAVE: return "\"&=\"";
+  case SYM_ASGN_CHOICE: return "\"|=\"";
+  case SYM_SEQ: return "\",\"";
+  case SYM_CHOICE: return "\"|\"";
+  case SYM_ILEAVE: return "\"&\"";
+  case SYM_OPTIONAL: return "\"?\"";
+  case SYM_ZERO_OR_MORE /*SYM_ANY_NAME*/: return "\"*\"";
+  case SYM_ONE_OR_MORE: return "\"+\"";
+  case SYM_LPAR: return "\"(\"";
+  case SYM_RPAR: return "\")\"";
+  case SYM_LCUR: return "\"{\"";
+  case SYM_RCUR: return "\"}\"";
+  case SYM_LSQU: return "\"[\"";
+  case SYM_RSQU: return "\"]\"";
+  case SYM_EXCEPT: return "\"-\"";
+  case SYM_QNAME: return "\":\"";
+  case SYM_CONCAT: return "\"~\"";
+  case SYM_NS_NAME: return "\":*\"";
+  case SYM_QUOTE: return "\"\\\"";
+  case SYM_FOLLOW_ANNOTATION: return "\">>\"";
+  case SYM_COMMENT: return "\"#\"";
+  case SYM_LITERAL: return "literal";
+  default: assert(0);
+  }
+  return NULL;
+}
+
+static void getsym(struct rnc_source *sp) {
+  sp->sym=sp->nxt; sp->symline=sp->nxtline; sp->symcol=sp->nxtcol;
+  sp->nxtline=sp->line; sp->nxtcol=sp->col;
   for(;;) {
     if(newline(sp->v)||whitespace(sp->v)) {getv(sp); continue;}
     switch(sp->v) {
-    case -1: return SYM_EOF; 
-    case '#': 
-      getv(sp);
-      if(sp->v=='#') {
-	int i=0;
-	for(;;) {
-	  do getv(sp); while(sp->v=='#');
-	  if(whitespace(sp->v)) getv(sp);
-	  for(;;) {
-	    if(i==sp->slen) realloc_s(sp);
-	    if(newline(sp->v)) {
-	      do getv(sp); while(whitespace(sp->v));
-	      if(sp->v=='#') {getv(sp);
-		if(sp->v=='#') {sp->s[i++]='\n'; break;}
-		skip_comment(sp);
-	      }
-	      sp->s[i]=0; return SYM_DOCUMENTATION;
-	    } else sp->s[i++]=(char)sp->v;
-	    getv(sp);
-	  } 
-	}
-      } else {skip_comment(sp); continue;}
-    case '=': getv(sp); return SYM_ASGN;
-    case ',': getv(sp); return SYM_SEQ;
+    case -1: sp->nxt=SYM_EOF; return; 
+    case '#': do getv(sp); while(!newline(sp->v)); getv(sp); continue;
+    case '=': getv(sp); sp->nxt=SYM_ASGN; return;
+    case ',': getv(sp); sp->nxt=SYM_SEQ; return;
     case '|': getv(sp); 
       if(sp->v=='=') {
-	getv(sp); return SYM_ASGN_CHOICE;
-      } return SYM_CHOICE;
-    case '&': getv(sp);
-      if(sp->v=='=') {
-	getv(sp); return SYM_ASGN_ILEAVE;
-      } else return SYM_ILEAVE;
-    case '?': getv(sp); return SYM_OPTIONAL;
-    case '*': getv(sp); return SYM_ZERO_OR_MORE; /* SYM_ANY_NAME */
-    case '+': getv(sp); return SYM_ONE_OR_MORE;
-    case '-': getv(sp); return SYM_EXCEPT;
-    case '~': getv(sp); return SYM_CONCAT;	   
-    case '(': getv(sp); return SYM_LPAR;
-    case ')': getv(sp); return SYM_RPAR;
-    case '{': getv(sp); return SYM_LCUR;
-    case '}': getv(sp); return SYM_RCUR;
-    case '[': getv(sp); return SYM_LSQU;
-    case ']': getv(sp); return SYM_RSQU;
-    case ':': getv(sp);
-      if(sp->v=='*') {
-	getv(sp); return SYM_NS_NAME;
-      } return SYM_QNAME;
-    case '>':
-      getv(sp); if(sp->v!='>') (*er_handler)(ER_LEXP,'>',sp->v,sp->fn,sp->line,sp->col);
-      getv(sp); return SYM_ANNOTATION;
+	getv(sp); sp->nxt=SYM_ASGN_CHOICE; return;
+      } sp->nxt=SYM_CHOICE; return;
+    case '&': getv(sp); 
+      if(sp->v=='=') {getv(sp); sp->nxt=SYM_ASGN_ILEAVE;} else sp->nxt=SYM_ILEAVE; return;
+    case '?': getv(sp); sp->nxt=SYM_OPTIONAL; return;
+    case '*': getv(sp); sp->nxt=SYM_ZERO_OR_MORE; return; /* SYM_ANY_NAME */
+    case '+': getv(sp); sp->nxt=SYM_ONE_OR_MORE; return;
+    case '-': getv(sp); sp->nxt=SYM_EXCEPT; return;
+    case '~': getv(sp); sp->nxt=SYM_CONCAT; return;	   
+    case '(': getv(sp); sp->nxt=SYM_LPAR; return;
+    case ')': getv(sp); sp->nxt=SYM_RPAR; return;
+    case '{': getv(sp); sp->nxt=SYM_LCUR; return;
+    case '}': getv(sp); sp->nxt=SYM_RCUR; return;
+    case '[': getv(sp); sp->nxt=SYM_LSQU; return;
+    case ']': getv(sp); sp->nxt=SYM_RSQU; return;
+    case ':': getv(sp); 
+      if(sp->v=='*') {getv(sp); sp->nxt=SYM_NS_NAME;} else sp->nxt=SYM_QNAME; return;
+    case '>': getv(sp); 
+      if(sp->v!='>') error(sp,ER_LEXP,'>',sp->fn,sp->line,sp->col);
+      getv(sp); sp->nxt=SYM_FOLLOW_ANNOTATION; return;
     case '"': case '\'': 
       { int q=sp->v;
 	int triple=0;
@@ -411,7 +365,7 @@ static int sym(struct utf_source *sp) {
 	  if(sp->v==q) { // triply quoted string
 	    triple=1; getv(sp);
 	  } else {
-	    sp->s[0]='\0'; return SYM_LITERAL;
+	    sp->s[0]='\0'; sp->nxt=SYM_LITERAL; return;
 	  }
 	} 
 	for(;;) {
@@ -423,14 +377,14 @@ static int sym(struct utf_source *sp) {
 	    } else {sp->s[i]='\0'; break;}
 	  } else if(sp->v<=0) {
 	    if(sp->v==-1 || !triple) {
-	      (*er_handler)(ER_LLIT,sp->fn,sp->line,sp->col);
+	      error(sp,ER_LLIT,sp->fn,sp->line,sp->col);
 	      sp->s[i]='\0'; break;
 	    } else sp->s[i]='\n';
 	  } else sp->s[i]=(char)sp->v;
 	  getv(sp);
 	  if(++i==sp->slen) realloc_s(sp);
 	}
-	getv(sp); return SYM_LITERAL;
+	getv(sp); sp->nxt=SYM_LITERAL; return;
       } 
     default: 
       { int escaped=0;
@@ -449,12 +403,12 @@ static int sym(struct utf_source *sp) {
 	      if(n>m) break;
 	      i=(n+m)/2;
 	      cmp=strcmp(sp->s,kwdtab[i]);
-	      if(cmp==0) return i; else if(cmp<0) m=i-1; else n=i+1;
+	      if(cmp==0) {sp->sym=i; return;} else if(cmp<0) m=i-1; else n=i+1;
 	    }
 	  } 
-	  return SYM_IDENT;
+	  sp->nxt=SYM_IDENT; return;
 	} else {
-	  (*er_handler)(ER_LILL,sp->v,sp->fn,sp->line,sp->col);
+	  error(sp,ER_LILL,sp->v,sp->fn,sp->line,sp->col);
 	  getv(sp);
 	  continue;
 	}
@@ -463,19 +417,79 @@ static int sym(struct utf_source *sp) {
   }
 }
 
+static void chksym(struct rnc_source *sp,int sym) {
+  if(sp->sym!=sym) error(sp,ER_SEXP,sym2str(sym),sp->fn,sp->line,sp->col);
+  getsym(sp);
+}
+
+/* return 1 if there was a declaration, 0 otherwise */
+static int decl(struct rnc_source *sp) {
+  switch(sp->sym) {
+  case SYM_NAMESPACE: return 1;
+  case SYM_DEFAULT: return 1;
+  case SYM_DATATYPES: return 1;
+  default: return 0;
+  }
+}
+
+static void annotationBody(struct rnc_source *sp,int allow_text) {
+}
+
+static void leadingAnnotation(struct rnc_source *sp) {
+  annotationBody(sp,0);
+}
+
+static int grammarContent(struct rnc_source *sp) {
+  if(sp->sym==SYM_IDENT && sp->nxt==SYM_LSQU) {
+    return 1;
+  } else if(sp->sym==SYM_LSQU) {
+    leadingAnnotation(sp);
+    switch(sp->sym) {
+    case SYM_DIV:
+    case SYM_INCLUDE:
+    case SYM_START:
+    case SYM_EOF:
+      return 1;
+    case SYM_IDENT:
+      switch(sp->nxt) {
+      case SYM_ASGN:
+      case SYM_ASGN_CHOICE:
+      case SYM_ASGN_ILEAVE:
+	return 1;
+      }
+    } 
+  }
+  return 0;
+}
+
+static void pattern(struct rnc_source *sp) {
+}
+
+static void topLevel(struct rnc_source *sp) {
+  while(decl(sp));
+  if(grammarContent(sp)) {
+    while(grammarContent(sp));
+    chksym(sp,SYM_EOF);
+  } else pattern(sp);
+}
+
+void rnc_parse(struct rnc_source *sp) {
+  getsym(sp); getsym(sp);
+  topLevel(sp);
+ /* second pass here */ 
+}
+
 int main(int argc,char **argv) {
-  struct utf_source src;
+  struct rnc_source src;
   rnc_bind(&src,"stdin",0);
-  getv(&src);
+  getsym(&src);
   for(;;) {
-    int s=sym(&src);
-    switch(s) {
+    getsym(&src);
+    switch(src.sym) {
     case SYM_EOF: return 0;
     case SYM_LITERAL: printf("(%i,%i) ``%s''\n",src.line,src.col,src.s); break;
-    case SYM_DOCUMENTATION: printf("(%i,%i) ## %s\n",src.line,src.col,src.s); break;
     case SYM_IDENT: printf("(%i,%i) $%s\n",src.line,src.col,src.s); break;
-    default:
-      if(s<NKWD) printf("(%i,%i) @%s\n",src.line,src.col,src.s); break;
+    default: if(src.sym<NKWD) printf("(%i,%i) @%s\n",src.line,src.col,src.s); break;
     }
   }
   rnc_close(&src);
@@ -483,6 +497,9 @@ int main(int argc,char **argv) {
 
 /*
  * $Log$
+ * Revision 1.12  2003/11/26 00:37:47  dvd
+ * parser in progress, documentation handling removed
+ *
  * Revision 1.11  2003/11/25 13:14:21  dvd
  * scanner ready
  *

@@ -1,5 +1,5 @@
 #include <string.h>
 
 int main() {
-  char *x=NULL;
+ printf("%i\n",sizeof(int[4]));
 }
