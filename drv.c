@@ -155,7 +155,7 @@ static int ncof(int nc,int uri,int name) {
   return 0;
 }
 
-int apply_after(int (*f)(int q1,int q2),int p1,int p0) {
+static int apply_after(int (*f)(int q1,int q2),int p1,int p0) {
   int p11,p12;
   switch(P_TYP(p1)) {
   case P_EMPTY: case P_NOT_ALLOWED: case P_TEXT:

@@ -65,7 +65,7 @@ int u_combining_char(int u) {return isa(u,COMBINING_CHAR);}
 int u_digit(int u) {return isa(u,DIGIT);}
 int u_extender(int u) {return isa(u,EXTENDER);}
 
-int inRange(int u,int r[][2],int len) {
+static int inRange(int u,int r[][2],int len) {
   int n=0,m=len-1,i;
   for(;;) {
     if(n>m) return 0;

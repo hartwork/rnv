@@ -6,7 +6,8 @@ EXPAT_H="<expat.h>"
 UNISTD_H="<unistd.h>"
 LIBEXPAT=-lexpat
 INC=-I/usr/local/include
-CFLAGS=-Wall -DEXPAT_H=${EXPAT_H} -DUNISTD_H=${UNISTD_H} -DRNV_VERSION="\"${VERSION}\""
+WARN=-Wall -Wstrict-prototypes  -Wmissing-prototypes -Wcast-align -Wtraditional
+CFLAGS=${WARN} -DEXPAT_H=${EXPAT_H} -DUNISTD_H=${UNISTD_H} -DRNV_VERSION="\"${VERSION}\""
 LFLAGS=
 OPT=-g -O -pg 
 LIB=${LIBEXPAT}
