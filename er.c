@@ -47,12 +47,21 @@ static void default_ver_handler(int er_no,va_list ap) {
   case ER_UNAN:
     vfprintf(stderr,"unterminated annotation (%s,%u,%u)\n",ap);
     break;
+  case ER_INC:
+    vfprintf(stderr,"cannot open included file '%s' (%s,%u,%u)\n",ap);
+    break;
+  case ER_EXT:
+    vfprintf(stderr,"cannot follow external reference '%s' (%s,%u,%u)\n",ap);
+    break;
   default: assert(0);
   }
 }
 
 /*
  * $Log$
+ * Revision 1.9  2003/11/27 23:05:49  dvd
+ * syntax and external files
+ *
  * Revision 1.8  2003/11/27 14:19:15  dvd
  * syntax done, now to includes
  *

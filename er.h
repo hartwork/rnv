@@ -6,14 +6,16 @@
 #define ER_H
 
 #define ER_IO 0
-#define ER_UTF 1
-#define ER_XESC 2
-#define ER_LEXP 3
-#define ER_LLIT 4
-#define ER_LILL 5
-#define ER_SEXP 6
-#define ER_SILL 7
-#define ER_UNAN 8
+#define ER_UTF 10
+#define ER_XESC 20
+#define ER_LEXP 30
+#define ER_LLIT 31
+#define ER_LILL 32
+#define ER_SEXP 40
+#define ER_SILL 41
+#define ER_UNAN 42
+#define ER_INC 50
+#define ER_EXT 51
 
 extern void er_handler(int er_no,...);
 extern void (*ver_handler_p)(int er_no,va_list ap);
@@ -22,6 +24,9 @@ extern void (*ver_handler_p)(int er_no,va_list ap);
 
 /*
  * $Log$
+ * Revision 1.8  2003/11/27 23:05:49  dvd
+ * syntax and external files
+ *
  * Revision 1.7  2003/11/26 23:49:00  dvd
  * syntax almost ready
  *
