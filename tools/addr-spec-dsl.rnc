@@ -11,7 +11,7 @@ start=element addr-spec {
       atoms = atom "(\." atom ")*"
       person = "\"([^\"\\]|\\.)*\""
       location = "\[([^\[\]\\]|\\.)*\]"
-      local-part = "(" atoms "|" person ")"
+      local-part = "(" atom "|" person ")"
       domain = "(" atoms "|" location ")"
       start = "(" comment " )?" local-part "@" domain "( " comment ")?"
     """

@@ -58,14 +58,22 @@
 	 (lambda (code)
 	   (letrec (
 	       (resolve
-		 (lambda (piece)
+		 (lambda (piece parents)
 		   (cond
 		     ((string? piece) piece)
 		     ((symbol? piece)
-		       (let ((entry (assv piece code)))
-			 (if entry
-			    (apply string-append (map resolve (cdr entry)))
-			    (begin (error! piece " unresolved") ""))))))))
-	     (resolve 'start)))))
+		       (if (memv piece parents) 
+		         (begin
+			   (error! "recursion through " piece)
+			   "")
+		         (let ((entry (assv piece code)))
+			   (if entry
+			     (apply string-append 
+			       (map (lambda (p)
+				   (let ((parents (cons piece parents))) 
+				     (resolve p parents)))
+			         (cdr entry)))
+			     (begin (error! piece " unresolved") "")))))))))
+	     (resolve 'start '())))))
     (let ((regex (splice (code))))
       (and (not errors) regex))))

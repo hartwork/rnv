@@ -1,5 +1,5 @@
 
-VERSION=1.5.3
+VERSION=1.5.5
 CC=cc
 
 # optional features

@@ -3,7 +3,7 @@
 
 #PUBLIC
 
-VERSION=1.5.3
+VERSION=1.5.5
 CC=cc
 
 # optional features
@@ -162,7 +162,7 @@ tools/rvp.pl tools/rvp.py \
 /usr/local/share/rng-c/fo.rnc \
 /usr/local/share/rng-c/none.rnc \
 /usr/local/share/rng-c/relaxng.rnc \
-tools/addr-spec.rnc tools/xslt-dsl.rnc
+tools/addr-spec.rnc tools/addr-spec-dsl.rnc tools/xslt-dsl.rnc
 DISTSCM=\
 scm/u.scm \
 scm/xml-ranges.scm \

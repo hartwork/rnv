@@ -1,7 +1,10 @@
 /* $Id$ */
 
-1.5.4
-Fri Jan 30 00:10:32 AMT 2004
+
+1.5.5 Fri Jan 30 11:07:01 AMT 2004
+dvd: added check for recursion in structured regexps
+
+1.5.4 Fri Jan 30 00:10:32 AMT 2004
 dvd: implemented structured regexps for scheme-datatypes
 
 1.5.3 Thu Jan 29 03:19:29 AMT 2004
