@@ -67,7 +67,7 @@ static void verror_handler(int erno,va_list ap) {
 	case XCL_ER_IO: err("%s"); break;
 	case XCL_ER_XML: err("%s"); break;
 	default: assert(0);
-	}                
+	}
       }
     }
   }
@@ -108,7 +108,7 @@ static void flush_text(void) {
 }
 
 static void start_element(void *userData,const char *name,const char **attrs) {
-  if(current!=rn_notAllowed) { 
+  if(current!=rn_notAllowed) {
     mixed=1;
     flush_text();
     ok=rnv_start_tag(&current,&previous,(char*)name,(char**)attrs)&&ok;
@@ -120,7 +120,7 @@ static void start_element(void *userData,const char *name,const char **attrs) {
 
 static void end_element(void *userData,const char *name) {
   if(current!=rn_notAllowed) {
-    flush_text(); 
+    flush_text();
     ok=rnv_end_tag(&current,&previous,(char*)name)&&ok;
     mixed=1;
   } else {
@@ -131,7 +131,7 @@ static void end_element(void *userData,const char *name) {
 static void characters(void *userData,const char *s,int len) {
   if(current!=rn_notAllowed) {
     int newlen_t=n_t+len+1;
-    if(newlen_t<=LIM_T&&LIM_T<len_t) newlen_t=LIM_T; 
+    if(newlen_t<=LIM_T&&LIM_T<len_t) newlen_t=LIM_T;
     else if(newlen_t<len_t) newlen_t=len_t;
     if(len_t!=newlen_t) text=(char*)memstretch(text,len_t=newlen_t,n_t,sizeof(char));
     memcpy(text+n_t,s,len); n_t+=len; text[n_t]='\0'; /* '\0' guarantees that the text is bounded, and strto[ld] work for data */

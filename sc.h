@@ -3,7 +3,7 @@
 #ifndef SC_H
 #define SC_H 1
 
-#define SC_RECSIZE 3 /* 0 - key, 1 - value, 2 - auxiliary */ 
+#define SC_RECSIZE 3 /* 0 - key, 1 - value, 2 - auxiliary */
 
 struct sc_stack {
   int (*tab)[SC_RECSIZE];

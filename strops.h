@@ -21,7 +21,7 @@ extern char *strclone(char *s);
  */
 extern char *abspath(char *r,char *b);
 
-/* find a string in a sorted array, return the index, 
+/* find a string in a sorted array, return the index,
   or size on failure */
 extern int strtab(char *s,char *tab[],int size);
 extern int strntab(char *s,int len,char *tab[],int size);

@@ -89,7 +89,7 @@ them to variables in the local scope, and a creator.
 
 #define rn_QName(i,uri,name) RN_NC_CHK(i,QNAME); uri=rn_nameclass[i+1]; name=rn_nameclass[i+2]
 #define rn_NsName(i,uri) RN_NC_CHK(i,NSNAME); uri=rn_nameclass[i+1]
-#define rn_AnyName(i) RN_NC_CHK(i,ANY_NAME) 
+#define rn_AnyName(i) RN_NC_CHK(i,ANY_NAME)
 #define rn_NameClassExcept(i,nc1,nc2) RN_NC_CHK(i,EXCEPT); nc1=rn_nameclass[i+1]; nc2=rn_nameclass[i+2]
 #define rn_NameClassChoice(i,nc1,nc2) RN_NC_CHK(i,CHOICE); nc1=rn_nameclass[i+1]; nc2=rn_nameclass[i+2]
 #define rn_Datatype(i,lib,typ) RN_NC_CHK(i,DATATYPE); lib=rn_nameclass[i+1]; typ=rn_nameclass[i+2]

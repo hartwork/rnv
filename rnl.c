@@ -34,7 +34,7 @@ static int load(struct rnc_source *sp) {
   int start=-1;
   if(!rnc_errors(sp)) start=rnc_parse(sp); rnc_close(sp);
   if(!rnc_errors(sp)&&(start=rnd_fixup(start))) {
-    start=rn_compress_last(start); 
+    start=rn_compress_last(start);
   } else start=0;
   return start;
 }

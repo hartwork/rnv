@@ -18,7 +18,7 @@ int strcmpn(char *s1,char *s2,int n2) {
 int tokcmpn(char *s1,char *s2,int n2) {
   char *end2=s2+n2;
  /* all white space characters are one byte long */
-  while(xmlc_white_space(*s1)) ++s1; 
+  while(xmlc_white_space(*s1)) ++s1;
   while(s2!=end2&&xmlc_white_space(*s2)) ++s2;
   for(;;) {
     if(s2==end2) {
@@ -40,8 +40,8 @@ int tokcmpn(char *s1,char *s2,int n2) {
 }
 
 int strhash(char *s) {
-  int h=0; 
-  while(*s) h=h*31+*(s++); 
+  int h=0;
+  while(*s) h=h*31+*(s++);
   return h;
 }
 

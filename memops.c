@@ -20,7 +20,7 @@ extern void *memalloc(int length,int size) {
 
 void *memstretch(void *p,int newlen,int oldlen,int size) {
   void *newp=memalloc(newlen,size);
-  memcpy(newp,p,oldlen*size); 
+  memcpy(newp,p,oldlen*size);
   memfree(p);
   return newp;
 }

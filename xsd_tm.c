@@ -7,7 +7,7 @@
 #include "xsd_tm.h"
 
 static int leap(int yr) {return !(yr%4)&&((yr%100)||!(yr%400));}
-static int y2d(int yr) {return yr*365+yr/4-yr/100+yr/400;} 
+static int y2d(int yr) {return yr*365+yr/4-yr/100+yr/400;}
 static int ymd2dn(int yr,int mo,int dy) {
   switch(mo) {
   case 12: dy+=30;
@@ -52,7 +52,7 @@ void xsd_mktmn(struct xsd_tm *tmp,char *fmt,char *s,int n) {
   for(;;) {
     if(s==end||!*fmt) break;
     switch(*s) {
-    case '-': 
+    case '-':
       switch(*fmt) {
       case 'y': ++fmt; yr=strtol(s,&s,10); continue;
       case 'z': ++fmt; ++s; zh=strtol(s,&s,10); ++s; zm=strtol(s,&s,10); continue;
@@ -60,7 +60,7 @@ void xsd_mktmn(struct xsd_tm *tmp,char *fmt,char *s,int n) {
       break;
     case '+': assert(*(fmt++)=='z'); zh=-strtol(s,&s,10); ++s; zm=-strtol(s,&s,10); continue;
     case 'Z': assert(*(fmt++)=='z'); zh=0; zm=0; ++s; continue;
-    case '0': case '1': case '2': case '3': case '4': 
+    case '0': case '1': case '2': case '3': case '4':
     case '5': case '6': case '7': case '8': case '9':
       switch(*(fmt++)) {
       case 'y': yr=strtol(s,&s,10); continue;

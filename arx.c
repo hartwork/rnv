@@ -1,5 +1,5 @@
-/* $Id$ */ 
-/* Regular Associations for XML 
+/* $Id$ */
+/* Regular Associations for XML
 
 arx grammar:
 
@@ -49,7 +49,7 @@ extern int rn_notAllowed;
 #define MATCH 3
 #define NOMAT 4
 
-#define LEN_2 16 
+#define LEN_2 16
 #define LEN_R 64
 #define LEN_S 64
 #define S_AVG_SIZE 64
@@ -156,7 +156,7 @@ static char *sym2str(int sym) {
   case SYM_LCUR: return "'{'";
   case SYM_RCUR: return "'}'";
   case SYM_ASGN: return "'='";
-  case SYM_INVL: return "invalid character"; 
+  case SYM_INVL: return "invalid character";
   default: assert(0);
   }
   return NULL;
@@ -253,7 +253,7 @@ static void getsym(void) {
     switch(cc) {
     case -1: sym=SYM_EOF; return;
     case '#': do getcc(); while(cc!='\n'&&cc!='\r'); getcc(); continue;
-    case '{': 
+    case '{':
       if(sym==SYM_VALD||sym==SYM_NVAL) {
 	getrng(); sym=SYM_RENG;
       } else {
@@ -278,7 +278,7 @@ static void getsym(void) {
       }
     case '"': getq(); sym=SYM_LTRL; return;
     case '/': getq(); sym=SYM_RGXP; return;
-    default: 
+    default:
       if(getid()) {
 	sym=strcmp("grammars",value)==0?SYM_GRMS
 	 : strcmp("valid",value)==0?SYM_VALD:SYM_IDNT;
@@ -298,7 +298,7 @@ static void chk_get(int x) {
 }
 
 static int typ2str(void) {
-  int i=i_2,typ=add_s(value); 
+  int i=i_2,typ=add_s(value);
   t2s[0][0]=typ; for(;;) if(t2s[--i][0]==typ) break;
   if(i==0) error(ARX_ER_TYP,value);
   return t2s[i][1];
@@ -316,16 +316,16 @@ static int arx(char *fn) {
     chk_get(SYM_GRMS); chk_get(SYM_LCUR);
     do {
       if(i_2==len_2) t2s=(int(*)[2])memstretch(t2s,len_2=i_2*2,i_2,sizeof(int[2]));
-      if(chksym(SYM_IDNT)) t2s[i_2][0]=add_s(value); 
+      if(chksym(SYM_IDNT)) t2s[i_2][0]=add_s(value);
       getsym();
       chk_get(SYM_ASGN);
       if(chksym(SYM_LTRL)) {
 	if(path2abs) {
 	  int len=strlen(arxfn)+strlen(value)+1;
 	  if(len>len_v) {value=(char*)memstretch(value,len,len_v,sizeof(char)); len_v=len;}
-	  abspath(value,arxfn); 
+	  abspath(value,arxfn);
 	}
-	t2s[i_2][1]=add_s(value); 
+	t2s[i_2][1]=add_s(value);
       }
       getsym();
       ++i_2;
@@ -372,7 +372,7 @@ static void flush_text(void) {
 }
 
 static void start_element(void *userData,const char *name,const char **attrs) {
-  if(current!=rn_notAllowed) { 
+  if(current!=rn_notAllowed) {
     mixed=1;
     flush_text();
     ok=rnv_start_tag(&current,&previous,(char*)name,(char**)attrs)&&ok;
@@ -382,7 +382,7 @@ static void start_element(void *userData,const char *name,const char **attrs) {
 
 static void end_element(void *userData,const char *name) {
   if(current!=rn_notAllowed) {
-    flush_text(); 
+    flush_text();
     ok=rnv_end_tag(&current,&previous,(char*)name)&&ok;
     mixed=1;
   }
@@ -391,7 +391,7 @@ static void end_element(void *userData,const char *name) {
 static void characters(void *userData,const char *s,int len) {
   if(current!=rn_notAllowed) {
     int newlen_t=n_t+len+1;
-    if(newlen_t<=LIM_T&&LIM_T<len_t) newlen_t=LIM_T; 
+    if(newlen_t<=LIM_T&&LIM_T<len_t) newlen_t=LIM_T;
     else if(newlen_t<len_t) newlen_t=len_t;
     if(len_t!=newlen_t) text=(char*)memstretch(text,len_t=newlen_t,n_t,sizeof(char));
     memcpy(text+n_t,s,len); n_t+=len; text[n_t]='\0'; /* '\0' guarantees that the text is bounded, and strto[ld] work for data */

@@ -177,7 +177,7 @@ static int add_r(char *rx) {
   return len;
 }
 
-#define ERRPOS 
+#define ERRPOS
 
 #define err(msg) vfprintf(stderr,msg" in \"%s\" at offset %i\n",ap)
 void rx_default_verror_handler(int erno,va_list ap) {

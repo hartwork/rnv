@@ -25,7 +25,7 @@ void sc_clear(struct sc_stack *stp) {
 }
 
 void sc_open(struct sc_stack *stp) {
-  stp->tab[stp->base=stp->top++][1]=BASE; 
+  stp->tab[stp->base=stp->top++][1]=BASE;
   if(stp->top==stp->len) stp->tab=(int(*)[SC_RECSIZE])memstretch(stp->tab,stp->len*=stp->top*2,stp->top,sizeof(int[SC_RECSIZE]));
 }
 

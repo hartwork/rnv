@@ -42,7 +42,7 @@ int ht_get(struct hashtable *ht,int i) {
 void ht_put(struct hashtable *ht,int i) {
   int hv=ht->hash(i),j;
   if(ht->used==ht->limit) {
-    int tablen=ht->tablen; int *table=ht->table; 
+    int tablen=ht->tablen; int *table=ht->table;
     ht->tablen<<=1; ht->limit<<=1;
     ht->table=(int*)memalloc(ht->tablen<<1,sizeof(int));
     for(j=0;j!=ht->tablen;++j) ht->table[j]=-1;

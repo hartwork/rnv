@@ -8,7 +8,7 @@
 /* returns BOM length if the string starts with BOM */
 extern int u_bom(char *s,int n);
 
-/* computes a unicode character u off the head of s; 
+/* computes a unicode character u off the head of s;
  returns number of bytes read. 0 means error.
  */
 extern int u_get(int *up,char *s);

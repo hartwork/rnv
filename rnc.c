@@ -105,7 +105,7 @@ void rnc_default_verror_handler(int er_no,va_list ap) {
 }
 
 void (*rnc_verror_handler)(int er_no,va_list ap)=&rnc_default_verror_handler;
-    
+
 #define BUFSIZE BUFSIZ+U_MAXLEN
 #define BUFTAIL U_MAXLEN
 
@@ -126,7 +126,7 @@ static int rnc_read(struct rnc_source *sp);
 
 int rnc_stropen(struct rnc_source *sp,char *fn,char *s,int len) {
   rnc_source_init(sp,fn);
-  sp->buf=s; 
+  sp->buf=s;
   sp->n=len; sp->complete=1; sp->i=u_bom(s,len);
   return 0;
 }
@@ -151,11 +151,11 @@ int rnc_open(struct rnc_source *sp,char *fn) {
 int rnc_close(struct rnc_source *sp) {
   int ret=0,i;
   for(i=0;i!=2;++i) {memfree(sp->sym[i].s); sp->sym[i].s=NULL;}
-  if(sp->flags&SRC_FREE) {sp->flags&=~SRC_FREE; memfree(sp->buf);} 
+  if(sp->flags&SRC_FREE) {sp->flags&=~SRC_FREE; memfree(sp->buf);}
   sp->buf=NULL;
   sp->complete=-1;
   if(sp->flags&SRC_CLOSE) {
-    sp->flags&=~SRC_CLOSE; 
+    sp->flags&=~SRC_CLOSE;
     if(sp->fd!=-1) {ret=close(sp->fd); sp->fd=-1;}
   }
   memfree(sp->fn); sp->fn=NULL;
@@ -682,7 +682,7 @@ static void foldref(struct rnc_source *sp,struct sc_stack *rp,int key,int val,in
 
 static void fold_scope(struct rnc_source *sp) {
   fold_efs(sp,&defs,&folddef);
-  fold_efs(sp,&refs,&foldref); 
+  fold_efs(sp,&refs,&foldref);
   fold_efs(sp,&prefs,&foldref);
 }
 
@@ -900,7 +900,7 @@ static int topLevel(struct rnc_source *sp);
 static void add_well_known_nss(int dflt) {
   sc_add(&nss,rn_newString("xml"),rn_newString("http://www.w3.org/XML/1998/namespace"),0);
   sc_add(&nss,rn_newString("xmlns"),rn_newString("http://www.w3.org/2000/xmlns"),0);
-  sc_add(&nss,0,dflt,PFX_INHERITED); sc_add(&nss,-1,dflt,PFX_INHERITED); 
+  sc_add(&nss,0,dflt,PFX_INHERITED); sc_add(&nss,-1,dflt,PFX_INHERITED);
 }
 
 static int file(struct rnc_source *sp,int nsuri) {
@@ -970,7 +970,7 @@ static int datatype(struct rnc_source *sp) {
   switch(CUR(sp).sym) {
   case SYM_TOKEN: dt=rn_newDatatype(0,rn_dt_token); break;
   case SYM_STRING: dt=rn_newDatatype(0,rn_dt_string); break;
-  case SYM_QNAME: 
+  case SYM_QNAME:
     { char *s=CUR(sp).s; while(*s!=':') ++s; *(s++)='\0';
       dt=rn_newDatatype(dt2uri(sp,rn_newString(CUR(sp).s)),rn_newString(s));
     } break;

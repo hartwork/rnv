@@ -42,7 +42,7 @@ int u_get(int *up,char *s) {
   unsigned char *t=(unsigned char*)s;
   if(*t<0x80) {*up=u1(t); return 1;}
   if(*t<0xC0) return 0;
-  if(*t<0xE0) {*up=u2(t); return (*up&B1)?2:0;} 
+  if(*t<0xE0) {*up=u2(t); return (*up&B1)?2:0;}
   if(*t<0xF0) {*up=u3(t); return (*up&B2)?3:0;}
   if(*t<0xF8) {*up=u4(t); return (*up&B3)?4:0;}
   if(*t<0xFC) {*up=u5(t); return (*up&B4)?5:0;}
@@ -64,7 +64,7 @@ int u_put(char *s,int u) {
 int u_strlen(char *s) {int n=0; while(*(s+n)) ++n; return u_strnlen(s,n);}
 int u_strnlen(char *s,int n) {
   int i,len=0,u;
-  char *end=s+n; 
+  char *end=s+n;
   for(;;) {
     if(s==end) break;
     i=u_get(&u,s);
@@ -81,7 +81,7 @@ int u_in_ranges(int u,int r[][2],int len) {
   for(;;) {
     if(n>m) return 0;
     i=(n+m)/2;
-    if(u<r[i][0]) m=i-1; 
+    if(u<r[i][0]) m=i-1;
     else if(u>r[i][1]) n=i+1;
     else return 1;
   }

@@ -3,8 +3,8 @@
 #ifndef LL_H
 #define LL_H 1
 
-/* all limits that can affect speed or memory consumption; 
- prefixes correspond to module names 
+/* all limits that can affect speed or memory consumption;
+ prefixes correspond to module names
  */
 
 #define RN_LEN_P 1024

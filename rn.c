@@ -97,29 +97,29 @@ int rn_newEmpty(void) { P_NEW(EMPTY);
 }
 
 int rn_newText(void) { P_NEW(TEXT);
-  rn_setNullable(i_p,1); 
+  rn_setNullable(i_p,1);
   rn_setCdata(i_p,1);
   return accept_p();
 }
 
 int rn_newChoice(int p1,int p2) { P_NEW(CHOICE);
   rn_pattern[i_p+1]=p1; rn_pattern[i_p+2]=p2;
-  rn_setNullable(i_p,rn_nullable(p1)||rn_nullable(p2)); 
-  rn_setCdata(i_p,rn_cdata(p1)||rn_cdata(p2)); 
+  rn_setNullable(i_p,rn_nullable(p1)||rn_nullable(p2));
+  rn_setCdata(i_p,rn_cdata(p1)||rn_cdata(p2));
   return accept_p();
 }
 
 int rn_newInterleave(int p1,int p2) { P_NEW(INTERLEAVE);
   rn_pattern[i_p+1]=p1; rn_pattern[i_p+2]=p2;
   rn_setNullable(i_p,rn_nullable(p1)&&rn_nullable(p2));
-  rn_setCdata(i_p,rn_cdata(p1)||rn_cdata(p2)); 
+  rn_setCdata(i_p,rn_cdata(p1)||rn_cdata(p2));
   return accept_p();
 }
 
 int rn_newGroup(int p1,int p2) { P_NEW(GROUP);
   rn_pattern[i_p+1]=p1; rn_pattern[i_p+2]=p2;
   rn_setNullable(i_p,rn_nullable(p1)&&rn_nullable(p2));
-  rn_setCdata(i_p,rn_cdata(p1)||rn_cdata(p2)); 
+  rn_setCdata(i_p,rn_cdata(p1)||rn_cdata(p2));
   return accept_p();
 }
 
@@ -161,7 +161,7 @@ int rn_newAttribute(int nc,int p1) { P_NEW(ATTRIBUTE);
 }
 
 int rn_newElement(int nc,int p1) { P_NEW(ELEMENT);
-  rn_pattern[i_p+2]=nc; rn_pattern[i_p+1]=p1; 
+  rn_pattern[i_p+2]=nc; rn_pattern[i_p+1]=p1;
   return accept_p();
 }
 
@@ -208,7 +208,7 @@ int rn_choice(int p1,int p2) {
   if(samechoice(p1,p2)) return p1;
   if(rn_nullable(p1) && (RN_P_IS(p2,EMPTY))) return p1;
   if(rn_nullable(p2) && (RN_P_IS(p1,EMPTY))) return p2;
-  return rn_newChoice(p1,p2); 
+  return rn_newChoice(p1,p2);
 }
 
 int rn_ileave(int p1,int p2) {
@@ -266,7 +266,7 @@ static int hash_nc(int i);
 static int hash_s(int i);
 
 static int equal_p(int p1,int p2);
-static int equal_nc(int nc1,int nc2); 
+static int equal_nc(int nc1,int nc2);
 static int equal_s(int s1,int s2);
 
 static void windup(void);
@@ -294,7 +294,7 @@ void rn_clear(void) {
 static void windup(void) {
   i_p=i_nc=i_s=0;
   adding_ps=0;
-  rn_pattern[0]=RN_P_ERROR;  accept_p(); 
+  rn_pattern[0]=RN_P_ERROR;  accept_p();
   rn_nameclass[0]=RN_NC_ERROR; accept_nc();
   rn_newString("");
   rn_notAllowed=rn_newNotAllowed(); rn_empty=rn_newEmpty(); rn_text=rn_newText(); BASE_P=i_p;
@@ -359,7 +359,7 @@ static void mark_p(int start) {
   int *flat=(int*)memalloc(i_p,sizeof(int));
 
   flat[n_f++]=start; rn_mark(start);
-  i=0; 
+  i=0;
   do {
     p=flat[i++];
     switch(RN_P_TYP(p)) {
@@ -382,7 +382,7 @@ static void mark_p(int start) {
       if(!rn_marked(p1)) {flat[n_f++]=p1; rn_mark(p1);}
       break;
 
-    default: 
+    default:
       assert(0);
     }
   } while(i!=n_f);
@@ -421,8 +421,8 @@ static void sweep_p(int *starts,int n_st,int since) {
 	case RN_P_DATA_EXCEPT: rn_DataExcept(p,p1,p2); goto BINARY;
 	BINARY:
 	  if(p2>=since && (q=xlat[p2-since])!=p2) {
-	    ht_deli(&ht_p,p); 
-	    touched=1; 
+	    ht_deli(&ht_p,p);
+	    touched=1;
 	    rn_pattern[p+2]=q;
 	  }
 	  goto UNARY;
@@ -434,12 +434,12 @@ static void sweep_p(int *starts,int n_st,int since) {
 	UNARY:
 	  if(p1>=since && (q=xlat[p1-since])!=p1) {
 	    if(!touched) ht_deli(&ht_p,p);
-	    touched=1; 
+	    touched=1;
 	    rn_pattern[p+1]=q;
 	  }
 	  break;
 
-	default: 
+	default:
 	  assert(0);
 	}
 	if(touched) {
@@ -459,7 +459,7 @@ static void sweep_p(int *starts,int n_st,int since) {
 }
 
 static void unmark_p(int since) {
-  int p; 
+  int p;
   for(p=0;p!=since;p+=p_size[RN_P_TYP(p)]) rn_unmark(p);
   for(p=since;p!=i_p;p+=p_size[RN_P_TYP(p)]) {
     if(rn_marked(p)) rn_unmark(p); else {ht_deli(&ht_p,p); erase(p);}
@@ -475,7 +475,7 @@ static void compress_p(int *starts,int n_st,int since) {
       xlat[p-since]=-1;
     } else {
       ht_deli(&ht_p,p);
-      xlat[p-since]=q; 
+      xlat[p-since]=q;
       q+=p_size[RN_P_TYP(p)];
     }
   }
@@ -502,7 +502,7 @@ static void compress_p(int *starts,int n_st,int since) {
 	if(p1>=since && (q=xlat[p1-since])!=p1) rn_pattern[p+1]=q;
 	break;
 
-      default: 
+      default:
 	assert(0);
       }
       if((q=xlat[p-since])!=p) {
