@@ -11,21 +11,21 @@
    -s takes less space but more time
    -h help message
  exit code: 0 on valid, non-zero on invalid
-   
+
  protocol
   query ::= (start | start-tag-open | attribute | start-tag-close | text | end-tag) z.
-   start ::= "start". 
+   start ::= "start".
    start-tag-open ::= "start-tag-open" patno name.
    attribute ::= "attribute" patno name value.
    start-tag-close :: = "start-tag-close" patno name.
    text ::= ("text"|"mixed") patno text.
    end-tag ::= "end-tag" patno name.
   response ::= (ok | er | error) z.
-   ok ::= "ok" patno. 
+   ok ::= "ok" patno.
    er ::= "er" patno erno.
    error ::= "error" patno erno error.
   z ::= "\0" .
- 
+
   conventions:
     last colon in name separates namespace uri and local part
     -q?er:error
@@ -41,7 +41,7 @@
 #include <setjmp.h>
 #include <errno.h>
 #include <assert.h>
-##include "memops.h"
+#include "memops.h"
 #include "strops.h"
 #include "erbit.h"
 #include "rnl.h"
@@ -52,15 +52,15 @@ extern int rn_notAllowed, drv_compact, rx_compact;
 #define ATT 0
 #define ENT 1
 #define MIX 2
-#define QUIT 3                                                                
+#define QUIT 3
 #define START 4
-#define STC 5 
+#define STC 5
 #define STO 6
 #define TXT 7
 #define NKWD 8
-char *kwdtab[NKWD]={ 
+char *kwdtab[NKWD]={
   "attribute",
-  "end-tag"
+  "end-tag",
   "mixed",
   "quit",
   "start",
@@ -71,24 +71,24 @@ char *kwdtab[NKWD]={
 
 #define OK "ok %u"
 #define ER "er %u"
-#define ERROR "error %u %s"
-
-#define PROTER 0
-#define PROTOCOL_ERROR "protocol error\n"
+#define ERROR "error %u"
 
 #define LEN_B 1024
 
+static FILE *nstderr;
 static int explain=1, start, lasterr;
 static int len_q,n_q; char *quebuf;
 static int erp[2]; /* *erp to read error messages */
-static FILE *nstderr=stderr;
 static jmp_buf IOER;
 
-static void verror_handler(int erno,va_list ap) {lasterr=erno;}
+static void verror_handler(int erno,va_list ap) {
+  lasterr=erno;
+  rnv_default_verror_handler(erno&~ERBIT_RNV,ap);
+}
 static void verror_handler_rnv(int erno,va_list ap) {verror_handler(erno|ERBIT_RNV,ap);}
 
 static int initialized=0;
-static void init() {
+static void init(void) {
   if(!initialized) {initialized=1;
     rnl_init();
     rnv_init(); rnv_verror_handler=&verror_handler_rnv;
@@ -96,15 +96,28 @@ static void init() {
   }
 }
 
-static void clear() {}
+static int tok(int i) {
+  for(;;) {
+    switch(quebuf[i]) {
+    case '\t': case '\n': case '\r': case ' ': break;
+    default: return i;
+    }
+    ++i;
+  } 
+}
 
-#define SPACE "\t\n\r "
-
-int tok(int i) {while(strchr(SPACE,quebuf[i])) ++i; return i;}
-int endtok(int i) {while(quebuf[i]&&!strchr(SPACE,quebuf[i])) ++i; return i;}
+static int endtok(int i) {
+  for(;;) {
+    switch(quebuf[i]) {
+    case '\0': case '\t': case '\n': case '\r': case ' ': return i;
+    default: break;
+    }
+    ++i;
+  } 
+}
 
 static void resp(int ok,int patno) {
-  int max,len,ofs;
+  int len,ofs;
   static char buf[LEN_B];
   char *f=ok?OK:explain?ERROR:ER;
   len=sprintf(buf,f,patno); assert(len<LEN_B);
@@ -113,8 +126,8 @@ static void resp(int ok,int patno) {
     buf[0]=' '; write(1,buf,1);
   }
   for(;;) { /* read always, write if verbose */
-    len=read(0,buf,LEN_B);
-    if(len<0) longjmp(IOER,1);
+    len=read(erp[0],buf,LEN_B);
+    if(len<0) {if(errno==EAGAIN) break; else longjmp(IOER,1);}
     if(len==0) break;
     if(!ok&&explain) {
       ofs=0;
@@ -129,46 +142,60 @@ static void resp(int ok,int patno) {
 }
 
 static int query(void) {
-  int i,j,n,dn, kwd, patno,prevno, ok;
+  int i,j,n,dn, kwd, patno,prevno, ok=0;
+  char *name;
   n=0;
   for(;;) {
     if(n==n_q) {
       if(len_q-n_q<LEN_B) quebuf=(char*)memstretch(quebuf,len_q=n_q+LEN_B,n_q,sizeof(char));
       dn=read(0,quebuf+n_q,LEN_B);
-      if(dn==-1) longjmp(IOER,1);
+      if(dn<0) longjmp(IOER,1);
+      if(dn==0) {quebuf[n_q]='\0'; dn=1;}
       n_q+=dn;
     }
     if(quebuf[n++]=='\0') break;
   }
 
   j=endtok(i=tok(0));
-  switch((kwd=strntab(quebuf+i,j-i,kwdtab,NKWD))) {
-  case START: resp(1,start); break;
-  case QUIT: resp(1,0); return 0;
+  if((kwd=strntab(quebuf+i,j-i,kwdtab,NKWD))==QUIT) {resp(1,0); return 0;}
+  switch(kwd) {
+  case START: ok=1; patno=start; break;
   case STO: case ATT: case STC: case TXT: case MIX: case ENT:
-    j=endtok(i=tok(j)); if(i==j) goto PROTER;
+    j=endtok((i=tok(j))); if(i==j) goto PROTER;
     patno=0; do patno=patno*10+quebuf[i++]-'0'; while(i!=j);
     switch(kwd) {
     case STO: case ATT: case STC: case ENT:
-      j=endtok(i=tok(j)); if(i==j||kwd==ATT&&quebuf[j]='\0') goto PROTER;
-      
+      j=endtok((i=tok(j))); if(i==j||(kwd==ATT&&quebuf[j]=='\0')) goto PROTER;
+      name=quebuf+i; quebuf[j]='\0';
+      switch(kwd) {
+      case STO: ok=rnv_start_tag_open(&patno,&prevno,name); break;
+      case ATT: ok=rnv_attribute(&patno,&prevno,name,quebuf+j+1); break;
+      case STC: ok=rnv_start_tag_close(&patno,&prevno,name); break;
+      case ENT: ok=rnv_end_tag(&patno,&prevno,name); break;
+      }
       break;
     case TXT: case MIX:
       if(quebuf[j]) ++j; i=j; while(quebuf[j]) ++j;
       ok=rnv_text(&patno,&prevno,quebuf+i,j-i,kwd==MIX);
-      resp(ok,patno);
       break;
     }
-  case NKWD: PROTER: fprintf(stderr,PROTOCOL_ERROR); resp(0,PROTER); break;
+    break;
+
+  case NKWD: PROTER: fprintf(stderr,"protocol error\n"); patno=0; ok=0; break;
   default: assert(0);
   }
-  
+  resp(ok,patno);
 
   i=0; while(n!=n_q) quebuf[i++]=quebuf[n++]; n_q=i;
   return 1;
 }
 
+static void version(void) {fprintf(stderr,"rvp version %s\n",RVP_VERSION);}
+static void usage(void) {fprintf(stderr,"usage: rvp {-[qsvh?]} schema.rnc\n");}
+
 int main(int argc,char **argv) {
+  init();
+
   while(*(++argv)&&**argv=='-') {
     int i=1;
     for(;;) {
@@ -177,7 +204,7 @@ int main(int argc,char **argv) {
       case 'h': case '?': usage(); return 0;
       case 'v': version(); break;
       case 's': drv_compact=1; rx_compact=1; break;
-      case 'q': numerr=1; break;
+      case 'q': explain=0; break;
       default: fprintf(stderr,"unknown option '-%c'\n",*(*argv+i)); break;
       }
       ++i;
@@ -187,16 +214,19 @@ int main(int argc,char **argv) {
 
   if(*argv==NULL || *(argv+1)!=NULL) {usage(); return 1;}
 
-  if(setjmp(IOER)) {
-    fprintf(nstderr,"I/O error: %s\n",strerror(erno));
-    return EXIT_FAILURE;
-  }
-
-  if(start=rnl_fn(*(argv)) {
+  if((start=rnl_fn(*(argv)))) {
     int fd2;
+
+    nstderr=stderr;
+    if(setjmp(IOER)) {
+      fprintf(nstderr,"I/O error: %s\n",strerror(errno));
+      return EXIT_FAILURE;
+    }
+
     if((fd2=dup(2))==-1) longjmp(IOER,1);
     nstderr=fdopen(fd2,"w");
     if(pipe(erp)==-1||dup2(erp[1],2)==-1) longjmp(IOER,1);
+    fcntl(erp[0],F_SETFL,O_NONBLOCK);
     while(query());
     return EXIT_SUCCESS;
   }

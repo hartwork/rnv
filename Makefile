@@ -9,7 +9,7 @@ UNISTD_H="<unistd.h>"
 INC=-I/usr/local/include
 LBL=-L/usr/local/lib
 
-DEF=-DEXPAT_H=${EXPAT_H} -DUNISTD_H=${UNISTD_H} -DRNV_VERSION="\"${VERSION}\"" -DARX_VERSION="\"${VERSION}\""
+DEF=-DEXPAT_H=${EXPAT_H} -DUNISTD_H=${UNISTD_H} -DRNV_VERSION="\"${VERSION}\"" -DARX_VERSION="\"${VERSION}\"" -DRVP_VERSION="\"${VERSION}\""
 WARN=-Wall -Wstrict-prototypes  -Wmissing-prototypes -Wcast-align
 OPT=-O -g
 
@@ -28,6 +28,7 @@ ll.h \
 erbit.h \
 xcl.c \
 arx.c \
+rvp.c \
 ary.c ary.h \
 rn.c rn.h \
 rnc.c rnc.h \
@@ -72,13 +73,16 @@ rx.o
 .c.o:
 	${CC} ${CFLAGS} -c -o $@ $<
 
-all: rnv arx
+all: rnv arx rvp
 
 rnv: xcl.o ${LIBRNV}
 	${CC} ${LFLAGS} -o rnv xcl.o ${LIBRNV} ${LIB}
 
 arx: arx.o ${LIBRNV}
 	${CC} ${LFLAGS} -o arx arx.o ${LIBRNV} ${LIB}
+
+rvp: rvp.o ${LIBRNV}
+	${CC} ${LFLAGS} -o rvp rvp.o ${LIBRNV} ${LIB}
 
 rnd_test: ${LIBRNV} tst/c/rnd_test.c
 	${CC} ${LFLAGS} -I. -o rnd_test tst/c/rnd_test.c ${LIBRNV} ${LIB}
