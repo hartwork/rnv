@@ -1,9 +1,15 @@
+#!/usr/bin/perl
 # $Id$
 
 use strict;
 
-my $TMPDIR="tmp";
-my $RNGDIR="../../RNG-C";
+if(@ARGV!=1) {
+  print STDERR "usage: uri2rnc <file.xml>\n";
+  exit(1);
+}
+
+my $TMPDIR="/tmp";
+my $RNGDIR="/usr/local/share/rng-c";
 my %SCHEMAS=(
   docbook=>"docbook.rnc",
   xslt=>"xslt.rnc",
