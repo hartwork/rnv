@@ -11,7 +11,7 @@ types = element types { empty
 	maxInclusive=".231E+52" 
 	maxExclusive="10E100" 
       }
-    }
+    } ?
   , attribute decimal { xsd:decimal } ?
   , attribute dateTime { xsd:dateTime } ?
   , attribute dateTimeMinMax { 

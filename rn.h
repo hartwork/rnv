@@ -50,6 +50,10 @@ them to variables in the local scope, and a creator.
 #define rn_unmark(i) (rn_pattern[i]&=~RN_P_FLG_MRK)
 
 #define rn_nullable(i) (rn_pattern[i]&RN_P_FLG_NUL)
+#define rn_setNullable(i,x) if(x) rn_pattern[i]|=RN_P_FLG_NUL
+
+#define rn_cdata(i) rn_pattern[i]&RN_P_FLG_TXT
+#define rn_setCdata(i,x) if(x) rn_pattern[i]|=RN_P_FLG_TXT
 
 /* assert: p1 at 1, p2 at 2 */
 
@@ -98,11 +102,6 @@ extern int *rn_pattern;
 extern int *rn_nameclass;
 
 extern void rn_new_schema(void);
-
-extern void rn_setNullable(int i,int x);
-
-extern int rn_cdata(int i);
-extern void rn_setCdata(int i,int x);
 
 extern int rn_contentType(int i);
 extern void rn_setContentType(int i,int t1,int t2);

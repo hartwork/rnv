@@ -10,7 +10,6 @@
 #include "rnv.h"
 
 extern int rn_notAllowed;
-extern int rn_cdata(int i);
 
 #define err(msg) vfprintf(stderr,msg"\n",ap);
 void rnv_default_verror_handler(int erno,va_list ap) {
@@ -24,7 +23,7 @@ void rnv_default_verror_handler(int erno,va_list ap) {
     case RNV_ER_EMIS: err("incomplete content"); break;
     case RNV_ER_AMIS: err("missing attributes of %s^%s"); break;
     case RNV_ER_UFIN: err("unfinished content of element %s^%s"); break;
-    case RNV_ER_TEXT: err("invalid text or data"); break;
+    case RNV_ER_TEXT: err("invalid data or text not allowed"); break;
     case RNV_ER_NOTX: err("text not allowed"); break;
     default: assert(0);
     }                
@@ -88,7 +87,7 @@ int rnv_text(int *curp,int *prevp,char *text,int n_t,int mixed) {
     *curp=drv_text(*prevp=*curp,text,n_t);
     if(*curp==rn_notAllowed) { ok=0;
       *curp=drv_text_recover(*prevp,text,n_t);
-      error_handler(rn_cdata(*prevp)?RNV_ER_TEXT:RNV_ER_NOTX);
+      error_handler(RNV_ER_TEXT);
     }
   }
   return ok;

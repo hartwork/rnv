@@ -43,13 +43,8 @@ void rn_new_schema(void) {base_p=i_p; i_ref=0;}
 void rn_del_p(int i) {ht_deli(&ht_p,i);}
 void rn_add_p(int i) {if(ht_get(&ht_p,i)==-1) ht_put(&ht_p,i);}
 
-void rn_setNullable(int i,int x) {if(x) rn_pattern[i]|=RN_P_FLG_NUL;}
-
 int rn_contentType(int i) {return rn_pattern[i]&0x1C00;}
 void rn_setContentType(int i,int t1,int t2) {rn_pattern[i]|=(t1>t2?t1:t2);}
-
-int rn_cdata(int i) {return rn_pattern[i]&RN_P_FLG_TXT;}
-void rn_setCdata(int i,int x) {if(x) rn_pattern[i]|=RN_P_FLG_TXT;}
 
 static int add_s(char *s) {
   int len=strlen(s)+1;
