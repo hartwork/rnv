@@ -287,24 +287,13 @@ struct facets {
 
 #define PAT_HEX_BINARY "[0-9a-fA-F]+"
 
-/* base64 is stricter than NIST thinks */
-#ifndef STRICT_BASE64
-#define STRICT_BASE64 0
-#endif
 #define PAT_BASE64 "([A-Za-z0-9+/] ?)"
-/* this is the correct pattern, bits don't cross bytes boundaries */
-#if STRICT_BASE64
+#define PAT_BASE64_2 "([AQgw] ?)"
+#define PAT_BASE64_1 "([AEIMQUYcgkosw048] ?)"
 #define PAT_BASE64_BINARY \
    "("PAT_BASE64"{4})*" \
-   "("PAT_BASE64 "[A-D] ?= ?=" \
-   "|"PAT_BASE64 PAT_BASE64 "[A-P] ?=)?"
-#else
-/* this is the pattern NIST tests like */
-#define PAT_BASE64_BINARY \
-   "("PAT_BASE64"{4})*" \
-   "("PAT_BASE64"{2}= ?=" \
-   "|"PAT_BASE64"{3}=)?"
-#endif
+   "("PAT_BASE64 PAT_BASE64_2"= ?=" \
+   "|"PAT_BASE64"{2}" PAT_BASE64_1"=)?"
 
 #define PAT_ANY_URI "(([a-zA-Z][0-9a-zA-Z+\\-\\.]*:)?/{0,2}[0-9a-zA-Z;/?:@&=+$\\.\\-_!~*'()%]+)?(#[0-9a-zA-Z;/?:@&=+$\\.\\-_!~*'()%]+)?"
 
@@ -840,16 +829,15 @@ void xsd_test() {
 
   assert(rx_match(PAT_BASE64_BINARY,"",0));
   assert(rx_match(PAT_BASE64_BINARY,"YmFz",4));
-  assert(rx_match(PAT_BASE64_BINARY,"YC==",4));
-  assert(rx_match(PAT_BASE64_BINARY,"Y D = =",7));
-  assert(rx_match(PAT_BASE64_BINARY,"YFO=",4));
-  assert(rx_match(PAT_BASE64_BINARY,"anVpY25waXBxZGtrYXRsdnRxeWRxbmVsdGtwdA==",40));
+  assert(rx_match(PAT_BASE64_BINARY,"YA==",4));
+  assert(rx_match(PAT_BASE64_BINARY,"Y w = =",7));
+  assert(rx_match(PAT_BASE64_BINARY,"YF8=",4));
 
   assert(!rx_match(PAT_BASE64_BINARY,"YmF@",4));
   assert(!rx_match(PAT_BASE64_BINARY,"YmFgH",5));
   assert(!rx_match(PAT_BASE64_BINARY,"Y===",4));
   assert(!rx_match(PAT_BASE64_BINARY,"YF=O",4));
-  assert(rx_match(PAT_BASE64_BINARY,"YFZ=",4)!=STRICT_BASE64);
+  assert(!rx_match(PAT_BASE64_BINARY,"YFZ=",4));
  
   assert(b64cmpn("","",0)==0);
   assert(b64cmpn("ABC123","ABC123",6)==0);
