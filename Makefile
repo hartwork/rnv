@@ -7,7 +7,7 @@ UNISTD_H="<unistd.h>"
 LIBEXPAT=-lexpat
 INC=-I/usr/local/include
 OPT=-g -O -pg 
-WARN=-Wall -Wstrict-prototypes  -Wmissing-prototypes -Wcast-align -Wtraditional
+WARN=-Wall -Wstrict-prototypes  -Wmissing-prototypes -Wcast-align
 CFLAGS=${WARN} -shared -DEXPAT_H=${EXPAT_H} -DUNISTD_H=${UNISTD_H} -DRNV_VERSION="\"${VERSION}\""
 LFLAGS=
 LBL=-L/usr/local/lib
