@@ -172,10 +172,8 @@ int rnc_stropen(struct utf_source *sp,char *fn,char *s,int len) {
 
 int rnc_bind(struct utf_source *sp,char *fn,int fd) {
   rnc_init(sp);
-  sp->fn=fn; 
+  sp->fn=fn; sp->fd=fd;
   sp->buf=(char*)calloc(BUFSIZE,sizeof(char));
-  sp->fd=fd;
-  sp->nx=-1;
   sp->complete=sp->fd==-1;
   sp->flags=SRC_FREE;
   rnc_read(sp);
@@ -203,8 +201,8 @@ int rnc_close(struct utf_source *sp) {
 static void rnc_init(struct utf_source *sp) {
   sp->fn=sp->buf=NULL;
   sp->i=sp->n=0; 
-  sp->nx=sp->complete=sp->fd=-1;
-  sp->u=sp->v=0;
+  sp->complete=sp->fd=-1;
+  sp->u=sp->v=0; sp->nx=-1;
   sp->flags=0;
 }
 
@@ -385,6 +383,9 @@ int main(int argc,char **argv) {
 
 /*
  * $Log$
+ * Revision 1.5  2003/11/20 23:35:17  dvd
+ * cleanups
+ *
  * Revision 1.4  2003/11/20 23:28:50  dvd
  * getu,getv debugged
  *
