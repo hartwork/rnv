@@ -1,5 +1,9 @@
 /* $Id$ */
 
+1.58 Wed Feb 18 16:53:05 AMT 2004
+dvd: enhanced diagnostics: first required elements and attributes
+     are reported, then optional
+
 1.5.7 Mon Feb 16 20:03:13 AMT 2004
 dvd: rewrote the pattern space compression algorithm -- it should
      be correct now, and if it is still not, debugging should be

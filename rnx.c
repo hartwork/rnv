@@ -11,8 +11,7 @@
 #define LEN_EXP RNX_LEN_EXP
 #define LIM_EXP RNX_LIM_EXP
 
-int *rnx_exp=NULL;
-int rnx_n_exp;
+int rnx_n_exp,*rnx_exp=NULL;
 static int len_exp;
 
 static int initialized=0;
@@ -24,24 +23,30 @@ void rnx_init(void) {
 
 void rnx_clear(void) {}
 
-static void expected(int p,int first) {
+static void expected(int p,int first,int req) {
   int p1,p2,px=0,i;
+  if(req && rn_nullable(p)) return;
   switch(RN_P_TYP(p)) {
   case RN_P_ERROR: break;
   case RN_P_NOT_ALLOWED: break;
   case RN_P_EMPTY: break;
   case RN_P_TEXT: px=p; break;
-  case RN_P_CHOICE: rn_Choice(p,p1,p2); expected(p1,first); expected(p2,first); break;
-  case RN_P_INTERLEAVE: rn_Interleave(p,p1,p2); expected(p1,first); expected(p2,first); break;
-  case RN_P_GROUP: rn_Group(p,p1,p2); expected(p1,first); expected(p2,first&&rn_nullable(p1)); break;
-  case RN_P_ONE_OR_MORE: rn_OneOrMore(p,p1); expected(p1,first); break;
-  case RN_P_LIST: rn_List(p,p1); expected(p1,first); break;
+  case RN_P_CHOICE: rn_Choice(p,p1,p2);
+    expected(p1,first,req); expected(p2,first,req); break;
+  case RN_P_INTERLEAVE: rn_Interleave(p,p1,p2);
+    expected(p1,first,req); expected(p2,first,req); break;
+  case RN_P_GROUP: rn_Group(p,p1,p2);
+    expected(p1,first,req); expected(p2,first&&rn_nullable(p1),req); break;
+  case RN_P_ONE_OR_MORE: rn_OneOrMore(p,p1); expected(p1,first,req); break;
+  case RN_P_LIST: rn_List(p,p1); expected(p1,first,req); break;
   case RN_P_DATA: px=p; break;
-  case RN_P_DATA_EXCEPT: rn_DataExcept(p,p1,p2); expected(p1,first); break;
+  case RN_P_DATA_EXCEPT: rn_DataExcept(p,p1,p2);
+    expected(p1,first,req); break;
   case RN_P_VALUE: px=p; break;
   case RN_P_ATTRIBUTE: px=p; break;
   case RN_P_ELEMENT: px=p; break;
-  case RN_P_AFTER: rn_After(p,p1,p2); expected(p1,first); if(rn_nullable(p1)) px=p; break;
+  case RN_P_AFTER: rn_After(p,p1,p2);
+    expected(p1,first,req); if(rn_nullable(p1)) px=p; break;
   case RN_P_REF: break;
   default: assert(0);
   }
@@ -55,13 +60,13 @@ static void expected(int p,int first) {
     }
   }
 }
-void rnx_expected(int p) {
+void rnx_expected(int p,int req) {
   if(len_exp>LIM_EXP) {
     m_free(rnx_exp);
     rnx_exp=(int*)m_alloc(len_exp=LIM_EXP,sizeof(int));
   }
   rnx_n_exp=0;
-  expected(p,1);
+  expected(p,1,req);
 }
 
 char *rnx_p2str(int p) {

@@ -55,16 +55,19 @@ static void verror_handler(int erno,va_list ap) {
   } else {
     int line=XML_GetCurrentLineNumber(expat),col=XML_GetCurrentColumnNumber(expat);
     if(line!=lastline||col!=lastcol) {
-      char *s;
       (*er_printf)("error (%s,%i,%i): ",xml,lastline=line,lastcol=col);
-      if(erno&ERBIT_RNV) {
+      if(erno&ERBIT_RNV) { int mexp=nexp;
 	rnv_default_verror_handler(erno&~ERBIT_RNV,ap);
-	rnx_expected(previous);
-	if(rnx_n_exp!=0 && rnx_n_exp<=nexp) { int i;
-	  (*er_printf)("expected:\n");
-	  for(i=0;i!=rnx_n_exp;++i) {
-	    (*er_printf)("\t%s\n",s=rnx_p2str(rnx_exp[i]));
-	    m_free(s);
+	if(mexp) { int req=2, i; char *s;
+	  while(req--) {
+            rnx_expected(previous,req);
+	    if(rnx_n_exp==0) continue;
+	    if(rnx_n_exp>mexp) break; mexp-=rnx_n_exp;
+            (*er_printf)(req?"required:\n":"expected:\n");
+            for(i=0;i!=rnx_n_exp;++i) {
+              (*er_printf)("\t%s\n",s=rnx_p2str(rnx_exp[i]));
+              m_free(s);
+            }
 	  }
 	}
       } else {
