@@ -1,7 +1,7 @@
 /* $Id$ */
 
-#include <fcntl.h> /* open, read, close */
-#include <unistd.h> /* read, close */
+#include <fcntl.h> /* open, close */
+#include UNISTD_H /* open,read,close */
 #include <string.h> /* memcpy,strlen,strcpy,strcat,strdup */
 #include <stdlib.h> /* calloc,malloc,free */
 #include <stdio.h> /*stderr*/

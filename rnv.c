@@ -2,11 +2,11 @@
 
 #include <stdlib.h> /*calloc,free*/
 #include <fcntl.h>  /*open,close*/
-#include <unistd.h> /*read*/
+#include UNISTD_H   /*open,read,close*/
 #include <stdio.h>  /*fprintf,stderr*/
 #include <string.h> /*strerror,strncpy,strrchr*/
 #include <errno.h>
-#include "expat.h"
+#include EXPAT_H
 #include "rn.h"
 #include "rnc.h"
 #include "rnd.h"
