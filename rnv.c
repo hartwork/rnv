@@ -15,6 +15,7 @@
 #include "drv.h"
 
 #define LEN_T 1024
+#define LIM_T 65536
 
 #define ELEMENT_NOT_ALLOWED "element '%s^%s' not allowed"
 #define ATTRIBUTE_NOT_ALLOWED "attribute '%s^%s=\"%s\"' not allowed"
@@ -172,10 +173,14 @@ static void end_element(void *userData,const char *name) {
 
 static void characters(void *userData,const char *s,int len) {
   if(current!=rn_notAllowed) {
-    if(n_t+len>len_t) {
-      char *newtext=(char*)calloc(n_t+len,sizeof(char)); 
+    int newlen_t=n_t+len;
+    if(newlen_t<=LIM_T&&LIM_T<len_t) newlen_t=LIM_T; 
+    else if(newlen_t<len_t) newlen_t=len_t;
+    if(len_t!=newlen_t) {
+      char *newtext=(char*)calloc(len_t=newlen_t,sizeof(char)); 
       memcpy(newtext,text,n_t*sizeof(char)); free(text); 
       text=newtext;
+      fprintf(stderr,"len_t=%i\n",len_t);
     }
     strncpy(text+n_t,s,len); n_t+=len;
   }
