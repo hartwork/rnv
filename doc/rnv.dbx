@@ -319,24 +319,24 @@ simple protocol to perform validation. The protocol, in BNF, is:
 <programlisting>
 
      query ::= (
-         quit
-       | start
-       | start-tag-open
-       | attribute
-       | start-tag-close
-       | text
-       | end-tag) z.
-     quit ::= "quit".
-     start ::= "start" [gramno].
-     start-tag-open ::= "start-tag-open" patno name.
-     attribute ::= "attribute" patno name value.
-     start-tag-close :: = "start-tag-close" patno name.
-     text ::= ("text"|"mixed") patno text.
-     end-tag ::= "end-tag" patno name.
+           quit
+         | start
+         | start-tag-open
+         | attribute
+         | start-tag-close
+         | text
+         | end-tag) z.
+       quit ::= "quit".
+       start ::= "start" [gramno].
+       start-tag-open ::= "start-tag-open" patno name.
+       attribute ::= "attribute" patno name value.
+       start-tag-close :: = "start-tag-close" patno name.
+       text ::= ("text"|"mixed") patno text.
+       end-tag ::= "end-tag" patno name.
      response ::= (ok | er | error) z.
-     ok ::= "ok" patno.
-     er ::= "er" patno erno.
-     error ::= "error" patno erno error.
+       ok ::= "ok" patno.
+       er ::= "er" patno erno.
+       error ::= "error" patno erno error.
      z ::= "\0" .
 </programlisting>
 
@@ -359,6 +359,8 @@ concise and verbose forms (invocation syntax described later).
 <listitem><para><command>start</command> passes the index of a
 grammar (first grammar in the list of command-line arguments has
 number 0); if the number is omitted, 0 is assumed.
+</para></listitem>
+<listitem><para><command>quit</command> is not opposite of <command>start</command>; instead, it quits RVP.
 </para></listitem>
 </itemizedlist>
 <para>The command-line syntax is:
