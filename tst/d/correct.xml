@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<!-- $Id$ -->
+<tst:suite xmlns:tst="http://davidashen.net/rnv/test/suite">
+  <tst:choice0><tst:a/></tst:choice0>
+  <tst:choice0><tst:b/></tst:choice0>
+  <tst:group0><tst:a/><tst:b/></tst:group0>
+  <tst:interleave0><tst:b/><tst:a/></tst:interleave0>
+  <tst:interleave0><tst:a/><tst:b/></tst:interleave0>
+  <tst:mixed0>
+    <ts:a/> some text <tst:b/>
+  </tst:mixed0>
+  <tst:mixed0>
+    text before <ts:a/> some text <tst:b/> more text
+  </tst:mixed0>
+  <tst:optional0/>
+  <tst:optional0><tst:a/><tst:b/></tst:optional0>
+  <tst:zero-or-more0/>
+  <tst:zero-or-more0><tst:a/><tst:a/></tst:zero-or-more0>
+  <tst:zero-or-more0><tst:b/><tst:a/><tst:a/></tst:zero-or-more0>
+  <tst:choice1><tst:a/></tst:choice1>
+  <tst:choice1 x="x"></tst:choice1>
+  <tst:choice1><tst:b/></tst:choice1>
+  <tst:choice1 y="y"></tst:choice1>
+</tst:suite>

@@ -1,0 +1,34 @@
+# $Id$
+
+namespace tst = "http://davidashen.net/rnv/test/suite"
+
+start = element tst:suite {
+	(	empty
+	|	element tst:choice0 { ec }
+	|	element tst:group0 { eg }
+	|	element tst:interleave0 { ei }
+	|	element tst:mixed0 { mixed { eg } }
+	|	element tst:optional0 { eg? }
+	|	element tst:zero-or-more0 { ec* }
+	|	element tst:one-or-more0 { ei+ }
+	|	element tst:choice1 { ec|ac }
+	|	element tst:group1 { eg|ag }
+	|	element tst:interleave1 { ei & ai }
+	|	element tst:optional1 { eg?,ag? }
+	|	element tst:zero-or-more1 { ec* }
+	|	element tst:one-or-more1 { ei+ }
+	)+
+}
+  
+eg = a , b
+ag = x , y
+ec = a | b
+ac = x | y
+ei = a & b
+ai = x & y
+
+a = element tst:a { text }
+b = element tst:b { text }
+
+x = attribute x { text }
+y = attribute y { text }
