@@ -32,21 +32,23 @@
 	      ((more class char)
 		(eqv? (cdr p1) (cdr p2)))))))
       (old
-	(lambda (p cache)
-	  (and (pair? cache)
-	    (or (and (pat=? p (car cache)) (car cache))
-	      (old p (cdr cache)))))))
+	(lambda (p que)
+	  (and (pair? que)
+	    (or (and (pat=? p (car que)) (car que))
+	      (old p (cdr que)))))))
     (lambda (p)
       (if p
-	(or (old p cache)
-	  (begin (set! cache (cons p cache))
-	    p))
+        (let ((que (assv (car p) cache)))
+	  (if que
+	    (or (old p (cdr que))
+	      (begin (set-cdr! que (cons p (cdr que))) p))
+	    (begin (set! cache (cons (list (car p) p) cache)) p)))
 	(begin
 	  (set! cache '())
 	  (set! rx-none (rx-newpat '(none)))
 	  (set! rx-empty (rx-newpat '(empty)))
 	  (set! rx-any (rx-newpat '(any)))
-	  #f)))))
+	  #f)))))	
 	
 (define (rx-more p)
   (case (car p)
@@ -295,8 +297,7 @@
 	(lambda ()
 	  (let loop ((p (branch)))
 	    (if (equal? sym '(chr . 124))
-	      (begin
-		(getsym)
+	      (begin (getsym)
 		(loop (rx-choice p (branch))))
 	      p)))))
 	
@@ -309,10 +310,10 @@
   (letrec (
       (in-class?
 	(letrec (
-	    (orf
+	    (-or-
 	      (lambda list
 		(and (pair? list)
-		  (or (car list) (apply orf (cdr list))))))
+		  (or (car list) (apply -or- (cdr list))))))
 	    (in-xml-ranges (lambda (i) (u-in-ranges c (cdr (assv i xml-ranges)))))
 	    (in-rx-ranges (lambda (i) (u-in-ranges c (cdr (assv i rx-ranges))))))
 	  (lambda (c id)
@@ -320,18 +321,18 @@
 	      ((NL) (or (= c 13) (= c 10)))
 	      ((S) (or (= c 13) (= c 10) (= c 9) (= c 32)))
 	      ((I) (or (= c 58) (= c 95)
-		     (apply orf (map in-xml-ranges '(base-char ideographic)))))
+		     (apply -or- (map in-xml-ranges '(base-char ideographic)))))
 	      ((C) (or (in-class? c 'I) (= c 45) (= c 46)
-		     (apply orf (map in-xml-ranges '(digit combining-char extender)))))
+		     (apply -or- (map in-xml-ranges '(digit combining-char extender)))))
 	      ((W) (not
 		     (or (in-class? c 'U-P) (in-class? c 'U-Z) (in-class? c 'U-C))))
-	      ((U-C) (apply orf (map in-rx-ranges '(U-Cc U-Cf U-Co))))
-	      ((U-L) (apply orf (map in-rx-ranges '(U-Lu U-Ll U-Lt U-Lm U-Lo))))
-	      ((U-M) (apply orf (map in-rx-ranges '(U-Mn U-Mc U-Me))))
-	      ((U-N) (apply orf (map in-rx-ranges '(U-Nd U-Nl U-No))))
-	      ((U-P) (apply orf (map in-rx-ranges '(U-Pc U-Pd U-Ps U-Pe))))
-	      ((U-S) (apply orf (map in-rx-ranges '(U-Sm U-Sc U-Sk U-So))))
-	      ((U-Z) (apply orf (map in-rx-ranges '(U-Zl U-Zs U-Zp))))
+	      ((U-C) (apply -or- (map in-rx-ranges '(U-Cc U-Cf U-Co))))
+	      ((U-L) (apply -or- (map in-rx-ranges '(U-Lu U-Ll U-Lt U-Lm U-Lo))))
+	      ((U-M) (apply -or- (map in-rx-ranges '(U-Mn U-Mc U-Me))))
+	      ((U-N) (apply -or- (map in-rx-ranges '(U-Nd U-Nl U-No))))
+	      ((U-P) (apply -or- (map in-rx-ranges '(U-Pc U-Pd U-Ps U-Pe))))
+	      ((U-S) (apply -or- (map in-rx-ranges '(U-Sm U-Sc U-Sk U-So))))
+	      ((U-Z) (apply -or- (map in-rx-ranges '(U-Zl U-Zs U-Zp))))
 	      (else (in-rx-ranges id)))))))
     (case (car p)
       ((none empty) rx-none)
