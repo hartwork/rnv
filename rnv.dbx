@@ -32,6 +32,8 @@ The package consists of:
 - the source code, <filename>*.[ch]</filename>;
 </listitem>
 <listitem>
+- the source code map, <filename>src.txt</filename>;
+<listitem>
 - <filename>Makefile</filename> for unix-like systems;
 </listitem>
 <listitem>

@@ -1,0 +1,30 @@
+# $Id$
+
+# source files
+
+rnv.c -- command-line validator
+rn.c rn.h -- RNG patterns
+rnc.c rnc.h -- RNC parser 
+rnd.c rnd.h -- second pass for RNC parser, restrictions and traits
+rnx.c rnx.h -- auxiliary functions for rn
+drv.c drv.h -- derivative of RNG patterns, validation core
+xsd.c xsd.h -- xml schema datatypes
+sc.c sc.h -- scope tables for rnc
+er.c er.h  -- error reporting (RNC parser and validator)
+ht.c ht.h -- hash table  
+strops.c strops.h  -- common string operations
+xmlc.c xmlc.h -- xml character classifiers
+u.c u.h  -- utf-8 
+
+# hierarchy
+
+... er,ht,strops,xmlc,uc -- used in many places
+
+rnv
+. rn
+. rnc
+.. sc
+. rnd
+. rnx
+. drv
+.. xsd
