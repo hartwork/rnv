@@ -498,7 +498,7 @@ static void getsym(struct rnc_source *sp) {
       skipAnnotationContent(sp);
       continue;
     case SYM_LITERAL:
-     /* alternatively, either a literal() non-terminal, or a separate filter;
+     /* alternatively, either a non-terminal, or a separate filter;
       - one more filtering layer is not worth the effort,
       - the non-terminal would later need extra buffer for concatenated strings.
       Since the concatenation is only applied to constants anyway, merging them
@@ -899,6 +899,9 @@ int main(int argc,char **argv) {
 
 /*
  * $Log$
+ * Revision 1.16  2003/11/27 23:19:31  dvd
+ * syntax and external files
+ *
  * Revision 1.15  2003/11/27 23:05:49  dvd
  * syntax and external files
  *
