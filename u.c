@@ -8,7 +8,7 @@
 #define u3(t) ux(ux(t[0]&0xF,t[1]),t[2])
 #define u4(t) ux(ux(ux(t[0]&0x7,t[1]),t[2]),t[3])
 #define u5(t) ux(ux(ux(ux(t[0]&0x3,t[1]),t[2]),t[3]),t[4])
-#define u6(t) ux(ux(ux(ux(t[0]&0x3,t[1]),t[2]),t[3]),t[4])
+#define u6(t) ux(ux(ux(ux(ux(t[0]&0x1,t[1]),t[2]),t[3]),t[4]),t[5])
 
 #define vx(c,u) c=0x80|((u)&0x3F)
 #define v1(t,u) t[0]=u
@@ -78,6 +78,9 @@ int inRange(int u,int r[][2],int len) {
 
 /*
  * $Log$
+ * Revision 1.12  2003/12/14 20:41:49  dvd
+ * typo in u.c
+ *
  * Revision 1.11  2003/12/14 20:39:05  dvd
  * ParseBuffer unless len==0
  *
