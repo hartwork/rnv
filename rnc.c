@@ -6,9 +6,9 @@
 #include <stdlib.h> /* calloc,malloc,free */
 #include <stdio.h> /*stderr*/
 #include <stdarg.h> /*va_list,va_arg,va_end*/
+#include <assert.h> /*assert*/
 
 #include "u.h"
-#include "rn.h"
 #include "er.h"
 #include "rnc.h"
 
@@ -41,30 +41,31 @@ static char *kwdtab[NKWD]={
 #define SYM_TOKEN 18
 
 #define SYM_IDENT 19
+#define SYM_QNAME 20
 
-#define SYM_ASGN 20
-#define SYM_ASGN_ILEAVE 21
-#define SYM_ASGN_CHOICE 22
-#define SYM_SEQ 23 /* , */
-#define SYM_CHOICE 24 
-#define SYM_ILEAVE 25
-#define SYM_OPTIONAL 26
-#define SYM_ZERO_OR_MORE 27
-#define SYM_ONE_OR_MORE 28
-#define SYM_LPAR 29
-#define SYM_RPAR 30
-#define SYM_LCUR 31
-#define SYM_RCUR 32
-#define SYM_LSQU 33
-#define SYM_RSQU 34
-#define SYM_EXCEPT 35
-#define SYM_QNAME 36   /* : */
-#define SYM_CONCAT 37
-#define SYM_NS_NAME 38 /* :* */
-#define SYM_ANY_NAME SYM_ZERO_OR_MORE /* because they both are * */
+#define SYM_NSNAME 21
+
+#define SYM_ASGN 22
+#define SYM_ASGN_ILEAVE 23
+#define SYM_ASGN_CHOICE 24
+#define SYM_GROUP 25 /* , */
+#define SYM_CHOICE 26 
+#define SYM_ILEAVE 27
+#define SYM_OPTIONAL 28
+#define SYM_ZERO_OR_MORE 29
+#define SYM_ONE_OR_MORE 30
+#define SYM_LPAR 31
+#define SYM_RPAR 32
+#define SYM_LCUR 33
+#define SYM_RCUR 34
+#define SYM_LSQU 35
+#define SYM_RSQU 36
+#define SYM_EXCEPT 37
+#define SYM_CONCAT 38
+#define SYM_ANY_NAME SYM_ZERO_OR_MORE /* both are * */
 #define SYM_QUOTE 39  /* \ */
 #define SYM_FOLLOW_ANNOTATION 40 /* >> */
-#define SYM_COMMENT 41 
+#define SYM_DOCUMENTATION 41 /* ## */
 #define SYM_LITERAL 42
 
 #define BUFSIZE 1024
@@ -74,6 +75,12 @@ static char *kwdtab[NKWD]={
 #define SRC_CLOSE 2
 #define SRC_ERRORS 4
 
+struct sym {
+  char *s; int slen;
+  int line,col;
+  int sym;
+};
+
 struct rnc_source {
   int flags;
   char *fn; int fd;
@@ -81,10 +88,12 @@ struct rnc_source {
   int complete;
   int line,col;
   int u,v,w; int nx;
-  char *s; int slen;
-  int symline,symcol,nxtline,nxtcol;
-  int sym,nxt;
+  int cur;
+  struct sym sym[2];
 };
+
+#define CUR(sp) ((sp)->sym[(sp)->cur])
+#define NXT(sp) ((sp)->sym[!(sp)->cur])
 
 static void rnc_init(struct rnc_source *sp);
 static int rnc_read(struct rnc_source *sp);
@@ -112,7 +121,7 @@ int rnc_open(struct rnc_source *sp,char *fn) {
 
 int rnc_close(struct rnc_source *sp) {
   int ret=0;
-  if(sp->s) free(sp->s);
+  {int i; for(i=0;i!=2;++i) if(sp->sym[i].s) free(sp->sym[i].s);}
   if(sp->flags&SRC_FREE) free(sp->buf); 
   sp->buf=NULL;
   sp->complete=-1;
@@ -131,8 +140,8 @@ static void rnc_init(struct rnc_source *sp) {
   sp->complete=sp->fd=-1;
   sp->nx=-1;
   sp->u=-1; sp->v=0; sp->line=1; sp->col=1;
-  sp->s=(char*)calloc(sp->slen=BUFSIZE,sizeof(char));
-  sp->nxt=sp->sym=-2;
+  sp->cur=0;
+  {int i; for(i=0;i!=2;++i) sp->sym[i].s=(char*)calloc(sp->sym[i].slen=BUFSIZE,sizeof(char));}
 }
 
 static int rnc_read(struct rnc_source *sp) {
@@ -240,7 +249,7 @@ static void getv(struct rnc_source *sp) {
 	    case 'E': case 'e': sp->v+=14; break;
 	    case 'F': case 'f': sp->v+=15; break;
             default: 
-	      error(sp,ER_XESC,sp->fn,sp->symline,sp->symcol);
+	      error(sp,ER_XESC,sp->fn,CUR(sp).line,CUR(sp).col);
 	      goto END_OF_HEX_DIGITS;
             }
 	  } END_OF_HEX_DIGITS:;
@@ -259,23 +268,23 @@ static void getv(struct rnc_source *sp) {
   }
 }
 
-#define skip_comment(sp) 
 /* why \r is not a new line by itself when escaped? it is when not. */
 #define newline(v) ((v)==0||(v)=='\n')
 #define whitespace(v) ((v)==' '||(v)=='\t')
 #define name_start(v) (u_base_char(v)||u_ideographic(v)||(v)=='_')
-#define name_char(v) (name_start(v)||u_digit(v)||u_combining_char(v)||u_extender(v)||(v)=='.'||(v)=='-')
+#define name_char(v) (name_start(v)||u_digit(v)||u_combining_char(v)||u_extender(v)||(v)=='.'||(v)=='-'||(v)==':')
+#define skip_comment(sp) while(!newline(sp->v)) getv(sp); getv(sp)
 
-static void realloc_s(struct rnc_source *sp) {
-  char *s; int slen=sp->slen*2;
+static void realloc_s(struct sym *symp) {
+  char *s; int slen=symp->slen*2;
   s=(char*)calloc(slen,sizeof(char));
-  memcpy(s,sp->s,sp->slen); free(sp->s); 
-  sp->s=s; sp->slen=slen;
+  memcpy(s,symp->s,symp->slen); free(symp->s); 
+  symp->s=s; symp->slen=slen;
 }
 
 static char *sym2str(int sym) {
   switch(sym) {
-  case SYM_EOF: return "EOF"; 
+  case SYM_EOF: return "end of file"; 
   case SYM_ATTRIBUTE: return "\"attribute\"";
   case SYM_DEFAULT: return "\"default\"";
   case SYM_DATATYPES: return "\"datatypes\"";
@@ -296,10 +305,12 @@ static char *sym2str(int sym) {
   case SYM_TEXT: return "\"text\"";
   case SYM_TOKEN: return "\"token\"";
   case SYM_IDENT: return "identifier"; 
+  case SYM_QNAME: return "prefixed name";
+  case SYM_NSNAME: return "namespace name";
   case SYM_ASGN: return "\"=\"";
   case SYM_ASGN_ILEAVE: return "\"&=\"";
   case SYM_ASGN_CHOICE: return "\"|=\"";
-  case SYM_SEQ: return "\",\"";
+  case SYM_GROUP: return "\",\"";
   case SYM_CHOICE: return "\"|\"";
   case SYM_ILEAVE: return "\"&\"";
   case SYM_OPTIONAL: return "\"?\"";
@@ -312,50 +323,66 @@ static char *sym2str(int sym) {
   case SYM_LSQU: return "\"[\"";
   case SYM_RSQU: return "\"]\"";
   case SYM_EXCEPT: return "\"-\"";
-  case SYM_QNAME: return "\":\"";
   case SYM_CONCAT: return "\"~\"";
-  case SYM_NS_NAME: return "\":*\"";
   case SYM_QUOTE: return "\"\\\"";
   case SYM_FOLLOW_ANNOTATION: return "\">>\"";
-  case SYM_COMMENT: return "\"#\"";
+  case SYM_DOCUMENTATION: return "\"##\"";
   case SYM_LITERAL: return "literal";
   default: assert(0);
   }
   return NULL;
 }
 
-static void getsym(struct rnc_source *sp) {
-  sp->sym=sp->nxt; sp->symline=sp->nxtline; sp->symcol=sp->nxtcol;
-  sp->nxtline=sp->line; sp->nxtcol=sp->col;
+static void advance(struct rnc_source *sp) {
+  sp->cur=!sp->cur;
+  NXT(sp).line=sp->line; NXT(sp).col=sp->col;
   for(;;) {
     if(newline(sp->v)||whitespace(sp->v)) {getv(sp); continue;}
     switch(sp->v) {
-    case -1: sp->nxt=SYM_EOF; return; 
-    case '#': do getv(sp); while(!newline(sp->v)); getv(sp); continue;
-    case '=': getv(sp); sp->nxt=SYM_ASGN; return;
-    case ',': getv(sp); sp->nxt=SYM_SEQ; return;
+    case -1: NXT(sp).sym=SYM_EOF; return; 
+    case '#': 
+      getv(sp);
+      if(sp->v=='#') {
+	int i=0;
+	for(;;) {
+	  do getv(sp); while(sp->v=='#');
+	  if(whitespace(sp->v)) getv(sp);
+	  for(;;) {
+	    if(i==NXT(sp).slen) realloc_s(&NXT(sp));
+	    if(newline(sp->v)) {
+	      do getv(sp); while(whitespace(sp->v));
+	      if(sp->v=='#') {getv(sp);
+		if(sp->v=='#') {NXT(sp).s[i++]='\n'; break;}
+		skip_comment(sp);
+	      }
+	      NXT(sp).s[i]=0; NXT(sp).sym=SYM_DOCUMENTATION; return;
+	    } else NXT(sp).s[i++]=(char)sp->v;
+	    getv(sp);
+	  } 
+	}
+      } else {skip_comment(sp); continue;}
+    case '=': getv(sp); NXT(sp).sym=SYM_ASGN; return;
+    case ',': getv(sp); NXT(sp).sym=SYM_GROUP; return;
     case '|': getv(sp); 
       if(sp->v=='=') {
-	getv(sp); sp->nxt=SYM_ASGN_CHOICE; return;
-      } sp->nxt=SYM_CHOICE; return;
+	getv(sp); NXT(sp).sym=SYM_ASGN_CHOICE; return;
+      } NXT(sp).sym=SYM_CHOICE; return;
     case '&': getv(sp); 
-      if(sp->v=='=') {getv(sp); sp->nxt=SYM_ASGN_ILEAVE;} else sp->nxt=SYM_ILEAVE; return;
-    case '?': getv(sp); sp->nxt=SYM_OPTIONAL; return;
-    case '*': getv(sp); sp->nxt=SYM_ZERO_OR_MORE; return; /* SYM_ANY_NAME */
-    case '+': getv(sp); sp->nxt=SYM_ONE_OR_MORE; return;
-    case '-': getv(sp); sp->nxt=SYM_EXCEPT; return;
-    case '~': getv(sp); sp->nxt=SYM_CONCAT; return;	   
-    case '(': getv(sp); sp->nxt=SYM_LPAR; return;
-    case ')': getv(sp); sp->nxt=SYM_RPAR; return;
-    case '{': getv(sp); sp->nxt=SYM_LCUR; return;
-    case '}': getv(sp); sp->nxt=SYM_RCUR; return;
-    case '[': getv(sp); sp->nxt=SYM_LSQU; return;
-    case ']': getv(sp); sp->nxt=SYM_RSQU; return;
-    case ':': getv(sp); 
-      if(sp->v=='*') {getv(sp); sp->nxt=SYM_NS_NAME;} else sp->nxt=SYM_QNAME; return;
+      if(sp->v=='=') {getv(sp); NXT(sp).sym=SYM_ASGN_ILEAVE;} else NXT(sp).sym=SYM_ILEAVE; return;
+    case '?': getv(sp); NXT(sp).sym=SYM_OPTIONAL; return;
+    case '*': getv(sp); NXT(sp).sym=SYM_ZERO_OR_MORE; return; /* SYM_ANY_NAME */
+    case '+': getv(sp); NXT(sp).sym=SYM_ONE_OR_MORE; return;
+    case '-': getv(sp); NXT(sp).sym=SYM_EXCEPT; return;
+    case '~': getv(sp); NXT(sp).sym=SYM_CONCAT; return;	   
+    case '(': getv(sp); NXT(sp).sym=SYM_LPAR; return;
+    case ')': getv(sp); NXT(sp).sym=SYM_RPAR; return;
+    case '{': getv(sp); NXT(sp).sym=SYM_LCUR; return;
+    case '}': getv(sp); NXT(sp).sym=SYM_RCUR; return;
+    case '[': getv(sp); NXT(sp).sym=SYM_LSQU; return;
+    case ']': getv(sp); NXT(sp).sym=SYM_RSQU; return;
     case '>': getv(sp); 
       if(sp->v!='>') error(sp,ER_LEXP,'>',sp->fn,sp->line,sp->col);
-      getv(sp); sp->nxt=SYM_FOLLOW_ANNOTATION; return;
+      getv(sp); NXT(sp).sym=SYM_FOLLOW_ANNOTATION; return;
     case '"': case '\'': 
       { int q=sp->v;
 	int triple=0;
@@ -365,48 +392,55 @@ static void getsym(struct rnc_source *sp) {
 	  if(sp->v==q) { // triply quoted string
 	    triple=1; getv(sp);
 	  } else {
-	    sp->s[0]='\0'; sp->nxt=SYM_LITERAL; return;
+	    NXT(sp).s[0]='\0'; NXT(sp).sym=SYM_LITERAL; return;
 	  }
 	} 
 	for(;;) {
 	  if(sp->v==q) {
 	    if(triple) {
-	      if(i>=2 && sp->s[i-2]==q && sp->s[i-1]==q) {
-		sp->s[i-2]='\0'; break;
-	      } else sp->s[i]=(char)sp->v;
-	    } else {sp->s[i]='\0'; break;}
+	      if(i>=2 && NXT(sp).s[i-2]==q && NXT(sp).s[i-1]==q) {
+		NXT(sp).s[i-2]='\0'; break;
+	      } else NXT(sp).s[i]=(char)sp->v;
+	    } else {NXT(sp).s[i]='\0'; break;}
 	  } else if(sp->v<=0) {
 	    if(sp->v==-1 || !triple) {
 	      error(sp,ER_LLIT,sp->fn,sp->line,sp->col);
-	      sp->s[i]='\0'; break;
-	    } else sp->s[i]='\n';
-	  } else sp->s[i]=(char)sp->v;
+	      NXT(sp).s[i]='\0'; break;
+	    } else NXT(sp).s[i]='\n';
+	  } else NXT(sp).s[i]=(char)sp->v;
 	  getv(sp);
-	  if(++i==sp->slen) realloc_s(sp);
+	  if(++i==NXT(sp).slen) realloc_s(&NXT(sp));
 	}
-	getv(sp); sp->nxt=SYM_LITERAL; return;
+	getv(sp); NXT(sp).sym=SYM_LITERAL; return;
       } 
     default: 
-      { int escaped=0;
+      { int escaped=0,prefixed=0;
         if(sp->v=='\\') {escaped=1; getv(sp);}
 	if(name_start(sp->v)) {
 	  int i=0;
 	  for(;;) {
-	    sp->s[i++]=sp->v;
-	    if(i==sp->slen) realloc_s(sp);
+	    NXT(sp).s[i++]=sp->v;
+	    if(i==NXT(sp).slen) realloc_s(&NXT(sp));
 	    getv(sp);
-	    if(!name_char(sp->v)) {sp->s[i]='\0'; break;}
+	    if(!name_char(sp->v)) {NXT(sp).s[i]='\0'; break;}
+	    if(sp->v==':') prefixed=1;
           }
-	  if(!escaped) {
+	  if(!(escaped||prefixed)) {
 	    int n=0,m=NKWD-1,i,cmp;
 	    for(;;) {
 	      if(n>m) break;
 	      i=(n+m)/2;
-	      cmp=strcmp(sp->s,kwdtab[i]);
-	      if(cmp==0) {sp->sym=i; return;} else if(cmp<0) m=i-1; else n=i+1;
+	      cmp=strcmp(NXT(sp).s,kwdtab[i]);
+	      if(cmp==0) {NXT(sp).sym=i; return;} else if(cmp<0) m=i-1; else n=i+1;
 	    }
 	  } 
-	  sp->nxt=SYM_IDENT; return;
+	  if(prefixed) {
+	    if(NXT(sp).s[i-1]==':'&&sp->v=='*') {
+	      getv(sp); NXT(sp).s[i-1]='\0';
+	      NXT(sp).sym=SYM_NSNAME;
+	    } else NXT(sp).sym=SYM_QNAME;
+	  } else NXT(sp).sym=SYM_IDENT; 
+	  return;
 	} else {
 	  error(sp,ER_LILL,sp->v,sp->fn,sp->line,sp->col);
 	  getv(sp);
@@ -417,14 +451,87 @@ static void getsym(struct rnc_source *sp) {
   }
 }
 
-static void chksym(struct rnc_source *sp,int sym) {
-  if(sp->sym!=sym) error(sp,ER_SEXP,sym2str(sym),sp->fn,sp->line,sp->col);
-  getsym(sp);
+static void skipto(struct rnc_source *sp,int sym) {
+  while(CUR(sp).sym!=sym&&CUR(sp).sym!=SYM_EOF) advance(sp);
 }
+
+static void skipAnnotationContent(struct rnc_source *sp) {
+  int line=CUR(sp).line, col=CUR(sp).col;
+  if(CUR(sp).sym==SYM_LSQU) {
+    advance(sp);
+    for(;;) {
+      switch(CUR(sp).sym) {
+      case SYM_LSQU: skipAnnotationContent(sp); break;
+      case SYM_RSQU: advance(sp); return;
+      case SYM_IDENT: case SYM_QNAME:
+      case SYM_ASGN:
+      case SYM_LITERAL: case SYM_CONCAT: advance(sp); break;
+      default:
+        if(0<=CUR(sp).sym&&CUR(sp).sym<NKWD) { /* keywords */
+	  advance(sp);
+	  break;
+	} else {
+	  error(sp,ER_SILL,sym2str(CUR(sp).sym),sp->fn,CUR(sp).line,CUR(sp).col);
+	  error(sp,ER_UNAN,sp->fn,line,col);
+	  return;
+	}
+      }
+    }
+  }
+}
+
+/* advance, join literal fragments and skip annotations and documentation comments */
+static void getsym(struct rnc_source *sp) {
+  advance(sp);
+  for(;;) {
+    switch(CUR(sp).sym) {
+    case SYM_DOCUMENTATION: 
+      advance(sp); 
+      continue;
+    case SYM_FOLLOW_ANNOTATION: advance(sp); advance(sp); 
+      if(CUR(sp).sym<0||CUR(sp).sym>SYM_QNAME) {
+	error(sp,ER_SEXP,"identifier, prefixed name or keyword",sp->fn,CUR(sp).line,CUR(sp).col);
+	skipto(sp,SYM_LSQU);
+      } else {
+	advance(sp); 
+        if(CUR(sp).sym!=SYM_LSQU) error(sp,ER_SEXP,sym2str(SYM_LSQU),sp->fn,CUR(sp).line,CUR(sp).col);
+      }
+    case SYM_LSQU: 
+      skipAnnotationContent(sp);
+      continue;
+    case SYM_LITERAL:
+      if(NXT(sp).sym==SYM_CONCAT) {
+	sp->cur=!sp->cur; advance(sp);
+	if(NXT(sp).sym!=SYM_LITERAL) {
+	  error(sp,ER_SEXP,"literal",sp->fn,NXT(sp).line,NXT(sp).col);
+	  break;
+	}
+	{ int newslen=strlen(CUR(sp).s)+strlen(NXT(sp).s);
+	  char *s;
+	  if(newslen>CUR(sp).slen) {
+	    s=(char*)calloc(newslen+1,sizeof(char));
+	    strcpy(s,CUR(sp).s); free(CUR(sp).s);
+	    CUR(sp).s=s;
+	  } else s=CUR(sp).s;
+	  strcat(s,NXT(sp).s);
+	}
+	sp->cur=!sp->cur; advance(sp);
+	continue;
+      }
+      break;
+    }
+    return;
+  }
+}
+
+static void chksym(struct rnc_source *sp,int sym) {
+  if(CUR(sp).sym!=sym) error(sp,ER_SEXP,sym2str(sym),sp->fn,CUR(sp).line,CUR(sp).col);
+}
+static void chkget(struct rnc_source *sp,int sym) {chksym(sp,sym); getsym(sp);}
 
 /* return 1 if there was a declaration, 0 otherwise */
 static int decl(struct rnc_source *sp) {
-  switch(sp->sym) {
+  switch(CUR(sp).sym) {
   case SYM_NAMESPACE: return 1;
   case SYM_DEFAULT: return 1;
   case SYM_DATATYPES: return 1;
@@ -432,45 +539,199 @@ static int decl(struct rnc_source *sp) {
   }
 }
 
-static void annotationBody(struct rnc_source *sp,int allow_text) {
+static void nameclass(struct rnc_source *sp) {
 }
 
-static void leadingAnnotation(struct rnc_source *sp) {
-  annotationBody(sp,0);
-}
-
-static int grammarContent(struct rnc_source *sp) {
-  if(sp->sym==SYM_IDENT && sp->nxt==SYM_LSQU) {
-    return 1;
-  } else if(sp->sym==SYM_LSQU) {
-    leadingAnnotation(sp);
-    switch(sp->sym) {
-    case SYM_DIV:
-    case SYM_INCLUDE:
-    case SYM_START:
-    case SYM_EOF:
-      return 1;
-    case SYM_IDENT:
-      switch(sp->nxt) {
-      case SYM_ASGN:
-      case SYM_ASGN_CHOICE:
-      case SYM_ASGN_ILEAVE:
-	return 1;
-      }
-    } 
+static void value(struct rnc_source *sp) {
+  switch(CUR(sp).sym) {
+  case SYM_TOKEN:
+  case SYM_STRING: 
+  case SYM_QNAME:
+    getsym(sp);
+  case SYM_LITERAL:
+    getsym(sp);
+    break;
   }
-  return 0;
+}
+
+static void data(struct rnc_source *sp) {
+  switch(CUR(sp).sym) {
+  case SYM_TOKEN: 
+  case SYM_STRING: 
+  case SYM_QNAME:
+    getsym(sp);
+  }
+  if(CUR(sp).sym==SYM_LCUR) {
+   /* parameters */
+    for(;;) {
+      if(CUR(sp).sym==SYM_RCUR) {
+	getsym(sp);
+	break;
+      }
+      getsym(sp);
+      if(0<CUR(sp).sym||CUR(sp).sym<=SYM_IDENT) {
+	error(sp,ER_SILL,sym2str(CUR(sp).sym),sp->fn,CUR(sp).line,CUR(sp).col);
+	skipto(sp,SYM_RCUR);
+	break;
+      }
+      chkget(sp,SYM_ASGN);
+      chksym(sp,SYM_LITERAL);
+      getsym(sp);
+    }
+  }
+}
+
+static void pattern(struct rnc_source *sp);
+static int grammarContent(struct rnc_source *sp);
+
+static void primary(struct rnc_source *sp) {
+  switch(CUR(sp).sym) {
+  case SYM_ELEMENT: getsym(sp);
+    nameclass(sp); chkget(sp,SYM_LCUR); pattern(sp); chkget(sp,SYM_RCUR);
+    break;
+  case SYM_ATTRIBUTE: getsym(sp);
+    nameclass(sp); chkget(sp,SYM_LCUR); pattern(sp); chkget(sp,SYM_RCUR);
+    break;
+  case SYM_LIST: getsym(sp);
+    chkget(sp,SYM_LCUR); pattern(sp); chkget(sp,SYM_RCUR);
+    break;
+  case SYM_MIXED: getsym(sp);
+    chkget(sp,SYM_LCUR); pattern(sp); chkget(sp,SYM_RCUR);
+    break;
+  case SYM_PARENT: getsym(sp);
+    chksym(sp,SYM_IDENT);
+    getsym(sp);
+    break;
+  case SYM_EMPTY: getsym(sp);
+    break;
+  case SYM_TEXT: getsym(sp);
+    break;
+  case SYM_NOT_ALLOWED: getsym(sp);
+    break;
+  case SYM_EXTERNAL: getsym(sp);
+    chksym(sp,SYM_LITERAL);
+    getsym(sp); 
+    if(CUR(sp).sym==SYM_INHERIT) getsym(sp);
+    break;
+  case SYM_GRAMMAR: 
+    chkget(sp,SYM_LCUR);
+    while(grammarContent(sp));
+    chkget(sp,SYM_RCUR);
+    break;
+    if(NXT(sp).sym==SYM_LITERAL) {
+      value(sp); 
+    } else {
+      data(sp);
+    }
+    break;
+  case SYM_IDENT: /* ref */
+    getsym(sp);
+    break;
+  case SYM_STRING: 
+  case SYM_TOKEN: 
+  case SYM_QNAME:  
+    if(NXT(sp).sym==SYM_LITERAL) {
+      value(sp); 
+    } else {
+      data(sp);
+    }
+    break;
+  case SYM_LPAR: 
+    getsym(sp); pattern(sp); chkget(sp,SYM_RPAR); 
+    break;
+  case SYM_LITERAL: 
+    value(sp); 
+    break;
+  default: 
+    error(sp,ER_SILL,sym2str(CUR(sp).sym),sp->fn,CUR(sp).line,CUR(sp).col);
+    getsym(sp);
+    break;
+  }
+}
+
+static void unary(struct rnc_source *sp) {
+  primary(sp);
+  switch(CUR(sp).sym) {
+  case SYM_OPTIONAL: getsym(sp); 
+    break;
+  case SYM_ZERO_OR_MORE:
+  case SYM_ONE_OR_MORE: getsym(sp);
+   /* check that the argument are not data-derived (?) */
+    break;
+  }
 }
 
 static void pattern(struct rnc_source *sp) {
+  int op;
+  unary(sp);
+  switch(CUR(sp).sym) {
+  case SYM_GROUP: 
+  case SYM_CHOICE:
+  case SYM_ILEAVE: /* check that the arguments are not data-derived (?) */
+    op=CUR(sp).sym;
+    do {
+      getsym(sp);
+      unary(sp);
+    } while(CUR(sp).sym==op);
+    break;
+  case SYM_EXCEPT:
+   /* check that the pattern is data */
+    getsym(sp);
+    primary(sp);
+  }
+}
+
+static void define(struct rnc_source *sp) {
+  switch(CUR(sp).sym) {
+  case SYM_ASGN: case SYM_ASGN_CHOICE: case SYM_ASGN_ILEAVE: getsym(sp); break;
+  default: error(sp,ER_SEXP,"assign method",sp->fn,CUR(sp).line,CUR(sp).col);
+  }
+  pattern(sp);
+}
+
+static void division(struct rnc_source *sp) {
+  chkget(sp,SYM_LCUR);
+  while(grammarContent(sp)); 
+  chkget(sp,SYM_RCUR);
+}
+
+static void include(struct rnc_source *sp) {
+ /* check for include inside includeContent */
+  getsym(sp);
+  if(CUR(sp).sym==SYM_INHERIT) getsym(sp);
+  chkget(sp,SYM_LCUR);
+  while(grammarContent(sp));
+  chkget(sp,SYM_RCUR);
+}
+
+static int grammarContent(struct rnc_source *sp) {
+  switch(CUR(sp).sym) {
+  case SYM_IDENT: 
+    switch(NXT(sp).sym) {
+    case SYM_LSQU: getsym(sp); return 1; /* skip grammar annotation */
+    case SYM_ASGN: 
+    case SYM_ASGN_CHOICE: 
+    case SYM_ASGN_ILEAVE: getsym(sp); define(sp); return 1;
+    default: return 0;
+    }
+  case SYM_QNAME:
+    switch(NXT(sp).sym) {
+    case SYM_LSQU: getsym(sp); return 1;
+    default: return 0;
+    }
+  case SYM_START: getsym(sp); define(sp); return 1;
+  case SYM_DIV: getsym(sp); division(sp); return 1;
+  case SYM_INCLUDE: getsym(sp); include(sp); return 1;
+  default: return 0;
+  }
 }
 
 static void topLevel(struct rnc_source *sp) {
   while(decl(sp));
   if(grammarContent(sp)) {
     while(grammarContent(sp));
-    chksym(sp,SYM_EOF);
   } else pattern(sp);
+  chkget(sp,SYM_EOF);
 }
 
 void rnc_parse(struct rnc_source *sp) {
@@ -485,11 +746,14 @@ int main(int argc,char **argv) {
   getsym(&src);
   for(;;) {
     getsym(&src);
-    switch(src.sym) {
+    switch(CUR(&src).sym) {
     case SYM_EOF: return 0;
-    case SYM_LITERAL: printf("(%i,%i) ``%s''\n",src.line,src.col,src.s); break;
-    case SYM_IDENT: printf("(%i,%i) $%s\n",src.line,src.col,src.s); break;
-    default: if(src.sym<NKWD) printf("(%i,%i) @%s\n",src.line,src.col,src.s); break;
+    case SYM_LITERAL: printf("(%i,%i) ``%s''\n",CUR(&src).line,CUR(&src).col,CUR(&src).s); break;
+    case SYM_DOCUMENTATION: printf("(%i,%i) ## %s\n",CUR(&src).line,CUR(&src).col,CUR(&src).s); break;
+    case SYM_IDENT:  printf("(%i,%i) $%s\n",CUR(&src).line,CUR(&src).col,CUR(&src).s); break;
+    case SYM_QNAME:  printf("(%i,%i) :%s\n",CUR(&src).line,CUR(&src).col,CUR(&src).s); break;
+    case SYM_NSNAME: printf("(%i,%i) *%s\n",CUR(&src).line,CUR(&src).col,CUR(&src).s); break;
+    default: if(CUR(&src).sym<NKWD) printf("(%i,%i) @%s\n",CUR(&src).line,CUR(&src).col,CUR(&src).s); break;
     }
   }
   rnc_close(&src);
@@ -497,6 +761,9 @@ int main(int argc,char **argv) {
 
 /*
  * $Log$
+ * Revision 1.13  2003/11/26 23:49:00  dvd
+ * syntax almost ready
+ *
  * Revision 1.12  2003/11/26 00:37:47  dvd
  * parser in progress, documentation handling removed
  *

@@ -12,6 +12,8 @@
 #define ER_LLIT 4
 #define ER_LILL 5
 #define ER_SEXP 6
+#define ER_SILL 7
+#define ER_UNAN 8
 
 extern void er_handler(int er_no,...);
 extern void (*ver_handler_p)(int er_no,va_list ap);
@@ -20,6 +22,9 @@ extern void (*ver_handler_p)(int er_no,va_list ap);
 
 /*
  * $Log$
+ * Revision 1.7  2003/11/26 23:49:00  dvd
+ * syntax almost ready
+ *
  * Revision 1.6  2003/11/26 00:37:47  dvd
  * parser in progress, documentation handling removed
  *

@@ -40,12 +40,22 @@ static void default_ver_handler(int er_no,va_list ap) {
     break;
   case ER_SEXP:
     vfprintf(stderr,"syntax error: %s expected (%s,%u<%u)\n",ap);
+    break;
+  case ER_SILL:
+    vfprintf(stderr,"syntax error: %s unexpected  (%s,%u,%u)\n",ap);
+    break;
+  case ER_UNAN:
+    vfprintf(stderr,"unterminated annotation (%s,%u,%u)\n",ap);
+    break;
   default: assert(0);
   }
 }
 
 /*
  * $Log$
+ * Revision 1.7  2003/11/26 23:49:00  dvd
+ * syntax almost ready
+ *
  * Revision 1.6  2003/11/26 00:37:47  dvd
  * parser in progress, documentation handling removed
  *
