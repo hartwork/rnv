@@ -27,6 +27,7 @@ delimiters in regexp and literal must be quoted by \ inside strings
 #include "memops.h"
 #include "strops.h"
 #include "ht.h"
+#include "erbit.h"
 #include "rn.h"
 #include "rnc.h"
 #include "rnd.h"
@@ -49,6 +50,7 @@ delimiters in regexp and literal must be quoted by \ inside strings
 static int len_t,len_r,len_s,i_t,i_r,i_s;
 static int (*t2s)[2],(*rules)[3];
 static char *string; static struct hashtable ht_s;
+static int errors;
 
 /* parser */
 static char *arxfn;
@@ -70,11 +72,17 @@ static int add_s(char *s) {
 static int hash_s(int i) {return strhash(string+i);}
 static int equal_s(int s1,int s2) {return strcmp(string+s1,string+s2)==0;}
 
+static void silent_verror_handler(int erno,va_list ap) {
+  if(erno&ERBIT_DRV) rnv_default_verror_handler(erno,ap); /* low-level diagnostics */
+  ++errors;
+}
+
 static void windup(void);
 static int initialized=0;
 static void init(void) {
   if(!initialized) {initialized=1;
     rn_init(); rnc_init(); rnd_init(); rnv_init();
+    rnv_verror_handler=&silent_verror_handler;
     ht_init(&ht_s,LEN_S,&hash_s,&equal_s);
     value=(char*)memalloc(len_v=LEN_V,sizeof(char));
     windup();
