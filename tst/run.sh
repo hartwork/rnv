@@ -26,4 +26,4 @@ rnv ${FLAGS} ${RNDIR}/xslt.rnc ${HOME}/work/docbook/xsl/*/*.xsl
 rnv ${FLAGS} ${RNDIR}/xmlschema.rnc `find ${HOME}/Docu/mathml2 -name '*.xsd' -print`
 rnv ${FLAGS} ${RNDIR}/fo.rnc ${HOME}/work/XEP/Tests/*/*.fo
 rnv ${FLAGS} ${RNDIR}/fo/main.rnc ${HOME}/work/XEP/Tests/*/*.fo
-rnv ${FLAGS} ${HOME}/work/TEI/P5/p5odds.rnc ${HOME}/work/TEI/P5/P5-driver.xml
+xx ${HOME}/work/TEI/P5/P5-driver.xml | rnv ${FLAGS} ${HOME}/work/TEI/P5/p5odds.rnc 

@@ -1,12 +1,12 @@
 
 RNV -- Relax NG Compact Syntax Validator in C
 
-Version 1.6 
+Version 1.7 
 
    Table of Contents
 
+   News since 1.6
    New since 1.5 
-   News since 1.4
    Aknowledgements
    Package Contents 
    Installation 
@@ -36,6 +36,13 @@ Version 1.6
    and shortcomings; however, it validates documents against a number of
    grammars. I use it.
 
+News since 1.6
+
+   The format for error messages is similar to that of Jing (file name,
+   line and column are colon-separated). Entities and DTD processing is
+   moved out of RNV, use XX, available from the same download location,
+   to expand entities.
+
 New since 1.5
 
    Better reporting: required and permitted content is reported
@@ -44,16 +51,6 @@ New since 1.5
    make more bugs than they cover, thus a reworked an extended test suite
    is now used for testing. The code has also been cleaned up and
    simplified in places during porting to Plan9.
-
-News since 1.4
-
-   Two ways to use extension datatype libraries are implemented for RNV;
-   they allow to extend type-checking capabilities of Relax NG for data
-   far beyond the scope of XML Schema datatypes. RNV now parses external
-   system entities, it was my omission not to implement this earlier, and
-   I am glad it is done now. Memory usage and diagnostics have been
-   improved, and the source code has been rearranged again for better
-   modularity.
 
 Aknowledgements
 
