@@ -94,7 +94,7 @@ static void not_allowed(char *what,char *suri,char *sname) {
 #define ATTRIBUTES_MISSING "required attributes missing"
 #define TEXT_NOT_ALLOWED "text not allowed"
 
-static void flush_text() {
+static void flush_text(void) {
   if(n_t!=0) {
     if(current!=rn_notAllowed) {
       current=drv_text(previous=current,text,n_t);
@@ -191,8 +191,8 @@ ERROR:
   return 0;
 }
 
-static void version() {fprintf(stderr,"rnv version %s\n",RNV_VERSION);}
-static void usage() {fprintf(stderr,"usage: rnv {-q|-v} schema.rnc {document.xml}\n");}
+static void version(void) {fprintf(stderr,"rnv version %s\n",RNV_VERSION);}
+static void usage(void) {fprintf(stderr,"usage: rnv {-q|-v} schema.rnc {document.xml}\n");}
 
 int main(int argc,char **argv) {
   int ok;
