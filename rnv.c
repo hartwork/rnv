@@ -38,13 +38,14 @@ static void init(void) {
 static int load_rnc(char *fn) {
   struct rnc_source *sp=rnc_alloc();
   if(rnc_open(sp,fn)!=-1) start=rnc_parse(sp); rnc_close(sp); 
-  rnc_free(sp); if(rnc_errors(sp)) return 0;
+  {int errors=rnc_errors(sp); rnc_free(sp); if(errors) return 0;}
   
   rnd_deref(start); if(rnd_errors()) return 0;
   rnd_restrictions(); if(rnd_errors()) return 0;
   rnd_traits();
 
   start=rnd_release(); 
+
   return 1;
 }
 
@@ -211,7 +212,7 @@ int main(int argc,char **argv) {
       }
       ++i;
     }
-    END_OF_OPTIONS:
+    END_OF_OPTIONS:;
   }
 
   if(!*(argv)) {
