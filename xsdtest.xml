@@ -65,8 +65,20 @@
   <types decimal="  .4570000 "/>
   <types decimal=" -." /> <!-- error -->
 
+  <types float=" -4E50 " double=" 3E52 "/>
+
   <types base64binary="ABCDEF/=" />
   <types base64binary="1 2 3 4 5 6 = =" />
+
+  <values double="NaN"/>
+  <values double=" NaN "/>
+  <values double=" INF "/>
+  <values double=" -INF "/>
+  <values double=" +INF "/>
+  <values double=" 1.234567 "/>
+  <values double=" .31415926 "/>
+  <values double=" -4E50 "/>
+  <values float=" -4E50 "/>
 
   <values
     hexbinary=" ABc123A "

@@ -1,8 +1,9 @@
 #include <stdio.h>
-#include <string.h>
-#include "u.h"
+#include <stdlib.h>
 
 int main(int argc,char **argv) {
-  printf("%i\n",u_strlen(*(argv+1)));
-  return 0;
+        double d;
+        d=atof(*(argv+1));
+        printf("%f\n",d);
+        return 0;
 }

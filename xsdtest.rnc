@@ -16,6 +16,8 @@ types = element types { empty
   , attribute id { xsd:ID { length="4"} } ?
   , attribute nmtokens { xsd:NMTOKENS } ?
   , attribute int { xsd:int {minInclusive="2"} } ?
+  , attribute float { xsd:float {minInclusive="-INF" maxInclusive="INF" } } ?
+  , attribute double { xsd:double } ?
 }
   
 values = element values { empty
@@ -23,6 +25,8 @@ values = element values { empty
   , attribute qname2 { xsd:QName "fo:block" } ?
   , attribute duration { xsd:duration " -P1YT10.2S " } ?
   , attribute decimal { xsd:decimal " -123.456 " } ?
+  , attribute float { xsd:float " NaN " } ?
+  , attribute double { xsd:double "  3.1415926 " } ?
   , attribute hexbinary { xsd:hexBinary " abc123a " } ?
   , attribute base64binary { xsd:base64Binary " ABCDEE== " } ?
 }

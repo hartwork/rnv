@@ -4,6 +4,7 @@
 #include <stdlib.h> /*calloc,free*/
 #include <string.h> /*strchr*/
 #include <stdio.h> /*stdio*/
+#include <math.h> /*HUGE_VAL*/
 #include <assert.h>
 #include "u.h"
 #include "xmlc.h"
@@ -298,20 +299,28 @@ struct facets {
 #define PAT_DATE_TIME "-?"PAT_DATE0"T"PAT_TIME0 PAT_ZONE"?"
 
 static int chki(struct facets *fp,char *s,int n) {
-  int ok=1; long val=atol(s);
-  if(fp->set&(1<<FCT_MIN_EXCLUSIVE)) ok=ok&&val>atol(fp->minExclusive);
-  if(fp->set&(1<<FCT_MIN_INCLUSIVE)) ok=ok&&val>=atol(fp->minInclusive);
-  if(fp->set&(1<<FCT_MAX_INCLUSIVE)) ok=ok&&val<=atol(fp->maxInclusive);
-  if(fp->set&(1<<FCT_MAX_EXCLUSIVE)) ok=ok&&val<atol(fp->maxExclusive);
+  int ok=1; long i=atol(s);
+  if(fp->set&(1<<FCT_MIN_EXCLUSIVE)) ok=ok&&i>atol(fp->minExclusive);
+  if(fp->set&(1<<FCT_MIN_INCLUSIVE)) ok=ok&&i>=atol(fp->minInclusive);
+  if(fp->set&(1<<FCT_MAX_INCLUSIVE)) ok=ok&&i<=atol(fp->maxInclusive);
+  if(fp->set&(1<<FCT_MAX_EXCLUSIVE)) ok=ok&&i<atol(fp->maxExclusive);
   return ok;
 }
 
+static double atodn(char *s,int n) {
+  return tokcmpn("-INF",s,n)==0?-HUGE_VAL
+    : tokcmpn("INF",s,n)==0?HUGE_VAL
+    : atof(s);
+}
+static double atod(char *s) {return atodn(s,strlen(s));}
+
 static int chkd(struct facets *fp,char *s,int n) {
-  int ok=1; double val=atof(s);
-  if(fp->set&(1<<FCT_MIN_EXCLUSIVE)) ok=ok&&val>atof(fp->minExclusive);
-  if(fp->set&(1<<FCT_MIN_INCLUSIVE)) ok=ok&&val>=atof(fp->minInclusive);
-  if(fp->set&(1<<FCT_MAX_INCLUSIVE)) ok=ok&&val<=atof(fp->maxInclusive);
-  if(fp->set&(1<<FCT_MAX_EXCLUSIVE)) ok=ok&&val<atof(fp->maxExclusive);
+  int ok=1,nan=tokcmpn("NaN",s,n)==0; 
+  double d=atodn(s,n);
+  if(fp->set&(1<<FCT_MIN_EXCLUSIVE)) ok=ok&&!nan&&d>atod(fp->minExclusive);
+  if(fp->set&(1<<FCT_MIN_INCLUSIVE)) ok=ok&&!nan&&d>=atod(fp->minInclusive);
+  if(fp->set&(1<<FCT_MAX_INCLUSIVE)) ok=ok&&!nan&&d<=atod(fp->maxInclusive);
+  if(fp->set&(1<<FCT_MAX_EXCLUSIVE)) ok=ok&&!nan&&d<atod(fp->maxExclusive);
   return ok;
 }
 
@@ -435,11 +444,7 @@ int xsd_allows(char *typ,char *ps,char *s,int n) {
     if(fct.set&(1<<FCT_TOTAL_DIGITS)) ok=ok&&diglenn(s,n)<=fct.totalDigits;
     if(fct.set&FCT_BOUNDS) ok=ok&chkd(&fct,s,n);
     break;
-  case TYP_FLOAT: 
-    fct.pattern[fct.npat++]=PAT_FLOATING;
-    if(fct.set&FCT_BOUNDS) ok=ok&chkd(&fct,s,n);
-    break;
-  case TYP_DOUBLE:
+  case TYP_FLOAT: case TYP_DOUBLE: /* float and double is the same type */
     fct.pattern[fct.npat++]=PAT_FLOATING;
     if(fct.set&FCT_BOUNDS) ok=ok&chkd(&fct,s,n);
     break;
@@ -559,6 +564,13 @@ int xsd_allows(char *typ,char *ps,char *s,int n) {
   return ok;
 }
 
+static int dblcmpn(char *val,char *s,char n) {
+  int d1,d2;
+  return tokcmpn(val,s,n)==0?0
+    : tokcmpn(val,"NaN",3)==0||tokcmpn("NaN",s,n)==0?1
+    : (d1=atod(val),d2=atodn(s,n),d1<d2?-1:d1>d2?1:0);
+}
+
 static int hexcmpn(char *s1,char *s2,int n) {
   char *end=s2+n;
   for(;;++s1,++s2) {
@@ -613,13 +625,13 @@ static int qncmpn(char *s1,char *s2,int n2) { /* context is not passed over; com
 }
 
 int xsd_equal(char *typ,char *val,char *s,int n) {
+  if(!xsd_allows(typ,"",val,strlen(val))||!xsd_allows(typ,"",s,n)) return 0;
   switch(strtab(typ,typtab,NTYP)) {
  /*primitive*/
   case TYP_STRING: return strcmpn(val,s,n)==0;
   case TYP_BOOLEAN: return (tokcmpn("true",val,strlen(val))==0||tokcmpn("1",val,strlen(val))==0)==(tokcmpn("true",s,n)==0||tokcmpn("1",s,n)==0);
-  case TYP_DECIMAL:
-  case TYP_FLOAT:
-  case TYP_DOUBLE: return atof(val)==atof(s);
+  case TYP_DECIMAL: return atof(val)==atof(s);
+  case TYP_FLOAT: case TYP_DOUBLE: return dblcmpn(val,s,n)==0;
   case TYP_DURATION: return duracmp(val,s,n)==0;
   case TYP_DATE_TIME:
   case TYP_DATE:
