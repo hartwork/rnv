@@ -6,12 +6,17 @@ EXPAT_H="<expat.h>"
 UNISTD_H="<unistd.h>"
 LIBEXPAT=-lexpat
 INC=-I/usr/local/include
-WARN=-Wall -Wstrict-prototypes  -Wmissing-prototypes -Wcast-align -Wtraditional
-CFLAGS=${WARN} -DEXPAT_H=${EXPAT_H} -DUNISTD_H=${UNISTD_H} -DRNV_VERSION="\"${VERSION}\""
-LFLAGS=
 OPT=-g -O -pg 
-LIB=${LIBEXPAT}
+WARN=-Wall -Wstrict-prototypes  -Wmissing-prototypes -Wcast-align -Wtraditional
+CFLAGS=${WARN} -shared -DEXPAT_H=${EXPAT_H} -DUNISTD_H=${UNISTD_H} -DRNV_VERSION="\"${VERSION}\""
+LFLAGS=
 LBL=-L/usr/local/lib
+LIB=${LIBEXPAT}
+
+LIBRNVA=librnv.a
+LIBRNVSO=librnv.so
+LIBRNV=${LIBRNVA}
+
 SRC=\
 rnv.c \
 rn.c rn.h \
@@ -42,13 +47,19 @@ util.o
 .c.o:
 	${CC} ${INC} ${OPT} ${CFLAGS} -c -o $@ $<
 
-all: rnv
+all: rnv ${LIBRNV} zip
 
-rnv: ${OBJ} rnv.o
-	${CC} ${OPT} ${LFLAGS} ${LBL} -o rnv rnv.o ${OBJ} ${LIB} 
+rnv: rnv.o ${LIBRNV}
+	${CC} ${OPT} ${LFLAGS} ${LBL} -o rnv rnv.o ${LIBRNV} ${LIB} 
 
 rnd_test: ${OBJ} rnd_test.o
 	${CC} ${OPT} ${LFLAGS} ${LBL} -o rnd_test rnd_test.o ${OBJ} ${LIB} 
+
+${LIBRNVA}: ${OBJ}
+	ar rc $@ $>
+
+${LIBRNVSO}: ${OBJ}
+	gcc -shared -o $@ $>
 
 clean: 
 	-rm -f *.o rnv rnd_test *_test *.core *.gmon *.gprof rnv*.zip rnv.txt rnv.pdf rnv.html rnv.xml
