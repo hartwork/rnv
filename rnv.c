@@ -274,6 +274,7 @@ static int validate(int fd) {
 PARSE_ERROR:
   error(RNVER_XML,XML_ErrorString(XML_GetErrorCode(expat)));
 ERROR:
+  XML_ParserFree(expat);
   return 0;
 }
 
