@@ -976,18 +976,19 @@ static void define(struct rnc_source *sp,int name) {
   getsym(sp);
   pat=pattern(sp);
   i=sc_find(&des,name);
-  if(i==0) sc_add(&des,name,pat,flags); else {
-    if(sc_locked(&des)) error(sp,ER_OVRIDE,sp->fn,line,col); else {
-      int old_flags=des.tab[i][2];
-      if(DE_HEAD&flags&old_flags) error(sp,ER_2HEADS,sp->fn,line,col);
-      if(((flags|old_flags)&(DE_CHOICE|DE_ILEAVE))==(DE_CHOICE|DE_ILEAVE)) error(sp,ER_COMBINE,sp->fn,line,col);
-      flags=des.tab[i][2]=old_flags|flags;
-      if(DE_CHOICE&flags) {
-	des.tab[i][1]=rn_choice(des.tab[i][1],pat);
-      } else if(DE_ILEAVE&flags) {
-	des.tab[i][1]=rn_ileave(des.tab[i][1],pat);
-      }
-    } 
+  if(i==0) {
+    if(sc_locked(&des)) error(sp,ER_OVRIDE,sp->fn,line,col);
+    sc_add(&des,name,pat,flags); 
+  } else {
+    int old_flags=des.tab[i][2];
+    if(DE_HEAD&flags&old_flags) error(sp,ER_2HEADS,sp->fn,line,col);
+    if(((flags|old_flags)&(DE_CHOICE|DE_ILEAVE))==(DE_CHOICE|DE_ILEAVE)) error(sp,ER_COMBINE,sp->fn,line,col);
+    flags=des.tab[i][2]=old_flags|flags;
+    if(DE_CHOICE&flags) {
+      des.tab[i][1]=rn_choice(des.tab[i][1],pat);
+    } else if(DE_ILEAVE&flags) {
+      des.tab[i][1]=rn_ileave(des.tab[i][1],pat);
+    }
   }
 }
 
@@ -1097,6 +1098,9 @@ int main(int argc,char **argv) {
 
 /*
  * $Log$
+ * Revision 1.23  2003/12/04 22:09:30  dvd
+ * bug in define
+ *
  * Revision 1.22  2003/12/04 22:02:20  dvd
  * refactoring
  *
