@@ -104,6 +104,7 @@ struct rnc_source *rnc_alloc(void) {
   return (struct rnc_source *)malloc(sizeof(struct rnc_source));
 }
 void rnc_free(struct rnc_source *sp) {
+  memset(sp,0xff,sizeof(struct rnc_source));
   free(sp);
 }
 
