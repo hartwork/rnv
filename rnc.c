@@ -159,6 +159,7 @@ struct utf_source {
   int complete;
   int line,col;
   int u,v,w; int nx;
+  char *s; int slen;
   int flags;
 };
 
@@ -188,6 +189,7 @@ int rnc_open(struct utf_source *sp,char *fn) {
 
 int rnc_close(struct utf_source *sp) {
   int ret=0;
+  if(sp->s) free(sp->s);
   if(sp->flags&SRC_FREE) free(sp->buf); 
   sp->buf=NULL;
   sp->complete=-1;
@@ -203,9 +205,10 @@ static void rnc_init(struct utf_source *sp) {
   sp->fn=sp->buf=NULL;
   sp->i=sp->n=0; 
   sp->complete=sp->fd=-1;
-  sp->u=sp->v=0; sp->nx=-1;
+  sp->nx=-1;
   sp->flags=0;
-  sp->line=1; sp->col=0;
+  sp->u=-1; sp->line=1; sp->col=1;
+  sp->s=(char*)calloc(sp->slen=BUFSIZE,sizeof(char));
 }
 
 static int rnc_read(struct utf_source *sp) {
@@ -234,8 +237,9 @@ static void getu(struct utf_source *sp) {
       if(rnc_read(sp)==-1) (*er_handler)(ER_IO,sp->fn);
     }
     if(sp->i==sp->n) {
-      sp->u=u0=='\n'?-1:'\n'; 
-      return;
+      sp->u=(u0=='\n'||u0=='\r')?-1:'\n'; 
+      u0=-1;
+      break;
     } /* eof */
     n=u_get(&sp->u,sp->buf+sp->i);
     if(n==0) { 
@@ -248,9 +252,13 @@ static void getu(struct utf_source *sp) {
       continue;
     } else {
       sp->i+=n;
-      if(u0=='\r'&&sp->u=='\n') continue;
+      if(u0=='\r'&&sp->u=='\n') {u0='\n'; continue;}
     }
-    return;
+    break;
+  }
+  if(u0!=-1) {
+    if(u0=='\r'||u0=='\n') {++sp->line; sp->col=0;} 
+    if(!(sp->u=='\r'||sp->u=='\n')) {++sp->col;}
   }
 }
 
@@ -317,51 +325,80 @@ static void getv(struct utf_source *sp) {
       break;
     }
   }
-  if(sp->v==0) {
-    ++sp->line; sp->col=1;
-  } else if(sp->v!=-1) ++sp->col;
 }
 
 static int sym(struct utf_source *sp) {
   int s;
-  switch(sp->v) {
-  case -1: s=SYM_EOF;
-  case '#':
-    break;
-  case '=': getv(sp); return SYM_ASGN;
-  case ',': getv(sp); return SYM_SEQ;
-  case '|': getv(sp); 
-    if(sp->v=='=') {
-      getv(sp); return SYM_ASGN_CHOICE;
-    } return SYM_CHOICE;
-  case '&': getv(sp);
-    if(sp->v=='=') {
-      getv(sp); return SYM_ASGN_ILEAVE;
-    } else return SYM_ILEAVE;
-  case '?': getv(sp); return SYM_OPTIONAL;
-  case '*': getv(sp); return SYM_ZERO_OR_MORE;
-  case '+': getv(sp); return SYM_ONE_OR_MORE;
-  case '-': getv(sp); return SYM_EXCEPT;
-  case '~': getv(sp); return SYM_CONCAT;	   
-  case '(': getv(sp); return SYM_LPAR;
-  case ')': getv(sp); return SYM_RPAR;
-  case '{': getv(sp); return SYM_LCUR;
-  case '}': getv(sp); return SYM_RCUR;
-  case '[': getv(sp); return SYM_LSQU;
-  case ']': getv(sp); return SYM_RSQU;
-  case ':': getv(sp);
-    if(sp->v=='*') {
-      getv(sp); return SYM_NS_NAME;
-    } return SYM_QNAME;
-  case '>':
-    getv(sp); if(v!='>') (*er_handler)(ER_LEX,'>',v,sp->fn,sp->line,sp->col);
-    getv(sp); return SYM_ANNOTATION;
-  case '"': 
-    break;
-  case '\'':
-    break;
-  default:
-    { /* identifiers */
+  for(;;) {
+    switch(sp->v) {
+    case -1: return SYM_EOF; 
+    case 0: case '\r': case '\n': case '\t': case ' ': getv(sp); continue;
+    case '#': do getv(sp); while(sp->v!=0); getv(sp); continue;
+    case '=': getv(sp); return SYM_ASGN;
+    case ',': getv(sp); return SYM_SEQ;
+    case '|': getv(sp); 
+      if(sp->v=='=') {
+	getv(sp); return SYM_ASGN_CHOICE;
+      } return SYM_CHOICE;
+    case '&': getv(sp);
+      if(sp->v=='=') {
+	getv(sp); return SYM_ASGN_ILEAVE;
+      } else return SYM_ILEAVE;
+    case '?': getv(sp); return SYM_OPTIONAL;
+    case '*': getv(sp); return SYM_ZERO_OR_MORE; /* SYM_ANY_NAME */
+    case '+': getv(sp); return SYM_ONE_OR_MORE;
+    case '-': getv(sp); return SYM_EXCEPT;
+    case '~': getv(sp); return SYM_CONCAT;	   
+    case '(': getv(sp); return SYM_LPAR;
+    case ')': getv(sp); return SYM_RPAR;
+    case '{': getv(sp); return SYM_LCUR;
+    case '}': getv(sp); return SYM_RCUR;
+    case '[': getv(sp); return SYM_LSQU;
+    case ']': getv(sp); return SYM_RSQU;
+    case ':': getv(sp);
+      if(sp->v=='*') {
+	getv(sp); return SYM_NS_NAME;
+      } return SYM_QNAME;
+    case '>':
+      getv(sp); if(sp->v!='>') (*er_handler)(ER_LEX,'>',sp->v,sp->fn,sp->line,sp->col);
+      getv(sp); return SYM_ANNOTATION;
+    case '"': case '\'': {
+      int q=sp->v;
+      int triple=0;
+      int i=0;
+      getv(sp); 
+      if(sp->v==q) {getv(sp);
+	if(sp->v==q) { // triply quoted string
+	  triple=1; getv(sp);
+	} else {
+	  sp->s[0]='\0'; return SYM_LITERAL;
+	}
+      } 
+      for(;;) { 
+	int c=sp->v,line=sp->line,col=sp->col; getv(sp);
+	if(i==sp->slen) {
+	  char *s=(char*)calloc(sp->slen*=2,sizeof(char));
+	  strcpy(s,sp->s); free(sp->s); sp->s=s; s=NULL;
+	}
+	if(c==q) {
+	  if(triple) {
+	    if(i>=2 && sp->s[i-2]==q && sp->s[i-1]==q)  {
+	      sp->s[i-2]='\0'; break;
+	    }
+	  } else {
+	    sp->s[i]='\0'; break;
+	  }
+	} else if(c<=0) {
+	  if(c==-1 || !triple) {
+	    (*er_handler)(ER_LIT,sp->fn,line,col);
+	    sp->s[i]='\0'; break;
+	  } else c='\n';
+	} 
+	sp->s[i++]=(char)c;
+      }
+    } return SYM_LITERAL;
+    default:
+      getv(sp); return SYM_IDENT;
     }
   }
 }
@@ -369,20 +406,21 @@ static int sym(struct utf_source *sp) {
 int main(int argc,char **argv) {
   struct utf_source src;
   rnc_bind(&src,"stdin",0);
+  getv(&src);
   for(;;) {
-    if(src.v==-1) break;
-    if(src.v==0) {
-      printf("\n>> ");
-    } else {
-      putchar(src.v);
+    switch(sym(&src)) {
+    case SYM_EOF: return 0;
+    case SYM_LITERAL: printf("'(%i,%i) %s'\n",src.line,src.col,src.s); break;
     }
-    getv(&src);
   }
   rnc_close(&src);
 }
 
 /*
  * $Log$
+ * Revision 1.9  2003/11/24 23:00:27  dvd
+ * literal, error reporting
+ *
  * Revision 1.8  2003/11/23 16:16:06  dvd
  * no roles for elements
  *

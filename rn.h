@@ -120,7 +120,7 @@ them to variables in the local scope, and a creator.
 #define After(i,qn,p1,p2) P_IS(i,AFTER) \
   qn=rn_pattern[i][1]; p1=rn_pattern[i][2]; p2=rn_pattern[i][3]
 #define newAfter(i,qn,p1,p2) P_NEW(i,AFTER) \
-  rn_pattern[i][1]=qn; rn_pattern[i][2]=p1; rn_pattern[i][3]=p2;
+  rn_pattern[i][1]=qn; rn_pattern[i][2]=p1; rn_pattern[i][3]=p2; \
   setCdata(i,cdata(p1))
 
 /* Name Classes */
@@ -190,6 +190,9 @@ extern void rn_init();
 
 /*
  * $Log$
+ * Revision 1.4  2003/11/24 23:00:27  dvd
+ * literal, error reporting
+ *
  * Revision 1.3  2003/11/23 16:16:06  dvd
  * no roles for elements
  *
