@@ -225,8 +225,8 @@ int main(int argc,char **argv) {
       case 'h': case '?': usage(); return 0;
       case 'v': version(); break;
       case 's': drv_compact=1; rx_compact=1; break;
-      case 'd': dxl_cmd=*(argv+1); if(dxl_cmd) ++argv; goto END_OF_OPTIONS;
-      case 'e': dsl_scm=*(argv+1); if(dsl_scm) ++argv; goto END_OF_OPTIONS;
+      case 'd': dxl_cmd=*(argv+1); if(*(argv+1)) ++argv; goto END_OF_OPTIONS;
+      case 'e': dsl_ld(*(argv+1)); if(*(argv+1)) ++argv; goto END_OF_OPTIONS;
       case 'q': explain=0; break;
       default: (*er_printf)("unknown option '-%c'\n",*(*argv+i)); break;
       }

@@ -63,7 +63,7 @@ int dxl_equal(char *typ,char *val,char *s,int n) {
   if((pid=fork())==0) {
     char *argv[]={dxl_cmd,"equal",typ,val,NULL,NULL};
 
-    argv[4]=(char*)malloc(n+1); argv[4][n]='\0'; strncpy(argv[4],s,n);
+    argv[4]=(char*)m_alloc(n+1); argv[4][n]='\0'; strncpy(argv[4],s,n);
     execvp(dxl_cmd,argv);
     (*er_printf)("dxl: cannot execute %s\n",dxl_cmd,strerror(errno));
   } else if(pid>0) {

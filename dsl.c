@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include "dsl.h"
 
-char *dsl_scm=NULL;
+static char *dsl_scm=NULL;
 
 #ifndef DSL_SCM
 #define DSL_SCM 0
@@ -12,6 +12,7 @@ char *dsl_scm=NULL;
 #if DSL_SCM
 
 #include <string.h>
+#include <assert.h>
 #include UNISTD_H
 #include SCM_H
 #include "m.h"
@@ -26,16 +27,14 @@ static char *implpath(void) {
 static void init_user_scm_dsl(void) {}
 static SCM  toplvl(void) {return scm_ldfile(dsl_scm)?BOOL_F:BOOL_T;}
 
-static int initialized=0;
-static void init(void) {
-  if(!initialized) {initialized=1;
-    init_user_scm=&init_user_scm_dsl;
-    { char *argv[]={"dsl_scm",NULL};  /*Init.scm wants args*/
-      scm_init_from_argv(sizeof(argv)/sizeof(char*)-1,argv,0,0,0);
-    }
-    if(BOOL_F==scm_top_level(implpath(),&toplvl)) {
-      (*er_printf)("dsl: cannot load %s\n",dsl_scm);
-    }
+void dsl_ld(char *dl) {
+  assert(dsl_scm==NULL); dsl_scm=dl;
+  init_user_scm=&init_user_scm_dsl;
+  { char *argv[]={dsl_scm,NULL};  /*Init.scm wants args*/
+    scm_init_from_argv(sizeof(argv)/sizeof(char*)-1,argv,0,0,0);
+  }
+  if(BOOL_F==scm_top_level(implpath(),&toplvl)) {
+    (*er_printf)("dsl: cannot load %s\n",dsl_scm);
   }
 }
 
@@ -57,7 +56,7 @@ int dsl_allows(char *typ,char *ps,char *s,int n) {
   int np,lenp;
   SCM ret=BOOL_F;
 
-  if(dsl_scm) {init();
+  if(dsl_scm) {
     p=ps; np=0;
     while(*p) {++np; while(*(p++)); while(*(p++));}
     lenp=p-ps-2*np;
@@ -86,7 +85,7 @@ int dsl_equal(char *typ,char *val,char *s,int n) {
   char *buf,*sp,*bp;
   SCM ret=BOOL_F;
 
-  if(dsl_scm) {init();
+  if(dsl_scm) {
     buf=(char*)m_alloc(
       strlen(EQUAL)+2*(strlen(typ)+strlen(val)+n)+1,
       sizeof(char));
@@ -103,6 +102,7 @@ int dsl_equal(char *typ,char *val,char *s,int n) {
 
 #else
 
+void dsl_ld(char *dl) {}
 int dsl_allows(char *typ,char *ps,char *s,int n) {return 0;}
 int dsl_equal(char *typ,char *val,char *s,int n) {return 0;}
 

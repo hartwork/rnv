@@ -7,6 +7,7 @@ VERSION=1.4.2
 CC=cc
 
 # optional features
+M_STATIC=0
 DSL_SCM=0
 DXL_EXC=0
 
@@ -18,6 +19,7 @@ INC=-I/usr/local/include
 LBL=-L/usr/local/lib
 
 DEF=\
+-DM_STATIC=${M_STATIC} \
 -DEXPAT_H=${EXPAT_H} \
 -DUNISTD_H=${UNISTD_H} \
 -DRNV_VERSION="\"${VERSION}\"" \

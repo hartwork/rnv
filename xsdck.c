@@ -1,5 +1,6 @@
 #include <string.h>
 #include <stdlib.h>
+#include "m.h"
 #include "er.h"
 #include "xsd.h"
 
@@ -16,7 +17,7 @@ int main(int argc,char **argv) {
     char *ps,*p,*a;
     if(argc<3||!(argc&1)) goto USAGE;
     len=argc-2; for(i=2;i!=argc-1;++i) len+=strlen(*(argv+i));
-    ps=(char*)malloc(len); ps[len-1]='\0';
+    ps=(char*)m_alloc(len,sizeof(char)); ps[len-1]='\0';
     p=ps; for(i=2;i!=argc-1;++i) {
       a=*(argv+i);
       while((*(p++)=*(a++)));

@@ -1,6 +1,13 @@
 /* $Id$ */
 
 1.5.0
+Wed Jan 21 02:38:09 AMT 2004
+dvd: SCM is now working as embedded engine; it was not obvious
+     that the initialization call had to be lower on the stack
+     than all other calls to SCM;
+     static mode added to m, if M_STATIC is non-zero it is the
+     size of available memory in bytes -- good for debugging.
+     
 Tue Jan 20 22:24:50 AMT 2004
 dvd: changed rx to conform to XSD errata (- is not a valid range)
      added -d and -e to rnv; I was not sure for a long time whether

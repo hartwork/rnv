@@ -5,7 +5,7 @@
 
 #define DSL_URL "http://davidashen.net/relaxng/scheme-datatypes"
 
-extern char *dsl_scm;
+extern void dsl_ld(char *dl);
 
 extern int dsl_allows(char *typ,char *ps,char *s,int n);
 extern int dsl_equal(char *typ,char *val,char *s,int n);
