@@ -1,4 +1,4 @@
-start = element typetest {(types|values),*}
+start = element typetest {(types|values)*}
 types = element types { empty
   , attribute string { xsd:string } ?
   , attribute boolean { xsd:boolean } ?

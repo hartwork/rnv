@@ -5,11 +5,11 @@
 xcl.c -- Expat-based command-line interface
 ll.h -- lengths of arrays
 erbit.h -- error classes
-rnv.c -- command-line validator
+rnv.c rnv.h -- higher-level validator logic
 rn.c rn.h -- RNG patterns
-rnc.c rnc.h -- RNC parser 
-rnd.c rnd.h -- second pass for RNC parser, restrictions and traits
-rnx.c rnx.h -- auxiliary functions for rn
+rnc.c rnc.h -- RNC loader
+rnd.c rnd.h -- second pass for RNC loader, restrictions and traits
+rnx.c rnx.h -- auxiliary functions for rn*
 drv.c drv.h -- derivative of RNG patterns, validation core
 xsd.c xsd.h -- xml schema datatypes
 xsd_tm.c xsd_tm.h -- dateTime datatype implementation

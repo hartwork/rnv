@@ -11,7 +11,7 @@ LBL=-L/usr/local/lib
 
 DEF=-DEXPAT_H=${EXPAT_H} -DUNISTD_H=${UNISTD_H} -DRNV_VERSION="\"${VERSION}\""
 WARN=-Wall -Wstrict-prototypes  -Wmissing-prototypes -Wcast-align
-OPT=-O2
+OPT=-O -g
 
 CFLAGS=${INC} ${DEF} ${WARN} ${OPT}
 LFLAGS=${OPT} ${LBL}
