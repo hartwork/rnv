@@ -598,7 +598,7 @@ static int drv(int p,int c) {
   case  P_ONE_OR_MORE: OneOreMore(p,p1); p=group(drv(p1,c),choice(empty,p)); break;
   case  P_EXCEPT: Except(p,p1,p2); p=nullable(drv(p1,c))&&!nullable(drv(p2,c))?empty:notAllowed; break;
   case  P_RANGE: Range(p,cf,cl); p=cf<=c&&c<=cl?empty:notAllowed; break;
-  case  P_CLASS: Class(p,cn); p=in_class(c,cn)?empty:notAllowed; break;
+  case  P_CLASS: Class(p,cn); p=(cn>0?in_class(c,cn):!in_class(c,-cn))?empty:notAllowed; break;
   case  P_ANY: p=empty; break;
   case  P_CHAR: Char(p,cf); p=c==cf?empty:notAllowed; break;
   default: assert(0);
