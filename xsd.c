@@ -134,7 +134,6 @@ static int tokncnt(char *s,int n) {
     if(s==end) goto SKIP_SPACE;
     s+=u_get(&u,s); 
   }
-  return cnt;
 }
 
 

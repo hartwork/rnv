@@ -252,7 +252,7 @@ static int r0,ri,sym,val,errors;
 
 static void error(void) {
   if(!errors) {
-    int n=strlen(ERRMSG)+strlen(regex+r0)+11;
+    int n=strlen(ERRMSG)+strlen(regex+r0)+12;
     char *buf=(char*)calloc(n,sizeof(char));
     fprintf(stderr,"r0=%i ri=%i\n",r0,ri);
     sprintf(buf,ERRMSG,regex+r0,u_strlen(regex+r0)-u_strlen(regex+ri));
