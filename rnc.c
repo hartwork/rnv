@@ -204,6 +204,7 @@ static void rnc_init(struct utf_source *sp) {
   sp->complete=sp->fd=-1;
   sp->u=sp->v=0; sp->nx=-1;
   sp->flags=0;
+  sp->line=sp->col=1;
 }
 
 static int rnc_read(struct utf_source *sp) {
@@ -315,6 +316,9 @@ static void getv(struct utf_source *sp) {
       break;
     }
   }
+  if(sp->v==0) {
+    ++sp->line; sp->col=1;
+  } else if(sp->v!=-1) ++sp->col;
 }
 
 static int sym(struct utf_source *sp) {
@@ -364,16 +368,12 @@ static int sym(struct utf_source *sp) {
 
 int main(int argc,char **argv) {
   struct utf_source src;
-  src.line=src.col=1;
   rnc_bind(&src,"stdin",0);
   for(;;) {
     if(src.v==-1) break;
     if(src.v==0) {
       printf("\n>> ");
-      src.line++;
-      src.col=1;
     } else {
-      src.col++;
       putchar(src.v);
     }
     getv(&src);
@@ -383,6 +383,9 @@ int main(int argc,char **argv) {
 
 /*
  * $Log$
+ * Revision 1.6  2003/11/20 23:43:07  dvd
+ * in progress
+ *
  * Revision 1.5  2003/11/20 23:35:17  dvd
  * cleanups
  *
