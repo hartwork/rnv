@@ -26,7 +26,8 @@ void sc_clear(struct sc_stack *stp) {
 
 void sc_open(struct sc_stack *stp) {
   stp->tab[stp->base=stp->top++][1]=BASE;
-  if(stp->top==stp->len) stp->tab=(int(*)[SC_RECSIZE])m_stretch(stp->tab,stp->len*=stp->top*2,stp->top,sizeof(int[SC_RECSIZE]));
+  if(stp->top==stp->len) stp->tab=(int(*)[SC_RECSIZE])m_stretch(
+    stp->tab,stp->len*=stp->top*2,stp->top,sizeof(int[SC_RECSIZE]));
 }
 
 int sc_void(struct sc_stack *stp) {
@@ -55,6 +56,7 @@ int sc_add(struct sc_stack *stp,int key,int val,int aux) {
   int i=stp->top;
   assert(!sc_locked(stp));
   stp->tab[i][0]=key; stp->tab[i][1]=val; stp->tab[i][2]=aux;
-  if(++stp->top==stp->len) stp->tab=(int(*)[SC_RECSIZE])m_stretch(stp->tab,stp->len*=stp->top*2,stp->top,sizeof(int[SC_RECSIZE]));
+  if(++stp->top==stp->len) stp->tab=(int(*)[SC_RECSIZE])m_stretch(
+    stp->tab,stp->len=stp->top*2,stp->top,sizeof(int[SC_RECSIZE]));
   return i;
 }

@@ -24,14 +24,14 @@ void m_free(void *p) {
   }
 }
 
-extern void *m_alloc(int length,int size) {
+void *m_alloc(int length,int size) {
   char *p=mp, *q=mp; int n=length*size;
   pmp=mp; mp+=(n+sizeof(int)-1)/sizeof(int)*sizeof(int);
   if(mp>=memory+M_STATIC) {
     (*er_printf)("failed to allocate %i bytes of memory\n",length*size);
     exit(1);
   }
-  while(q!=mp) *(q++)=M_FILL;
+  if(M_FILL!=-1) while(q!=mp) *(q++)=M_FILL;
   return (char*)p;
 }
 
@@ -41,8 +41,8 @@ void m_free(void *p) {
   free(p);
 }
 
-extern void *m_alloc(int length,int size) {
-  void *p=calloc(length,size);
+void *m_alloc(int length,int size) {
+  void *p=malloc(length*size);
   if(p==NULL) {
     (*er_printf)("failed to allocate %i bytes of memory\n",length*size);
     exit(1);

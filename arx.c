@@ -85,7 +85,8 @@ static int n_txt;
 
 static int add_s(char *s) {
   int len=strlen(s)+1,j;
-  if(i_s+len>len_s) string=(char*)m_stretch(string,len_s=2*(i_s+len),i_s,sizeof(char));
+  if(i_s+len>len_s) string=(char*)m_stretch(
+    string,len_s=2*(i_s+len),i_s,sizeof(char));
   strcpy(string+i_s,s);
   if((j=ht_get(&ht_s,i_s))==-1) {
     ht_put(&ht_s,j=i_s);

@@ -18,6 +18,7 @@
 
 #define RND_LEN_F 1024
 
+#define DRV_LEN_DTL 4
 #define DRV_LEN_M 4096
 #define DRV_PRIME_M 0xffd
 #define DRV_LIM_M (8*DRV_LEN_M)

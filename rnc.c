@@ -171,7 +171,8 @@ static void rnc_source_init(struct rnc_source *sp,char *fn) {
   sp->line=1; sp->col=1; sp->prevline=-1;
   sp->u=-1; sp->v=0;  sp->nx=-1;
   sp->cur=0;
-  for(i=0;i!=2;++i) sp->sym[i].s=(char*)m_alloc(sp->sym[i].slen=BUFSIZE,sizeof(char));
+  for(i=0;i!=2;++i)  sp->sym[i].s=(char*)m_alloc(
+    sp->sym[i].slen=BUFSIZE,sizeof(char));
 }
 
 static int rnc_read(struct rnc_source *sp) {

@@ -1,7 +1,6 @@
 /* $Id$ */
 
 #include <string.h> /* strcmp,strlen,strcpy*/
-
 #include "m.h"
 #include "s.h" /* s_hval */
 #include "ht.h"
@@ -294,11 +293,9 @@ void rn_init(void) {
     rn_pattern=(int *)m_alloc(len_p=P_AVG_SIZE*LEN_P,sizeof(int));
     rn_nameclass=(int *)m_alloc(len_nc=NC_AVG_SIZE*LEN_NC,sizeof(int));
     rn_string=(char*)m_alloc(len_s=S_AVG_SIZE*LEN_S,sizeof(char));
-
     ht_init(&ht_p,LEN_P,&hash_p,&equal_p);
     ht_init(&ht_nc,LEN_NC,&hash_nc,&equal_nc);
     ht_init(&ht_s,LEN_S,&hash_s,&equal_s);
-
     windup();
   }
 }
@@ -314,8 +311,12 @@ static void windup(void) {
   rn_pattern[0]=RN_P_ERROR;  accept_p();
   rn_nameclass[0]=RN_NC_ERROR; accept_nc();
   rn_newString("");
-  rn_notAllowed=rn_newNotAllowed(); rn_empty=rn_newEmpty(); rn_text=rn_newText(); BASE_P=i_p;
-  rn_dt_string=rn_newDatatype(0,rn_newString("string")); rn_dt_token=rn_newDatatype(0,rn_newString("token"));
+  rn_notAllowed=rn_newNotAllowed(); 
+  rn_empty=rn_newEmpty(); 
+  rn_text=rn_newText(); 
+  BASE_P=i_p;
+  rn_dt_string=rn_newDatatype(0,rn_newString("string")); 
+  rn_dt_token=rn_newDatatype(0,rn_newString("token"));
   rn_xsd_uri=rn_newString("http://www.w3.org/2001/XMLSchema-datatypes");
 }
 
@@ -371,11 +372,11 @@ static int equal_s(int s1,int s2) {return strcmp(rn_string+s1,rn_string+s2)==0;}
 
 /* marks patterns reachable from start, assumes that the references are resolved */
 #define pick_p(p) do { \
-  if(p>=since && !rn_marked(p)) {flat[n_f++]=p; rn_mark(p);}  \
+  if(p>=since && !rn_marked(p)) {flat[n_f++]=p; assert(n_f<=i_p-since); rn_mark(p);}  \
 } while(0)
 static void mark_p(int start,int since) {
   int p,p1,p2,nc,i,n_f;
-  int *flat=(int*)m_alloc(i_p,sizeof(int));
+  int *flat=(int*)m_alloc(i_p-since,sizeof(int));
 
   n_f=0; pick_p(start);
   for(i=0;i!=n_f;++i) {
@@ -405,7 +406,7 @@ static void mark_p(int start,int since) {
 
 /* assumes that used patterns are marked */
 #define redir_p() do { \
-  if(xlat[q-since]!=-1) { \
+  if(q<since || xlat[q-since]!=-1) { \
     rn_unmark(p); xlat[p-since]=q; \
     changed=1; \
   } else { \
@@ -421,7 +422,7 @@ static void sweep_p(int *starts,int n_st,int since) {
     if(rn_marked(p)) xlat[p-since]=p; else xlat[p-since]=-1;
   }
   for(p=since;p!=i_p;p+=p_size[RN_P_TYP(p)]) {
-    if(xlat[p-since]!=-1 && (q=ht_get(&ht_p,p))!=p) redir_p();
+    if(xlat[p-since]==p && (q=ht_get(&ht_p,p))!=p) redir_p();
   }
   while(changed) {
     changed=0;
@@ -528,6 +529,7 @@ static void compress_p(int *starts,int n_st,int since) {
       }
       if((q=xlat[p-since])!=p) { int i;
 	for(i=0;i!=psiz;++i) rn_pattern[q+i]=rn_pattern[p+i];
+	assert(q+psiz<i_p);
       }
       ht_put(&ht_p,q);
     }
@@ -547,13 +549,6 @@ static void compress_p(int *starts,int n_st,int since) {
     }
   }
 
-#if 0
-  for(p=0;p!=i_p;p+=p_size[RN_P_TYP(p)]) {
-    char *s=rnx_p2str(p);
-    printf("%s\n",s);
-    m_free(s);
-  }
-#endif    
   printf("i_p=%i\n",i_p);
 }
 

@@ -17,7 +17,7 @@ struct dtl {
   int (*allows)(char *typ,char *ps,char *s,int n);
 };
 
-#define LEN_DTL 4
+#define LEN_DTL DRV_LEN_DTL
 #define LEN_M DRV_LEN_M
 #define PRIME_M DRV_PRIME_M
 #define LIM_M DRV_LIM_M
