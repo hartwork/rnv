@@ -34,6 +34,7 @@ static int inRange(int u,int r[][2],int len);
 
 #define isa(u,CHAR_CLASS) inRange(u,CHAR_CLASS,sizeof(CHAR_CLASS)/sizeof(int([2])))
 
+int u_newline(int u) {return u=='\r'||u=='\n';}
 int u_base_char(int u) {return isa(u,BASE_CHAR);}
 int u_ideographic(int u) {return isa(u,IDEOGRAPHIC);}
 int u_combining_char(int u) {return isa(u,COMBINING_CHAR);}
@@ -53,6 +54,9 @@ int inRange(int u,int r[][2],int len) {
 
 /*
  * $Log$
+ * Revision 1.5  2003/11/20 16:29:08  dvd
+ * x escapes sketched
+ *
  * Revision 1.4  2003/11/19 11:05:55  dvd
  * binary search for u.c
  *

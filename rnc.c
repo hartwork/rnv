@@ -145,6 +145,7 @@ keyword ::= "attribute"
 #define SYM_LITERAL 43
 
 #define BUFSIZE 1024
+#define CUFSIZE 1
 #define BUFTAIL 6
 
 struct utf_source {
@@ -152,11 +153,16 @@ struct utf_source {
   char *buf; int i,n;
   int complete;
   int line,col;
+  int u,v,w; int nx;
 };
 
 static int rnc_stropen(struct utf_source *src,char *s,int len) {
   src->fn="";
-  src->buf=s; src->i=0; src->n=len; src->complete=1; src->fd=-1;
+  src->buf=s; 
+  src->i=0; src->n=len; 
+  nx=-1;
+  src->complete=1; 
+  src->fd=-1;
   return 0;
 }
 
@@ -165,7 +171,9 @@ static int rnc_open(struct utf_source *src,char *fn) {
   src->buf=(char*)calloc(BUFSIZE,sizeof(char));
   src->fd=open(fn,O_RDONLY);
   src->i=src->n=0;
-  src->complete=src->fd==-1;
+  nx=-1;
+  complete=-1;
+  src->fd==-1;
   return src->fd;
 }
 
@@ -179,7 +187,6 @@ static int rnc_read(struct utf_source *src) {
       src->n+=ni;
       if(src->n>=BUFTAIL) break;
     } else {
-      if(ni==-1) er_handler(ER_IO,src->fn);
       close(src->fd); src->fd=-1;
       src->complete=1;
       break;
@@ -198,27 +205,145 @@ static int rnc_close(struct utf_source *src) {
   return ret;
 }
 
-static int getuc(struct utf_source *src) {
-  int u,n;
-  if(!src->complete&&src->i>BUFSIZE-BUFTAIL) {
-    /* fill the buffer */
+static void getu(struct utf_source *src) {
+  int n,u0=src->u;
+  for(;;) {
+    if(!src->complete&&src->i>BUFSIZE-BUFTAIL) {
+      if(rnc_read(src)==-1) (*er_handler)(ER_IO,src->fn);
+    }
+    if(src->i==src->n) {
+      src->u=u0=='\n'?-1:'\n'; 
+      return;
+    } /* eof */
+    n=u_get(&src->u,src->buf+src->i);
+    if(n==0) { 
+      (*er_handler)(ER_UTF,src->fn,src->line,src->col);
+      ++src->i;
+      continue;
+    } else if(n+src->n>sizeof(src->buf)) { 
+      (*er_handler)(ER_UTF,src->fn,src->line,src->col);
+      src->i=src->n;
+      continue;
+    } else {
+      src->i+=n;
+      if(u0=='\r'&&src->u=='\n') continue;
+    }
+    return;
   }
-  n=u_get(&u,src->buf+src->i);
-  if(n==0) { 
-    er_handler(ER_UTF,src->fn,src->line,src->col);
-  } else if(n+src->n>sizeof(src->buf)) { 
-    er_handler(ER_UTF,src->fn,src->line,src->col);
-  } else {
-  }
-  return u;
 }
 
-static void sym() {
-  int cc;
+static void getv(struct utf_source *src) {
+  if(nx>0) {
+    src->v='x'; --nx;
+  } else if(nx==0) {
+    src->v=src->w;
+    nx=-1;
+  } else {
+    getu(src);
+    switch(u) {
+    case '\r': case '\n': src->v=0; break;
+    case '\\':
+      getu(src);
+      if(src->u=='x') {
+	nx=0;
+	do {
+	  ++nx;
+	  getu(src);
+	} while(src->u=='x');
+	if(src->u=='{') { 
+	  nx=-1;
+	  src->v=0; 
+	  for(;;) {
+	    getu(src);
+	    if(src->u=='}') goto END_OF_HEX_DIGITS;
+	    src->v<<=4;
+	    switch(src->u) {
+            case '0': break;
+            case '1': src->v+=1; break;
+            case '2': src->v+=2; break;
+            case '3': src->v+=3; break;
+            case '4': src->v+=4; break;
+            case '5': src->v+=5; break;
+            case '6': src->v+=6; break;
+            case '7': src->v+=7; break;
+            case '8': src->v+=8; break;
+            case '9': src->v+=9; break;
+	    case 'A': case 'a': src->v+=10; break;
+	    case 'B': case 'b': src->v+=11; break;
+	    case 'C': case 'c': src->v+=12; break;
+	    case 'D': case 'd': src->v+=13; break;
+	    case 'E': case 'e': src->v+=14; break;
+	    case 'F': case 'f': src->v+=15; break;
+            default: 
+	      (*er_handler)(ER_XESC,src->fn,src->line,src->col);
+	      goto END_OF_HEX_DIGITS;
+            }
+	  } END_OF_HEX_DIGITS:;
+	} else {
+	  src->v='\\'; src->w=src->u;
+	}
+      } else {
+	nx=0;
+	src->v='\\'; src->w=src->u;
+      }
+      break;
+    default:
+      src->v=src->u;
+      break;
+    }
+  }
+}
+
+static int sym(struct utf_source *src) {
+  switch(src->v) {
+  case -1: return SYM_EOF;
+  case '#':
+    break;
+  case '=':
+    break;
+  case ',':
+    break;
+  case '|':
+    break;
+  case '&':
+    break;
+  case '?':
+    break;
+  case '*':
+    break;
+  case '+':
+    break;
+  case '-':
+    break;
+  case '(':
+    break;
+  case ')':
+    break;
+  case '{':
+    break;
+  case '}':
+    break;
+  case '"':
+    break;
+  case '\'':
+    break;
+  case '~':	   
+    break;
+  case '[':
+    break;
+  case ']':
+    break;
+  case '>':
+    break;
+  default:
+  }
 }
 
 /*
  * $Log$
+ * Revision 1.3  2003/11/20 16:29:08  dvd
+ * x escapes sketched
+ *
  * Revision 1.2  2003/11/20 07:46:16  dvd
  * +er, rnc in progress
  *
