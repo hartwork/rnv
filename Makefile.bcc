@@ -38,8 +38,8 @@ sc.c sc.h \
 ht.c ht.h \
 u.c u.h \
 xmlc.c xmlc.h \
-strops.c strops.h \
-memops.c memops.h \
+s.c s.h \
+m.c m.h \
 rx.c rx.h \
 rx_cls_u.c \
 rx_cls_ranges.c
@@ -59,8 +59,8 @@ sc.obj \
 u.obj \
 ht.obj \
 xmlc.obj \
-strops.obj \
-memops.obj \
+s.obj \
+m.obj \
 rx.obj
 
 .SUFFIXES: .c .obj
@@ -80,20 +80,20 @@ clean:
 	-rm -f *.obj *.exe
 	-del *.obj *.exe
 
-xcl.o: memops.h erbit.h rnc.h rnd.h rnv.h rnx.h ll.h
-arx.o: memops.h strops.h xmlc.h ht.h erbit.h rnc.h rnd.h rnv.h rx.h
-rn.o: memops.h strops.h ht.h ll.h rn.h
-rnc.o: u.h xmlc.h memops.h strops.h rn.h sc.h rnc.h
-rnd.o: memops.h rn.h rnx.h ll.h rnd.h
-rnv.o: memops.h xmlc.h erbit.h drv.h rnv.h
-rnx.o: memops.h strops.h rn.h ll.h rnx.h
-drv.o: xmlc.h memops.h strops.h ht.h rn.h xsd.h ll.h erbit.h drv.h
-xsd.o: u.h xmlc.h strops.h erbit.h rx.h xsd_tm.h xsd.h
+xcl.o: m.h erbit.h rnc.h rnd.h rnv.h rnx.h ll.h
+arx.o: m.h s.h xmlc.h ht.h erbit.h rnc.h rnd.h rnv.h rx.h
+rn.o: m.h s.h ht.h ll.h rn.h
+rnc.o: u.h xmlc.h m.h s.h rn.h sc.h rnc.h
+rnd.o: m.h rn.h rnx.h ll.h rnd.h
+rnv.o: m.h xmlc.h erbit.h drv.h rnv.h
+rnx.o: m.h s.h rn.h ll.h rnx.h
+drv.o: xmlc.h m.h s.h ht.h rn.h xsd.h ll.h erbit.h drv.h
+xsd.o: u.h xmlc.h s.h erbit.h rx.h xsd_tm.h xsd.h
 xsd_tm.o: xsd_tm.h
-sc.o: memops.h ll.h sc.h
-ht.o: memops.h ht.h
+sc.o: m.h ll.h sc.h
+ht.o: m.h ht.h
 u.o: u.h
 xmlc.o: u.h xmlc.h
-strops.o: xmlc.h memops.h strops.h
-memops.o: memops.h
-rx.o: u.h xmlc.h memops.h strops.h ht.h ll.h rx.h rx_cls_u.c rx_cls_ranges.c
+s.o: xmlc.h m.h s.h
+m.o: m.h
+rx.o: u.h xmlc.h m.h s.h ht.h ll.h rx.h rx_cls_u.c rx_cls_ranges.c

@@ -2,8 +2,8 @@
 
 #include <stdio.h>
 #include "xmlc.h" /*xmlc_white_space*/
-#include "memops.h"
-#include "strops.h" /*tokcmpn*/
+#include "m.h"
+#include "s.h" /*s_tokcmpn*/
 #include "ht.h"
 #include "rn.h"
 #include "xsd.h"
@@ -115,7 +115,7 @@ static void accept_m(void) {
   }
   ht_put(&ht_m,i_m++);
   if(drv_compact&&i_m==LIM_M) i_m=0;
-  if(i_m==len_m) memo=(int(*)[M_SIZE])memstretch(memo,len_m=2*i_m,i_m,sizeof(int[M_SIZE]));
+  if(i_m==len_m) memo=(int(*)[M_SIZE])m_stretch(memo,len_m=2*i_m,i_m,sizeof(int[M_SIZE]));
 }
 
 static int fallback_equal(char *typ,char *val,char *s,int n) {return 1;}
@@ -123,8 +123,8 @@ static int fallback_allows(char *typ,char *ps,char *s,int n) {return 1;}
 
 static int builtin_equal(char *typ,char *val,char *s,int n) {
   int dt=rn_newDatatype(0,typ-rn_string);
-  if(dt==rn_dt_string) return strcmpn(val,s,n)==0;
-  else if(dt==rn_dt_token) return tokcmpn(val,s,n)==0;
+  if(dt==rn_dt_string) return s_cmpn(val,s,n)==0;
+  else if(dt==rn_dt_token) return s_tokcmpn(val,s,n)==0;
   else assert(0);
   return 0;
 }
@@ -138,8 +138,8 @@ void drv_init(void) {
   if(!initialized) { initialized=1;
     rn_init();
     xsd_init(); xsd_verror_handler=&verror_handler_xsd;
-    memo=(int (*)[M_SIZE])memalloc(len_m=LEN_M,sizeof(int[M_SIZE]));
-    dtl=(struct dtl*)memalloc(len_dtl=LEN_DTL,sizeof(struct dtl));
+    memo=(int (*)[M_SIZE])m_alloc(len_m=LEN_M,sizeof(int[M_SIZE]));
+    dtl=(struct dtl*)m_alloc(len_dtl=LEN_DTL,sizeof(struct dtl));
     ht_init(&ht_m,LEN_M,&hash_m,&equal_m);
     windup();
   }
@@ -158,7 +158,7 @@ void drv_clear(void) {
 }
 
 void drv_add_dtl(char *suri,int (*equal)(char *typ,char *val,char *s,int n),int (*allows)(char *typ,char *ps,char *s,int n)) {
-  if(n_dtl==len_dtl) dtl=(struct dtl *)memstretch(dtl,len_dtl=n_dtl*2,n_dtl,sizeof(struct dtl));
+  if(n_dtl==len_dtl) dtl=(struct dtl *)m_stretch(dtl,len_dtl=n_dtl*2,n_dtl,sizeof(struct dtl));
   dtl[n_dtl].uri=rn_newString(suri);
   dtl[n_dtl].equal=equal;
   dtl[n_dtl].allows=allows;

@@ -2,7 +2,7 @@
 
 #include <stdio.h>
 #include <assert.h>
-#include "memops.h"
+#include "m.h"
 #include "rn.h"
 #include "rnx.h"
 #include "ll.h"
@@ -53,7 +53,7 @@ static int de(int p) {
   RN_P_CHK(p,REF);
   for(;;) {
     if(!rn_marked(p)) {
-      if(n_r==len_r) refs=(int*)memstretch(refs,len_r=(n_r*2),n_r,sizeof(int));
+      if(n_r==len_r) refs=(int*)m_stretch(refs,len_r=(n_r*2),n_r,sizeof(int));
       refs[n_r++]=p;
     }
     rn_mark(p);
@@ -69,8 +69,8 @@ static void flatten(int p) { if(!rn_marked(p)) {flat[n_f++]=p; rn_mark(p);}}
 static void deref(int start) {
   int p,p1,p2,nc,i,changed;
 
-  flat=(int*)memalloc(len_f=LEN_F,sizeof(int)); n_f=0;
-  refs=(int*)memalloc(len_r=LEN_R,sizeof(int)); n_r=0;
+  flat=(int*)m_alloc(len_f=LEN_F,sizeof(int)); n_f=0;
+  refs=(int*)m_alloc(len_r=LEN_R,sizeof(int)); n_r=0;
 
   if(RN_P_IS(start,REF)) start=de(start);
   flatten(start);
@@ -91,7 +91,7 @@ static void deref(int start) {
       if(RN_P_IS(p1,REF)) {p1=de(p1); changed=1;}
       if(RN_P_IS(p2,REF)) {p2=de(p2); changed=1;}
       if(changed) {rn_del_p(p); rn_pattern[p+1]=p1; rn_pattern[p+2]=p2; rn_add_p(p);}
-      if(n_f+2>len_f) flat=(int*)memstretch(flat,len_f=2*(n_f+2),n_f,sizeof(int));
+      if(n_f+2>len_f) flat=(int*)m_stretch(flat,len_f=2*(n_f+2),n_f,sizeof(int));
       flatten(p1); flatten(p2);
       break;
 
@@ -103,7 +103,7 @@ static void deref(int start) {
       changed=0;
       if(RN_P_IS(p1,REF)) {p1=de(p1); changed=1;}
       if(changed) {rn_del_p(p); rn_pattern[p+1]=p1; rn_add_p(p);}
-      if(n_f+1>len_f) flat=(int*)memstretch(flat,len_f=2*(n_f+1),n_f,sizeof(int));
+      if(n_f+1>len_f) flat=(int*)m_stretch(flat,len_f=2*(n_f+1),n_f,sizeof(int));
       flatten(p1);
       break;
 
@@ -116,7 +116,7 @@ static void deref(int start) {
   } while(i!=n_f);
   for(i=0;i!=n_f;++i) rn_unmark(flat[i]);
   for(i=0;i!=n_r;++i) {p=refs[i]; rn_pattern[p+1]=0; rn_unmark(p);}
-  memfree(refs);
+  m_free(refs);
 }
 
 static int loop(int p) {
@@ -156,7 +156,7 @@ static void loops(void) {
       if(i==0) error(RND_ER_LOOPST); else {
 	char *s=rnx_nc2str(nc);
 	error(RND_ER_LOOPEL,s);
-	memfree(s);
+	m_free(s);
       }
     }
     for(;;) {++i;
@@ -208,7 +208,7 @@ static void ctypes(void) {
       if(!rn_contentType(p1)) {
 	char *s=rnx_nc2str(nc);
 	error(RND_ER_CTYPE,s);
-	memfree(s);
+	m_free(s);
       }
     }
   }
@@ -340,18 +340,18 @@ static void path(int p,int nc) {
   case RN_P_INTERLEAVE: rn_Interleave(p,p1,p2); goto BINARY;
   case RN_P_GROUP: rn_Group(p,p1,p2); goto BINARY;
   case RN_P_DATA_EXCEPT: rn_DataExcept(p,p1,p2);
-    if(bad_data_except(p2)) {char *s=rnx_nc2str(nc); error(RND_ER_BADEXPT,s); memfree(s);}
+    if(bad_data_except(p2)) {char *s=rnx_nc2str(nc); error(RND_ER_BADEXPT,s); m_free(s);}
     goto BINARY;
   BINARY: path(p1,nc); path(p2,nc); break;
 
   case RN_P_ONE_OR_MORE: rn_OneOrMore(p,p1);
-    if(bad_one_or_more(p1,0)) {char *s=rnx_nc2str(nc); error(RND_ER_BADMORE,s); memfree(s);}
+    if(bad_one_or_more(p1,0)) {char *s=rnx_nc2str(nc); error(RND_ER_BADMORE,s); m_free(s);}
     goto UNARY;
   case RN_P_LIST: rn_List(p,p1);
-    if(bad_list(p1)) {char *s=rnx_nc2str(nc); error(RND_ER_BADLIST,s); memfree(s);}
+    if(bad_list(p1)) {char *s=rnx_nc2str(nc); error(RND_ER_BADLIST,s); m_free(s);}
     goto UNARY;
   case RN_P_ATTRIBUTE: rn_Attribute(p,nc1,p1);
-    if(bad_attribute(p1)) {char *s=rnx_nc2str(nc),*s1=rnx_nc2str(nc1); error(RND_ER_BADATTR,s1,s); memfree(s1); memfree(s);}
+    if(bad_attribute(p1)) {char *s=rnx_nc2str(nc),*s1=rnx_nc2str(nc1); error(RND_ER_BADATTR,s1,s); m_free(s1); m_free(s);}
     goto UNARY;
   UNARY: path(p1,nc); break;
 
@@ -437,7 +437,7 @@ static void traits(void) {
 
 static int release(void) {
   int start=flat[0];
-  memfree(flat); flat=NULL;
+  m_free(flat); flat=NULL;
   return start;
 }
 

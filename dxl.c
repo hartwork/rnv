@@ -8,7 +8,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <assert.h>
-#include "memops.h"
+#include "m.h"
 #include "dxl.h"
 
 char *dxl_cmd=NULL;
@@ -28,9 +28,9 @@ extern int dxl_allows(char *typ,char *ps,char *s,int n) {
       } else arg=1;
       ++p;
     }
-    argv=(char**)memalloc(argc,sizeof(char*));
+    argv=(char**)m_alloc(argc,sizeof(char*));
     argv[--argc]=NULL;
-    argv[--argc]=(char*)memalloc(n+1,sizeof(char)); argv[argc][n]='\0'; strncpy(argv[argc],s,n);
+    argv[--argc]=(char*)m_alloc(n+1,sizeof(char)); argv[argc][n]='\0'; strncpy(argv[argc],s,n);
     argv[0]=dxl_cmd; argv[1]="allows"; argv[2]=typ;
     i=3; if(i<argc) {
       for(;;) {

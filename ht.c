@@ -2,7 +2,7 @@
 
 #include <stdlib.h> /*NULL*/
 #include <assert.h> /*assert*/
-#include "memops.h"
+#include "m.h"
 #include "ht.h"
 
 #define LOAD_FACTOR 2
@@ -12,7 +12,7 @@ void ht_init(struct hashtable *ht,int len,int (*hash)(int),int (*equal)(int,int)
   ht->tablen=1; len*=LOAD_FACTOR;
   while(ht->tablen<len) ht->tablen<<=1;
   ht->limit=ht->tablen/LOAD_FACTOR;
-  ht->table=(int*)memalloc(ht->tablen<<1,sizeof(int)); /* the second half is hash values */
+  ht->table=(int*)m_alloc(ht->tablen<<1,sizeof(int)); /* the second half is hash values */
   ht->hash=hash; ht->equal=equal;
   ht_clear(ht);
 }
@@ -23,7 +23,7 @@ void ht_clear(struct hashtable *ht) {
 }
 
 void ht_dispose(struct hashtable *ht) {
-  memfree(ht->table); ht->table=NULL;
+  m_free(ht->table); ht->table=NULL;
 }
 
 #define first(ht,hv) (hv&(ht->tablen-1))
@@ -44,7 +44,7 @@ void ht_put(struct hashtable *ht,int i) {
   if(ht->used==ht->limit) {
     int tablen=ht->tablen; int *table=ht->table;
     ht->tablen<<=1; ht->limit<<=1;
-    ht->table=(int*)memalloc(ht->tablen<<1,sizeof(int));
+    ht->table=(int*)m_alloc(ht->tablen<<1,sizeof(int));
     for(j=0;j!=ht->tablen;++j) ht->table[j]=-1;
     for(j=0;j!=tablen;++j) {
       if(table[j]!=-1) {
@@ -53,7 +53,7 @@ void ht_put(struct hashtable *ht,int i) {
 	ht->table[k]=table[j]; ht->table[k|ht->tablen]=hvj;
       }
     }
-    memfree(table);
+    m_free(table);
   }
   for(j=first(ht,hv);ht->table[j]!=-1;j=next(ht,j)) assert(!ht->equal(i,ht->table[j]));
   ht->table[j]=i;

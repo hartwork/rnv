@@ -9,7 +9,7 @@ UNISTD_H="<unistd.h>"
 INC=-I/usr/local/include
 LBL=-L/usr/local/lib
 
-DEF=-DEXPAT_H=${EXPAT_H} -DUNISTD_H=${UNISTD_H} -DRNV_VERSION="\"${VERSION}\"" -DARX_VERSION="\"${VERSION}\"" -DRVP_VERSION="\"${VERSION}\""
+DEF=-DDSL_SCM=1 -DEXPAT_H=${EXPAT_H} -DUNISTD_H=${UNISTD_H} -DRNV_VERSION="\"${VERSION}\"" -DARX_VERSION="\"${VERSION}\"" -DRVP_VERSION="\"${VERSION}\""
 WARN=-Wall -Wstrict-prototypes  -Wmissing-prototypes -Wcast-align
 OPT=-O -g
 
@@ -17,7 +17,8 @@ CFLAGS=${INC} ${DEF} ${WARN} ${OPT}
 LFLAGS=${OPT} ${LBL}
 
 LIBEXPAT=-lexpat
-LIB=${LIBEXPAT}
+LIBSCM=-lscm
+LIB=${LIBEXPAT} ${LIBSCM} -lm
 
 LIBRNVA=librnv.a
 LIBRNVSO=librnv.so
@@ -46,8 +47,8 @@ sc.c sc.h \
 ht.c ht.h \
 u.c u.h \
 xmlc.c xmlc.h \
-strops.c strops.h \
-memops.c memops.h \
+s.c s.h \
+m.c m.h \
 rx.c rx.h \
 rx_cls_u.c \
 rx_cls_ranges.c
@@ -69,8 +70,8 @@ sc.o \
 u.o \
 ht.o \
 xmlc.o \
-strops.o \
-memops.o \
+s.o \
+m.o \
 rx.o
 
 .SUFFIXES: .c .o
@@ -134,22 +135,22 @@ install: ${DIST}-${VERSION}.zip readme.txt changes.txt
 
 # DO NOT DELETE
 
-xcl.o: memops.h erbit.h rnl.h rnv.h rnx.h ll.h
-arx.o: u.h memops.h strops.h xmlc.h ht.h erbit.h rnl.h rnv.h rx.h ary.h
+xcl.o: m.h erbit.h rnl.h rnv.h rnx.h ll.h
+arx.o: u.h m.h s.h xmlc.h ht.h erbit.h rnl.h rnv.h rx.h ary.h
 ary.o: rn.h ary.h
-rn.o: memops.h strops.h ht.h ll.h rn.h
-rnc.o: u.h xmlc.h memops.h strops.h rn.h sc.h rnc.h
-rnd.o: memops.h rn.h rnx.h ll.h rnd.h
+rn.o: m.h s.h ht.h ll.h rn.h
+rnc.o: u.h xmlc.h m.h s.h rn.h sc.h rnc.h
+rnd.o: m.h rn.h rnx.h ll.h rnd.h
 rnl.o: erbit.h rn.h rnc.h rnd.h rnl.h
-rnv.o: memops.h xmlc.h erbit.h drv.h rnv.h
-rnx.o: memops.h strops.h rn.h ll.h rnx.h
-drv.o: xmlc.h memops.h strops.h ht.h rn.h xsd.h ll.h erbit.h drv.h
-xsd.o: u.h xmlc.h strops.h erbit.h rx.h xsd_tm.h xsd.h
+rnv.o: m.h xmlc.h erbit.h drv.h rnv.h
+rnx.o: m.h s.h rn.h ll.h rnx.h
+drv.o: xmlc.h m.h s.h ht.h rn.h xsd.h ll.h erbit.h drv.h
+xsd.o: u.h xmlc.h s.h erbit.h rx.h xsd_tm.h xsd.h
 xsd_tm.o: xsd_tm.h
-sc.o: memops.h ll.h sc.h
-ht.o: memops.h ht.h
+sc.o: m.h ll.h sc.h
+ht.o: m.h ht.h
 u.o: u.h
 xmlc.o: u.h xmlc.h
-strops.o: xmlc.h memops.h strops.h
-memops.o: memops.h
-rx.o: u.h xmlc.h memops.h strops.h ht.h ll.h rx.h rx_cls_u.c rx_cls_ranges.c
+s.o: xmlc.h m.h s.h
+m.o: m.h
+rx.o: u.h xmlc.h m.h s.h ht.h ll.h rx.h rx_cls_u.c rx_cls_ranges.c

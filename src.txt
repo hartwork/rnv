@@ -16,8 +16,8 @@ xsd.c xsd.h -- xml schema datatypes
 xsd_tm.c xsd_tm.h -- dateTime datatype implementation
 sc.c sc.h -- scope tables for rnc
 ht.c ht.h -- hash table  
-strops.c strops.h  -- common string operations
-memops.c memops.h  -- common memory operations
+s.c s.h  -- common string operations
+m.c m.h  -- common memory operations
 xmlc.c xmlc.h -- xml character classifiers
 u.c u.h  -- utf-8 
 rx.c rx.h -- regular expressions engine
@@ -25,7 +25,7 @@ rx_cls_u.c rx_cls_ranges.c -- auto-generated tables; included by rx.c
 
 # hierarchy
 
-... ht,strops,memops,xmlc,u -- used in many places
+... ht,s,m,xmlc,u -- used in many places
 
 xcl,arx
 . rnv

@@ -10,8 +10,8 @@
 
 #include "u.h"
 #include "xmlc.h"
-#include "memops.h"
-#include "strops.h" /* strclone */
+#include "m.h"
+#include "s.h" /* s_clone */
 #include "rn.h"
 #include "sc.h"
 #include "rnc.h"
@@ -134,7 +134,7 @@ int rnc_stropen(struct rnc_source *sp,char *fn,char *s,int len) {
 int rnc_bind(struct rnc_source *sp,char *fn,int fd) {
   rnc_source_init(sp,fn);
   if((sp->fd=fd)!=-1) {
-    sp->buf=(char*)memalloc(BUFSIZE,sizeof(char)); sp->flags=SRC_FREE;
+    sp->buf=(char*)m_alloc(BUFSIZE,sizeof(char)); sp->flags=SRC_FREE;
     sp->n=sp->i=0; sp->complete=0; rnc_read(sp); sp->i=u_bom(sp->buf,sp->n);
   }
   return sp->fd;
@@ -150,28 +150,28 @@ int rnc_open(struct rnc_source *sp,char *fn) {
 
 int rnc_close(struct rnc_source *sp) {
   int ret=0,i;
-  for(i=0;i!=2;++i) {memfree(sp->sym[i].s); sp->sym[i].s=NULL;}
-  if(sp->flags&SRC_FREE) {sp->flags&=~SRC_FREE; memfree(sp->buf);}
+  for(i=0;i!=2;++i) {m_free(sp->sym[i].s); sp->sym[i].s=NULL;}
+  if(sp->flags&SRC_FREE) {sp->flags&=~SRC_FREE; m_free(sp->buf);}
   sp->buf=NULL;
   sp->complete=-1;
   if(sp->flags&SRC_CLOSE) {
     sp->flags&=~SRC_CLOSE;
     if(sp->fd!=-1) {ret=close(sp->fd); sp->fd=-1;}
   }
-  memfree(sp->fn); sp->fn=NULL;
+  m_free(sp->fn); sp->fn=NULL;
   return ret;
 }
 
 static void rnc_source_init(struct rnc_source *sp,char *fn) {
   int i;
-  sp->fn=strclone(fn);
+  sp->fn=s_clone(fn);
   sp->flags=0;
   sp->buf=NULL;
   sp->complete=sp->fd=-1;
   sp->line=1; sp->col=1; sp->prevline=-1;
   sp->u=-1; sp->v=0;  sp->nx=-1;
   sp->cur=0;
-  for(i=0;i!=2;++i) sp->sym[i].s=(char*)memalloc(sp->sym[i].slen=BUFSIZE,sizeof(char));
+  for(i=0;i!=2;++i) sp->sym[i].s=(char*)m_alloc(sp->sym[i].slen=BUFSIZE,sizeof(char));
 }
 
 static int rnc_read(struct rnc_source *sp) {
@@ -208,7 +208,7 @@ static int initialized=0;
 void rnc_init(void) {
   if(!initialized) { initialized=1;
     rn_init();
-    len_p=LEN_P; path=(char*)memalloc(len_p,sizeof(char));
+    len_p=LEN_P; path=(char*)m_alloc(len_p,sizeof(char));
     /* initialize scopes */
     sc_init(&nss); sc_init(&dts); sc_init(&defs); sc_init(&refs); sc_init(&prefs);
   }
@@ -336,7 +336,7 @@ static void getv(struct rnc_source *sp) {
 #define skip_comment(sp) while(!newline(sp->v)) getv(sp); getv(sp)
 
 static void realloc_s(struct rnc_cym *symp,int newslen) {
-  symp->s=(char*)memstretch(symp->s,newslen,symp->slen,sizeof(char));
+  symp->s=(char*)m_stretch(symp->s,newslen,symp->slen,sizeof(char));
   symp->slen=newslen;
 }
 
@@ -485,7 +485,7 @@ static void advance(struct rnc_source *sp) {
           }
 	  if(!(escaped||prefixed)) {
 	    int kwd;
-	    if((kwd=strtab(NXT(sp).s,kwdtab,NKWD))!=NKWD) {
+	    if((kwd=s_tab(NXT(sp).s,kwdtab,NKWD))!=NKWD) {
 	      NXT(sp).sym=kwd;
 	      return;
 	    }
@@ -662,11 +662,11 @@ static void fold_efs(struct rnc_source *sp,struct sc_stack *stp,void (*fold)(str
   int len=stp->top-stp->base-1;
   if(len!=0) {
     int i;
-    int (*tab)[SC_RECSIZE]=(int(*)[SC_RECSIZE])memalloc(len,sizeof(int[SC_RECSIZE]));
+    int (*tab)[SC_RECSIZE]=(int(*)[SC_RECSIZE])m_alloc(len,sizeof(int[SC_RECSIZE]));
     memcpy(tab,stp->tab+stp->base+1,len*sizeof(int[SC_RECSIZE]));
     sc_close(stp);
     for(i=0;i!=len;++i) fold(sp,stp,tab[i][0],tab[i][1],tab[i][2]);
-    memfree(tab);
+    m_free(tab);
   } else sc_close(stp);
 }
 
@@ -888,8 +888,8 @@ static int relpath(struct rnc_source *sp) {
   int ret;
   if((ret=chksym(sp,SYM_LITERAL))) {
     int len=strlen(sp->fn)+strlen(CUR(sp).s)+1;
-    if(len>len_p) {memfree(path); path=(char*)memalloc(len_p=len,sizeof(char));}
-    strcpy(path,CUR(sp).s); abspath(path,sp->fn);
+    if(len>len_p) {m_free(path); path=(char*)m_alloc(len_p=len,sizeof(char));}
+    strcpy(path,CUR(sp).s); s_abspath(path,sp->fn);
   }
   getsym(sp);
   return ret;

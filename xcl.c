@@ -10,7 +10,7 @@
 #include <errno.h>
 #include <assert.h>
 #include EXPAT_H
-#include "memops.h"
+#include "m.h"
 #include "erbit.h"
 #include "rnl.h"
 #include "rnv.h"
@@ -58,7 +58,7 @@ static void verror_handler(int erno,va_list ap) {
 	    fprintf(stderr,"expected:\n");
 	    for(i=0;i!=rnx_n_exp;++i) {
 	      fprintf(stderr,"\t%s\n",s=rnx_p2str(rnx_exp[i]));
-	      memfree(s);
+	      m_free(s);
 	    }
 	  }
 	}
@@ -83,13 +83,13 @@ static void init(void) {
     rnl_init(); rnl_verror_handler=&verror_handler_rnl;
     rnv_init(); rnv_verror_handler=&verror_handler_rnv;
     rnx_init();
-    text=(char*)memalloc(len_t=LEN_T,sizeof(char));
+    text=(char*)m_alloc(len_t=LEN_T,sizeof(char));
     windup();
   }
 }
 
 static void clear(void) {
-  if(len_t>LIM_T) {memfree(text); text=(char*)memalloc(len_t=LEN_T,sizeof(char));}
+  if(len_t>LIM_T) {m_free(text); text=(char*)m_alloc(len_t=LEN_T,sizeof(char));}
   windup();
 }
 
@@ -133,7 +133,7 @@ static void characters(void *userData,const char *s,int len) {
     int newlen_t=n_t+len+1;
     if(newlen_t<=LIM_T&&LIM_T<len_t) newlen_t=LIM_T;
     else if(newlen_t<len_t) newlen_t=len_t;
-    if(len_t!=newlen_t) text=(char*)memstretch(text,len_t=newlen_t,n_t,sizeof(char));
+    if(len_t!=newlen_t) text=(char*)m_stretch(text,len_t=newlen_t,n_t,sizeof(char));
     memcpy(text+n_t,s,len); n_t+=len; text[n_t]='\0'; /* '\0' guarantees that the text is bounded, and strto[ld] work for data */
   }
 }

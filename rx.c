@@ -5,8 +5,8 @@
 #include <assert.h>
 #include "u.h" /*u_get,u_strlen*/
 #include "xmlc.h"
-#include "memops.h"
-#include "strops.h"
+#include "m.h"
+#include "s.h"
 #include "ht.h"
 #include "ll.h"
 #include "rx.h"
@@ -80,7 +80,7 @@ static int accept_p(void) {
   if((j=ht_get(&ht_p,i_p))==-1) {
     ht_put(&ht_p,j=i_p);
     i_p+=p_size[P_TYP(i_p)];
-    if(i_p+P_SIZE>len_p) pattern=(int*)memstretch(pattern,len_p=2*(i_p+P_SIZE),i_p,sizeof(int));
+    if(i_p+P_SIZE>len_p) pattern=(int*)m_stretch(pattern,len_p=2*(i_p+P_SIZE),i_p,sizeof(int));
   }
   return j;
 }
@@ -143,7 +143,7 @@ static int cls(int cn) {
 
 
 static int equal_r(int r1,int r2) {return strcmp(regex+r1,regex+r2)==0;}
-static int hash_r(int r) {return strhash(regex+r);}
+static int hash_r(int r) {return s_hval(regex+r);}
 
 static int equal_p(int p1,int p2) {
   int *pp1=pattern+p1,*pp2=pattern+p2;
@@ -172,7 +172,7 @@ static int hash_2(int x) {return r2p[x][0]*PRIME_2;}
 
 static int add_r(char *rx) {
   int len=strlen(rx)+1;
-  if(i_r+len>len_r) regex=(char*)memstretch(regex,len_r=2*(i_r+len),i_r,sizeof(char));
+  if(i_r+len>len_r) regex=(char*)m_stretch(regex,len_r=2*(i_r+len),i_r,sizeof(char));
   strcpy(regex+i_r,rx);
   return len;
 }
@@ -236,17 +236,17 @@ static void accept_m(void) {
   if(ht_get(&ht_m,i_m)!=-1) ht_del(&ht_m,i_m);
   ht_put(&ht_m,i_m++);
   if(i_m>=LIM_M) i_m=0;
-  if(i_m==len_m) memo=(int(*)[M_SIZE])memstretch(memo,len_m=i_m*2,i_m,sizeof(int[M_SIZE]));
+  if(i_m==len_m) memo=(int(*)[M_SIZE])m_stretch(memo,len_m=i_m*2,i_m,sizeof(int[M_SIZE]));
 }
 
 static void windup(void);
 static int initialized=0;
 void rx_init(void) {
   if(!initialized) { initialized=1;
-    pattern=(int *)memalloc(len_p=P_AVG_SIZE*LEN_P,sizeof(int));
-    r2p=(int (*)[2])memalloc(len_2=LEN_2,sizeof(int[2]));
-    regex=(char*)memalloc(len_r=R_AVG_SIZE*LEN_R,sizeof(char));
-    memo=(int (*)[M_SIZE])memalloc(len_m=LEN_M,sizeof(int[M_SIZE]));
+    pattern=(int *)m_alloc(len_p=P_AVG_SIZE*LEN_P,sizeof(int));
+    r2p=(int (*)[2])m_alloc(len_2=LEN_2,sizeof(int[2]));
+    regex=(char*)m_alloc(len_r=R_AVG_SIZE*LEN_R,sizeof(char));
+    memo=(int (*)[M_SIZE])m_alloc(len_m=LEN_M,sizeof(int[M_SIZE]));
 
     ht_init(&ht_p,LEN_P,&hash_p,&equal_p);
     ht_init(&ht_2,LEN_2,&hash_2,&equal_2);
@@ -291,7 +291,7 @@ static int chclass(void) {
   for(;;) {
     if(regex[rj]=='\0') {ri=rj; error(RX_ER_NORCU); return 0;}
     if(regex[rj]=='}') {
-      if((cl=strntab(regex+ri,rj-ri,clstab,NUM_CLS_U))==NUM_CLS_U) {error(RX_ER_BADCL); cl=0;}
+      if((cl=s_ntab(regex+ri,rj-ri,clstab,NUM_CLS_U))==NUM_CLS_U) {error(RX_ER_BADCL); cl=0;}
       ri=rj+1;
       return cl;
     }
@@ -500,7 +500,7 @@ static int compile(char *rx) {
     bind(r); p=expression(); if(sym!=SYM_END) error(RX_ER_BADCH);
     r2p[i_2][0]=r; r2p[i_2][1]=p;
     ht_put(&ht_2,i_2++);
-    if(i_2==len_2) r2p=(int(*)[2])memstretch(r2p,len_2=2*i_2,i_2,sizeof(int[2]));
+    if(i_2==len_2) r2p=(int(*)[2])m_stretch(r2p,len_2=2*i_2,i_2,sizeof(int[2]));
   } else {
     r2p[i_2][0]=r;
     p=r2p[ht_get(&ht_2,i_2)][1];

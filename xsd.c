@@ -8,7 +8,7 @@
 #include <assert.h>
 #include "u.h"
 #include "xmlc.h"
-#include "strops.h"
+#include "s.h"
 #include "erbit.h"
 #include "rx.h"
 #include "xsd_tm.h"
@@ -394,14 +394,14 @@ static int chkdec(struct facets *fp,char *s,int n) {
 }
 
 static double atodn(char *s,int n) {
-  return tokcmpn("-INF",s,n)==0?-HUGE_VAL
-    : tokcmpn("INF",s,n)==0?HUGE_VAL
+  return s_tokcmpn("-INF",s,n)==0?-HUGE_VAL
+    : s_tokcmpn("INF",s,n)==0?HUGE_VAL
     : atof(s);
 }
 static double atod(char *s) {return atodn(s,strlen(s));}
 
 static int chkdbl(struct facets *fp,char *s,int n) {
-  int ok=1,nan=tokcmpn("NaN",s,n)==0;
+  int ok=1,nan=s_tokcmpn("NaN",s,n)==0;
   double d=atodn(s,n);
   if(fp->set&(1<<FCT_MIN_EXCLUSIVE)) ok=ok&&!nan&&d>atod(fp->minExclusive);
   if(fp->set&(1<<FCT_MIN_INCLUSIVE)) ok=ok&&!nan&&d>=atod(fp->minInclusive);
@@ -432,7 +432,7 @@ static int chktm(char *typ,char *fmt,struct facets *fp,char *s,int n) {
 
 int xsd_allows(char *typ,char *ps,char *s,int n) {
   int ok=1,length;
-  int dt=strtab(typ,typtab,NTYP);
+  int dt=s_tab(typ,typtab,NTYP);
   struct facets fct; fct.set=0; fct.npat=0;
   switch(dt) {
   case TYP_INTEGER:
@@ -504,7 +504,7 @@ int xsd_allows(char *typ,char *ps,char *s,int n) {
   { int n;
     while((n=strlen(ps))) {
       char *key=ps,*val=key+n+1,*end,i;
-      switch(i=strtab(key,fcttab,NFCT)) {
+      switch(i=s_tab(key,fcttab,NFCT)) {
       case FCT_LENGTH: fct.length=(int)strtol(val,&end,10); if(!*val||*end) (*error_handler)(XSD_ER_PARVAL,key,val); break;
       case FCT_MAX_LENGTH: fct.maxLength=(int)strtol(val,&end,10); if(!*val||*end) (*error_handler)(XSD_ER_PARVAL,key,val); break;
       case FCT_MIN_LENGTH: fct.minLength=(int)strtol(val,&end,10); if(!*val||*end) (*error_handler)(XSD_ER_PARVAL,key,val); break;
@@ -661,8 +661,8 @@ int xsd_allows(char *typ,char *ps,char *s,int n) {
 
 static int dblcmpn(char *val,char *s,char n) {
   double d1,d2;
-  return tokcmpn(val,s,n)==0?0
-    : tokcmpn(val,"NaN",3)==0||tokcmpn("NaN",s,n)==0?1
+  return s_tokcmpn(val,s,n)==0?0
+    : s_tokcmpn(val,"NaN",3)==0||s_tokcmpn("NaN",s,n)==0?1
     : (d1=atod(val),d2=atodn(s,n),d1<d2?-1:d1>d2?1:0);
 }
 
@@ -712,9 +712,9 @@ static int qncmpn(char *s1,char *s2,int n2) { /* context is not passed over; com
   while(*ln1&&*ln1!=':') ++ln1;
   while(n!=0&&*ln2!=':') {++ln2; --n;}
   if(*ln1) {
-    return n?tokcmpn(ln1+1,ln2+1,n-1):tokcmpn(ln1+1,s2,n2);
+    return n?s_tokcmpn(ln1+1,ln2+1,n-1):s_tokcmpn(ln1+1,s2,n2);
   } else {
-    return n?tokcmpn(s1,ln2+1,n-1):tokcmpn(s1,s2,n2);
+    return n?s_tokcmpn(s1,ln2+1,n-1):s_tokcmpn(s1,s2,n2);
   }
 }
 
@@ -724,10 +724,10 @@ int xsd_equal(char *typ,char *val,char *s,int n) {
     return 0;
   }
   if(!xsd_allows(typ,"",s,n)) return 0;
-  switch(strtab(typ,typtab,NTYP)) {
+  switch(s_tab(typ,typtab,NTYP)) {
  /*primitive*/
-  case TYP_STRING: return strcmpn(val,s,n)==0;
-  case TYP_BOOLEAN: return (tokcmpn("true",val,strlen(val))==0||tokcmpn("1",val,strlen(val))==0)==(tokcmpn("true",s,n)==0||tokcmpn("1",s,n)==0);
+  case TYP_STRING: return s_cmpn(val,s,n)==0;
+  case TYP_BOOLEAN: return (s_tokcmpn("true",val,strlen(val))==0||s_tokcmpn("1",val,strlen(val))==0)==(s_tokcmpn("true",s,n)==0||s_tokcmpn("1",s,n)==0);
   case TYP_DECIMAL: return deccmp(val,strlen(val),s,n)==0;
   case TYP_FLOAT: case TYP_DOUBLE: return dblcmpn(val,s,n)==0;
   case TYP_DURATION: return duracmp(val,s,n)==0;
@@ -741,7 +741,7 @@ int xsd_equal(char *typ,char *val,char *s,int n) {
   case TYP_G_MONTH: return dtcmpn(val,s,n,"mz")==0;
   case TYP_HEX_BINARY: return hexcmpn(val,s,n)==0;
   case TYP_BASE64_BINARY: return b64cmpn(val,s,n)==0;
-  case TYP_ANY_URI: return tokcmpn(val,s,n)==0;
+  case TYP_ANY_URI: return s_tokcmpn(val,s,n)==0;
   case TYP_QNAME: case TYP_NOTATION:
     return qncmpn(val,s,n)==0;
  /*derived*/
@@ -756,7 +756,7 @@ int xsd_equal(char *typ,char *val,char *s,int n) {
   case TYP_IDREF:
   case TYP_IDREFS:
   case TYP_ENTITY:
-  case TYP_ENTITIES: return tokcmpn(val,s,n)==0;
+  case TYP_ENTITIES: return s_tokcmpn(val,s,n)==0;
   case TYP_INTEGER:
   case TYP_POSITIVE_INTEGER:
   case TYP_NON_NEGATIVE_INTEGER:

@@ -3,7 +3,7 @@
 #include <string.h> /*strncpy,strrchr*/
 #include <stdio.h>
 #include <assert.h>
-#include "memops.h"
+#include "m.h"
 #include "xmlc.h" /*xmlc_white_space*/
 #include "erbit.h"
 #include "drv.h"
@@ -60,7 +60,7 @@ static void qname(char *name) {
   char *sep; int len;
   if((sep=strrchr(name,':'))) sname=sep+1; else sep=sname=name;
   len=sep-name+1;
-  if(len>len_suri) {len_suri=len; memfree(suri); suri=(char*)memalloc(len_suri,sizeof(char));}
+  if(len>len_suri) {len_suri=len; m_free(suri); suri=(char*)m_alloc(len_suri,sizeof(char));}
   strncpy(suri,name,len-1);
   suri[len-1]='\0';
 }

@@ -31,8 +31,8 @@ comments start with # and continue till end of line
 #include <assert.h>
 #include EXPAT_H
 #include "u.h"
-#include "memops.h"
-#include "strops.h"
+#include "m.h"
+#include "s.h"
 #include "xmlc.h"
 #include "ht.h"
 #include "erbit.h"
@@ -82,7 +82,7 @@ static int n_t;
 
 static int add_s(char *s) {
   int len=strlen(s)+1,j;
-  if(i_s+len>len_s) string=(char*)memstretch(string,len_s=2*(i_s+len),i_s,sizeof(char));
+  if(i_s+len>len_s) string=(char*)m_stretch(string,len_s=2*(i_s+len),i_s,sizeof(char));
   strcpy(string+i_s,s);
   if((j=ht_get(&ht_s,i_s))==-1) {
     ht_put(&ht_s,j=i_s);
@@ -91,7 +91,7 @@ static int add_s(char *s) {
   return j;
 }
 
-static int hash_s(int i) {return strhash(string+i);}
+static int hash_s(int i) {return s_hval(string+i);}
 static int equal_s(int s1,int s2) {return strcmp(string+s1,string+s2)==0;}
 
 static void silent_verror_handler(int erno,va_list ap) {
@@ -104,18 +104,18 @@ static void init(void) {
   if(!initialized) {initialized=1;
     rnl_init(); rnv_init();
     rnv_verror_handler=&silent_verror_handler;
-    string=(char*)memalloc(len_v=LEN_S*S_AVG_SIZE,sizeof(char));
-    t2s=(int(*)[2])memalloc(len_2=LEN_2,sizeof(int[2]));
-    rules=(int(*)[3])memalloc(len_r=LEN_R,sizeof(int[3]));
+    string=(char*)m_alloc(len_v=LEN_S*S_AVG_SIZE,sizeof(char));
+    t2s=(int(*)[2])m_alloc(len_2=LEN_2,sizeof(int[2]));
+    rules=(int(*)[3])m_alloc(len_r=LEN_R,sizeof(int[3]));
     ht_init(&ht_s,LEN_S,&hash_s,&equal_s);
-    value=(char*)memalloc(len_v=LEN_V,sizeof(char));
-    text=(char*)memalloc(len_t=LEN_T,sizeof(char));
+    value=(char*)m_alloc(len_v=LEN_V,sizeof(char));
+    text=(char*)m_alloc(len_t=LEN_T,sizeof(char));
     windup();
   }
 }
 
 static void clear(void) {
-  if(len_t>LIM_T) {memfree(text); text=(char*)memalloc(len_t=LEN_T,sizeof(char));}
+  if(len_t>LIM_T) {m_free(text); text=(char*)m_alloc(len_t=LEN_T,sizeof(char));}
   ht_clear(&ht_s);
   windup();
 }
@@ -210,7 +210,7 @@ static int getid(void) {
     int i=0;
     do {
       value[i++]=cc;
-      if(i==len_v) value=(char*)memstretch(value,len_v=2*i,i,sizeof(char));
+      if(i==len_v) value=(char*)m_stretch(value,len_v=2*i,i,sizeof(char));
       getcc();
     } while(nmtoken(cc));
     value[i]='\0';
@@ -227,7 +227,7 @@ static void getq(void) {
       if(i!=0&&value[i-1]=='\\') --i; else {getcc(); break;}
     } else if(cc<' ') {error(ARX_ER_NOQ); break;}
     value[i++]=cc;
-    if(i==len_v) value=(char*)memstretch(value,len_v=2*i,i,sizeof(char));
+    if(i==len_v) value=(char*)m_stretch(value,len_v=2*i,i,sizeof(char));
   }
   value[i]='\0';
 }
@@ -241,7 +241,7 @@ static void getrng(void) {
     else if(cc=='>') {if(cc0=='=') {getcc(); break;}} /* use => as terminator */
     else if(cc==-1) {error(ARX_ER_EXP,"=>",sym2str(SYM_EOF)); break;}
     value[i++]=cc;
-    if(i==len_v) value=(char*)memstretch(value,len_v=2*i,i,sizeof(char));
+    if(i==len_v) value=(char*)m_stretch(value,len_v=2*i,i,sizeof(char));
   }
   if(ircur==-1) {error(ARX_ER_EXP,sym2str(SYM_RCUR),sym2str(SYM_EOF)); ircur=0;}
   value[ircur]='\0';
@@ -315,15 +315,15 @@ static int arx(char *fn) {
     cc=' '; getsym();
     chk_get(SYM_GRMS); chk_get(SYM_LCUR);
     do {
-      if(i_2==len_2) t2s=(int(*)[2])memstretch(t2s,len_2=i_2*2,i_2,sizeof(int[2]));
+      if(i_2==len_2) t2s=(int(*)[2])m_stretch(t2s,len_2=i_2*2,i_2,sizeof(int[2]));
       if(chksym(SYM_IDNT)) t2s[i_2][0]=add_s(value);
       getsym();
       chk_get(SYM_ASGN);
       if(chksym(SYM_LTRL)) {
 	if(path2abs) {
 	  int len=strlen(arxfn)+strlen(value)+1;
-	  if(len>len_v) {value=(char*)memstretch(value,len,len_v,sizeof(char)); len_v=len;}
-	  abspath(value,arxfn);
+	  if(len>len_v) {value=(char*)m_stretch(value,len,len_v,sizeof(char)); len_v=len;}
+	  s_abspath(value,arxfn);
 	}
 	t2s[i_2][1]=add_s(value);
       }
@@ -332,7 +332,7 @@ static int arx(char *fn) {
     } while(sym==SYM_IDNT);
     chk_get(SYM_RCUR);
     for(;;) {
-      if(i_r==len_r) rules=(int(*)[3])memstretch(rules,len_r=i_r*2,i_r,sizeof(int[3]));
+      if(i_r==len_r) rules=(int(*)[3])m_stretch(rules,len_r=i_r*2,i_r,sizeof(int[3]));
       switch(sym) {
       case SYM_MTCH: rules[i_r][0]=MATCH; goto REGEXP;
       case SYM_NMTC: rules[i_r][0]=NOMAT; goto REGEXP;
@@ -348,10 +348,10 @@ static int arx(char *fn) {
       case SYM_NVAL: rules[i_r][0]=INVAL; goto RNG;
       RNG: getsym();
 	if(chksym(SYM_RENG)) {
-	  char *rncfn=(char*)memalloc(strlen(arxfn)+strlen("#rnc[]")+12,sizeof(char));
+	  char *rncfn=(char*)m_alloc(strlen(arxfn)+strlen("#rnc[]")+12,sizeof(char));
 	  sprintf(rncfn,"%s#rnc[%i]",arxfn,rnc++);
 	  if(!(rules[i_r][1]=rnl_s(rncfn,value,strlen(value)))) error(ARX_ER_RNG);
-	  memfree(rncfn);
+	  m_free(rncfn);
 	}
 	getsym();
 	if(chksym(SYM_IDNT)) rules[i_r][2]=typ2str();
@@ -393,7 +393,7 @@ static void characters(void *userData,const char *s,int len) {
     int newlen_t=n_t+len+1;
     if(newlen_t<=LIM_T&&LIM_T<len_t) newlen_t=LIM_T;
     else if(newlen_t<len_t) newlen_t=len_t;
-    if(len_t!=newlen_t) text=(char*)memstretch(text,len_t=newlen_t,n_t,sizeof(char));
+    if(len_t!=newlen_t) text=(char*)m_stretch(text,len_t=newlen_t,n_t,sizeof(char));
     memcpy(text+n_t,s,len); n_t+=len; text[n_t]='\0'; /* '\0' guarantees that the text is bounded, and strto[ld] work for data */
   }
 }

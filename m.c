@@ -3,13 +3,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-#include "memops.h"
+#include "m.h"
 
-void memfree(void *p) {
+void m_free(void *p) {
   free(p);
 }
 
-extern void *memalloc(int length,int size) {
+extern void *m_alloc(int length,int size) {
   void *p=calloc(length,size);
   if(p==NULL) {
     fprintf(stderr,"failed to allocate %i bytes of memory\n",length*size);
@@ -18,9 +18,9 @@ extern void *memalloc(int length,int size) {
   return p;
 }
 
-void *memstretch(void *p,int newlen,int oldlen,int size) {
-  void *newp=memalloc(newlen,size);
+void *m_stretch(void *p,int newlen,int oldlen,int size) {
+  void *newp=m_alloc(newlen,size);
   memcpy(newp,p,oldlen*size);
-  memfree(p);
+  m_free(p);
   return newp;
 }

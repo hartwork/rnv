@@ -46,8 +46,8 @@
 #include <setjmp.h>
 #include <errno.h>
 #include <assert.h>
-#include "memops.h"
-#include "strops.h"
+#include "m.h"
+#include "s.h"
 #include "erbit.h"
 #include "drv.h"
 #include "rnl.h"
@@ -102,7 +102,7 @@ static void init(void) {
     rnv_init(); rnv_verror_handler=&verror_handler_rnv;
     drv_add_dtl(DXL_URL,&dxl_equal,&dxl_allows);
     drv_add_dtl(DSL_URL,&dsl_equal,&dsl_allows);
-    quebuf=(char*)memalloc(len_q=LEN_B,sizeof(char));
+    quebuf=(char*)m_alloc(len_q=LEN_B,sizeof(char));
   }
 }
 
@@ -159,7 +159,7 @@ static int query(void) {
   n=0;
   for(;;) {
     if(n==n_q) {
-      if(len_q-n_q<LEN_B) quebuf=(char*)memstretch(quebuf,len_q=n_q+LEN_B,n_q,sizeof(char));
+      if(len_q-n_q<LEN_B) quebuf=(char*)m_stretch(quebuf,len_q=n_q+LEN_B,n_q,sizeof(char));
       dn=read(0,quebuf+n_q,LEN_B);
       if(dn<0) longjmp(IOER,1);
       if(dn==0) {errno=EIO; longjmp(IOER,1);}
@@ -169,7 +169,7 @@ static int query(void) {
   }
 
   j=endtok(i=tok(0));
-  if((kwd=strntab(quebuf+i,j-i,kwdtab,NKWD))==QUIT) {resp(1,0,0); return 0;}
+  if((kwd=s_ntab(quebuf+i,j-i,kwdtab,NKWD))==QUIT) {resp(1,0,0); return 0;}
   switch(kwd) {
   case START:
     j=endtok((i=tok(j)));
@@ -236,7 +236,7 @@ int main(int argc,char **argv) {
 
   if(*argv==NULL) {usage(); return 1;}
 
-  starts=(int*)memalloc(argc,sizeof(int));
+  starts=(int*)m_alloc(argc,sizeof(int));
   ok=1; n_st=0;
   do {
     ok=(starts[n_st++]=rnl_fn(*(argv++)))&&ok;
