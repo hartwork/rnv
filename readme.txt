@@ -11,6 +11,7 @@ Version 1.3
    Installation 
    Invocation 
    Limitations 
+   ARX 
    New versions 
 
    Abstract
@@ -27,10 +28,14 @@ Version 1.3
 
 News since 1.2
 
-   This release is mostly dedicated to performance and convenience
-   enhancements. Pattern pools are now one-dimensional arrays, which
-   conserves space and gives better performance. Pass-through mode has
-   been added to facilitate use of rnv in pipes.
+   This release has many performance and convenience enhancements.
+   Pattern pools are now one-dimensional arrays, which conserves space
+   and gives better performance. Pass-through mode has been added to
+   facilitate use of rnv in pipes. ARX, an utility to automatically
+   associate documents and grammars, is included in the distribution;
+   details are below. A simple plugin for vim, http://www.vim.org/,
+   is provided to use RNV with the editor. The script uses ARX to
+   automatically choose the grammar for a document.
 
 News since 1.1
 
@@ -47,9 +52,13 @@ Package Contents
      * the source code, *.[ch];
      * the source code map, src.txt;
      * Makefile for unix-like systems;
-     * compile.bat to compile with Borland C/C++ Compiler on Windows;
-     * rnv.exe, a Win32 executable statically linked with a current
-       version of Expat from http://expat.sourceforge.net/;
+     * Makefile.bcc for Win32 and Borland C/C++ Compiler;
+     * tools/rnv.vim, a plugin for Vim;
+     * tools/arx.conf, ARX configuration file;
+     * tools/*.rnc, sample Relax NG grammars;
+     * win32/rnv.exe and win32/arx.exe, Win32 executables statically
+       linked with a current version of Expat from
+       http://expat.sourceforge.net/;
      * the log of changes, changes.txt;
      * this file, readme.txt.
 
@@ -58,9 +67,9 @@ Installation
    On Unix-like systems, run make. If you are using Expat 1.2, define
    EXPAT_H as xmlparse.h (instead of expat.h).
 
-   On Windows, use rnv.exe. To recompile from the sources, either use
-   compile.bat with Borland C/C++ Compiler or modify the Makefile for
-   your environment.
+   On Windows, use rnv.exe. To recompile from the sources, use
+   Makefile.bcc with Borland C/C++ Compiler, or create a makefile or
+   project for your environment.
 
 Invocation
 
@@ -102,8 +111,85 @@ Limitations
        then the schema's path must be written in the Unix way for the
        relative paths to work. For example, under Windows, rnv that uses
        ..\schema\docbook.rnc to validate userguide.dbx should be invoked
-       as:
-       rnv.exe ../schema/docbook.rnc userguide.dbx
+       as
+
+      rnv.exe ../schema/docbook.rnc userguide.dbx
+
+ARX
+
+   ARX is a tool to automatically determine the type of a document from
+   its name and contents. It is inspired by James Clark's schema location
+   approach for nXML,
+   http://groups.yahoo.com/group/emacs-nxml-mode/message/259, and is
+   a development of the idea described in
+   http://relaxng.org/pipermail/relaxng-user/2003-December/000214.htm
+   l.
+
+   ARX is a command-line utility. The invocation syntax is
+
+        arx {-n|-v|-h} document.xml  arx.conf {arx.conf}
+
+   ARX either prints a string corresponding to the document's type or
+   nothing if the type cannot be determined. The options are:
+
+   -n
+          turns off prepending base path of the configuration file to the
+          result, even if it looks like a relative path (useful when the
+          configuration file and the grammars are in separate
+          directories, or for association with something that is not a
+          file);
+
+   -v
+          prints current version;
+
+   -h or -?
+          displays usage summary and exit.
+
+   The configuration file must confrom to the following grammar:
+
+      arx = grammars route*
+      grammars = "grammars"  "{" type2string+ "}"
+      type2string =  type "=" literal
+      type = nmtoken
+      route = match|nomatch|valid|invalid
+      match = "=~" regexp "=>" type
+      nomatch = "!~" regexp "=>" type
+      valid = "valid" "{" rng "}" "=>" type
+      invalid = "!valid" "{" rng "}" "=>" type
+
+      literal=string in '"', '"' inside must be prepended by '\'
+      regexp=string in '/', '/' inside must be prepended by '\'
+      rng=Relax NG Compact Syntax
+
+      Comments start with # and continue till the end of line.
+
+   Rules are processed sequentially, the first matching rule determines
+   the file's type. Relax NG templates are matched against file contents,
+   regular expressions are applied to file names. The sample below
+   associates documents with grammars for XSLT, DocBook or XSL FO.
+
+      grammars {
+        docbook="docbook.rnc"
+        xslt="xslt.rnc"
+        xslfo="fo.rnc"
+      }
+
+      valid {
+        start = element (book|article|chapter|reference) {any}
+        any = (element * {any}|attribute * {text}|text)*
+      } => docbook
+
+      !valid {
+        default namespace xsl = "http://www.w3.org/1999/XSL/Transform"
+        start = element *-xsl:* {not-xsl}
+        not-xsl = (element *-xsl:* {not-xsl}|attribute * {text}|text)*
+      } => xslt
+
+      =~/.*\.xsl/ => xslt
+      =~/.*\.fo/ => xslfo
+
+   ARX can also be used to link documents to any type of information or
+   processing.
 
 New versions
 

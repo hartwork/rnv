@@ -91,9 +91,9 @@ depend: ${SRC}
 clean:
 	-rm -f *.o tst/c/*.o  *.a *.so rnv arx rnd_test *_test *.core *.gmon *.gprof rnv*.zip rnv.txt rnv.pdf rnv.html rnv.xml
 
-DISTFILES=license.txt ${SRC} Makefile readme.txt changes.txt src.txt
-DISTWIN32=rnv.exe compile.bat
-DISTTOOLS=tools/rnv.vim tools/uri2rnc.pl
+DISTFILES=license.txt ${SRC} Makefile Makefile.bcc readme.txt changes.txt src.txt
+DISTWIN32=rnv.exe arx.exe
+DISTTOOLS=tools/rnv.vim tools/arx.conf /home/dvd/work/RNG-C/xslt.rnc /home/dvd/work/RNG-C/fo.rnc
 zip: rnv-${VERSION}.zip
 rnv-${VERSION}.zip: ${DISTFILES} ${DISTWIN32} ${DISTTOOLS}
 	-rm -rf rnv.zip rnv-[0-9]*.[0-9]*.[0-9]*
@@ -101,7 +101,7 @@ rnv-${VERSION}.zip: ${DISTFILES} ${DISTWIN32} ${DISTTOOLS}
 	ln ${DISTFILES} rnv-${VERSION}/.
 	ln ${DISTWIN32} rnv-${VERSION}/win32/.
 	ln ${DISTTOOLS} rnv-${VERSION}/tools/.
-	zip -r rnv-${VERSION}.zip rnv-${VERSION}
+	zip -9 -r rnv-${VERSION}.zip rnv-${VERSION}
 	-rm -rf rnv-${VERSION}
 
 install: rnv-${VERSION}.zip readme.txt changes.txt

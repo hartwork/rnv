@@ -3,6 +3,7 @@
 # source files
 
 xcl.c -- Expat-based command-line interface
+arx.c -- document and type association utility
 ll.h -- lengths of arrays
 erbit.h -- error classes
 rnv.c rnv.h -- higher-level validator logic
@@ -26,7 +27,7 @@ rx_cls_u.c rx_cls_ranges.c -- auto-generated tables; included by rx.c
 
 ... ht,strops,memops,xmlc,u -- used in many places
 
-xcl
+xcl,arx
 . rnv
 ... erbit.h
 ... ll

@@ -60,6 +60,7 @@ static char *xml;
 static int len_2,len_r,len_s,i_2,i_r,i_s;
 static int (*t2s)[2],(*rules)[3];
 static char *string; static struct hashtable ht_s;
+static int path2abs;
 
 /* arx parser */
 static char *arxfn;
@@ -315,9 +316,12 @@ static int arx(char *fn) {
       getsym();
       chk_get(SYM_ASGN);
       if(chksym(SYM_LTRL)) {
-	int len=strlen(arxfn)+strlen(value)+1;
-	if(len>len_v) {value=(char*)memstretch(value,len,len_v,sizeof(char)); len_v=len;}
-	abspath(value,arxfn); t2s[i_2][1]=add_s(value); 
+	if(path2abs) {
+	  int len=strlen(arxfn)+strlen(value)+1;
+	  if(len>len_v) {value=(char*)memstretch(value,len,len_v,sizeof(char)); len_v=len;}
+	  abspath(value,arxfn); 
+	}
+	t2s[i_2][1]=add_s(value); 
       }
       getsym();
       ++i_2;
@@ -418,18 +422,20 @@ static void validate(int start,int fd) {
 }
 
 static void version(void) {fprintf(stderr,"arx version %s\n",ARX_VERSION);}
-static void usage(void) {fprintf(stderr,"usage: arx {-[vh?]} document.xml arx.conf {arx.conf}\n");}
+static void usage(void) {fprintf(stderr,"usage: arx {-[nvh?]} document.xml arx.conf {arx.conf}\n");}
 
 int main(int argc,char **argv) {
   int fd;
   init();
 
+  path2abs=1;
   while(*(++argv)&&**argv=='-') {
     int i=1;
     for(;;) {
       switch(*(*argv+i)) {
       case '\0': goto END_OF_OPTIONS;
       case 'h': case '?': usage(); return 1;
+      case 'n': path2abs=0; break;
       case 'v': version(); break;
       default: fprintf(stderr,"unknown option '-%c'\n",*(*argv+i)); break;
       }
