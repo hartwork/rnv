@@ -18,7 +18,7 @@ class ProtocolError(Exception):
   def __str__(self):
     return repr(self.value)
 
-# run RVP with grammar specified on the command line 
+# run RVP with grammar specified on the command line
 def launch():
   global rvpin,rvpout
   inp,out=os.popen2('rvp '+string.join(sys.argv[1:],' '))
@@ -62,7 +62,7 @@ def start_tag_open(cur,name):
 def attribute(cur,name,val):
   send('attribute '+cur+' '+name+' '+val)
   return resp()
-  
+
 def start_tag_close(cur,name):
   send('start-tag-close '+cur+' '+name)
   return resp()
@@ -76,7 +76,7 @@ def textonly(cur,text):
   return resp()
 
 # in mixed content, whitespace is simply discarded, and any
-# non-whitespace is equal; but this optimization gives only only
+# non-whitespace is equal; but this optimization gives only
 # 5% increase in speed at most in practical cases
 def mixed(cur,text):
   if(re.search('[^\t\n ]',text)):
@@ -99,7 +99,7 @@ def quit():
 # text, and then flush_text passes the text to the validator
 def flush_text():
   global mixed,pat,text
-  
+
   if(pat==mixed):
     mixed(pat,text)
   else:
@@ -125,7 +125,7 @@ def end_element(name):
 
 def characters(data):
   global text
-  
+
   text=text+data
 
 # Main

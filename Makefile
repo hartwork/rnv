@@ -29,6 +29,7 @@ erbit.h \
 xcl.c \
 arx.c \
 rvp.c \
+xsdck.c \
 ary.c ary.h \
 rn.c rn.h \
 rnc.c rnc.h \
@@ -39,6 +40,7 @@ rnx.c rnx.h \
 drv.c drv.h \
 xsd.c xsd.h \
 xsd_tm.c xsd_tm.h \
+dxl.c dxl.h \
 sc.c sc.h \
 ht.c ht.h \
 u.c u.h \
@@ -60,6 +62,7 @@ drv.o \
 ary.o \
 xsd.o \
 xsd_tm.o \
+dxl.o \
 sc.o \
 u.o \
 ht.o \
@@ -73,7 +76,7 @@ rx.o
 .c.o:
 	${CC} ${CFLAGS} -c -o $@ $<
 
-all: rnv arx rvp
+all: rnv arx rvp xsdck
 
 rnv: xcl.o ${LIBRNV}
 	${CC} ${LFLAGS} -o rnv xcl.o ${LIBRNV} ${LIB}
@@ -83,6 +86,9 @@ arx: arx.o ${LIBRNV}
 
 rvp: rvp.o ${LIBRNV}
 	${CC} ${LFLAGS} -o rvp rvp.o ${LIBRNV} ${LIB}
+
+xsdck: xsdck.o ${LIBRNV}
+	${CC} ${LFLAGS} -o xsdck xsdck.o ${LIBRNV} ${LIB}
 
 rnd_test: ${LIBRNV} tst/c/rnd_test.c
 	${CC} ${LFLAGS} -I. -o rnd_test tst/c/rnd_test.c ${LIBRNV} ${LIB}

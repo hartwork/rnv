@@ -1,5 +1,10 @@
 /* $Id$ */
 
+1.4.2
+dvd: add -d command to rvp to load external type checker; dxl.c dxl.h implement
+     http://davidashen.net/relaxng/pluggable-datatypes datatype; xsdck makes
+     xsd: pluggable.
+
 1.4.1 Tue Jan 13 14:29:08 AMT 2004
 dvd: added sys/types.h where appropriate; fixed Makefile.bcc
      to include rnl.{c,h,obj}
@@ -12,8 +17,8 @@ dvd: rvp is implemented; reads validation events from input, sends diagnostics
      to output; embedding examples in perl and python
 
 Sat Jan 10 03:18:12 AMT 2004
-dvd: factored out loading of rnc into rnl; now instead of calling rnc
-     and rnd separately rnl_(fn|fd|s) is called. 
+dvd: factored out loading of rnc into rnl; now, instead of calling rnc
+     and rnd separately, rnl_(fn|fd|s) is called. 
 
 1.3.5 Tue Jan  6 11:56:06 AMT 2004
 dvd: learned that UTF-8 is reality, added processing; fixed check for name

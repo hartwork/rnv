@@ -31,8 +31,8 @@ sub resp {
   /^error (\d+) (\d+) (.*)/ and do {
       my ($pat,$msg)=($1,$3);
 
-     # if the message is empty, don't print the message, 
-     # the error has occured in already erroneous state 
+     # if the message is empty, don't print the message,
+     # the error has occured in already erroneous state
       if($msg) {
         my ($line,$col)=($parser->current_line(),$parser->current_column());
 	if($line!=$prevline || $col!=$prevcol) {
@@ -117,7 +117,7 @@ sub qname {
    my ($p,$name)=@_;
    return join(':',$p->namespace($name),$name);
 }
-   
+
 sub start_element {
   my ($p,$el,%attrs)=@_;
 

@@ -7,8 +7,9 @@
 
  reads from 0, writes to 1, 2 for grammar parse errors only, then redirected.
    -q switches to numerical error codes
-   -v displays version
    -s takes less space but more time
+   -d command plugs in an external type checker
+   -v displays version
    -h help message
  exit code: 0 on valid, non-zero on invalid
 
@@ -47,8 +48,10 @@
 #include "memops.h"
 #include "strops.h"
 #include "erbit.h"
+#include "drv.h"
 #include "rnl.h"
 #include "rnv.h"
+#include "dxl.h"
 
 extern int rn_notAllowed, drv_compact, rx_compact;
 
@@ -95,6 +98,7 @@ static void init(void) {
   if(!initialized) {initialized=1;
     rnl_init();
     rnv_init(); rnv_verror_handler=&verror_handler_rnv;
+    drv_add_dtl(DXL_URL,&dxl_equal,&dxl_allows);
     quebuf=(char*)memalloc(len_q=LEN_B,sizeof(char));
   }
 }
@@ -202,7 +206,7 @@ static int query(void) {
 }
 
 static void version(void) {fprintf(stderr,"rvp version %s\n",RVP_VERSION);}
-static void usage(void) {fprintf(stderr,"usage: rvp {-[qsvh?]} {schema.rnc}\n");}
+static void usage(void) {fprintf(stderr,"usage: rvp {-[qdsvh?]} {schema.rnc}\n");}
 
 int main(int argc,char **argv) {
   int i, ok;
@@ -217,6 +221,7 @@ int main(int argc,char **argv) {
       case 'h': case '?': usage(); return 0;
       case 'v': version(); break;
       case 's': drv_compact=1; rx_compact=1; break;
+      case 'd': dxl_cmd=*(argv+1); if(dxl_cmd) ++argv; goto END_OF_OPTIONS;
       case 'q': explain=0; break;
       default: fprintf(stderr,"unknown option '-%c'\n",*(*argv+i)); break;
       }
