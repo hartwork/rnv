@@ -11,14 +11,14 @@ static int parse(struct rnc_source *sp) {
   rnc_close(sp); if(rnc_errors(sp)) return 0;
 
   fprintf(stderr,"dereferencing\n");
-  start=rnd_deref(start); if(rnd_errors()) return 0;
+  rnd_deref(start); if(rnd_errors()) return 0;
 
   fprintf(stderr,"checking restrictions\n");
   rnd_restrictions(); if(rnd_errors()) return 0;
 
   fprintf(stderr,"computing auxiliary traits\n");
   rnd_traits();
-  rnd_release();
+  start=rnd_release();
 
   fprintf(stderr,"start=%i\n",start);
 

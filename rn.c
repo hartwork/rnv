@@ -2,6 +2,7 @@
 
 #include <stdlib.h> /* calloc */
 #include <string.h> /* strcmp,memcmp,strlen,strcpy,memcpy,memset */
+#include <stdio.h> /* debugging*/
 
 #include "util.h"
 #include "ht.h"
@@ -23,7 +24,93 @@ static int len_p, len_nc, len_s;
 
 void rn_new_schema() {base_p=i_p; i_ref=0;}
 
-void rn_del_p(int i) {ht_del(&ht_p,i);}
+extern int rn_end_schema(int *flat,int n_f) {
+  int start,
+    i,p,q,p1,p2,nc,
+    changed_x,changed_p,
+    len=i_p-base_p,
+    *xlat=(int*)calloc(len,sizeof(int));
+  for(i=0;i!=len;++i) xlat[i]=i+base_p;
+
+  for(i=0;i!=n_f;++i) mark(flat[i]);
+
+  changed_x=0;
+  for(p=base_p;p!=i_p;++p) {
+    if(!marked(p)) {
+      if(!P_IS(p,REF)) {
+	rn_del_p(p);
+	rn_pattern[p][0]=P_VOID;
+	changed_x=1;
+      }
+    } else if((q=ht_get(&ht_p,p))<base_p) {
+      rn_pattern[p][0]=P_VOID;
+      xlat[p-base_p]=q;
+      changed_x=1;
+    }
+  }
+
+  while(changed_x) {
+    changed_x=0;
+    for(p=base_p;p!=i_p;++p) {
+      if(marked(p)) {
+	changed_p=0;
+	switch(P_TYP(p)) {
+	case P_VOID:
+	case P_EMPTY: case P_NOT_ALLOWED: case P_TEXT: case P_DATA: case P_VALUE:
+	  break;
+
+	case P_CHOICE: Choice(p,p1,p2); goto BINARY;
+	case P_INTERLEAVE: Interleave(p,p1,p2); goto BINARY;
+	case P_GROUP: Group(p,p1,p2); goto BINARY;
+	case P_DATA_EXCEPT: DataExcept(p,p1,p2); goto BINARY;
+	BINARY:
+	  if(p1>=base_p && xlat[p1-base_p]!=p1) {p1=xlat[p1-base_p]; changed_p=1;}
+	  if(p2>=base_p && xlat[p2-base_p]!=p2) {p2=xlat[p2-base_p]; changed_p=1;}
+	  if(changed_p) {rn_del_p(p); rn_pattern[p][1]=p1; rn_pattern[p][2]=p2; rn_add_p(p);}
+	  break;
+
+	case P_ONE_OR_MORE: OneOrMore(p,p1); goto UNARY;
+	case P_LIST: List(p,p1); goto UNARY;
+	case P_ATTRIBUTE: Attribute(p,nc,p1); goto UNARY;
+	case P_ELEMENT: Element(p,nc,p1); goto UNARY;
+	UNARY:
+	  if(p1>=base_p && xlat[p1-base_p]!=p1) {p1=xlat[p1-base_p]; changed_p=1;}
+	  if(changed_p) {rn_del_p(p); rn_pattern[p][1]=p1; rn_add_p(p);}
+	  break;
+
+	default: 
+	  assert(0);
+	}
+	if(changed_p) {
+	  if((q=ht_get(&ht_p,p))<base_p) {
+	    rn_pattern[p][0]=P_VOID;
+	    xlat[p-base_p]=q;
+	  }
+	  changed_x=1;
+	}
+      }
+    }
+  }
+
+  for(i=0;i!=n_f;++i) unmark(flat[i]);
+
+  for(;;) {
+    p=i_p-1;
+    if(P_IS(p,VOID)) { --i_p;
+    } else if(P_IS(p,REF)) { --i_p;
+      rn_del_p(p);
+    } else break;
+  }
+  memset(rn_pattern[i_p],0,sizeof(int[P_SIZE]));
+
+  start=flat[0];
+  if(start>=base_p) start=xlat[start-base_p];
+  free(xlat);
+
+  return start;
+}
+
+void rn_del_p(int i) {if(ht_get(&ht_p,i)==i) ht_del(&ht_p,i);}
 void rn_add_p(int i) {if(ht_get(&ht_p,i)==-1) ht_put(&ht_p,i);}
 
 void setNullable(int i,int x) {if(x) rn_pattern[i][0]|=P_FLG_NUL;}
@@ -48,6 +135,9 @@ int newString(char *s) {
 
 #define P_NEW(x) rn_pattern[i_p][0]=P_##x
 
+#define P_LABEL "pattern"
+#define NC_LABEL "nameclass"
+
 #define accept(name,n,N)  \
 static int accept_##n() { \
   int j; \
@@ -63,6 +153,7 @@ static int accept_##n() { \
   memset(rn_##name[i_##n],0,sizeof(int[N##_SIZE])); \
   return j; \
 }
+
 accept(pattern,p,P)
 accept(nameclass,nc,NC)
 
@@ -323,32 +414,31 @@ static void windup() {
   rn_empty=newEmpty(); rn_notAllowed=newNotAllowed(); rn_text=newText();
 }
 
-/* hash function for int[] */
-static int hash_ary(int i,int *ary,int size) {
-  int j;
-  int *a=ary+i*size;
-  int h=0,s=sizeof(int)*8/size;
-  j=0;
-  for(;;) {h=h+a[j++]; if(j==size) break; h<<=s;}
-  return h;
+static int hash_p(int p) {
+  int *pp=rn_pattern[p];
+  return (pp[0]<<24)+((pp[1]&0xfff)<<12)+(pp[2]&0xfff);
 }
-
-static int hash_p(int i) {return hash_ary(i,(int*)rn_pattern,P_SIZE);}
-static int hash_nc(int i) {return hash_ary(i,(int*)rn_nameclass,NC_SIZE);}
+static int hash_nc(int nc) {
+  int *ncp=rn_nameclass[nc];
+  return (ncp[0]<<24)+((ncp[1]&0xfff)<<12)+(ncp[2]&0xfff);
+}
 static int hash_s(int i) {return strhash(rn_string+i);}
 
 static int equal_p(int p1,int p2) {
-  int *pp1=&rn_pattern[p1][0],*pp2=&rn_pattern[p2][0];
-  return pp1[0]==pp2[0] && pp1[1] == pp2[1] && pp1[2] == pp2[2];
+  int *pp1=rn_pattern[p1],*pp2=rn_pattern[p2];
+  return (pp1[0]&0xff)==(pp2[0]&0xff) && pp1[1] == pp2[1] && pp1[2] == pp2[2];
 }
-static int equal_nc(int p1,int p2) {
-  int *ncp1=&rn_nameclass[p1][0],*ncp2=&rn_nameclass[p2][0];
-  return ncp1[0]==ncp2[0] && ncp1[1] == ncp2[1] && ncp1[2] == ncp2[2];
+static int equal_nc(int nc1,int nc2) {
+  int *ncp1=rn_nameclass[nc1],*ncp2=rn_nameclass[nc2];
+  return (ncp1[0]&0xff)==(ncp2[0]&0xff) && ncp1[1] == ncp2[1] && ncp1[2] == ncp2[2];
 }
 static int equal_s(int s1,int s2) {return strcmp(rn_string+s1,rn_string+s2)==0;}
 
 /* 
  * $Log$
+ * Revision 1.15  2003/12/10 01:08:04  dvd
+ * compressing schema, work in progress
+ *
  * Revision 1.14  2003/12/09 19:38:44  dvd
  * failed to compress grammar
  *

@@ -54,7 +54,7 @@ static int deref(int p) {
 
 static void flatten(p) { if(!marked(p)) {flat[n_f++]=p; mark(p);}}
 
-int rnd_deref(int start) {
+void rnd_deref(int start) {
   int p,p1,p2,nc,i,changed;
 
   flat=(int*)calloc(len_f=LEN_F,sizeof(int)); n_f=0;
@@ -99,13 +99,14 @@ int rnd_deref(int start) {
     case P_REF: /* because of a loop, but will be handled in rnd_loops */
       break;
 
-    default: assert(0);
+    default: 
+      printf("p=%i typ=%i\n",p,P_TYP(p));
+      assert(0);
     }
   } while(i!=n_f);
   for(i=0;i!=n_f;++i) unmark(flat[i]);
   for(i=0;i!=n_r;++i) {p=refs[i]; rn_pattern[p][1]=0; unmark(p);}
   free(refs);
-  return start;
 }
 
 static int loop(int p) {
@@ -424,12 +425,17 @@ void rnd_traits() {
   cdatas();
 }
 
-void rnd_release() {
+int rnd_release() {
+  int start=rn_end_schema(flat,n_f);
   free(flat); flat=NULL;
+  return start;
 }
 
 /*
  * $Log$
+ * Revision 1.9  2003/12/10 01:08:04  dvd
+ * compressing schema, work in progress
+ *
  * Revision 1.8  2003/12/09 19:47:35  dvd
  * start dereferenced
  *

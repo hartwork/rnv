@@ -22,6 +22,7 @@
 #define P_ELEMENT 13
 #define P_AFTER 14
 #define P_REF 15
+#define P_VOID 255
 
 /*
 Patterns and nameclasses are stored in arrays of arrays of integers.
@@ -102,6 +103,7 @@ extern int (*rn_pattern)[P_SIZE];
 extern int (*rn_nameclass)[NC_SIZE];
 
 extern void rn_new_schema();
+extern int rn_end_schema(int *flat,int n_f);
 
 extern void setNullable(int i,int x);
 extern void setCdata(int i,int x);
@@ -151,6 +153,9 @@ extern void rn_clear();
 
 /*
  * $Log$
+ * Revision 1.16  2003/12/10 01:08:04  dvd
+ * compressing schema, work in progress
+ *
  * Revision 1.15  2003/12/09 19:38:44  dvd
  * failed to compress grammar
  *
