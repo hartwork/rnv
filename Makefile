@@ -1,16 +1,22 @@
 # $Id$
 #
-VERSION=1.0.0
+VERSION=1.1.1
 CC=cc
 EXPAT_H="<expat.h>"
 UNISTD_H="<unistd.h>"
 LIBEXPAT=-lexpat
 INC=-I/usr/local/include
-CFLAGS=-Wall -DEXPAT_H=${EXPAT_H} -DUNISTD_H=${UNISTD_H} -DRNV_VERSION="\"${VERSION}\""
-LFLAGS=
 OPT=-g -O -pg 
-LIB=${LIBEXPAT}
+WARN=-Wall -Wstrict-prototypes  -Wmissing-prototypes -Wcast-align -Wtraditional
+CFLAGS=${WARN} -shared -DEXPAT_H=${EXPAT_H} -DUNISTD_H=${UNISTD_H} -DRNV_VERSION="\"${VERSION}\""
+LFLAGS=
 LBL=-L/usr/local/lib
+LIB=${LIBEXPAT}
+
+LIBRNVA=librnv.a
+LIBRNVSO=librnv.so
+LIBRNV=${LIBRNVA}
+
 SRC=\
 rnv.c \
 rn.c rn.h \
@@ -43,20 +49,29 @@ util.o
 
 all: rnv
 
-rnv: ${OBJ} rnv.o
-	${CC} ${OPT} ${LFLAGS} ${LBL} -o rnv rnv.o ${OBJ} ${LIB} 
+rnv: rnv.o ${LIBRNV}
+	${CC} ${OPT} ${LFLAGS} ${LBL} -o rnv rnv.o ${LIBRNV} ${LIB} 
 
 rnd_test: ${OBJ} rnd_test.o
 	${CC} ${OPT} ${LFLAGS} ${LBL} -o rnd_test rnd_test.o ${OBJ} ${LIB} 
 
-clean: 
-	-rm -f *.o rnv rnd_test *_test *.core *.gmon *.gprof rnv*.zip
+${LIBRNVA}: ${OBJ}
+	ar rc $@ ${OBJ}
 
-DISTFILES=license.txt ${SRC} Makefile compile.bat rnv.exe readme.txt 
-zip: ${DISTFILES}
+${LIBRNVSO}: ${OBJ}
+	gcc -shared -o $@ ${OBJ}
+
+clean: 
+	-rm -f *.o  *.a *.so rnv rnd_test *_test *.core *.gmon *.gprof rnv*.zip rnv.txt rnv.pdf rnv.html rnv.xml
+
+DISTFILES=license.txt ${SRC} Makefile compile.bat rnv.exe readme.txt changes.txt
+zip: rnv-${VERSION}.zip
+rnv-${VERSION}.zip: ${DISTFILES}
 	-rm -rf rnv.zip rnv-[0-9]*.[0-9]*.[0-9]*
 	mkdir rnv-${VERSION}
 	ln ${DISTFILES} rnv-${VERSION}/.
 	zip -r rnv-${VERSION}.zip rnv-${VERSION}
 	-rm -rf rnv-${VERSION}
 
+install: rnv-${VERSION}.zip readme.txt changes.txt
+	-cp -f rnv-${VERSION}.zip readme.txt changes.txt ${DISTDIR}
