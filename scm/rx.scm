@@ -5,7 +5,11 @@
 (load  (in-vicinity (program-vicinity) "xml-ranges.scm"))
 (load  (in-vicinity (program-vicinity) "rx-ranges.scm"))
 
-; patterns: none empty any choice group more except range class char
+(define rx-patterns '(none empty any choice group more except range class char))
+
+(define rx-regex-cache-size 16)
+(define rx-pattern-cache-size 256)
+(define rx-memo-cache-size 1024)
 
 (define (rx-null? p)
   (case (car p)
@@ -18,6 +22,14 @@
 (define rx-none #f)
 (define rx-empty #f)
 (define rx-any #f)
+
+(define rx-regex-cache (make-vector rx-regex-cache-size #f))
+(define (rx-regex-hash regex)
+  (let digit ((v 0) (l (string->list regex)))
+    (if (null? l) v
+      (digit (+ (* v 31) (char->integer (car l))) (cdr l)))))
+      
+(define rx-memo-cache (make-vector rx-memo-cache-size #f))
 
 (define rx-newpat ; #f flushes
   (letrec (
@@ -44,7 +56,7 @@
 	      (begin (set-cdr! que (cons p (cdr que))) p))
 	    (begin (set! cache (cons (list (car p) p) cache)) p)))
 	(begin
-	  (set! cache '())
+	  (if (> (apply + (map length cache)) rx-pattern-cache-size) (set! cache '()))
 	  (set! rx-none (rx-newpat '(none)))
 	  (set! rx-empty (rx-newpat '(empty)))
 	  (set! rx-any (rx-newpat '(any)))
@@ -300,11 +312,16 @@
 	      (begin (getsym)
 		(loop (rx-choice p (branch))))
 	      p)))))
-	
-    (rx-newpat #f) (getsym) 	
-    (let ((p (expr)))
-      (or (equal? sym '(end)) (error! "junk after end"))
-      (and (not errors) p))))
+    (let* (
+        (n (remainder (rx-regex-hash regex) (vector-length rx-regex-cache)))
+	(cell (vector-ref rx-regex-cache n)))	
+      (if (and cell (equal? (car cell) regex)) (cdr cell)
+        (begin
+          (rx-newpat #f) (getsym) 	
+          (let ((p (expr)))
+            (or (equal? sym '(end)) (error! "junk after end"))
+	    (vector-set! rx-regex-cache n (cons regex p))
+            (and (not errors) p)))))))
 
 (define (rx-deriv p c)
   (letrec (
@@ -334,22 +351,31 @@
 	      ((U-S) (apply -or- (map in-rx-ranges '(U-Sm U-Sc U-Sk U-So))))
 	      ((U-Z) (apply -or- (map in-rx-ranges '(U-Zl U-Zs U-Zp))))
 	      (else (in-rx-ranges id)))))))
-    (case (car p)
-      ((none empty) rx-none)
-      ((any) rx-empty)
-      ((choice) (rx-choice (rx-deriv (cadr p) c) (rx-deriv (cddr p) c)))
-      ((group)
-	(let ((q (rx-group (rx-deriv (cadr p) c) (cddr p))))
-	  (if (rx-null? (cadr p)) (rx-choice q (rx-deriv (cddr p) c)) q)))
-      ((more) (rx-group (rx-deriv (cdr p) c) (rx-choice rx-empty p)))
-      ((except)
-	(if (and (rx-null? (rx-deriv (cadr p) c))
-	    (not (rx-null? (rx-deriv (cddr p) c))))
-	  rx-empty
-	  rx-none))
-      ((range) (if (and (<= (cadr p) c) (<= c (cddr p))) rx-empty rx-none))
-      ((class) (if (in-class? c (cdr p)) rx-empty rx-none))
-      ((char) (if (= (cdr p) c) rx-empty rx-none)))))
+    (let* (
+        (n 
+	  (remainder (+ (* c (length rx-patterns)) (length (memv (car p) rx-patterns)))
+	    (vector-length rx-memo-cache)))
+	(cell (vector-ref rx-memo-cache n)))
+      (if (and cell (eqv? (car cell) p) (eqv? (cadr cell) c)) (cddr cell)
+        (let ((q
+            (case (car p)
+              ((none empty) rx-none)
+              ((any) rx-empty)
+              ((choice) (rx-choice (rx-deriv (cadr p) c) (rx-deriv (cddr p) c)))
+              ((group)
+                (let ((q (rx-group (rx-deriv (cadr p) c) (cddr p))))
+                  (if (rx-null? (cadr p)) (rx-choice q (rx-deriv (cddr p) c)) q)))
+              ((more) (rx-group (rx-deriv (cdr p) c) (rx-choice rx-empty p)))
+              ((except)
+                (if (and (rx-null? (rx-deriv (cadr p) c))
+                    (not (rx-null? (rx-deriv (cddr p) c))))
+                  rx-empty
+                  rx-none))
+              ((range) (if (and (<= (cadr p) c) (<= c (cddr p))) rx-empty rx-none))
+              ((class) (if (in-class? c (cdr p)) rx-empty rx-none))
+              ((char) (if (= (cdr p) c) rx-empty rx-none)))))
+	  (vector-set! rx-memo-cache n (cons p (cons c q)))
+	  q)))))
 
 (define (rx-match r s)
   (and r
