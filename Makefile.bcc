@@ -24,6 +24,7 @@ ll.h \
 erbit.h \
 xcl.c \
 arx.c \
+ary.c \
 rn.c rn.h \
 rnc.c rnc.h \
 rnd.c rnd.h \
@@ -49,6 +50,7 @@ rnd.obj \
 rnv.obj \
 rnx.obj \
 drv.obj \
+ary.obj \
 xsd.obj \
 xsd_tm.obj \
 sc.obj \

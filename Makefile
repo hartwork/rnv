@@ -28,6 +28,7 @@ ll.h \
 erbit.h \
 xcl.c \
 arx.c \
+ary.c \
 rn.c rn.h \
 rnc.c rnc.h \
 rnd.c rnd.h \
@@ -53,6 +54,7 @@ rnd.o \
 rnv.o \
 rnx.o \
 drv.o \
+ary.o \
 xsd.o \
 xsd_tm.o \
 sc.o \
