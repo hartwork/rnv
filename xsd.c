@@ -9,6 +9,7 @@
 #include "u.h"
 #include "xmlc.h"
 #include "strops.h"
+#include "erbit.h"
 #include "rx.h"
 #include "xsd_tm.h"
 #include "xsd.h"
@@ -18,8 +19,8 @@ static void (*rxverror0)(int erno,va_list ap);
 #define err(msg) vfprintf(stderr,msg"\n",ap)
 static void default_verror_handler(int erno,va_list ap) {
   fprintf(stderr,"XML Schema datatypes: ");
-  if(erno&RXER_BIT) {
-    rxverror0(erno&~RXER_BIT,ap);
+  if(erno&ERBIT_RX) {
+    rxverror0(erno&~ERBIT_RX,ap);
   } else {
     switch(erno) {
     case XSDER_TYP: err("unknown type %s"); break;
@@ -42,7 +43,7 @@ static void error_handler(int erno,...) {
   (*xsd_verror_handler)(erno,ap);
   va_end(ap);
 }
-static void verror_handler_rx(int erno,va_list ap) {(*xsd_verror_handler)(erno|RXER_BIT,ap);}
+static void verror_handler_rx(int erno,va_list ap) {(*xsd_verror_handler)(erno|ERBIT_RX,ap);}
 
 static int initialized=0;
 void xsd_init(void) {

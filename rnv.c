@@ -9,6 +9,7 @@
 #include <errno.h>
 #include EXPAT_H
 #include "xmlc.h" /*xmlc_white_space*/
+#include "erbit.h"
 #include "rn.h"
 #include "rnc.h"
 #include "rnd.h"
@@ -52,7 +53,7 @@ static int n_t;
 static char *suri=NULL,*sname; static int len_suri=-1; /* qname() splits, handlers use */
 
 static void verror(int erno,va_list ap);
-static void verror_handler_xsd(int erno,va_list ap) {verror(erno|XSDER_BIT,ap);}
+static void verror_handler_xsd(int erno,va_list ap) {verror(erno|ERBIT_XSD,ap);}
 
 static void windup(void);
 static int initialized=0;
@@ -109,8 +110,8 @@ static void verror(int erno,va_list ap) {
   if(line!=lastline||col!=lastcol) {
     char *s;
     fprintf(stderr,"error (%s,%i,%i): ",xml,lastline=line,lastcol=col);
-    if(erno&XSDER_BIT) {
-      (*xsdverror0)(erno&~XSDER_BIT,ap);
+    if(erno&ERBIT_XSD) {
+      (*xsdverror0)(erno&~ERBIT_XSD,ap);
     } else {
       switch(erno) {
       case RNVER_IO: err("%s"); break;

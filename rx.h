@@ -16,8 +16,6 @@
 #define RXER_BADCL 8
 #define RXER_NODGT 9
 
-#define RXER_BIT 0x2000
-
 extern void (*rx_verror_handler)(int erno,va_list ap);
 extern int rx_compact;
 
