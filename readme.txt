@@ -42,8 +42,8 @@ New since 1.5
    separately; it helps debug grammars. Several bugfixes; I relied on an
    acquired test suite and published schemata, but have found that I can
    make more bugs than they cover, thus a reworked an extended test suite
-   is now used for testing. The code has also been cleanup and simplified
-   in places during porting to Plan9.
+   is now used for testing. The code has also been cleaned up and
+   simplified in places during porting to Plan9.
 
 News since 1.4
 
