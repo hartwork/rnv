@@ -1,7 +1,7 @@
 /* $Id$ */
 
-#ifndef MEMOPS_H
-#define MEMOPS_H 1
+#ifndef M_H
+#define M_H 1
 
 extern void m_free(void *p);
 extern void *m_alloc(int length,int size);

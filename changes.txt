@@ -1,6 +1,8 @@
 /* $Id$ */
 
 1.4.2
+Tue Jan 20 00:24:56 AMT 2004
+dvd: renamed strops to s, memops to m, functions has s_ and m_ prefixes
 
 Mon Jan 19 13:43:57 AMT 2004
 dvd: fixed typo in diagnostics when literal is missing after ~

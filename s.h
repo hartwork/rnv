@@ -1,7 +1,7 @@
 /* $Id$ */
 
-#ifndef STROPS_H
-#define STROPS_H 1
+#ifndef S_H
+#define S_H 1
 
 /* compares two string, s1 is null terminated, s2 is n characters long */
 extern int s_cmpn(char *s1,char *s2,int n2);
