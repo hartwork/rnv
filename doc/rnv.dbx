@@ -5,7 +5,7 @@
 RNV &#x2014; Relax NG Compact Syntax Validator in C
 </title>
 <subtitle>
-Version 1.3
+Version 1.4
 </subtitle>
 
 
@@ -17,6 +17,21 @@ Version 1.3
 RNV is a part of an on-going work, and the current code can have bugs and shortcomings; however, it validates documents against a number of grammars. I use it.
 </para>
  </abstract>
+<section>
+<title>
+New since 1.3
+</title>
+<para> To facilitate the embedding of RNV into heterogeneous
+environments, I have developed <link linkend="RVP">RVP</link>, a
+pipe that expects validation primitives on one end and emits
+validation diagnostics from the other. Embedding examples in Perl
+and Python are provided; I believe that, on the day of writing it,
+these are the fastest and most conformant (if not the only) Relax
+NG validation solutions for these languages. Several changes have
+been made to the core modules, mostly to provide better separation
+ of layers.
+</para>
+</section>
 
 <section>
 <title>
@@ -25,16 +40,6 @@ News since 1.2
 
 <para>
 This release has many performance and convenience enhancements. Pattern pools are now one-dimensional arrays, which conserves space and gives better performance. Pass-through mode has been added to facilitate use of rnv in pipes. <application>ARX</application>, an utility to automatically associate documents and grammars, is included in the distribution; details are below. A simple plug-in for vim, <ulink url="http://www.vim.org/">http://www.vim.org/</ulink>, is provided to use  <varname>RNV</varname> with the editor. The script uses <application>ARX</application> to automatically choose the grammar for a document.
-</para>
-</section>
-
-<section>
-<title>
-News since 1.1
-</title>
-
-<para>
-I have implemented XML Schema datatypes checking. The support is not complete (details are in the list of limitations). On the bright side, the utility now includes a complete and sufficiently fast implementation of Unicode regular expressions (with ugly XML Schema syntax, but still useful).
 </para>
 </section>
 
@@ -271,20 +276,20 @@ The sample below associates documents with grammars for XSLT, DocBook or XSL FO.
 <programlisting>
 
       grammars {
-	docbook="docbook.rnc"
-	xslt="xslt.rnc"
-	xslfo="fo.rnc"
+        docbook="docbook.rnc"
+        xslt="xslt.rnc"
+        xslfo="fo.rnc"
       }
 
       valid {
-	start = element (book|article|chapter|reference) {any}
-	any = (element * {any}|attribute * {text}|text)*
+        start = element (book|article|chapter|reference) {any}
+        any = (element * {any}|attribute * {text}|text)*
       } =&gt; docbook
 
       !valid {
-	default namespace xsl = "http://www.w3.org/1999/XSL/Transform"
-	start = element *-xsl:* {not-xsl}
-	not-xsl = (element *-xsl:* {not-xsl}|attribute * {text}|text)*
+        default namespace xsl = "http://www.w3.org/1999/XSL/Transform"
+        start = element *-xsl:* {not-xsl}
+        not-xsl = (element *-xsl:* {not-xsl}|attribute * {text}|text)*
       } =&gt; xslt
 
       =~/.*\.xsl/ =&gt; xslt
@@ -295,7 +300,7 @@ The sample below associates documents with grammars for XSLT, DocBook or XSL FO.
 <application>ARX</application> can also be used to link documents to any type of information or processing. 
 </para>
 </section>
-<section>
+<section id="RVP">
 <title>
 RVP
 </title>
@@ -310,18 +315,23 @@ simple protocol to perform validation. The protocol, in BNF, is:
 </para>
 <programlisting>
 
-     query ::= (start | start-tag-open | attribute | start-tag-close | text | end-tag) z.
+     query ::= (start
+       | start-tag-open
+       | attribute
+       | start-tag-close
+       | text
+       | end-tag) z.
      start ::= "start" [gramno].
      start-tag-open ::= "start-tag-open" patno name.
      attribute ::= "attribute" patno name value.
      start-tag-close :: = "start-tag-close" patno name.
      text ::= ("text"|"mixed") patno text.
      end-tag ::= "end-tag" patno name.
-    response ::= (ok | er | error) z.
+     response ::= (ok | er | error) z.
      ok ::= "ok" patno.
      er ::= "er" patno erno.
      error ::= "error" patno erno error.
-    z ::= "\0" .
+     z ::= "\0" .
 </programlisting>
 
 <itemizedlist>

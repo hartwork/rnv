@@ -1,7 +1,11 @@
 /* $Id$ */
 
-1.4.0 Sat Jan 10 03:18:12 AMT 2004
+1.4.0
+Mon Jan 12 03:53:56 AMT 2004
+dvd: rvp is implemented; reads validation events from input, sends diagnostics
+     to output; embedding examples in perl and python
 
+Sat Jan 10 03:18:12 AMT 2004
 dvd: factored out loading of rnc into rnl; now instead of calling rnc
      and rnd separately rnl_(fn|fd|s) is called. 
 
