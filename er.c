@@ -24,11 +24,14 @@ static void default_er_handler(int er_no,...) {
   case ER_XESC:
     vfprintf(stderr,"unterminated escape (%s,%u,%u)\n",ap);
     break;
-  case ER_LEX:
-    vfprintf(stderr,"lexical error: expected '%c', got '%c' (%s,%u,%u)\n",ap);
+  case ER_LEXP:
+    vfprintf(stderr,"lexical error: expected '%c', got \\x{%x} (%s,%u,%u)\n",ap);
     break;
-  case ER_LIT:
+  case ER_LLIT:
     vfprintf(stderr,"lexical error: unterminated literal (%s,%u,%u)\n",ap);
+    break;
+  case ER_LILL:
+    vfprintf(stderr,"lexical error: illegal character \\x{%x} (%s,%u,%u)\n",ap);
     break;
   default: assert(0);
   }
@@ -37,6 +40,9 @@ static void default_er_handler(int er_no,...) {
 
 /*
  * $Log$
+ * Revision 1.5  2003/11/25 13:14:21  dvd
+ * scanner ready
+ *
  * Revision 1.4  2003/11/24 23:00:27  dvd
  * literal, error reporting
  *

@@ -6,8 +6,9 @@
 #define ER_IO 0
 #define ER_UTF 1
 #define ER_XESC 2
-#define ER_LEX 3
-#define ER_LIT 4
+#define ER_LEXP 3
+#define ER_LLIT 4
+#define ER_LILL 5
 
 extern void (*er_handler)(int er_no,...);
 
@@ -15,6 +16,9 @@ extern void (*er_handler)(int er_no,...);
 
 /*
  * $Log$
+ * Revision 1.5  2003/11/25 13:14:21  dvd
+ * scanner ready
+ *
  * Revision 1.4  2003/11/24 23:00:27  dvd
  * literal, error reporting
  *

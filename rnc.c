@@ -101,7 +101,8 @@ keyword ::= "attribute"
 | "token"
 */
 
-#define SYM_EOF 0
+#define SYM_EOF -1
+#define SYM_ATTRIBUTE 0
 #define SYM_DEFAULT 1
 #define SYM_DATATYPE 2
 #define SYM_DIV 3
@@ -148,7 +149,6 @@ keyword ::= "attribute"
 #define SYM_LITERAL 43
 
 #define BUFSIZE 1024
-#define CUFSIZE 1
 #define BUFTAIL 6
 
 #define SRC_FREE 1
@@ -238,7 +238,7 @@ static void getu(struct utf_source *sp) {
       if(rnc_read(sp)==-1) (*er_handler)(ER_IO,sp->fn);
     }
     if(sp->i==sp->n) {
-      sp->u=(u0=='\n'||u0=='\r')?-1:'\n'; 
+      sp->u=(u0=='\n'||u0=='\r'||u0==-1)?-1:'\n'; 
       u0=-1;
       break;
     } /* eof */
@@ -328,9 +328,18 @@ static void getv(struct utf_source *sp) {
   }
 }
 
-#define newline(v) ((v)==0||(v)=='\r'||(v)=='\n')
-#define whitespace(v) ((v)==' '||(v)=='\t')
 #define skip_comment(sp) {while(!newline((sp)->v)) getv(sp); getv(sp);}
+/* why \r is not a new line by itself when escaped? it is when not. */
+#define newline(v) ((v)==0||(v)=='\n')
+#define whitespace(v) ((v)==' '||(v)=='\t')
+#define name_start(v) (u_base_char(v)||u_ideographic(v)||(v)=='_')
+#define name_char(v) (name_start(v)||u_digit(v)||u_combining_char(v)||u_extender(v)||(v)=='.'||(v)=='-')
+
+#define NKWD 19
+static char *kwdtab[NKWD]={
+  "attribute", "datatypes", "default", "div", "element", "empty", "external", 
+  "grammar", "include", "inherit", "list", "mixed", "namespace", "notAllowed", 
+  "parent", "start", "string", "text", "token"};
 
 static void realloc_s(struct utf_source *sp) {
   char *s; int slen=sp->slen*2;
@@ -391,40 +400,65 @@ static int sym(struct utf_source *sp) {
 	getv(sp); return SYM_NS_NAME;
       } return SYM_QNAME;
     case '>':
-      getv(sp); if(sp->v!='>') (*er_handler)(ER_LEX,'>',sp->v,sp->fn,sp->line,sp->col);
+      getv(sp); if(sp->v!='>') (*er_handler)(ER_LEXP,'>',sp->v,sp->fn,sp->line,sp->col);
       getv(sp); return SYM_ANNOTATION;
-    case '"': case '\'': {
-      int q=sp->v;
-      int triple=0;
-      int i=0;
-      getv(sp); 
-      if(sp->v==q) {getv(sp);
-	if(sp->v==q) { // triply quoted string
-	  triple=1; getv(sp);
-	} else {
-	  sp->s[0]='\0'; return SYM_LITERAL;
+    case '"': case '\'': 
+      { int q=sp->v;
+	int triple=0;
+	int i=0;
+	getv(sp); 
+	if(sp->v==q) {getv(sp);
+	  if(sp->v==q) { // triply quoted string
+	    triple=1; getv(sp);
+	  } else {
+	    sp->s[0]='\0'; return SYM_LITERAL;
+	  }
+	} 
+	for(;;) {
+	  if(sp->v==q) {
+	    if(triple) {
+	      if(i>=2 && sp->s[i-2]==q && sp->s[i-1]==q) {
+		sp->s[i-2]='\0'; break;
+	      } else sp->s[i]=(char)sp->v;
+	    } else {sp->s[i]='\0'; break;}
+	  } else if(sp->v<=0) {
+	    if(sp->v==-1 || !triple) {
+	      (*er_handler)(ER_LLIT,sp->fn,sp->line,sp->col);
+	      sp->s[i]='\0'; break;
+	    } else sp->s[i]='\n';
+	  } else sp->s[i]=(char)sp->v;
+	  getv(sp);
+	  if(++i==sp->slen) realloc_s(sp);
 	}
+	getv(sp); return SYM_LITERAL;
       } 
-      for(;;) {
-	if(sp->v==q) {
-	  if(triple) {
-	    if(i>=2 && sp->s[i-2]==q && sp->s[i-1]==q) {
-	      sp->s[i-2]='\0'; break;
-	    } else sp->s[i]=(char)sp->v;
-	  } else {sp->s[i]='\0'; break;}
-	} else if(sp->v<=0) {
-	  if(sp->v==-1 || !triple) {
-	    (*er_handler)(ER_LIT,sp->fn,sp->line,sp->col);
-	    sp->s[i]='\0'; break;
-	  } else sp->s[i]='\n';
-	} else sp->s[i]=(char)sp->v;
-	getv(sp);
-	if(++i==sp->slen) realloc_s(sp);
-      }
-      getv(sp);
-    } return SYM_LITERAL;
-    default:
-      getv(sp); return SYM_IDENT;
+    default: 
+      { int escaped=0;
+        if(sp->v=='\\') {escaped=1; getv(sp);}
+	if(name_start(sp->v)) {
+	  int i=0;
+	  for(;;) {
+	    sp->s[i++]=sp->v;
+	    if(i==sp->slen) realloc_s(sp);
+	    getv(sp);
+	    if(!name_char(sp->v)) {sp->s[i]='\0'; break;}
+          }
+	  if(!escaped) {
+	    int n=0,m=NKWD-1,i,cmp;
+	    for(;;) {
+	      if(n>m) break;
+	      i=(n+m)/2;
+	      cmp=strcmp(sp->s,kwdtab[i]);
+	      if(cmp==0) return i; else if(cmp<0) m=i-1; else n=i+1;
+	    }
+	  } 
+	  return SYM_IDENT;
+	} else {
+	  (*er_handler)(ER_LILL,sp->v,sp->fn,sp->line,sp->col);
+	  getv(sp);
+	  continue;
+	}
+      }	
     }
   }
 }
@@ -434,10 +468,14 @@ int main(int argc,char **argv) {
   rnc_bind(&src,"stdin",0);
   getv(&src);
   for(;;) {
-    switch(sym(&src)) {
+    int s=sym(&src);
+    switch(s) {
     case SYM_EOF: return 0;
     case SYM_LITERAL: printf("(%i,%i) ``%s''\n",src.line,src.col,src.s); break;
     case SYM_DOCUMENTATION: printf("(%i,%i) ## %s\n",src.line,src.col,src.s); break;
+    case SYM_IDENT: printf("(%i,%i) $%s\n",src.line,src.col,src.s); break;
+    default:
+      if(s<NKWD) printf("(%i,%i) @%s\n",src.line,src.col,src.s); break;
     }
   }
   rnc_close(&src);
@@ -445,6 +483,9 @@ int main(int argc,char **argv) {
 
 /*
  * $Log$
+ * Revision 1.11  2003/11/25 13:14:21  dvd
+ * scanner ready
+ *
  * Revision 1.10  2003/11/25 10:33:53  dvd
  * documentation and comments
  *
