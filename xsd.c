@@ -693,16 +693,19 @@ static int b64cmpn(char *s1,char *s2,int n) {
     while(s2!=end&&xmlc_white_space(*s2)) ++s2;
     if(s2==end) return *s1;
     if(!*s1) return -*s2;
+    if(*s1==*s2) continue;
     return *s1-*s2;
   }
 }
 
 static int nrmcmpn(char *s1,char *s2,int n) {
   char *end=s2+n;
-  for(;;) { if(s2==end) return *s1;
+  for(;;++s1,++s2) {
+    if(s2==end) return *s1;
     if(!*s1) return -*s2;
-    if(*s1!=*s2&&(!xmlc_white_space(*s1)||!xmlc_white_space(*s2))) return *s1-*s2;
-    ++s1; ++s2;
+    if(*s1==*s2) continue;
+    if(xmlc_white_space(*s1)&&xmlc_white_space(*s2)) continue;
+    return *s1-*s2;
   }
 }
 

@@ -1,5 +1,9 @@
 /* $Id$ */
 
+1.7.3 Wed Jan  5 05:57:55 AMT 2005
+dvd: bug in xsd.c:b64cmpn fixed (thanks to Sridhar Guthula), 
+     tiny code cleanup in comparison routines. 
+
 1.7.2 Tue Nov  9 15:28:23 AMT 2004
 dvd: fixed a bug in rvp.py, didn't update the current pattern after
      text or mixed
