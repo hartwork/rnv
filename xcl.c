@@ -33,13 +33,12 @@ extern int rn_notAllowed,rx_compact,drv_compact;
 
 #define XCL_ER_IO 0
 #define XCL_ER_XML 1
-#define XCL_ER_NOXENT 2
-#define XCL_ER_NOSID 3
+#define XCL_ER_XENT 2
 
 #define PIXGFILE "davidashen-net-xg-file"
 #define PIXGPOS "davidashen-net-xg-pos"
 
-static int peipe,verbose,extent,nexp,rnck;
+static int peipe,verbose,nexp,rnck;
 static char *xml;
 static XML_Parser expat=NULL;
 static int start,current,previous;
@@ -59,8 +58,8 @@ static void verror_handler(int erno,va_list ap) {
   } else {
     int line=XML_GetCurrentLineNumber(expat),col=XML_GetCurrentColumnNumber(expat);
     if(line!=lastline||col!=lastcol) { lastline=line; lastcol=col;
-      if(xgfile) (*er_printf)("error (%s,%s): ",xgfile,xgpos); else
-      (*er_printf)("error (%s,%i,%i): ",xml,line,col);
+      if(xgfile) (*er_printf)("%s:%s: error: ",xgfile,xgpos); else
+      (*er_printf)("%s:%i:%i: error: ",xml,line,col);
       if(erno&ERBIT_RNV) {
 	rnv_default_verror_handler(erno&~ERBIT_RNV,ap);
 	if(nexp) { int req=2, i=0; char *s;
@@ -79,8 +78,7 @@ static void verror_handler(int erno,va_list ap) {
 	switch(erno) {
 	case XCL_ER_IO: err("%s"); break;
 	case XCL_ER_XML: err("%s"); break;
-	case XCL_ER_NOXENT: err("cannot open external entity '%s': %s"); break;
-	case XCL_ER_NOSID: err("cannot process external entity without systemId"); break;
+	case XCL_ER_XENT: err("pipe through xx to expand external entities"); break;
 	default: assert(0);
 	}
       }
@@ -163,7 +161,7 @@ static void processingInstruction(void *userData,
   } else if(strcmp(PIXGPOS,target)==0) {
     if(xgpos) m_free(xgpos);
     xgpos=s_clone((char*)data);
-    *strchr(xgpos,' ')=',';
+    *strchr(xgpos,' ')=':';
   }
 }
 
@@ -197,47 +195,26 @@ ERROR:
   return 0;
 }
 
-static int externalEntityRef(XML_Parser p,const char *context, const char *base,const char *systemId,const char *publicId) {
-  ok=0;
-  if(systemId) {
-    int fd; char *re, *entity;
-    assert(base);
-    entity=(char*)m_alloc(strlen(base)+strlen(systemId)+2,1);
-    strcpy(entity,systemId); re=s_abspath(entity,(char*)base);
-    if((fd=open(entity,O_RDONLY))==-1) {
-      error_handler(XCL_ER_NOXENT,re,strerror(errno));
-    } else {
-      XML_Parser expat0=expat; char *xml0=xml; xml=entity;
-      expat=XML_ExternalEntityParserCreate(expat0,context,NULL);
-      XML_SetBase(expat,xml);
-      ok=process(fd);
-      XML_ParserFree(expat);
-      xml=xml0; expat=expat0;
-      close(fd);
-    }
-    m_free(entity);
-  } else {
-    error_handler(XCL_ER_NOSID);
-  }
+static int externalEntityRef(XML_Parser p,const char *context,
+    const char *base,const char *systemId,const char *publicId) {
+  error_handler(XCL_ER_XENT);
   return 1;
 }
 
 static void validate(int fd) {
   previous=current=start;
   expat=XML_ParserCreateNS(NULL,':');
-  XML_SetParamEntityParsing(expat,XML_PARAM_ENTITY_PARSING_ALWAYS)
-    || ((*er_printf)("expat compiled without -DXML_DTD\n"),0);
+  XML_SetParamEntityParsing(expat,XML_PARAM_ENTITY_PARSING_ALWAYS);
   XML_SetElementHandler(expat,&start_element,&end_element);
   XML_SetCharacterDataHandler(expat,&characters);
   XML_SetExternalEntityRefHandler(expat,&externalEntityRef);
   XML_SetProcessingInstructionHandler(expat,&processingInstruction);
-  XML_SetBase(expat,xml);
   ok=process(fd);
   XML_ParserFree(expat);
 }
 
 static void version(void) {(*er_printf)("rnv version %s\n",RNV_VERSION);}
-static void usage(void) {(*er_printf)("usage: rnv {-[qnsxpc"
+static void usage(void) {(*er_printf)("usage: rnv {-[qnspc"
 #if DXL_EXC
 "d"
 #endif
@@ -249,7 +226,7 @@ static void usage(void) {(*er_printf)("usage: rnv {-[qnsxpc"
 int main(int argc,char **argv) {
   init();
 
-  peipe=0; verbose=1; extent=0; nexp=NEXP; rnck=0;
+  peipe=0; verbose=1; nexp=NEXP; rnck=0;
   while(*(++argv)&&**argv=='-') {
     int i=1;
     for(;;) {
@@ -258,7 +235,6 @@ int main(int argc,char **argv) {
       case 'q': verbose=0; nexp=0; break;
       case 'n': if(*(argv+1)) nexp=atoi(*(++argv)); goto END_OF_OPTIONS;
       case 's': drv_compact=1; rx_compact=1; break;
-      case 'x': extent=1; break;
       case 'p': peipe=1; break;
       case 'c': rnck=1; break;
 #if DXL_EXC

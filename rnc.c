@@ -72,8 +72,8 @@ static char *kwdtab[NKWD]={
 #define SYM_DOCUMENTATION 41 /* ## */
 #define SYM_LITERAL 42
 
-#define err(msg) (*er_vprintf)("error (%s,%i,%i): "msg"\n",ap)
-#define warn(msg) (*er_vprintf)("warning (%s,%i,%i): "msg"\n",ap)
+#define err(msg) (*er_vprintf)("%s:%i:%i: error: "msg"\n",ap)
+#define warn(msg) (*er_vprintf)("%s:%i:%i: warning: "msg"\n",ap)
 void rnc_default_verror_handler(int er_no,va_list ap) {
   switch(er_no) {
   case RNC_ER_IO: err("I/O error: %s\n"); break;

@@ -177,7 +177,7 @@ static char *sym2str(int sym) {
 /* there is nothing in the grammar I need utf-8 processing for */
 #define err(msg) (*er_vprintf)(msg"\n",ap)
 static void verror_handler(int erno,va_list ap) {
-  (*er_printf)("error (%s,%i,%i): ",arxfn,line,col);
+  (*er_printf)("%s:%i:%i: error: ",arxfn,line,col);
   switch(erno) {
   case ARX_ER_IO: err("I/O error: %s"); break;
   case ARX_ER_SYN: err("syntax error"); break;
