@@ -66,7 +66,7 @@ ${LIBRNVSO}: ${OBJ}
 clean: 
 	-rm -f *.o  *.a *.so rnv rnd_test *_test *.core *.gmon *.gprof rnv*.zip rnv.txt rnv.pdf rnv.html rnv.xml
 
-DISTFILES=license.txt ${SRC} Makefile compile.bat rnv.exe readme.txt changes.txt
+DISTFILES=license.txt ${SRC} Makefile compile.bat rnv.exe readme.txt changes.txt src.txt
 zip: rnv-${VERSION}.zip
 rnv-${VERSION}.zip: ${DISTFILES}
 	-rm -rf rnv.zip rnv-[0-9]*.[0-9]*.[0-9]*
