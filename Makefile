@@ -11,7 +11,6 @@ rnc.o \
 rnd.o \
 drv.o \
 xsd.o \
-rnv.o \
 er.o \
 sc.o \
 u.o \
@@ -21,10 +20,18 @@ util.o
 .c.o:
 	${CC} ${INC} ${OPT} -c -o $@ $<
 
-rnv: ${OBJ}
-	${CC} ${OPT} ${LBL} -o rnv ${OBJ} ${LIB} 
+all: rnd_test
+
+rnv: ${OBJ} rnv.o
+	${CC} ${OPT} ${LBL} -o rnv rnv.o ${OBJ} ${LIB} 
+
+rnd_test: ${OBJ} rnd_test.o
+	${CC} ${OPT} ${LBL} -o rnd_test rnd_test.o ${OBJ} ${LIB} 
 
 # $Log$
+# Revision 1.14  2003/12/11 23:37:58  dvd
+# derivative in progress
+#
 # Revision 1.13  2003/12/11 17:18:09  dvd
 # rnv->rnd_test,rnv will be the command-line validator
 #

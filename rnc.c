@@ -103,6 +103,9 @@ struct rnc_source {
 struct rnc_source *rnc_alloc() {
   return (struct rnc_source *)malloc(sizeof(struct rnc_source));
 }
+void rnc_free(struct rnc_source *sp) {
+  free(sp);
+}
 
 static int len_p;
 static char *path;
@@ -136,9 +139,15 @@ int rnc_open(struct rnc_source *sp,char *fn) {
 int rnc_close(struct rnc_source *sp) {
   int ret=0,i;
   for(i=0;i!=2;++i) {free(sp->sym[i].s); sp->sym[i].s=NULL;}
-  if(sp->flags&SRC_FREE) free(sp->buf); sp->buf=NULL;
+  if(sp->flags&SRC_FREE) {
+    sp->flags&=~SRC_FREE; free(sp->buf);
+  } 
+  sp->buf=NULL;
   sp->complete=-1;
-  if((sp->flags&SRC_CLOSE)&&sp->fd!=-1) {ret=close(sp->fd); sp->fd=-1;}
+  if(sp->flags&SRC_CLOSE) {
+    sp->flags&=~SRC_CLOSE; 
+    if(sp->fd!=-1) {ret=close(sp->fd); sp->fd=-1;}
+  }
   free(sp->fn); sp->fn=NULL;
   return ret;
 }
@@ -186,14 +195,13 @@ int rnc_errors(struct rnc_source *sp) {
 
 static struct sc_stack nss,dts,defs,refs,prefs;
 
-static int initialized;
+static int initialized=0;
 void rnc_init() {
-  if(!initialized) {
+  if(!initialized) { initialized=1;
     rn_init();
     len_p=LEN_P; path=(char*)calloc(len_p,sizeof(char));
     /* initialize scopes */
     sc_init(&nss); sc_init(&dts); sc_init(&defs); sc_init(&refs); sc_init(&prefs);
-    initialized=1;
   }
 }
 
@@ -961,8 +969,8 @@ static int param(struct rnc_source *sp) {
 static int datatype(struct rnc_source *sp) {
   int dt=0;
   switch(CUR(sp).sym) {
-  case SYM_TOKEN: dt=newDatatype(0,newString("token")); break;
-  case SYM_STRING: dt=newDatatype(0,newString("string")); break;
+  case SYM_TOKEN: dt=newDatatype(0,rn_dt_token); break;
+  case SYM_STRING: dt=newDatatype(0,rn_dt_string); break;
   case SYM_QNAME: {
       char *s=CUR(sp).s; while(*s!=':') ++s; *(s++)='\0';
       dt=newDatatype(dt2uri(sp,newString(CUR(sp).s)),newString(s));
@@ -1144,7 +1152,7 @@ static int grammarContent(struct rnc_source *sp) {
 static int topLevel(struct rnc_source *sp) {
   int ret=-1,is_grammar;
   sc_open(&dts);
-  sc_add(&dts,newString("xsd"),newString("http://www.w3.org/2001/XMLSchema-datatypes"),PFX_DEFAULT);
+  sc_add(&dts,newString("xsd"),rn_xsd_uri,PFX_DEFAULT);
 
   getsym(sp); getsym(sp);
   while(decl(sp));
@@ -1187,6 +1195,9 @@ int rnc_parse(struct rnc_source *sp) {
 
 /*
  * $Log$
+ * Revision 1.36  2003/12/11 23:37:58  dvd
+ * derivative in progress
+ *
  * Revision 1.35  2003/12/11 17:01:31  dvd
  * utf8 is handled properly
  *

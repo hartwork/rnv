@@ -3,6 +3,9 @@
 #ifndef RND_H
 #define RND_H 1
 
+void rnd_clear();
+void rnd_init();
+
 extern void rnd_deref(int start);
 extern void rnd_restrictions();
 extern void rnd_traits();
@@ -13,6 +16,9 @@ extern int rnd_errors();
 
 /*
  * $Log$
+ * Revision 1.6  2003/12/11 23:37:58  dvd
+ * derivative in progress
+ *
  * Revision 1.5  2003/12/10 01:08:04  dvd
  * compressing schema, work in progress
  *

@@ -3,6 +3,9 @@
 #ifndef UTIL_H
 #define UTIL_H 1
 
+/* compares two tokens, s1 is null terminated, s2 is not */
+extern int tokncmp(char *s1,char *s2,int n2);
+
 /* hash value for a zero-terminated string */
 extern int strhash(char *s);
 
@@ -16,6 +19,9 @@ extern char *abspath(char *r,char *b);
 
 /*
  * $Log$
+ * Revision 1.2  2003/12/11 23:37:58  dvd
+ * derivative in progress
+ *
  * Revision 1.1  2003/11/27 21:00:23  dvd
  * abspath,strhash
  *

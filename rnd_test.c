@@ -1,3 +1,5 @@
+/* $Id$ */
+
 #include <stdlib.h>
 #include <stdio.h>
 #include "rnc.h"
@@ -29,6 +31,7 @@ int main(int argc,char **argv) {
   struct rnc_source *sp;
 
   rnc_init();
+  rnd_init();
 
   sp=rnc_alloc();
   if(*(++argv)) {
@@ -41,7 +44,7 @@ int main(int argc,char **argv) {
     rnc_bind(sp,"stdin",0);
     if(!parse(sp)) goto ERRORS;
   }
-  free(sp);
+  rnc_free(sp);
 
   return 0;
 
@@ -50,3 +53,9 @@ ERRORS:
   return 1;
 }
 
+/* 
+ * $Log$
+ * Revision 1.2  2003/12/11 23:37:58  dvd
+ * derivative in progress
+ *
+ */

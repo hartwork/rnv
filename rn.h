@@ -85,14 +85,14 @@ them to variables in the local scope, and a creator.
 #define NC_IS(i,x) (NC_##x==NC_TYP(i))
 #define NC_CHK(i,x) assert(NC_IS(i,x))
 
-#define QName(i,uri,localname) NC_CHK(i,QNAME); uri=rn_nameclass[i][1]; localname=rn_nameclass[i][2]
+#define QName(i,uri,name) NC_CHK(i,QNAME); uri=rn_nameclass[i][1]; name=rn_nameclass[i][2]
 #define NsName(i,uri) NC_CHK(i,NSNAME); uri=rn_nameclass[i][1]
 #define AnyName(i) NC_CHK(i,ANY_NAME) 
 #define NameClassExcept(i,nc1,nc2) NC_CHK(i,EXCEPT); nc1=rn_nameclass[i][1]; nc2=rn_nameclass[i][2]
 #define NameClassChoice(i,nc1,nc2) NC_CHK(i,CHOICE); nc1=rn_nameclass[i][1]; nc2=rn_nameclass[i][2]
 #define Datatype(i,lib,dt) NC_CHK(i,DATATYPE); lib=rn_nameclass[i][1]; dt=rn_nameclass[i][2]
 
-extern int rn_empty,rn_text,rn_notAllowed;
+extern int rn_empty,rn_text,rn_notAllowed,rn_dt_string,rn_dt_token,rn_xsd_uri;
 
 extern char *rn_string;
 
@@ -134,10 +134,11 @@ extern int rn_one_or_more(int p);
 extern int rn_group(int p1,int p2);
 extern int rn_choice(int p1,int p2);
 extern int rn_ileave(int p1,int p2);
+extern int rn_after(int p1,int p2);
 
 extern int newAnyName();
 extern int newAnyNameExcept(int nc);
-extern int newQName(int uri,int localname);
+extern int newQName(int uri,int name);
 extern int newNsName(int uri);
 extern int newNameClassExcept(int nc1,int nc2);
 extern int newNameClassChoice(int nc1,int nc2);
@@ -152,6 +153,9 @@ extern void rn_clear();
 
 /*
  * $Log$
+ * Revision 1.19  2003/12/11 23:37:58  dvd
+ * derivative in progress
+ *
  * Revision 1.18  2003/12/10 21:41:26  dvd
  * +xsd
  *

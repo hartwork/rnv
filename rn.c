@@ -15,7 +15,7 @@
 int (*rn_pattern)[P_SIZE];
 int (*rn_nameclass)[NC_SIZE];
 char *rn_string;
-int rn_empty,rn_text,rn_notAllowed;
+int rn_empty,rn_text,rn_notAllowed,rn_dt_string,rn_dt_token,rn_xsd_uri;
 
 static struct hashtable ht_p, ht_nc, ht_s;
 
@@ -206,10 +206,16 @@ int rn_ileave(int p1,int p2) {
   return newInterleave(p1,p2);
 }
 
+int rn_after(int p1,int p2) {
+  if(P_IS(p1,NOT_ALLOWED)) return p1;
+  if(P_IS(p2,NOT_ALLOWED)) return p2;
+  return newAfter(p1,p2);
+}
+
 #define NC_NEW(x) rn_nameclass[i_nc][0]=NC_##x
 
-int newQName(int uri,int localname) { NC_NEW(QNAME);
-  rn_nameclass[i_nc][1]=uri; rn_nameclass[i_nc][2]=localname;
+int newQName(int uri,int name) { NC_NEW(QNAME);
+  rn_nameclass[i_nc][1]=uri; rn_nameclass[i_nc][2]=name;
   return accept_nc();
 }
 
@@ -239,7 +245,7 @@ int newDatatype(int lib,int dt) { NC_NEW(DATATYPE);
 
 char *nc2str(int nc) {
   char *s,*s1,*s2;
-  int nc1,nc2,uri,localname;
+  int nc1,nc2,uri,name;
   switch(NC_TYP(nc)) {
   case NC_ERROR: return strdup("?");
   case NC_NSNAME:
@@ -249,9 +255,9 @@ char *nc2str(int nc) {
     return s;
 
   case NC_QNAME:
-    QName(nc,uri,localname); 
-    s=calloc(strlen(rn_string+uri)+strlen(rn_string+localname)+2,sizeof(char));
-    strcpy(s,rn_string+uri); strcat(s,"^"); strcat(s,rn_string+localname);
+    QName(nc,uri,name); 
+    s=calloc(strlen(rn_string+uri)+strlen(rn_string+name)+2,sizeof(char));
+    strcpy(s,rn_string+uri); strcat(s,"^"); strcat(s,rn_string+name);
     return s;
 
   case NC_ANY_NAME: return strdup("*");
@@ -273,9 +279,9 @@ char *nc2str(int nc) {
     return s;
     
   case NC_DATATYPE:
-    Datatype(nc,uri,localname); 
-    s=calloc(strlen(rn_string+uri)+strlen(rn_string+localname)+2,sizeof(char));
-    strcpy(s,rn_string+uri); strcat(s,"^"); strcat(s,rn_string+localname);
+    Datatype(nc,uri,name); 
+    s=calloc(strlen(rn_string+uri)+strlen(rn_string+name)+2,sizeof(char));
+    strcpy(s,rn_string+uri); strcat(s,"^"); strcat(s,rn_string+name);
     return s;
   default: 
     assert(0);
@@ -295,7 +301,7 @@ static void windup();
 
 static int initialized=0;
 void rn_init() {
-  if(!initialized) {
+  if(!initialized) { initialized=1;
     len_p=LEN_P; len_nc=LEN_NC; len_s=LEN_S;
 
     rn_pattern=(int (*)[])calloc(len_p,sizeof(int[P_SIZE]));
@@ -307,7 +313,6 @@ void rn_init() {
     ht_init(&ht_s,len_s,&hash_s,&equal_s);
 
     windup();
-    initialized=1;
   }
 }
 
@@ -324,6 +329,8 @@ static void windup() {
   rn_nameclass[0][0]=NC_ERROR; accept_nc();
   newString("");
   rn_empty=newEmpty(); rn_notAllowed=newNotAllowed(); rn_text=newText();
+  rn_dt_string=newDatatype(0,newString("string")); rn_dt_token=newDatatype(0,newString("token"));
+  rn_xsd_uri=newString("http://www.w3.org/2001/XMLSchema-datatypes");
 }
 
 static int hash_p(int p) {
@@ -348,6 +355,9 @@ static int equal_s(int s1,int s2) {return strcmp(rn_string+s1,rn_string+s2)==0;}
 
 /* 
  * $Log$
+ * Revision 1.19  2003/12/11 23:37:58  dvd
+ * derivative in progress
+ *
  * Revision 1.18  2003/12/10 21:41:26  dvd
  * +xsd
  *

@@ -16,6 +16,17 @@ static int *flat;
 static int *refs;
 static int errors;
 
+static int initialized=0;
+void rnd_init() {
+  if(!initialized) {
+    rn_init();
+    initialized=1;
+  }
+}
+
+void rnd_clear() {}
+
+
 int rnd_errors() {
   return errors!=0;
 }
@@ -432,6 +443,9 @@ int rnd_release() {
 
 /*
  * $Log$
+ * Revision 1.11  2003/12/11 23:37:58  dvd
+ * derivative in progress
+ *
  * Revision 1.10  2003/12/10 09:38:43  dvd
  * rn_end_schema is removed again, but the result is good -- bugs debugged
  *

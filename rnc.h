@@ -5,6 +5,7 @@
 
 struct rnc_source;
 extern struct rnc_source *rnc_alloc();
+extern void rnc_free(struct rnc_source *sp);
 
 extern void rnc_init();
 extern void rnc_clear();
@@ -22,6 +23,9 @@ extern int rnc_errors(struct rnc_source *sp);
 
 /*
  * $Log$
+ * Revision 1.7  2003/12/11 23:37:58  dvd
+ * derivative in progress
+ *
  * Revision 1.6  2003/12/07 16:50:55  dvd
  * stage D, dereferencing and checking for loops
  *
