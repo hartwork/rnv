@@ -3,28 +3,43 @@
 #include "rnc.h"
 #include "rnd.h"
 
+static int parse(struct rnc_source *sp) {
+  int start;
+
+  fprintf(stderr,"parsing\n");
+  start=rnc_parse(sp);
+  rnc_close(sp); if(rnc_errors(sp)) return 0;
+
+  fprintf(stderr,"dereferencing\n");
+  rnd_deref(start); if(rnd_errors()) return 0;
+
+  fprintf(stderr,"checking restrictions\n");
+  rnd_restrictions(); if(rnd_errors()) return 0;
+
+  fprintf(stderr,"computing auxiliary traits\n");
+  rnd_traits();
+  rnd_release();
+
+  return 1;
+}
+
 int main(int argc,char **argv) {
-  int start; struct rnc_source *sp;
+  struct rnc_source *sp;
 
   rnc_init();
 
   sp=rnc_alloc();
-  if(*(++argv)) rnc_open(sp,*argv); else rnc_bind(sp,"stdin",0);
-  fprintf(stderr,"parsing\n");
-  start=rnc_parse(sp);
-  rnc_close(sp); if(rnc_errors(sp)) {goto ERRORS;}
+  if(*(++argv)) {
+    do {
+      if(rnc_open(sp,*argv)!=-1) if(!parse(sp)) goto ERRORS;
+      rnc_close(sp);
+    } while(*(++argv));
+  } else {
+    rnc_bind(sp,"stdin",0);
+    if(!parse(sp)) goto ERRORS;
+  }
   free(sp);
 
-  fprintf(stderr,"dereferencing\n");
-  rnd_deref(start); if(rnd_errors()) goto ERRORS;
-
-  fprintf(stderr,"checking restrictions\n");
-  rnd_restrictions(); if(rnd_errors()) goto ERRORS;
-
-  fprintf(stderr,"computing auxiliary traits\n");
-  rnd_traits();
-
-  rnd_release();
   return 0;
 
 ERRORS:

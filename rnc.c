@@ -120,34 +120,31 @@ int rnc_stropen(struct rnc_source *sp,char *fn,char *s,int len) {
 int rnc_bind(struct rnc_source *sp,char *fn,int fd) {
   rnc_source_init(sp);
   sp->fn=strdup(fn); sp->fd=fd;
-  sp->buf=(char*)calloc(BUFSIZE,sizeof(char));
-  sp->complete=sp->fd==-1;
-  sp->flags=SRC_FREE;
-  rnc_read(sp);
+  sp->buf=(char*)calloc(BUFSIZE,sizeof(char)); sp->flags=SRC_FREE;
+  if(!(sp->complete=sp->fd==-1)) rnc_read(sp);
   return sp->fd;
 }
 
+static void error(int force,struct rnc_source *sp,int er_no,...);
+
 int rnc_open(struct rnc_source *sp,char *fn) {
+  int fd=rnc_bind(sp,fn,open(fn,O_RDONLY)); if(fd==-1) error(1,sp,ER_IO,sp->fn);
   sp->flags|=SRC_CLOSE;
-  return rnc_bind(sp,fn,open(fn,O_RDONLY));
+  return fd;
 }
 
 int rnc_close(struct rnc_source *sp) {
-  int ret=0;
-  {int i; for(i=0;i!=2;++i) if(sp->sym[i].s) free(sp->sym[i].s);}
-  if(sp->flags&SRC_FREE) free(sp->buf);
-  sp->buf=NULL;
+  int ret=0,i;
+  for(i=0;i!=2;++i) {free(sp->sym[i].s); sp->sym[i].s=NULL;}
+  if(sp->flags&SRC_FREE) free(sp->buf); sp->buf=NULL;
   sp->complete=-1;
-  if(sp->flags&SRC_CLOSE) {
-    if(sp->fd!=-1) {
-      ret=close(sp->fd); sp->fd=-1;
-    }
-  }
+  if((sp->flags&SRC_CLOSE)&&sp->fd!=-1) {ret=close(sp->fd); sp->fd=-1;}
   free(sp->fn); sp->fn=NULL;
   return ret;
 }
 
 static void rnc_source_init(struct rnc_source *sp) {
+  int i;
   sp->flags=0;
   sp->fn=sp->buf=NULL;
   sp->i=sp->n=0;
@@ -155,7 +152,7 @@ static void rnc_source_init(struct rnc_source *sp) {
   sp->line=1; sp->col=1; sp->prevline=-1;
   sp->u=-1; sp->v=0;  sp->nx=-1;
   sp->cur=0;
-  {int i; for(i=0;i!=2;++i) sp->sym[i].s=(char*)calloc(sp->sym[i].slen=BUFSIZE,sizeof(char));}
+  for(i=0;i!=2;++i) sp->sym[i].s=(char*)calloc(sp->sym[i].slen=BUFSIZE,sizeof(char));
 }
 
 static int rnc_read(struct rnc_source *sp) {
@@ -221,7 +218,7 @@ static void getu(struct rnc_source *sp) {
   int n,u0=sp->u;
   for(;;) {
     if(!sp->complete&&sp->i>sp->n-BUFTAIL) {
-      if(rnc_read(sp)==-1) {error(1,sp,ER_IO,sp->fn);}
+      if(rnc_read(sp)==-1) error(1,sp,ER_IO,sp->fn);
     }
     if(sp->i==sp->n) {
       sp->u=(u0=='\n'||u0=='\r'||u0==-1)?-1:'\n';
@@ -1188,6 +1185,9 @@ int rnc_parse(struct rnc_source *sp) {
 
 /*
  * $Log$
+ * Revision 1.31  2003/12/08 23:16:15  dvd
+ * multiple schema files as command-line arguments to rnv, cleanups in file handling code (rnc)
+ *
  * Revision 1.30  2003/12/08 21:23:47  dvd
  * +path restrictions
  *
