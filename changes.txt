@@ -1,8 +1,12 @@
 /* $Id$ */
 
 1.5.2
+Wed Jan 28 01:43:42 AMT 2004
+dvd: removed static pointers from rnv and qualified name passed
+     from Expat is modified instead. This is safe.
+
 Mon Jan 26 21:13:30 AMT 2004
-dvd: Removed ++ from assert in xsd_tm.c
+dvd: ++ moved out of assert in xsd_tm.c
 
 1.5.1 Mon Jan 26 01:25:42 AMT 2004
 dvd: Internal release, regexp in Scheme implemented
