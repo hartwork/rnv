@@ -47,7 +47,7 @@ static void init(void) {
   rnx_init();
   drv_init();
   text=(char*)calloc(len_t=LEN_T,sizeof(char));
-  n_t=0;
+  text[n_t=0]='\0';
 }
 
 static int load_rnc(char *fn) {
@@ -116,7 +116,7 @@ static void flush_text(void) {
       current=drv_text_recover(previous,text,n_t);
     }
   }
-  n_t=0;
+  text[n_t=0]='\0';
 }
 
 static int level=0;

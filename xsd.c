@@ -171,26 +171,39 @@ static int dtcmpn(char *s1,char *s2,int n,char *fmt) {
 
 static int toklenn(char *s,int n) {
   char *end=s+n;
-  int u,len=-2;
-  SKIP_SPACE: ++len;
-  for(;;) {
-    if(s==end) return len;
+  int u,len=0;
+  SKIP_SPACE:
+  for(;;) { if(s==end) return len?len-1:0;
     s+=u_get(&u,s); 
     if(!xmlc_white_space(u)) break; 
   }
-  for(;;) {
+  ++len;
+  for(;;) { if(s==end) return len;
     ++len;
+    s+=u_get(&u,s);
     if(xmlc_white_space(u)) goto SKIP_SPACE;
-    if(s==end) goto SKIP_SPACE;
+  }
+}
+
+static int tokcntn(char *s,int n) {
+  char *end=s+n;
+  int u,cnt=0;
+  SKIP_SPACE:
+  for(;;) { if(s==end) return cnt;
     s+=u_get(&u,s); 
+    if(!xmlc_white_space(u)) break; 
+  }
+  ++cnt;
+  for(;;) { if(s==end) return cnt;
+    s+=u_get(&u,s); 
+    if(xmlc_white_space(u)) goto SKIP_SPACE;
   }
 }
 
 static int b64lenn(char *s,int n) {
   char *end=s+n;
   int l=0,len;
-  for(;;) {
-    if(end==s) break;
+  for(;;) { if(end==s) break;
     --end;
     if(!xmlc_white_space(*end)&&*end!='=') {++end; break;}
   }
@@ -207,13 +220,11 @@ static int b64lenn(char *s,int n) {
 
 static int fdiglenn(char *s,int n) {
   char *end=s+n; int len=0;
-  for(;;) {
-    if(end==s) break;
+  for(;;) { if(end==s) break;
     --end;
     if(*end!='0'&&!xmlc_white_space(*end)) {++end; break;}
   }
-  for(;;) {
-    if(s==end) break;
+  for(;;) { if(s==end) break;
     if(*(s++)=='.') {
       while(s++!=end) ++len; 
       break;
@@ -224,37 +235,17 @@ static int fdiglenn(char *s,int n) {
 
 static int diglenn(char *s,int n) {
   char *end=s+n; int len=0;
-  for(;;) {
-    if(s==end) break;
+  for(;;) { if(s==end) break;
     if(!xmlc_white_space(*s)&&*s!='+'&&*s!='-'&&*s!='0') break;
     ++s;
   }
-  for(;;) {
-    if(s==end||*s=='.'||xmlc_white_space(*s)) break;
+  for(;;) { if(s==end||*s=='.'||xmlc_white_space(*s)) break;
     ++len; ++s;
   }
   if(len==0) len=1;
   if(*s=='.') len+=fdiglenn(s,end-s);
   return len;
 }
-
-static int tokcntn(char *s,int n) {
-  char *end=s+n;
-  int u,cnt=0;
-  SKIP_SPACE:
-  for(;;) {
-    if(s==end) return cnt;
-    s+=u_get(&u,s); 
-    if(!xmlc_white_space(u)) break; 
-  }
-  ++cnt;
-  for(;;) {
-    if(xmlc_white_space(u)) goto SKIP_SPACE;
-    if(s==end) goto SKIP_SPACE;
-    s+=u_get(&u,s); 
-  }
-}
-
 
 #define NPAT 16
 
@@ -293,7 +284,7 @@ struct facets {
 #define PAT_NMTOKENS PAT_NMTOKEN"( "PAT_NMTOKEN")*"
 #define PAT_NAMES PAT_NAME"( "PAT_NAME")*"
 
-#define PAT_LANGUAGE "([a-zA-Z]{1,8}(-[a-zA-Z0-9]{1,8})*"
+#define PAT_LANGUAGE "([a-zA-Z]{1,8}(-[a-zA-Z0-9]{1,8})*)"
 
 #define PAT_DURAY "("PAT_ORDINAL"Y)"
 #define PAT_DURAM "("PAT_ORDINAL"M)"
@@ -313,7 +304,7 @@ struct facets {
 
 #define PAT_ZONE "(Z|[+-](0[0-9]|1[0-4]):[0-5][0-9])"
 #define PAT_YEAR0 "[0-9]{4,}" 
-#define PAT_MONTH0 "(0[1-9]|1[12])"
+#define PAT_MONTH0 "(0[1-9]|1[0-2])"
 #define PAT_DAY0 "([0-2][0-9]|3[01])"
 #define PAT_YEAR "-?"PAT_YEAR0 PAT_ZONE"?"
 #define PAT_MONTH "--"PAT_MONTH0"--"PAT_ZONE"?"
@@ -326,12 +317,65 @@ struct facets {
 #define PAT_TIME PAT_TIME0 PAT_ZONE"?"
 #define PAT_DATE_TIME "-?"PAT_DATE0"T"PAT_TIME0 PAT_ZONE"?"
 
-static int chki(struct facets *fp,char *s,int n) {
-  int ok=1; long i=atol(s);
-  if(fp->set&(1<<FCT_MIN_EXCLUSIVE)) ok=ok&&i>atol(fp->minExclusive);
-  if(fp->set&(1<<FCT_MIN_INCLUSIVE)) ok=ok&&i>=atol(fp->minInclusive);
-  if(fp->set&(1<<FCT_MAX_INCLUSIVE)) ok=ok&&i<=atol(fp->maxInclusive);
-  if(fp->set&(1<<FCT_MAX_EXCLUSIVE)) ok=ok&&i<atol(fp->maxExclusive);
+static void anchdec(int *plus,int *zero,char **beg,char **dp,char **end,char *s,int n) {
+  char *end0=s+n;
+  *beg=s; *end=end0; *zero=1;
+  *plus=1;
+  for(;;) { if(end0==*beg) break;
+    --end0;
+    if(!xmlc_white_space(**end)) {++end0; break;}
+  }
+  *end=end0;
+  for(;;) { if(*end==*beg) break;
+    --*end;
+    if(**end!='0') {*zero=0; ++*end; break;}
+  }
+  *dp=*end;
+  for(;;) { if(*beg==*end) break;
+    if(!xmlc_white_space(**beg)&&**beg!='0') {*zero=0; 
+      *plus=(**beg!='-'); if(**beg=='-'||**beg=='+') ++*beg;
+      for(;;) {
+	if(*dp==*beg) {*dp=*end=end0; break;}
+	--*dp; 
+	if(**dp=='.') break;
+      }
+      break;
+    }
+    ++*beg;
+  }
+}
+
+static int deccmp(char *s1,int n1,char *s2,int n2) {
+  int p1,p2,z1,z2,cmp; 
+  char *d1,*e1,*d2,*e2,*c1,*c2;
+  anchdec(&p1,&z1,&s1,&d1,&e1,s1,n1); anchdec(&p2,&z2,&s2,&d2,&e2,s2,n2);
+  if(z1&&z2) return 0; 
+  if(p1!=p2) return p1-p2; 
+  cmp=0;
+  if(d1-s1!=d2-s2) cmp=d1-s1-(d2-s2);
+  if(cmp!=0) return p1?cmp:-cmp;
+  c1=s1; c2=s2;
+  for(;;) {
+    if(c1==d1) break;
+    if(*c1!=*c2) {cmp=*c1-*c2; break;}
+    ++c1; ++c2;
+  }
+  if(cmp!=0) return p1?cmp:-cmp;
+  for(;;) {
+    if(c1==e1) {cmp=-(c2!=e2); break;}
+    if(c2==e2) {cmp=1; break;}
+    if(*c1!=*c2) {cmp=*c1-*c2; break;}
+    ++c1; ++c2;
+  }
+  return p1?cmp:-cmp;
+}
+
+static int chkdec(struct facets *fp,char *s,int n) {
+  int ok=1;
+  if(fp->set&(1<<FCT_MIN_EXCLUSIVE)) ok=ok&&deccmp(s,n,fp->minExclusive,strlen(fp->minExclusive))>0;
+  if(fp->set&(1<<FCT_MIN_INCLUSIVE)) ok=ok&&deccmp(s,n,fp->minInclusive,strlen(fp->minInclusive))>=0;
+  if(fp->set&(1<<FCT_MAX_INCLUSIVE)) ok=ok&&deccmp(s,n,fp->maxInclusive,strlen(fp->maxInclusive))<=0;
+  if(fp->set&(1<<FCT_MAX_EXCLUSIVE)) ok=ok&&deccmp(s,n,fp->maxExclusive,strlen(fp->maxExclusive))<0;
   return ok;
 }
 
@@ -342,7 +386,7 @@ static double atodn(char *s,int n) {
 }
 static double atod(char *s) {return atodn(s,strlen(s));}
 
-static int chkd(struct facets *fp,char *s,int n) {
+static int chkdbl(struct facets *fp,char *s,int n) {
   int ok=1,nan=tokcmpn("NaN",s,n)==0; 
   double d=atodn(s,n);
   if(fp->set&(1<<FCT_MIN_EXCLUSIVE)) ok=ok&&!nan&&d>atod(fp->minExclusive);
@@ -379,66 +423,66 @@ int xsd_allows(char *typ,char *ps,char *s,int n) {
   switch(dt) {
   case TYP_INTEGER:
     fct.pattern[fct.npat++]=PAT_INTEGER;
+    dt=TYP_DECIMAL;
     break;
   case TYP_POSITIVE_INTEGER: 
     fct.pattern[fct.npat++]=PAT_POSITIVE;
-    dt=TYP_INTEGER; fct.set|=1<<FCT_MIN_INCLUSIVE;
+    dt=TYP_DECIMAL; fct.set|=1<<FCT_MIN_INCLUSIVE;
     fct.minInclusive="1"; 
     break;
   case TYP_NON_NEGATIVE_INTEGER: 
     fct.pattern[fct.npat++]=PAT_NON_NEGATIVE;
-    dt=TYP_INTEGER; fct.set|=1<<FCT_MIN_INCLUSIVE;
+    dt=TYP_DECIMAL; fct.set|=1<<FCT_MIN_INCLUSIVE;
     fct.minInclusive="0";
     break;
   case TYP_NON_POSITIVE_INTEGER: 
     fct.pattern[fct.npat++]=PAT_NON_POSITIVE;
-    dt=TYP_INTEGER; fct.set|=1<<FCT_MAX_INCLUSIVE;
+    dt=TYP_DECIMAL; fct.set|=1<<FCT_MAX_INCLUSIVE;
     fct.maxInclusive="0";
     break;
   case TYP_NEGATIVE_INTEGER: 
     fct.pattern[fct.npat++]=PAT_NEGATIVE;
-    dt=TYP_INTEGER; fct.set|=FCT_IBOUNDS;
-    dt=TYP_INTEGER; fct.set|=1<<FCT_MAX_INCLUSIVE;
+    dt=TYP_DECIMAL; fct.set|=1<<FCT_MAX_INCLUSIVE;
     fct.maxInclusive="-1";
     break;
   case TYP_BYTE: 
     fct.pattern[fct.npat++]=PAT_INTEGER;
-    dt=TYP_INTEGER; fct.set|=FCT_IBOUNDS;
+    dt=TYP_DECIMAL; fct.set|=FCT_IBOUNDS;
     fct.minInclusive="-128"; fct.maxInclusive="127";
     break;
   case TYP_UNSIGNED_BYTE: 
     fct.pattern[fct.npat++]=PAT_NON_NEGATIVE;
-    dt=TYP_INTEGER; fct.set|=FCT_IBOUNDS;
+    dt=TYP_DECIMAL; fct.set|=FCT_IBOUNDS;
     fct.minInclusive="0"; fct.maxInclusive="255";
     break;
   case TYP_SHORT: 
     fct.pattern[fct.npat++]=PAT_INTEGER;
-    dt=TYP_INTEGER; fct.set|=FCT_IBOUNDS;
+    dt=TYP_DECIMAL; fct.set|=FCT_IBOUNDS;
     fct.minInclusive="-32768"; fct.maxInclusive="32767";
     break;
   case TYP_UNSIGNED_SHORT: 
     fct.pattern[fct.npat++]=PAT_NON_NEGATIVE;
-    dt=TYP_INTEGER; fct.set|=FCT_IBOUNDS;
+    dt=TYP_DECIMAL; fct.set|=FCT_IBOUNDS;
     fct.minInclusive="0"; fct.maxInclusive="65535";
     break;
   case TYP_INT: 
     fct.pattern[fct.npat++]=PAT_INTEGER;
-    dt=TYP_INTEGER; fct.set|=FCT_IBOUNDS;
+    dt=TYP_DECIMAL; fct.set|=FCT_IBOUNDS;
     fct.minInclusive="-2147483648"; fct.maxInclusive="2147483647";
     break;
   case TYP_UNSIGNED_INT: 
     fct.pattern[fct.npat++]=PAT_NON_NEGATIVE;
-    dt=TYP_INTEGER; fct.set|=FCT_IBOUNDS;
+    dt=TYP_DECIMAL; fct.set|=FCT_IBOUNDS;
     fct.minInclusive="0"; fct.maxInclusive="4294967295";
     break;
-  case TYP_LONG: 
+  case TYP_LONG:
     fct.pattern[fct.npat++]=PAT_INTEGER;
-    dt=TYP_INTEGER; fct.set|=FCT_IBOUNDS;
+    dt=TYP_DECIMAL; fct.set|=FCT_IBOUNDS;
     fct.minInclusive="-9223372036854775808"; fct.maxInclusive="9223372036854775807";
     break;
   case TYP_UNSIGNED_LONG: 
     fct.pattern[fct.npat++]=PAT_NON_NEGATIVE;
-    dt=TYP_INTEGER; fct.set|=FCT_IBOUNDS;
+    dt=TYP_DECIMAL; fct.set|=FCT_IBOUNDS;
     fct.minInclusive="0"; fct.maxInclusive="18446744073709551615";
     break;
   }
@@ -484,11 +528,11 @@ int xsd_allows(char *typ,char *ps,char *s,int n) {
     fct.pattern[fct.npat++]=PAT_FIXED;
     if(fct.set&(1<<FCT_FRACTION_DIGITS)) ok=ok&&fdiglenn(s,n)<=fct.fractionDigits;
     if(fct.set&(1<<FCT_TOTAL_DIGITS)) ok=ok&&diglenn(s,n)<=fct.totalDigits;
-    if(fct.set&FCT_BOUNDS) ok=ok&chkd(&fct,s,n);
+    if(fct.set&FCT_BOUNDS) ok=ok&chkdec(&fct,s,n);
     break;
   case TYP_FLOAT: case TYP_DOUBLE: /* float and double is the same type */
     fct.pattern[fct.npat++]=PAT_FLOATING;
-    if(fct.set&FCT_BOUNDS) ok=ok&chkd(&fct,s,n);
+    if(fct.set&FCT_BOUNDS) ok=ok&chkdbl(&fct,s,n);
     break;
   case TYP_DURATION: 
     fct.pattern[fct.npat++]=PAT_DURATION;
@@ -592,10 +636,6 @@ int xsd_allows(char *typ,char *ps,char *s,int n) {
     fct.pattern[fct.npat++]=PAT_NCNAMES;
     length=tokcntn(s,n);
     break;
-  case TYP_INTEGER:
-    if(fct.set&(1<<FCT_TOTAL_DIGITS)) ok=ok&&diglenn(s,n)<=fct.totalDigits;
-    if(fct.set&FCT_BOUNDS) ok=ok&&chki(&fct,s,n);
-    break;
   case NTYP: (*error_handler)(XSDER_TYP,typ); break;
   default: assert(0);
   }
@@ -649,8 +689,7 @@ static int b64cmpn(char *s1,char *s2,int n) {
 
 static int nrmcmpn(char *s1,char *s2,int n) {
   char *end=s2+n;
-  for(;;) {
-    if(s2==end) return *s1;
+  for(;;) { if(s2==end) return *s1;
     if(!*s1) return -*s2;
     if(*s1!=*s2&&(!xmlc_white_space(*s1)||!xmlc_white_space(*s2))) return *s1-*s2;
     ++s1; ++s2;
@@ -679,7 +718,7 @@ int xsd_equal(char *typ,char *val,char *s,int n) {
  /*primitive*/
   case TYP_STRING: return strcmpn(val,s,n)==0;
   case TYP_BOOLEAN: return (tokcmpn("true",val,strlen(val))==0||tokcmpn("1",val,strlen(val))==0)==(tokcmpn("true",s,n)==0||tokcmpn("1",s,n)==0);
-  case TYP_DECIMAL: return atof(val)==atof(s);
+  case TYP_DECIMAL: return deccmp(val,strlen(val),s,n)==0;
   case TYP_FLOAT: case TYP_DOUBLE: return dblcmpn(val,s,n)==0;
   case TYP_DURATION: return duracmp(val,s,n)==0;
   case TYP_DATE_TIME: return dtcmpn(val,s,n,"ymdtz")==0;
@@ -720,7 +759,7 @@ int xsd_equal(char *typ,char *val,char *s,int n) {
   case TYP_INT:
   case TYP_UNSIGNED_INT:
   case TYP_LONG:
-  case TYP_UNSIGNED_LONG: return atol(val)==atol(s);
+  case TYP_UNSIGNED_LONG: return deccmp(val,strlen(val),s,n)==0;
   case NTYP: (*error_handler)(XSDER_TYP,typ); return 0;
   default: assert(0);
   }

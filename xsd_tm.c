@@ -28,7 +28,7 @@ static int ymd2dn(int yr,int mo,int dy) {
 }
 
 static int ymd2ds(int yr,int mo,int dy) {
-  return (yr>=0?y2d(yr-1):(y2d(yr)-366)+ymd2dn(yr,mo,dy));
+  return (yr>=0?y2d(yr-1):y2d(yr)-366)+ymd2dn(yr,mo,dy);
 }
 
 #define DAYSECS 86400
