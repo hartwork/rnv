@@ -30,8 +30,33 @@
     -q?er:error    
 */
 
+#include "memops.h"
+#include "strops.h"
+#include "xmlc.h"
+#include "ht.h"
+#include "rnc.h"
+#include "rnd.h"
+#include "rnv.h"
 
+extern in rn_notAllowed;
+
+static int explain=1;
 
 int main(int argc,char **argv) {
+  while(*(++argv)&&**argv=='-') {
+    int i=1;
+    for(;;) {
+      switch(*(*argv+i)) {
+      case '\0': goto END_OF_OPTIONS;
+      case 'q': numerr=1; break;
+      case 'h': case '?': usage(); return 0;
+      case 'v': version(); break;
+      default: fprintf(stderr,"unknown option '-%c'\n",*(*argv+i)); break;
+      }
+      ++i;
+    }
+    END_OF_OPTIONS:;
+  }
+
 }
  
