@@ -10,20 +10,16 @@
 #define LEN_P 1024
 #define LEN_NC 1024
 #define LEN_S 16384
-#define LEN_F 4096
 
 int (*rn_pattern)[P_SIZE];
 int (*rn_nameclass)[NC_SIZE];
 char *rn_string;
-int *rn_first, *rn_first_a, *rn_first_c, *rn_first_to;
-int *rn_firsts;
 int rn_empty,rn_text,rn_notAllowed;
 
 static struct hashtable ht_p, ht_nc, ht_s;
 
 int i_p, i_nc, i_s;
-static int len_p, len_nc, len_s, len_f;
-static int len_s, len_f;
+static int len_p, len_nc, len_s;
 
 int newString(char *s) {
   int len=strlen(s)+1, j;
@@ -40,9 +36,10 @@ int newString(char *s) {
 }
 
 #define P_NEW(x) rn_pattern[i_p][0]=P_##x
-#define setNullable(x) if(x) rn_pattern[i_p][0]|=P_FLG_NUL
-#define setCdata(x) if(x) rn_pattern[i_p][0]|=P_FLG_TXT
-#define setContentType(x) rn_pattern[i_[][0]|=x
+
+void setNullable(int x) {if(x) rn_pattern[i_p][0]|=P_FLG_NUL;}
+void setCdata(int x) {if(x) rn_pattern[i_p][0]|=P_FLG_TXT;}
+void setContentType(int t1,int t2) {rn_pattern[i_p][0]|=(t1>t2?t1:t2);}
 
 #define accept(name,n,N)  \
 static int accept_##n() { \
@@ -79,27 +76,24 @@ int newText() { P_NEW(TEXT);
 int newChoice(int p1,int p2) { P_NEW(CHOICE);
   rn_pattern[i_p][1]=p1; rn_pattern[i_p][2]=p2;
   setNullable(nullable(p1)||nullable(p2));
-  setCdata(cdata(p1)||cdata(p2));
   return accept_p();
 }
 
 int newInterleave(int p1,int p2) { P_NEW(INTERLEAVE);
   rn_pattern[i_p][1]=p1; rn_pattern[i_p][2]=p2;
   setNullable(nullable(p1)&&nullable(p2));
-  setCdata(cdata(p1)||cdata(p2));
   return accept_p();
 }
 
 int newGroup(int p1,int p2) { P_NEW(GROUP);
   rn_pattern[i_p][1]=p1; rn_pattern[i_p][2]=p2;
   setNullable(nullable(p1)&&nullable(p2));
-  setCdata(cdata(p1)||cdata(p2));
   return accept_p();
 }
 
 int newOneOrMore(int p1) { P_NEW(ONE_OR_MORE);
   rn_pattern[i_p][1]=p1;
-  setNullable(nullable(p1)); setCdata(cdata(p1));
+  setNullable(nullable(p1));
   return accept_p();
 }
 
@@ -139,7 +133,6 @@ int newElement(int nc,int p1) { P_NEW(ELEMENT);
 
 int newAfter(int qn,int p1,int p2) { P_NEW(AFTER);
   rn_pattern[i_p][1]=qn; rn_pattern[i_p][2]=p1; rn_pattern[i_p][3]=p2;
-  setCdata(cdata(p1));
   return accept_p();
 }
 
@@ -235,11 +228,12 @@ static int equal_p(int p1,int p2);
 static int equal_nc(int nc1,int nc2); 
 static int equal_s(int s1,int s2);
 
+static void windup();
+
 static int initialized=0;
 void rn_init() {
   if(!initialized) {
-    len_p=LEN_P; len_nc=LEN_NC; len_s=LEN_S; len_f=LEN_F;
-    i_p=0; i_nc=0; i_s=0;
+    len_p=LEN_P; len_nc=LEN_NC; len_s=LEN_S;
 
     rn_pattern=(int (*)[])calloc(len_p,sizeof(int[P_SIZE]));
     rn_nameclass=(int (*)[])calloc(len_nc,sizeof(int[NC_SIZE]));
@@ -249,25 +243,24 @@ void rn_init() {
     ht_init(&ht_nc,len_nc,&hash_nc,&equal_nc);
     ht_init(&ht_s,len_s,&hash_s,&equal_s);
 
-    memset(rn_pattern[0],0,sizeof(int[P_SIZE]));
-    memset(rn_nameclass[0],0,sizeof(int[NC_SIZE]));
-    rn_pattern[0][0]=P_ERROR;  accept_p();
-    rn_nameclass[0][0]=NC_ERROR; accept_nc();
-    newString(""); /* empty string is always at 0 */
-
-    rn_first=(int*)calloc(len_p,sizeof(int));
-    rn_first_a=(int*)calloc(len_p,sizeof(int));
-    rn_first_c=(int*)calloc(len_p,sizeof(int));
-    rn_first_to=(int*)calloc(len_p,sizeof(int));
-
-    rn_firsts=(int*)calloc(len_f,sizeof(int));
-
-    rn_empty=newEmpty();
-    rn_notAllowed=newNotAllowed();
-    rn_text=newText();
-
+    windup();
     initialized=1;
   }
+}
+
+void rn_clear() {
+  ht_clear(&ht_p); ht_clear(&ht_nc); ht_clear(&ht_s);
+  windup();
+}
+
+static void windup() {
+  i_p=i_nc=i_s=0;
+  memset(rn_pattern[0],0,sizeof(int[P_SIZE]));
+  memset(rn_nameclass[0],0,sizeof(int[NC_SIZE]));
+  rn_pattern[0][0]=P_ERROR;  accept_p(); 
+  rn_nameclass[0][0]=NC_ERROR; accept_nc();
+  newString("");
+  rn_empty=newEmpty(); rn_notAllowed=newNotAllowed(); rn_text=newText();
 }
 
 /* hash function for int[] */
@@ -293,6 +286,9 @@ static int equal_s(int s1,int s2) {return strcmp(rn_string+s1,rn_string+s2)==0;}
 
 /* 
  * $Log$
+ * Revision 1.8  2003/12/04 22:02:20  dvd
+ * refactoring
+ *
  * Revision 1.7  2003/12/04 00:37:03  dvd
  * refactoring
  *

@@ -173,6 +173,7 @@ static int rnc_read(struct rnc_source *sp) {
 }
 
 #define NS_INHERITED 1
+
 #define DE_HEAD 1
 #define DE_CHOICE 2
 #define DE_ILEAVE 4
@@ -1096,6 +1097,9 @@ int main(int argc,char **argv) {
 
 /*
  * $Log$
+ * Revision 1.22  2003/12/04 22:02:20  dvd
+ * refactoring
+ *
  * Revision 1.21  2003/12/04 00:37:03  dvd
  * refactoring
  *

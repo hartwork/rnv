@@ -21,6 +21,7 @@
 #define P_ATTRIBUTE 12
 #define P_ELEMENT 13
 #define P_AFTER 14
+#define P_REF 15
 
 /*
 Patterns and nameclasses are stored in arrays of arrays of integers.
@@ -60,6 +61,7 @@ them to variables in the local scope, and a creator.
 #define Attribute(i,nc,p1) P_CHK(i,ATTRIBUTE); nc=rn_pattern[i][1]; p1=rn_pattern[i][2]
 #define Element(i,nc,p1) P_CHK(i,ELEMENT); nc=rn_pattern[i][1]; p1=rn_pattern[i][2]
 #define After(i,qn,p1,p2) P_CHK(i,AFTER); qn=rn_pattern[i][1]; p1=rn_pattern[i][2]; p2=rn_pattern[i][3]
+#define Ref(i,p) P_CHK(i,REF); p=rn_pattern[i][1]
 
 /* Name Classes */
 #define NC_ERROR 0
@@ -94,8 +96,9 @@ extern char *rn_string;
 extern int (*rn_pattern)[P_SIZE];
 extern int (*rn_nameclass)[NC_SIZE];
 
-extern int *rn_first, *rn_first_a, *rn_first_c, *rn_first_to; /* -1 if not computed, otherwise index in firsts */
-extern int *rn_firsts; /* -1 terminates a list */
+extern void setNullable(int x);
+extern void setCdata(int x);
+extern void setContentType(int t1,int t2);
 
 extern int newString(char *s);
 
@@ -129,11 +132,15 @@ extern int newNameClassChoice(int nc1,int nc2);
 extern int newDatatype(int lib,int dt);
 
 extern void rn_init();
+extern void rn_clear();
 
 #endif
 
 /*
  * $Log$
+ * Revision 1.10  2003/12/04 22:02:20  dvd
+ * refactoring
+ *
  * Revision 1.9  2003/12/04 00:37:03  dvd
  * refactoring
  *

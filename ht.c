@@ -7,13 +7,12 @@
 #define LOAD_FACTOR 0.5
 
 void ht_init(struct hashtable *ht,int len,int (*hash)(int),int (*equal)(int,int)) {
-  int i;
   ht->tablen=1; len=(int)((len+1)/LOAD_FACTOR);
   while(ht->tablen<len) ht->tablen<<=1;
-  ht->limit=(int)(ht->tablen*LOAD_FACTOR); ht->used=0; 
+  ht->limit=(int)(ht->tablen*LOAD_FACTOR);
   ht->table=(int*)calloc(ht->tablen<<1,sizeof(int)); /* the second half is hash values */
-  for(i=0;i!=ht->tablen;++i) ht->table[i]=-1; /* null is -1 */
   ht->hash=hash; ht->equal=equal;
+  ht_clear(ht);
 }
 
 void ht_free(struct hashtable *ht) {
@@ -90,6 +89,9 @@ int ht_del(struct hashtable *ht,int i) {
 
 /*
  * $Log$
+ * Revision 1.3  2003/12/04 22:02:20  dvd
+ * refactoring
+ *
  * Revision 1.2  2003/11/29 17:47:48  dvd
  * decl
  *

@@ -11,6 +11,7 @@ struct sc_stack {
 };
 
 extern void sc_init(struct sc_stack *stp);
+extern void sc_clear(struct sc_stack *stp);
 
 extern void sc_open(struct sc_stack *stp);
 extern void sc_lock(struct sc_stack *stp);
@@ -24,6 +25,9 @@ extern int sc_add(struct sc_stack *stp,int key,int val,int aux); /* returns inde
 
 /* 
  * $Log$
+ * Revision 1.4  2003/12/04 22:02:20  dvd
+ * refactoring
+ *
  * Revision 1.3  2003/12/01 14:44:54  dvd
  * patterns in progress
  *

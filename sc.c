@@ -9,10 +9,18 @@
 
 #define LEN 64
 
-void sc_init(struct sc_stack *stp) {
-  stp->tab=(int(*)[])calloc(stp->len=LEN,sizeof(int[SC_RECSIZE]));
+static void windup(struct sc_stack *stp) {
   stp->top=0;
   sc_open(stp);
+}
+
+void sc_init(struct sc_stack *stp) {
+  stp->tab=(int(*)[])calloc(stp->len=LEN,sizeof(int[SC_RECSIZE]));
+  windup(stp);
+}
+
+void sc_clear(struct sc_stack *stp) {
+  windup(stp);
 }
 
 static void realloc_sc(struct sc_stack *stp) {
@@ -53,6 +61,9 @@ int sc_add(struct sc_stack *stp,int key,int val,int aux) {
 
 /*
  * $Log$
+ * Revision 1.4  2003/12/04 22:02:20  dvd
+ * refactoring
+ *
  * Revision 1.3  2003/12/01 14:44:54  dvd
  * patterns in progress
  *
