@@ -18,6 +18,7 @@ int (*rn_nameclass)[NC_SIZE];
 char *rn_string;
 int *rn_first, *rn_first_a, *rn_first_c, *rn_first_to;
 int *rn_firsts;
+int rn_empty,rn_text,rn_notAllowed;
 
 static struct hashtable ht_p, ht_nc, ht_s;
 
@@ -58,6 +59,10 @@ void rn_init() {
     rn_first_to=(int*)calloc(len_p,sizeof(int));
 
     rn_firsts=(int*)calloc(len_f,sizeof(int));
+
+    newEmpty(); rn_empty=rn_accept_p();
+    newNotAllowed(); rn_notAllowed=rn_accept_p();
+    newText(); rn_text=rn_accept_p();
 
     initialized=1;
   }
@@ -119,6 +124,9 @@ int rn_accept_s(char *s) {
 
 /* 
  * $Log$
+ * Revision 1.6  2003/12/01 14:44:53  dvd
+ * patterns in progress
+ *
  * Revision 1.5  2003/11/29 20:51:39  dvd
  * nameclasses
  *

@@ -13,12 +13,18 @@
 #define ER_LILL 32
 #define ER_SEXP 40
 #define ER_SILL 41
+#define ER_NOTGR 42
 #define ER_EXT 50
 #define ER_DUPNS 51
 #define ER_DUPDT 52
 #define ER_NONS 53
 #define ER_NODT 54
 #define ER_NCEX 55
+#define ER_2HEADS 56
+#define ER_COMBINE 57
+#define ER_OVRIDE 58
+#define ER_EXPT 59
+#define ER_NOSTART 60
 
 extern void er_handler(int er_no,...);
 extern void (*ver_handler_p)(int er_no,va_list ap);
@@ -27,6 +33,9 @@ extern void (*ver_handler_p)(int er_no,va_list ap);
 
 /*
  * $Log$
+ * Revision 1.11  2003/12/01 14:44:53  dvd
+ * patterns in progress
+ *
  * Revision 1.10  2003/11/29 20:51:39  dvd
  * nameclasses
  *

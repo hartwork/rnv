@@ -3,44 +3,30 @@
 #ifndef SC_H
 #define SC_H 1
 
-#define SC_NS 1
-#define SC_DT 2
-#define SC_DE 3
+#define SC_RECSIZE 3 /* 0 - key, 1 - value, 2 - auxiliary */ 
 
-#define SC_NS_INHERITED 4
+struct sc_stack {
+  int (*tab)[SC_RECSIZE];
+  int len,base,top;
+};
 
-#define SC_DE_HEAD 4
-#define SC_DE_CHOICE 8
-#define SC_DE_ILEAVE 16
+extern void sc_init(struct sc_stack *stp);
 
-/* special prefixes */
-#define SC_INHR -1 /* no string is at this index, used for inherited namespace */
-#define SC_START -1 /* key for 'start' define */
+extern void sc_open(struct sc_stack *stp);
+extern void sc_lock(struct sc_stack *stp);
+extern int sc_locked(struct sc_stack *stp);
+extern void sc_close(struct sc_stack *stp);
 
-/* sentinel urls */
-#define SC_BASE -1
-#define SC_LOCK -2
-
-#define SC_RECSIZE 3 /* 0 - key, 1 - value, 2 - type & flags */ 
-
-#define SC_TYP(i) (sc_tab[i][2]&0x3)
-
-extern int (*sc_tab)[SC_RECSIZE];
-
-extern void sc_init();
-
-extern void sc_open();
-extern void sc_lock();
-extern int sc_locked();
-extern void sc_close();
-
-extern int sc_find(int key,int typ); /* returns 0 if not found, index in sc_tab otherwise */
-extern int sc_add(int key,int val,int aux); /* returns index for the new record */
+extern int sc_find(struct sc_stack *stp,int key); /* returns 0 if not found, index in tab otherwise */
+extern int sc_add(struct sc_stack *stp,int key,int val,int aux); /* returns index for the new record */
 
 #endif
 
 /* 
  * $Log$
+ * Revision 1.3  2003/12/01 14:44:54  dvd
+ * patterns in progress
+ *
  * Revision 1.2  2003/11/29 20:51:39  dvd
  * nameclasses
  *

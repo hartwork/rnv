@@ -18,49 +18,70 @@ void er_handler(int er_no,...) {
   va_end(ap);
 }
 
+    
+#define printerr(msg) vfprintf(stderr,msg" (%s,%u,%u)\n",ap)
+
 static void default_ver_handler(int er_no,va_list ap) {
   switch(er_no) {
   case ER_IO:
     fprintf(stderr,"I/O error (%s): %s\n",va_arg(ap,char*),strerror(errno));
     break;
   case ER_UTF: 
-    vfprintf(stderr,"invalid UTF-8 sequence (%s,%u,%u)\n",ap);
+    printerr("invalid UTF-8 sequence");
     break;
   case ER_XESC:
-    vfprintf(stderr,"unterminated escape (%s,%u,%u)\n",ap);
+    printerr("unterminated escape");
     break;
   case ER_LEXP:
-    vfprintf(stderr,"lexical error: '%c' expected (%s,%u,%u)\n",ap);
+    printerr("lexical error: '%c' expected");
     break;
   case ER_LLIT:
-    vfprintf(stderr,"lexical error: unterminated literal (%s,%u,%u)\n",ap);
+    printerr("lexical error: unterminated literal");
     break;
   case ER_LILL:
-    vfprintf(stderr,"lexical error: illegal character \\x{%x} (%s,%u,%u)\n",ap);
+    printerr("lexical error: illegal character \\x{%x}");
     break;
   case ER_SEXP:
-    vfprintf(stderr,"syntax error: %s expected, %s found (%s,%u,%u)\n",ap);
+    printerr("syntax error: %s expected, %s found");
     break;
   case ER_SILL:
-    vfprintf(stderr,"syntax error: %s unexpected  (%s,%u,%u)\n",ap);
+    printerr("syntax error: %s unexpected ");
+    break;
+  case ER_NOTGR:
+    printerr("included schema is not a grammar");
     break;
   case ER_EXT:
-    vfprintf(stderr,"cannot open external grammar '%s' (%s,%u,%u)\n",ap);
+    printerr("cannot open external grammar '%s'");
     break;
   case ER_DUPNS:
-    vfprintf(stderr,"duplicate namespace prefix '%s' (%s,%u,%u)\n",ap);
+    printerr("duplicate namespace prefix '%s'");
     break;
   case ER_DUPDT:
-    vfprintf(stderr,"duplicate datatype prefix '%s' (%s,%u,%u)\n",ap);
+    printerr("duplicate datatype prefix '%s'");
     break;
   case ER_NONS:
-    vfprintf(stderr,"undeclared namespace prefix '%s' (%s,%u,%u)\n",ap);
+    printerr("undeclared namespace prefix '%s'");
     break;
   case ER_NODT:
-    vfprintf(stderr,"undeclared datatype prefix '%s' (%s,%u,%u)\n",ap);
+    printerr("undeclared datatype prefix '%s'");
     break;
   case ER_NCEX:
-    vfprintf(stderr,"first argument for '-' is not '*' or 'prefix:*' (%s,%u,%u)\n",ap);
+    printerr("first argument for '-' is not '*' or 'prefix:*'");
+    break;
+  case ER_2HEADS:
+    printerr("repeated define or start");
+    break;
+  case ER_COMBINE:
+    printerr("conflicting combine methods in define or start");
+    break;
+  case ER_OVRIDE:
+    printerr("define or start overrides nothing");
+    break;
+  case ER_EXPT:
+    printerr("first argument for '-' is not data");
+    break;
+  case ER_NOSTART:
+    printerr("missing start");
     break;
   default: assert(0);
   }
@@ -68,6 +89,9 @@ static void default_ver_handler(int er_no,va_list ap) {
 
 /*
  * $Log$
+ * Revision 1.12  2003/12/01 14:44:53  dvd
+ * patterns in progress
+ *
  * Revision 1.11  2003/11/29 20:51:39  dvd
  * nameclasses
  *

@@ -32,19 +32,19 @@ them to variables in the local scope, and a creator.
 */
 
 /* Pattern Bindings */
-#define P_TYP(i) (rn_pattern[i][0]&0xf)
+#define P_TYP(i) (rn_pattern[i][0]&0xff)
 #define P_IS(i,x)  (P_##x==P_TYP(i))
 #define P_CHK(i,x)  assert(P_IS(i,x))
 #define P_NEW(x) rn_pattern[rn_i_p][0]=P_##x
 
-#define P_NUL_BIT 0x10
-#define P_TXT_BIT 0x20
+#define P_NUL_BIT 0x100
+#define P_TXT_BIT 0x200
 
 #define nullable(i) (rn_pattern[i][0]&P_NUL_BIT)
-#define setNullable(x) if(x) rn_pattern[rn_i_p][0]&=P_NUL_BIT
+#define setNullable(x) if(x) rn_pattern[rn_i_p][0]|=P_NUL_BIT
 
 #define cdata(i) (rn_pattern[i][0]&P_TXT_BIT)
-#define setCdata(x) if(x) rn_pattern[rn_i_p][0]&=P_TXT_BIT
+#define setCdata(x) if(x) rn_pattern[rn_i_p][0]|=P_TXT_BIT
 
 #define Empty(i) P_CHK(i,EMPTY)
 #define newEmpty() P_NEW(EMPTY); \
@@ -76,7 +76,7 @@ them to variables in the local scope, and a creator.
 #define newGroup(p1,p2) P_NEW(GROUP); \
   rn_pattern[rn_i_p][1]=p1; rn_pattern[rn_i_p][2]=p2; \
   setNullable(nullable(p1)&&nullable(p2)); \
-  setCdata(cdata(p1)||cdata(p2)
+  setCdata(cdata(p1)||cdata(p2))
 
 #define OneOrMore(i,p1) P_CHK(i,ONE_OR_MORE); \
   p1=rn_pattern[i][1]
@@ -96,10 +96,10 @@ them to variables in the local scope, and a creator.
   rn_pattern[rn_i_p][1]=dt; \
   setCdata(1)
 
-#define DataExcept(i,dt,ps,p1) P_CHK(i,DATA_EXCEPT); \
+#define DataExcept(i,dt,p1) P_CHK(i,DATA_EXCEPT); \
   dt=rn_pattern[i][1]; p1=rn_pattern[i][2]
-#define newDataExcept(dt,ps,p1) P_NEW(DATA_EXCEPT); \
-  rn_pattern[rn_i_p][11=dt; rn_pattern[rn_i_p][2]=p1; \
+#define newDataExcept(dt,p1) P_NEW(DATA_EXCEPT); \
+  rn_pattern[rn_i_p][1]=dt; rn_pattern[rn_i_p][2]=p1; \
   setCdata(1)
 
 #define Value(i,dt,s,ctx) P_CHK(i,VALUE); \
@@ -135,7 +135,7 @@ them to variables in the local scope, and a creator.
 #define NC_DATATYPE 7
 
 /* Name Class Bindings  */
-#define NC_TYP(i) (rn_nameclass[i][0]&0x7)
+#define NC_TYP(i) (rn_nameclass[i][0]&0xff)
 #define NC_IS(i,x) (NC_##x==NC_TYP(i))
 #define NC_CHK(i,x) assert(NC_IS(i,x))
 #define NC_NEW(x) rn_nameclass[rn_i_nc][0]=NC_##x
@@ -178,6 +178,8 @@ them to variables in the local scope, and a creator.
 #define newDatatype(lib,dt) NC_NEW(DATATYPE); \
   rn_nameclass[rn_i_nc][1]=lib; rn_nameclass[rn_i_nc][2]=dt
 
+extern int rn_empty,rn_text,rn_notAllowed;
+
 extern int rn_i_p,rn_i_nc,rn_i_s; /* current index, a new element is created at this index */
 extern int rn_accept_p(); /* the pattern at i_p is either new and i_p is incremented, or the same pattern is in the table */
 extern int rn_accept_nc(); /* same for name class */
@@ -199,6 +201,9 @@ extern void rn_init();
 
 /*
  * $Log$
+ * Revision 1.8  2003/12/01 14:44:53  dvd
+ * patterns in progress
+ *
  * Revision 1.7  2003/11/29 20:51:39  dvd
  * nameclasses
  *
