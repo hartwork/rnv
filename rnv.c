@@ -17,6 +17,7 @@ static char *xml;
 static XML_Parser expat;
 static int start,current,previous;
 static int errors;
+static int explain=1;
 
 static void init(void) {
   rn_init();
@@ -42,15 +43,19 @@ static int load_rnc(char *fn) {
 static void error(char *msg) {
   char *s;
   ++errors;
-  rnx_expected(previous);
-  if(rnx_n_exp!=0) {
-    int i;
-    fprintf(stderr,"invalid document (%s,%i,%i): %s\nexpected:\n",xml,XML_GetCurrentLineNumber(expat),XML_GetCurrentColumnNumber(expat),msg);
-    for(i=0;i!=rnx_n_exp;++i) {
-      fprintf(stderr,"\t%s\n",s=p2str(rnx_exp[i]));
-      free(s);
+  fprintf(stderr,"invalid document (%s,%i,%i): %s",xml,XML_GetCurrentLineNumber(expat),XML_GetCurrentColumnNumber(expat),msg);
+  if(explain) {
+    rnx_expected(previous);
+    if(rnx_n_exp!=0) {
+      int i;
+      fprintf(stderr,"\nexpected:");
+      for(i=0;i!=rnx_n_exp;++i) {
+	fprintf(stderr,"\n\t%s",s=p2str(rnx_exp[i]));
+	free(s);
+      }
     }
   }
+  fprintf(stderr,"\n");
 }
 
 static char *suri=NULL,*sname;
@@ -58,18 +63,21 @@ static int len_suri=-1;
 
 static void qname(char *name) {
   char *sep; int len;
-  sep=strrchr(name,':'); 
-  if(sep) {
-    sname=sep+1;
-  } else {
-    sep=sname=name;
-  }
+  if((sep=strrchr(name,':'))) sname=sep+1; else sep=sname=name;
   len=sep-name+1;
-  if(len>len_suri) { len_suri=len;
-    free(suri); suri=(char*)calloc(len_suri,sizeof(char));
-  }
+  if(len>len_suri) {len_suri=len; free(suri); suri=(char*)calloc(len_suri,sizeof(char));}
   strncpy(suri,name,len-1);
   suri[len-1]='\0';
+}
+
+static char *msg=NULL;
+static int len_msg=-1;
+
+static void not_allowed(char *what,char *suri,char *sname) {
+  int len=strlen(what)+strlen(suri)+strlen(sname);
+  if(len>len_msg) {len_msg=len; free(msg); msg=(char*)calloc(len_msg,sizeof(char));}
+  msg[sprintf(msg,what,suri,sname)]='\0';
+  error(msg);
 }
 
 #define ELEMENT_NOT_ALLOWED "element '%s^%s' not allowed"
@@ -78,20 +86,12 @@ static void qname(char *name) {
 #define ATTRIBUTES_MISSING "required attributes missing"
 #define TEXT_NOT_ALLOWED "text not allowed"
 
-static char *msg=NULL;
-static int len_msg=-1;
-
 static void start_element(void *userData,const char *name,const char **attrs) {
   if(current!=rn_notAllowed) { 
     qname((char*)name);
     current=drv_start_tag_open(previous=current,suri,sname);
     if(current==rn_notAllowed) {
-      int len=strlen(ELEMENT_NOT_ALLOWED)+strlen(suri)+strlen(sname);
-      if(len>len_msg) {len_msg=len;
-	free(msg); msg=(char*)calloc(len_msg,sizeof(char));
-      }
-      msg[sprintf(msg,ELEMENT_NOT_ALLOWED,suri,sname)]='\0';
-      error(msg);
+      not_allowed(ELEMENT_NOT_ALLOWED,suri,sname);
       current=drv_start_tag_open_recover(previous,suri,sname);
     }
     while(current) {
@@ -100,11 +100,7 @@ static void start_element(void *userData,const char *name,const char **attrs) {
       ++attrs;
       current=drv_attribute(previous=current,suri,sname,(char*)*attrs);
       if(current==rn_notAllowed) {
-	int len=strlen(ATTRIBUTE_NOT_ALLOWED)+strlen(suri)+strlen(sname);
-	if(len>len_msg) {len_msg=len;
-	  free(msg); msg=(char*)calloc(len_msg,sizeof(char));
-	}
-	msg[sprintf(msg,ATTRIBUTE_NOT_ALLOWED,suri,sname)]='\0';
+	not_allowed(ATTRIBUTE_NOT_ALLOWED,suri,sname);
 	error(msg);
       }
       ++attrs;
@@ -174,14 +170,16 @@ ERROR:
 int main(int argc,char **argv) {
   init();
 
-  if(argc<2) {
+  if(*(++argv)&&strcmp(*argv,"-q")==0) {explain=0; ++argv;}
+
+  if(!*argv) {
     fprintf(stderr,"rnv version  %s\nusage: rnv schema.rnc {document.xml}\n",RNV_VERSION);
     goto ERRORS;
   }
 
-  if(load_rnc(*(++argv))) {
+  if(load_rnc(*(argv++))) {
     int ok=1;
-    if(*(++argv)) {
+    if(*argv) {
       do {
 	int fd; xml=*argv;
 	if((fd=open(xml,O_RDONLY))==-1) {
