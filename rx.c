@@ -173,6 +173,7 @@ static int add_r(char *rx) {
 #define err(msg) vfprintf(stderr,msg" in \"%s\" at offset %i\n",ap)
 
 static void default_verror_handler(int erno,va_list ap) {
+  fprintf(stderr,"regular expressions: ");
   switch(erno) {
   case RXER_BADCH: err("bad character"); break;
   case RXER_UNFIN: err("unfinished expression"); break;

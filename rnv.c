@@ -1,5 +1,6 @@
 /* $Id$ */
 
+#include <stdarg.h>
 #include <stdlib.h> /*calloc,free*/
 #include <fcntl.h>  /*open,close*/
 #include UNISTD_H   /*open,read,close*/
@@ -13,42 +14,69 @@
 #include "rnd.h"
 #include "rnx.h"
 #include "drv.h"
-#include "rx.h"
+#include "xsd.h"
 #include "ll.h"
+
+extern int rx_compact;
 
 #define LEN_T RNV_LEN_T
 #define LIM_T RNV_LIM_T
 
-#define RNVER_ELEM 0
-#define RNVER_AKEY 1
-#define RNVER_AVAL 2
-#define RNVER_EMIS 3
-#define RNVER_AMIS 4
-#define RNVER_UFIN 5
-#define RNVER_TEXT 6
-#define RNVER_MIXT 7
+/* maximum number of candidates to display */
+#define NEXP 6
 
+#define RNVER_IO 0
+#define RNVER_XML 1
+#define RNVER_ELEM 10
+#define RNVER_AKEY 11
+#define RNVER_AVAL 12
+#define RNVER_EMIS 13
+#define RNVER_AMIS 14
+#define RNVER_UFIN 15
+#define RNVER_TEXT 16
+#define RNVER_MIXT 17
+
+static void (*xsdverror0)(int erno,va_list ap);
+
+static int explain=1;
 static char *xml;
-static XML_Parser expat;
+static XML_Parser expat=NULL;
 static int start,current,previous;
 static int mixed=0;
+static int lastline,lastcol,level;
 static int errors;
-static int explain=1;
 
 /* Expat does not normalize strings on input unless the whole file is loaded into the buffer */
 static char *text; static int len_t;
 static int n_t;
-
 static char *suri=NULL,*sname; static int len_suri=-1; /* qname() splits, handlers use */
 
+static void verror(int erno,va_list ap);
+static void verror_handler_xsd(int erno,va_list ap) {verror(erno|XSDER_BIT,ap);}
+
+static void windup(void);
+static int initialized=0;
 static void init(void) {
-  rn_init();
-  rnc_init();
-  rnd_init();
-  rnx_init();
-  drv_init();
-  text=(char*)calloc(len_t=LEN_T,sizeof(char));
+  if(!initialized) {initialized=1;
+    rn_init();
+    rnc_init();
+    rnd_init();
+    rnx_init();
+    drv_init();
+    xsdverror0=xsd_verror_handler; xsd_verror_handler=&verror_handler_xsd;
+    text=(char*)calloc(len_t=LEN_T,sizeof(char));
+    windup();
+  }
+}
+
+static void clear(void) {
+  if(len_t>LIM_T) {free(text); text=(char*)calloc(len_t=LEN_T,sizeof(char));}
+  windup();
+}
+
+static void windup(void) {
   text[n_t=0]='\0';
+  errors=0; level=0; lastline=lastcol=-1;
 }
 
 static int load_rnc(char *fn) {
@@ -69,35 +97,48 @@ static int load_rnc(char *fn) {
 #define err(msg) vfprintf(stderr,msg,ap);
 
 static void error(int erno,...) {
-  char *s;
   va_list ap;
-  ++errors;
-  fprintf(stderr,"invalid document (%s,%i,%i): ",xml,XML_GetCurrentLineNumber(expat),XML_GetCurrentColumnNumber(expat));
   va_start(ap,erno);
-  switch(erno) {
-  case RNVER_ELEM: err("element %s^%s not allowed"); break;
-  case RNVER_AKEY: err("attribute %s^%s not allowed"); break;
-  case RNVER_AVAL: err("attribute %s^%s with invalid value \"%s\""); break;
-  case RNVER_EMIS: err("incomplete content"); break;
-  case RNVER_AMIS: err("missing attributes of %s^%s"); break;
-  case RNVER_UFIN: err("unfinished content"); break;
-  case RNVER_TEXT: err("invalid text or data"); break;
-  case RNVER_MIXT: err("text not allowed"); break;
-  default: assert(0);
-  }                
+  verror(erno,ap);
   va_end(ap);
-  if(explain) {
-    rnx_expected(previous);
-    if(rnx_n_exp!=0) {
-      int i;
-      fprintf(stderr,"\nexpected:");
-      for(i=0;i!=rnx_n_exp;++i) {
-	fprintf(stderr,"\n\t%s",s=rnx_p2str(rnx_exp[i]));
-	free(s);
+}
+
+static void verror(int erno,va_list ap) {
+  int line=XML_GetCurrentLineNumber(expat),col=XML_GetCurrentColumnNumber(expat);
+  ++errors;
+  if(line!=lastline||col!=lastcol) {
+    char *s;
+    fprintf(stderr,"error (%s,%i,%i): ",xml,lastline=line,lastcol=col);
+    if(erno&XSDER_BIT) {
+      (*xsdverror0)(erno&~XSDER_BIT,ap);
+    } else {
+      switch(erno) {
+      case RNVER_IO: err("%s"); break;
+      case RNVER_XML: err("%s"); break;
+      case RNVER_ELEM: err("element %s^%s not allowed"); break;
+      case RNVER_AKEY: err("attribute %s^%s not allowed"); break;
+      case RNVER_AVAL: err("attribute %s^%s with invalid value \"%s\""); break;
+      case RNVER_EMIS: err("incomplete content"); break;
+      case RNVER_AMIS: err("missing attributes of %s^%s"); break;
+      case RNVER_UFIN: err("unfinished content"); break;
+      case RNVER_TEXT: err("invalid text or data"); break;
+      case RNVER_MIXT: err("text not allowed"); break;
+      default: assert(0);
+      }                
+      if(explain) {
+	rnx_expected(previous);
+	if(rnx_n_exp!=0 && rnx_n_exp<=NEXP) {
+	  int i;
+	  fprintf(stderr,"\nexpected:");
+	  for(i=0;i!=rnx_n_exp;++i) {
+	    fprintf(stderr,"\n\t%s",s=rnx_p2str(rnx_exp[i]));
+	    free(s);
+	  }
+	}
       }
+      fprintf(stderr,"\n");
     }
   }
-  fprintf(stderr,"\n");
 }
 
 static void qname(char *name) {
@@ -135,8 +176,6 @@ static void flush_text(void) {
   }
   text[n_t=0]='\0';
 }
-
-static int level=0;
 
 static void start_element(void *userData,const char *name,const char **attrs) {
   if(current!=rn_notAllowed) { 
@@ -210,7 +249,6 @@ static void characters(void *userData,const char *s,int len) {
 static int validate(int fd) {
   void *buf; int len;
   previous=current=start;
-  errors=0;
 
   expat=XML_ParserCreateNS(NULL,':');
   XML_SetElementHandler(expat,&start_element,&end_element);
@@ -219,7 +257,7 @@ static int validate(int fd) {
     buf=XML_GetBuffer(expat,BUFSIZ);
     len=read(fd,buf,BUFSIZ);
     if(len<0) {
-      fprintf(stderr,"I/O error (%s): %s\n",xml,strerror(errno));
+      error(RNVER_IO,strerror(errno));
       goto ERROR;
     }
     if(len==0) {
@@ -234,7 +272,7 @@ static int validate(int fd) {
   return !errors;
 
 PARSE_ERROR:
-  fprintf(stderr,"%s (%s,%i,%i)\n",XML_ErrorString(XML_GetErrorCode(expat)),xml,XML_GetCurrentLineNumber(expat),XML_GetCurrentColumnNumber(expat));
+  error(RNVER_XML,XML_ErrorString(XML_GetErrorCode(expat)));
 ERROR:
   return 0;
 }
@@ -279,10 +317,12 @@ int main(int argc,char **argv) {
 	}
 	ok=validate(fd)&&ok;
 	close(fd);
+	clear();
       } while(*(++argv));
     } else { /* stdin */
       xml="stdin";
       ok=validate(0)&&ok;
+      clear();
     }
   }
 

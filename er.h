@@ -38,6 +38,8 @@
 #define ER_BADATTR 87
 #define ER_NODTL 100
 
+#define ER_BIT 0x1000
+
 extern void er_handler(int er_no,...);
 extern void (*ver_handler_p)(int er_no,va_list ap);
 

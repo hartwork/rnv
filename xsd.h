@@ -11,6 +11,8 @@
 #define XSDER_WS 5
 #define XSDER_ENUM 6
 
+#define XSDER_BIT 0x4000
+
 extern void (*xsd_verror_handler)(int erno,va_list ap);
 
 extern void xsd_init(void);

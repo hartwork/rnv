@@ -16,6 +16,7 @@ types = element types { empty
   , attribute dateTime { xsd:dateTime } ?
   , attribute dateTimeMinMax { 
       xsd:dateTime {
+	pattern="[abc"
 	minExclusive="0001-01-01T00:00:00Z" 
 	minInclusive="1969-04-30T00:00:00+14:00"  # times+14 comes before times-14
 	maxInclusive="1969-04-30T23:59:60-14:00" 

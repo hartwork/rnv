@@ -13,20 +13,27 @@
 #include "xsd_tm.h"
 #include "xsd.h"
 
-#define err(msg) vfprintf(stderr,"XML Schema datatypes: "msg"\n",ap)
+static void (*rxverror0)(int erno,va_list ap);
 
+#define err(msg) vfprintf(stderr,msg"\n",ap)
 static void default_verror_handler(int erno,va_list ap) {
-  switch(erno) {
-  case XSDER_TYP: err("unknown type %s"); break;
-  case XSDER_PAR: err("unknown parameter %s"); break;
-  case XSDER_PARVAL: err("invalid parameter value %s=\"%s\""); break;
-  case XSDER_VAL: err("invalid typed value \"%s\" for type %s"); break;
-  case XSDER_NPAT: err("no more than 16 patterns per type are supported"); break;
-  case XSDER_WS: err("the builtin derived datatype that specifies the desired value for the whiteSpace facet should be used instead of 'whiteSpace'"); break;
-  case XSDER_ENUM: err("'value' should be used instead of 'enumeration'"); break;
-  default: assert(0);
+  fprintf(stderr,"XML Schema datatypes: ");
+  if(erno&RXER_BIT) {
+    rxverror0(erno&~RXER_BIT,ap);
+  } else {
+    switch(erno) {
+    case XSDER_TYP: err("unknown type %s"); break;
+    case XSDER_PAR: err("unknown parameter %s"); break;
+    case XSDER_PARVAL: err("invalid parameter value %s=\"%s\""); break;
+    case XSDER_VAL: err("invalid typed value \"%s\" for type %s"); break;
+    case XSDER_NPAT: err("no more than 16 patterns per type are supported"); break;
+    case XSDER_WS: err("the builtin derived datatype that specifies the desired value for the whiteSpace facet should be used instead of 'whiteSpace'"); break;
+    case XSDER_ENUM: err("'value' should be used instead of 'enumeration'"); break;
+    default: assert(0);
+    }
   }
 }
+
 void (*xsd_verror_handler)(int erno,va_list ap)=&default_verror_handler;
 
 static void error_handler(int erno,...) {
@@ -35,11 +42,14 @@ static void error_handler(int erno,...) {
   (*xsd_verror_handler)(erno,ap);
   va_end(ap);
 }
+static void verror_handler_rx(int erno,va_list ap) {(*xsd_verror_handler)(erno|RXER_BIT,ap);}
 
 static int initialized=0;
 void xsd_init(void) {
   if(!initialized) { initialized=1;
     rx_init();
+    rxverror0=rx_verror_handler;
+    rx_verror_handler=&verror_handler_rx;
   }
 }
 
