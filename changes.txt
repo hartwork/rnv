@@ -1,6 +1,6 @@
 /* $Id$ */
 
-1.58 Wed Feb 18 16:53:05 AMT 2004
+1.5.8 Wed Feb 18 16:53:05 AMT 2004
 dvd: enhanced diagnostics: first required elements and attributes
      are reported, then optional
 
