@@ -1,6 +1,7 @@
 /* $Id$ */
 
 #include <stdlib.h> /*calloc,free*/
+#include <string.h> /*memcpy*/
 #include <assert.h> /*assert*/
 #include <stdarg.h> /*va_list,va_start,va_end*/
 #include "er.h"
@@ -415,6 +416,9 @@ void rnd_release() {
 
 /*
  * $Log$
+ * Revision 1.6  2003/12/08 23:18:48  dvd
+ * string.h included from rnd for memcpy
+ *
  * Revision 1.5  2003/12/08 21:23:47  dvd
  * +path restrictions
  *
