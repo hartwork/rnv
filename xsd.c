@@ -2,7 +2,6 @@
 
 #include <limits.h> /*INT_MAX*/
 #include <stdlib.h> /*atof,atol,strtol*/
-#include <stdio.h> /*stdio*/
 #include <string.h> /*strlen*/
 #include <math.h> /*HUGE_VAL*/
 #include <assert.h>
@@ -12,11 +11,12 @@
 #include "erbit.h"
 #include "rx.h"
 #include "xsd_tm.h"
+#include "er.h"
 #include "xsd.h"
 
-#define err(msg) vfprintf(stderr,msg"\n",ap)
+#define err(msg) er_vprintf(msg"\n",ap)
 void xsd_default_verror_handler(int erno,va_list ap) {
-  fprintf(stderr,"XML Schema datatypes: ");
+  er_printf("XML Schema datatypes: ");
   if(erno&ERBIT_RX) {
     rx_default_verror_handler(erno&~ERBIT_RX,ap);
   } else {

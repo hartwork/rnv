@@ -1,17 +1,17 @@
 /* $Id$ */
 
 #include <string.h> /*strncpy,strrchr*/
-#include <stdio.h>
 #include <assert.h>
 #include "m.h"
 #include "xmlc.h" /*xmlc_white_space*/
 #include "erbit.h"
 #include "drv.h"
+#include "er.h"
 #include "rnv.h"
 
 extern int rn_notAllowed;
 
-#define err(msg) vfprintf(stderr,msg"\n",ap);
+#define err(msg) er_vprintf(msg"\n",ap);
 void rnv_default_verror_handler(int erno,va_list ap) {
   if(erno&ERBIT_DRV) {
     drv_default_verror_handler(erno&~ERBIT_DRV,ap);

@@ -36,6 +36,7 @@ xsd.c xsd.h \
 xsd_tm.c xsd_tm.h \
 sc.c sc.h \
 ht.c ht.h \
+er.c er.h \
 u.c u.h \
 xmlc.c xmlc.h \
 s.c s.h \
@@ -56,8 +57,9 @@ ary.obj \
 xsd.obj \
 xsd_tm.obj \
 sc.obj \
-u.obj \
 ht.obj \
+er.obj \
+u.obj \
 xmlc.obj \
 s.obj \
 m.obj \

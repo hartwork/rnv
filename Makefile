@@ -45,6 +45,7 @@ dxl.c dxl.h \
 dsl.c dsl.h \
 sc.c sc.h \
 ht.c ht.h \
+er.c er.h \
 u.c u.h \
 xmlc.c xmlc.h \
 s.c s.h \
@@ -69,6 +70,7 @@ dsl.o \
 sc.o \
 u.o \
 ht.o \
+er.o \
 xmlc.o \
 s.o \
 m.o \

@@ -5,7 +5,6 @@
 #include <fcntl.h>  /*open,close*/
 #include <sys/types.h>
 #include UNISTD_H   /*open,read,close*/
-#include <stdio.h>  /*fprintf,stderr*/
 #include <string.h> /*strerror*/
 #include <errno.h>
 #include <assert.h>
@@ -15,12 +14,15 @@
 #include "rnl.h"
 #include "rnv.h"
 #include "rnx.h"
+#include "er.h"
 #include "ll.h"
 
 extern int rn_notAllowed,rx_compact,drv_compact;
 
 #define LEN_T XCL_LEN_T
 #define LIM_T XCL_LIM_T
+
+#define BUFSIZE 1024
 
 /* maximum number of candidates to display */
 #define NEXP 16
@@ -40,7 +42,7 @@ static int ok;
 static char *text; static int len_t;
 static int n_t;
 
-#define err(msg) vfprintf(stderr,msg"\n",ap);
+#define err(msg) er_vprintf(msg"\n",ap);
 static void verror_handler(int erno,va_list ap) {
   if(erno&ERBIT_RNL) {
     rnl_default_verror_handler(erno&~ERBIT_RNL,ap);
@@ -48,16 +50,16 @@ static void verror_handler(int erno,va_list ap) {
     int line=XML_GetCurrentLineNumber(expat),col=XML_GetCurrentColumnNumber(expat);
     if(line!=lastline||col!=lastcol) {
       char *s;
-      fprintf(stderr,"error (%s,%i,%i): ",xml,lastline=line,lastcol=col);
+      er_printf("error (%s,%i,%i): ",xml,lastline=line,lastcol=col);
       if(erno&ERBIT_RNV) {
 	rnv_default_verror_handler(erno&~ERBIT_RNV,ap);
 	if(explain) {
 	  rnx_expected(previous);
 	  if(rnx_n_exp!=0 && rnx_n_exp<=NEXP) {
 	    int i;
-	    fprintf(stderr,"expected:\n");
+	    er_printf("expected:\n");
 	    for(i=0;i!=rnx_n_exp;++i) {
-	      fprintf(stderr,"\t%s\n",s=rnx_p2str(rnx_exp[i]));
+	      er_printf("\t%s\n",s=rnx_p2str(rnx_exp[i]));
 	      m_free(s);
 	    }
 	  }
@@ -154,8 +156,8 @@ static void validate(int fd) {
   XML_SetElementHandler(expat,&start_element,&end_element);
   XML_SetCharacterDataHandler(expat,&characters);
   for(;;) {
-    buf=XML_GetBuffer(expat,BUFSIZ);
-    len=read(fd,buf,BUFSIZ);
+    buf=XML_GetBuffer(expat,BUFSIZE);
+    len=read(fd,buf,BUFSIZE);
     if(len<0) {
       error_handler(XCL_ER_IO,strerror(errno));
       goto ERROR;
@@ -169,14 +171,14 @@ static void validate(int fd) {
 
 PARSE_ERROR:
   error_handler(XCL_ER_XML,XML_ErrorString(XML_GetErrorCode(expat)));
-  while(peipe&&(len=read(fd,buf,BUFSIZ))!=0) peipe=peipe&&pipeout(buf,len);
+  while(peipe&&(len=read(fd,buf,BUFSIZE))!=0) peipe=peipe&&pipeout(buf,len);
 ERROR:
   XML_ParserFree(expat);
   ok=0;
 }
 
-static void version(void) {fprintf(stderr,"rnv version %s\n",RNV_VERSION);}
-static void usage(void) {fprintf(stderr,"usage: rnv {-[qpsvh?]} schema.rnc {document.xml}\n");}
+static void version(void) {er_printf("rnv version %s\n",RNV_VERSION);}
+static void usage(void) {er_printf("usage: rnv {-[qpsvh?]} schema.rnc {document.xml}\n");}
 
 int main(int argc,char **argv) {
   init();
@@ -192,7 +194,7 @@ int main(int argc,char **argv) {
       case 's': drv_compact=1; rx_compact=1; break;
       case 'p': peipe=1; break;
       case 'q': explain=0; break;
-      default: fprintf(stderr,"unknown option '-%c'\n",*(*argv+i)); break;
+      default: er_printf("unknown option '-%c'\n",*(*argv+i)); break;
       }
       ++i;
     }
@@ -206,21 +208,21 @@ int main(int argc,char **argv) {
       do {
 	int fd; xml=*argv;
 	if((fd=open(xml,O_RDONLY))==-1) {
-	  fprintf(stderr,"I/O error (%s): %s\n",xml,strerror(errno));
+	  er_printf("I/O error (%s): %s\n",xml,strerror(errno));
 	  ok=0;
 	  continue;
 	}
-	if(explain) fprintf(stderr,"%s\n",xml);
+	if(explain) er_printf("%s\n",xml);
 	validate(fd);
 	close(fd);
 	clear();
       } while(*(++argv));
-      if(!ok&&explain) fprintf(stderr,"error: some documents are invalid\n");
+      if(!ok&&explain) er_printf("error: some documents are invalid\n");
     } else { /* stdin */
       xml="stdin";
       validate(0);
       clear();
-      if(!ok&&explain) fprintf(stderr,"error: invalid input\n");
+      if(!ok&&explain) er_printf("error: invalid input\n");
     }
   }
 

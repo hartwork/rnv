@@ -4,7 +4,6 @@
 #include <sys/types.h>
 #include UNISTD_H /* open,read,close */
 #include <string.h> /* memcpy,strlen,strcpy,strcat */
-#include <stdio.h> /*stderr,fprintf*/
 #include <errno.h> /*errno*/
 #include <assert.h> /*assert*/
 
@@ -14,6 +13,7 @@
 #include "s.h" /* s_clone */
 #include "rn.h"
 #include "sc.h"
+#include "er.h"
 #include "rnc.h"
 
 #define NKWD 19
@@ -72,8 +72,8 @@ static char *kwdtab[NKWD]={
 #define SYM_DOCUMENTATION 41 /* ## */
 #define SYM_LITERAL 42
 
-#define err(msg) vfprintf(stderr,"error (%s,%i,%i): "msg"\n",ap)
-#define warn(msg) vfprintf(stderr,"warning (%s,%i,%i): "msg"\n",ap)
+#define err(msg) er_vprintf("error (%s,%i,%i): "msg"\n",ap)
+#define warn(msg) er_vprintf("warning (%s,%i,%i): "msg"\n",ap)
 void rnc_default_verror_handler(int er_no,va_list ap) {
   switch(er_no) {
   case RNC_ER_IO: err("I/O error: %s\n"); break;
@@ -106,7 +106,7 @@ void rnc_default_verror_handler(int er_no,va_list ap) {
 
 void (*rnc_verror_handler)(int er_no,va_list ap)=&rnc_default_verror_handler;
 
-#define BUFSIZE BUFSIZ+U_MAXLEN
+#define BUFSIZE 1024+U_MAXLEN
 #define BUFTAIL U_MAXLEN
 
 #define SRC_FREE 1

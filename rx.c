@@ -1,7 +1,6 @@
 /* $Id$ */
 
 #include <string.h> /*strlen,strcpy,strcmp*/
-#include <stdio.h> /*stderr for error_handler*/
 #include <assert.h>
 #include "u.h" /*u_get,u_strlen*/
 #include "xmlc.h"
@@ -9,6 +8,7 @@
 #include "s.h"
 #include "ht.h"
 #include "ll.h"
+#include "er.h"
 #include "rx.h"
 
 #define LEN_P RX_LEN_P
@@ -179,9 +179,9 @@ static int add_r(char *rx) {
 
 #define ERRPOS
 
-#define err(msg) vfprintf(stderr,msg" in \"%s\" at offset %i\n",ap)
+#define err(msg) er_vprintf(msg" in \"%s\" at offset %i\n",ap)
 void rx_default_verror_handler(int erno,va_list ap) {
-  fprintf(stderr,"regular expressions: ");
+  er_printf("regular expressions: ");
   switch(erno) {
   case RX_ER_BADCH: err("bad character"); break;
   case RX_ER_UNFIN: err("unfinished expression"); break;

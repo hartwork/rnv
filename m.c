@@ -2,7 +2,7 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
+#include "er.h"
 #include "m.h"
 
 void m_free(void *p) {
@@ -12,7 +12,7 @@ void m_free(void *p) {
 extern void *m_alloc(int length,int size) {
   void *p=calloc(length,size);
   if(p==NULL) {
-    fprintf(stderr,"failed to allocate %i bytes of memory\n",length*size);
+    er_printf("failed to allocate %i bytes of memory\n",length*size);
     exit(1);
   }
   return p;

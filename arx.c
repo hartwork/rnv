@@ -22,10 +22,10 @@ comments start with # and continue till end of line
 
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 #include <sys/types.h>
 #include UNISTD_H
 #include <fcntl.h>
-#include <stdio.h>
 #include <stdarg.h>
 #include <errno.h>
 #include <assert.h>
@@ -39,6 +39,7 @@ comments start with # and continue till end of line
 #include "rnl.h"
 #include "rnv.h"
 #include "rx.h"
+#include "er.h"
 #include "ary.h"
 
 extern int rn_notAllowed;
@@ -59,6 +60,8 @@ extern int rn_notAllowed;
 #define LEN_T 1024
 #define LIM_T 65536
 
+#define BUFSIZE 1024
+
 static char *xml;
 static int len_2,len_r,len_s,i_2,i_r,i_s;
 static int (*t2s)[2],(*rules)[3];
@@ -68,7 +71,7 @@ static int path2abs;
 /* arx parser */
 static char *arxfn;
 static int arxfd, i_b,len_b, cc, line,col,prevline,rnc, sym,len_v, errors;
-static char buf[BUFSIZ];
+static char buf[BUFSIZE];
 static char *value;
 
 /* xml validator */
@@ -171,9 +174,9 @@ static char *sym2str(int sym) {
 #define ARX_ER_TYP 6
 
 /* there is nothing in the grammar I need utf-8 processing for */
-#define err(msg) vfprintf(stderr,msg"\n",ap)
+#define err(msg) er_vprintf(msg"\n",ap)
 static void verror_handler(int erno,va_list ap) {
-  fprintf(stderr,"error (%s,%i,%i): ",arxfn,line,col);
+  er_printf("error (%s,%i,%i): ",arxfn,line,col);
   switch(erno) {
   case ARX_ER_IO: err("I/O error: %s"); break;
   case ARX_ER_SYN: err("syntax error"); break;
@@ -195,7 +198,7 @@ static void error(int erno,...) {
 
 static void getcc(void) {
   for(;;) { int cc0=cc;
-    if(i_b==len_b) {i_b=0; if((len_b=read(arxfd,buf,BUFSIZ))==-1) error(ARX_ER_IO,strerror(errno));}
+    if(i_b==len_b) {i_b=0; if((len_b=read(arxfd,buf,BUFSIZE))==-1) error(ARX_ER_IO,strerror(errno));}
     cc=i_b>=len_b?-1:((unsigned char*)buf)[i_b++];
     if(cc==-1) {if(cc0=='\n') break; else cc='\n';}
     if(cc=='\n' && cc0=='\r') continue;
@@ -306,11 +309,11 @@ static int typ2str(void) {
 
 static int arx(char *fn) {
   if((arxfd=open(arxfn=fn,O_RDONLY))==-1) {
-    fprintf(stderr,"error (%s): %s\n",arxfn,strerror(errno));
+    er_printf("error (%s): %s\n",arxfn,strerror(errno));
     return 0;
   } else {
     errors=0;
-    len_b=read(arxfd,buf,BUFSIZ); i_b=u_bom(buf,len_b);
+    len_b=read(arxfd,buf,BUFSIZE); i_b=u_bom(buf,len_b);
     prevline=-1; line=1; col=0; rnc=0;
     cc=' '; getsym();
     chk_get(SYM_GRMS); chk_get(SYM_LCUR);
@@ -407,10 +410,10 @@ static void validate(int start,int fd) {
   XML_SetCharacterDataHandler(expat,&characters);
   ok=1; any=0;
   for(;;) {
-    buf=XML_GetBuffer(expat,BUFSIZ);
-    len=read(fd,buf,BUFSIZ);
+    buf=XML_GetBuffer(expat,BUFSIZE);
+    len=read(fd,buf,BUFSIZE);
     if(len<0) {
-      fprintf(stderr,"error (%s): %s\n",xml,strerror(errno));
+      er_printf("error (%s): %s\n",xml,strerror(errno));
       wf=ok=0; break;
     }
     if(!XML_ParseBuffer(expat,len,len==0)) wf=ok=0;
@@ -420,8 +423,8 @@ static void validate(int start,int fd) {
   return;
 }
 
-static void version(void) {fprintf(stderr,"arx version %s\n",ARX_VERSION);}
-static void usage(void) {fprintf(stderr,"usage: arx {-[nvh?]} document.xml arx.conf {arx.conf}\n");}
+static void version(void) {er_printf("arx version %s\n",ARX_VERSION);}
+static void usage(void) {er_printf("usage: arx {-[nvh?]} document.xml arx.conf {arx.conf}\n");}
 
 int main(int argc,char **argv) {
   int fd;
@@ -436,7 +439,7 @@ int main(int argc,char **argv) {
       case 'h': case '?': usage(); return 1;
       case 'n': path2abs=0; break;
       case 'v': version(); break;
-      default: fprintf(stderr,"unknown option '-%c'\n",*(*argv+i)); break;
+      default: er_printf("unknown option '-%c'\n",*(*argv+i)); break;
       }
       ++i;
     }

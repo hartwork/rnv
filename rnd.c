@@ -1,11 +1,12 @@
 /* $Id$ */
 
-#include <stdio.h>
+#include <stdlib.h>
 #include <assert.h>
 #include "m.h"
 #include "rn.h"
 #include "rnx.h"
 #include "ll.h"
+#include "er.h"
 #include "rnd.h"
 
 #define LEN_F RND_LEN_F
@@ -16,7 +17,7 @@ static int *flat;
 static int *refs;
 static int errors;
 
-#define err(msg) vfprintf(stderr,"error: "msg"\n",ap)
+#define err(msg) er_vprintf("error: "msg"\n",ap)
 void rnd_default_verror_handler(int er_no,va_list ap) {
   switch(er_no) {
   case RND_ER_LOOPST: err("loop in start pattern"); break;

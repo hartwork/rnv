@@ -1,6 +1,6 @@
-#include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include "er.h"
 #include "xsd.h"
 
 int main(int argc,char **argv) {
@@ -24,6 +24,6 @@ int main(int argc,char **argv) {
     return !xsd_allows(*(argv+1),ps,*(argv+argc-1),strlen(*(argv+argc-1)));
   }
 USAGE:
-  fprintf(stderr,"xsdck: invalid arguments\n");
+  er_printf("xsdck: invalid arguments\n");
   return 255;
 }

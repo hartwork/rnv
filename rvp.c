@@ -38,10 +38,10 @@
 
 #include <stdlib.h>
 #include <stdarg.h>
+#include <stdio.h>
 #include <fcntl.h>  /*open,close*/
 #include <sys/types.h>
 #include UNISTD_H   /*open,read,close*/
-#include <stdio.h>  /*fprintf,stderr*/
 #include <string.h> /*strerror*/
 #include <setjmp.h>
 #include <errno.h>
@@ -53,6 +53,7 @@
 #include "rnl.h"
 #include "rnv.h"
 #include "dxl.h"
+#include "er.h"
 #include "dsl.h"
 
 extern int rn_notAllowed, drv_compact, rx_compact;
@@ -199,7 +200,7 @@ static int query(void) {
     }
     break;
 
-  case NKWD: PROTER: fprintf(stderr,"protocol error\n"); lasterr=0; patno=0; ok=0; break;
+  case NKWD: PROTER: er_printf("protocol error\n"); lasterr=0; patno=0; ok=0; break;
   default: assert(0);
   }
   resp(ok,patno,prevno);
@@ -208,8 +209,8 @@ static int query(void) {
   return 1;
 }
 
-static void version(void) {fprintf(stderr,"rvp version %s\n",RVP_VERSION);}
-static void usage(void) {fprintf(stderr,"usage: rvp {-[qdsvh?]} {schema.rnc}\n");}
+static void version(void) {er_printf("rvp version %s\n",RVP_VERSION);}
+static void usage(void) {er_printf("usage: rvp {-[qdsvh?]} {schema.rnc}\n");}
 
 int main(int argc,char **argv) {
   int i, ok;
@@ -227,7 +228,7 @@ int main(int argc,char **argv) {
       case 'd': dxl_cmd=*(argv+1); if(dxl_cmd) ++argv; goto END_OF_OPTIONS;
       case 'e': dsl_scm=*(argv+1); if(dsl_scm) ++argv; goto END_OF_OPTIONS;
       case 'q': explain=0; break;
-      default: fprintf(stderr,"unknown option '-%c'\n",*(*argv+i)); break;
+      default: er_printf("unknown option '-%c'\n",*(*argv+i)); break;
       }
       ++i;
     }
