@@ -12,7 +12,7 @@
 #define RNV_ER_AMIS 4
 #define RNV_ER_UFIN 5
 #define RNV_ER_TEXT 6
-#define RNV_ER_MIXT 7
+#define RNV_ER_NOTX 7
 
 extern void (*rnv_verror_handler)(int erno,va_list ap);
 

@@ -24,7 +24,7 @@ static void default_verror_handler(int erno,va_list ap) {
     case RNV_ER_AMIS: err("missing attributes of %s^%s"); break;
     case RNV_ER_UFIN: err("unfinished content of element %s^%s"); break;
     case RNV_ER_TEXT: err("invalid text or data"); break;
-    case RNV_ER_MIXT: err("text not allowed"); break;
+    case RNV_ER_NOTX: err("text not allowed"); break;
     default: assert(0);
     }                
   }
@@ -80,14 +80,14 @@ void rnv_text(int *curp,int *prevp,char *text,int n_t,int mixed) {
       *curp=drv_mixed_text(*prevp=*curp);
       if(*curp==rn_notAllowed) {
 	*curp=drv_mixed_text_recover(*prevp);
-	error_handler(RNV_ER_MIXT);
+	error_handler(RNV_ER_NOTX);
       }
     }
   } else {
     *curp=drv_text(*prevp=*curp,text,n_t);
     if(*curp==rn_notAllowed) {
       *curp=drv_text_recover(*prevp,text,n_t);
-      error_handler(RNV_ER_TEXT);
+      error_handler(cdata(*prevp)?RNV_ER_TEXT:RNV_ER_NOTX);
     }
   }
 }
