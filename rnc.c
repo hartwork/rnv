@@ -399,7 +399,7 @@ static void advance(struct rnc_source *sp) {
 		skip_comment(sp);
 	      }
 	      NXT(sp).s[i]=0; NXT(sp).sym=SYM_DOCUMENTATION; return;
-	    } else NXT(sp).s[i++]=(char)sp->v;
+	    } else NXT(sp).s[i++]=(char)sp->v; /* UNICODE */
 	    getv(sp);
 	  }
 	}
@@ -443,14 +443,14 @@ static void advance(struct rnc_source *sp) {
 	    if(triple) {
 	      if(i>=2 && NXT(sp).s[i-2]==q && NXT(sp).s[i-1]==q) {
 		NXT(sp).s[i-2]='\0'; break;
-	      } else NXT(sp).s[i]=(char)sp->v;
+	      } else NXT(sp).s[i]=(char)sp->v; /* UNICODE */
 	    } else {NXT(sp).s[i]='\0'; break;}
 	  } else if(sp->v<=0) {
 	    if(sp->v==-1 || !triple) {
 	      error(0,sp,ER_LLIT,sp->fn,sp->line,sp->col);
 	      NXT(sp).s[i]='\0'; break;
 	    } else NXT(sp).s[i]='\n';
-	  } else NXT(sp).s[i]=(char)sp->v;
+	  } else NXT(sp).s[i]=(char)sp->v; /* UNICODE */
 	  getv(sp);
 	  if(++i==NXT(sp).slen) realloc_s(&NXT(sp));
 	}
@@ -462,7 +462,7 @@ static void advance(struct rnc_source *sp) {
 	if(name_start(sp->v)) {
 	  int i=0;
 	  for(;;) {
-	    NXT(sp).s[i++]=sp->v;
+	    NXT(sp).s[i++]=sp->v; /* UNICODE */
 	    if(i==NXT(sp).slen) realloc_s(&NXT(sp));
 	    getv(sp);
 	    if(!name_char(sp->v)) {NXT(sp).s[i]='\0'; break;}
@@ -1187,6 +1187,9 @@ int rnc_parse(struct rnc_source *sp) {
 
 /*
  * $Log$
+ * Revision 1.33  2003/12/10 22:23:52  dvd
+ * *** empty log message ***
+ *
  * Revision 1.32  2003/12/09 19:38:44  dvd
  * failed to compress grammar
  *

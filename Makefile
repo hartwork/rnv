@@ -10,6 +10,7 @@ rn.o \
 rnc.o \
 rnd.o \
 drv.o \
+xsd.o \
 rnv.o \
 er.o \
 sc.o \
@@ -24,6 +25,9 @@ rnv: ${OBJ}
 	${CC} ${OPT} ${LBL} -o rnv ${OBJ} ${LIB} 
 
 # $Log$
+# Revision 1.11  2003/12/10 22:23:52  dvd
+# *** empty log message ***
+#
 # Revision 1.10  2003/12/08 23:16:15  dvd
 # multiple schema files as command-line arguments to rnv, cleanups in file handling code (rnc)
 #
