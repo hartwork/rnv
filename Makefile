@@ -163,7 +163,7 @@ drv.o: xmlc.h m.h s.h ht.h rn.h xsd.h ll.h erbit.h er.h drv.h
 xsd.o: u.h xmlc.h s.h erbit.h rx.h xsd_tm.h er.h xsd.h
 xsd_tm.o: xsd_tm.h
 dxl.o: m.h er.h dxl.h
-dsl.o: dsl.h m.h er.h
+dsl.o: dsl.h
 sc.o: m.h ll.h sc.h
 ht.o: m.h ht.h
 er.o: er.h
