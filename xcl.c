@@ -42,7 +42,7 @@ static int ok;
 static char *text; static int len_t;
 static int n_t;
 
-#define err(msg) vfprintf(stderr,msg,ap);
+#define err(msg) vfprintf(stderr,msg"\n",ap);
 static void verror_handler(int erno,va_list ap) {
   if(erno&ERBIT_RNC) {
     rnc_default_verror_handler(erno&~ERBIT_RNC,ap);

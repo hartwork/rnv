@@ -3,8 +3,9 @@
 1.3.5
 
 Tue Jan  6 11:56:06 AMT 2004
-dvd: learned that UTF-8 is reality. Added processing. Fixed check for name characters in arx, 
-     made it >0x7f||nmtoken 
+dvd: learned that UTF-8 is reality, added processing; fixed check for name
+     characters in arx, made it >0x7f||nmtoken  (no good reason to process unicode);
+     added end-of-line to error messages from Expat
 
 1.3.4 Mon Jan  5 22:43:05 AMT 2004
 dvd: grammar samples added to the distribution, entries for other grammars 
