@@ -55,7 +55,6 @@ static int hash_m(int m) {
   return ((me[0]&0x7)|((me[1]^me[2]^me[3])<<3))*PRIME_M;
 }
 
-static void accept_m(void);
 static int newStartTagOpen(int p,int uri,int name) { 
   int *me=memo[i_m];
   new_memo(M_STO);

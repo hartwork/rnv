@@ -158,6 +158,46 @@ static int add_r(char *rx) {
 static void default_error_handler(char *msg) {fprintf(stderr,"%s\n",msg);}
 void (*rx_error_handler)(char *msg)=&default_error_handler;
 
+#define LEN_M RX_LEN_M
+#define PRIME_M RX_PRIME_M
+#define LIM_M RX_LIM_M
+
+#define M_SIZE 3
+
+#define M_SET(p) memo[i_m][M_SIZE-1]=p
+#define M_RET(m) memo[m][M_SIZE-1]
+
+static int (*memo)[M_SIZE];
+static int i_m,len_m;
+static struct hashtable ht_m;
+
+static int new_memo(int p,int c) {
+  int *me=memo[i_m];
+  if(ht_get(&ht_m,i_m)==i_m) ht_del(&ht_m,i_m); 
+  me[0]=p; me[1]=c;
+  return ht_get(&ht_m,i_m);
+}
+
+static int equal_m(int m1,int m2) {
+  int *me1=memo[m1],*me2=memo[m2];
+  return (me1[0]==me2[0])&&(me1[1]==me2[1]);
+}
+static int hash_m(int m) {
+  int *me=memo[m];
+  return (me[0]^me[1])*PRIME_M;
+}
+
+static void accept_m(void) {
+  if(ht_get(&ht_m,i_m)!=-1) ht_del(&ht_m,i_m);
+  ht_put(&ht_m,i_m++);
+  if(i_m==LIM_M) i_m=0;
+  if(i_m==len_m) {
+    int (*newmemo)[M_SIZE]=(int (*)[M_SIZE])calloc(len_m*=2,sizeof(int[M_SIZE]));
+    memcpy(newmemo,memo,i_m*sizeof(int[M_SIZE]));
+    free(memo); memo=newmemo;
+  } 
+}
+
 static void windup(void);
 static int initialized=0;
 void rx_init(void) {
@@ -165,22 +205,24 @@ void rx_init(void) {
     pattern=(int (*)[P_SIZE])calloc(len_p=LEN_P,sizeof(int[P_SIZE]));
     r2p=(int (*)[2])calloc(len_2=LEN_2,sizeof(int[2]));
     regex=(char*)calloc(len_r=LEN_R,sizeof(char));
+    memo=(int (*)[M_SIZE])calloc(len_m=LEN_M,sizeof(int[M_SIZE]));
 
     ht_init(&ht_p,len_p,&hash_p,&equal_p);
     ht_init(&ht_2,len_2,&hash_2,&equal_2);
     ht_init(&ht_r,len_r/R_LEN,&hash_r,&equal_r);
+    ht_init(&ht_m,len_m,&hash_m,&equal_m);
 
     windup();
   }
 }
 
 static void clear(void) {
-  ht_clear(&ht_p); ht_clear(&ht_2); ht_clear(&ht_r);
+  ht_clear(&ht_p); ht_clear(&ht_2); ht_clear(&ht_r); ht_clear(&ht_m);
   windup();
 }
 
 static void windup(void) {
-  i_p=i_r=i_2=0;
+  i_p=i_r=i_2=i_m=0;
   memset(pattern[0],0,sizeof(int[P_SIZE]));
   pattern[0][0]=P_ERROR;  accept_p(); 
   empty=newEmpty(); notAllowed=newNotAllowed(); any=newAny();
@@ -582,22 +624,27 @@ static int in_class(int c,int cn) {
   return 0;
 }
 
+
 static int drv(int p,int c) {
-  int p1,p2,cf,cl,cn;
+  int p1,p2,cf,cl,cn,ret,m;
   assert(!P_IS(p,ERROR));
+  m=new_memo(p,c);
+  if(m!=-1) return M_RET(m);
   switch(P_TYP(p)) {
-  case P_EMPTY: case P_NOT_ALLOWED: p=notAllowed; break;
-  case P_CHOICE: Choice(p,p1,p2); p=choice(drv(p1,c),drv(p2,c)); break;
-  case P_GROUP: Group(p,p1,p2); {int p11=group(drv(p1,c),p2); p=nullable(p1)?choice(p11,drv(p2,c)):p11;} break;
-  case P_ONE_OR_MORE: OneOreMore(p,p1); p=group(drv(p1,c),choice(empty,p)); break;
-  case P_EXCEPT: Except(p,p1,p2); p=nullable(drv(p1,c))&&!nullable(drv(p2,c))?empty:notAllowed; break;
-  case P_RANGE: Range(p,cf,cl); p=cf<=c&&c<=cl?empty:notAllowed; break;
-  case P_CLASS: Class(p,cn); p=(cn>0?in_class(c,cn):!in_class(c,-cn))?empty:notAllowed; break;
-  case P_ANY: p=empty; break;
-  case P_CHAR: Char(p,cf); p=c==cf?empty:notAllowed; break;
-  default: assert(0);
+  case P_EMPTY: case P_NOT_ALLOWED: ret=notAllowed; break;
+  case P_CHOICE: Choice(p,p1,p2); ret=choice(drv(p1,c),drv(p2,c)); break;
+  case P_GROUP: Group(p,p1,p2); {int p11=group(drv(p1,c),p2); ret=nullable(p1)?choice(p11,drv(p2,c)):p11;} break;
+  case P_ONE_OR_MORE: OneOreMore(p,p1); ret=group(drv(p1,c),choice(empty,p)); break;
+  case P_EXCEPT: Except(p,p1,p2); ret=nullable(drv(p1,c))&&!nullable(drv(p2,c))?empty:notAllowed; break;
+  case P_RANGE: Range(p,cf,cl); ret=cf<=c&&c<=cl?empty:notAllowed; break;
+  case P_CLASS: Class(p,cn); ret=(cn>0?in_class(c,cn):!in_class(c,-cn))?empty:notAllowed; break;
+  case P_ANY: ret=empty; break;
+  case P_CHAR: Char(p,cf); ret=c==cf?empty:notAllowed; break;
+  default: ret=0; assert(0);
   }
-  return p;
+  new_memo(p,c); M_SET(ret);
+  accept_m();
+  return ret;
 }
 
 int rx_match(char *rx,char *s,int n) {

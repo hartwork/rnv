@@ -332,6 +332,10 @@ int xsd_allows(char *typ,char *ps,char *s,int n) {
 
   while(fct.npat--) ok=ok&&match[fct.whiteSpace](fct.pattern[fct.npat],s,n);
 
+  if(FCT_SET(LENGTH)) ok=ok&&length==fct.length;
+  if(FCT_SET(MAX_LENGTH)) ok=ok&&length<=fct.maxLength;
+  if(FCT_SET(MIN_LENGTH)) ok=ok&&length>=fct.minLength;
+
   return ok;
 }
 

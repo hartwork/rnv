@@ -33,5 +33,8 @@
 #define RX_PRIME_R RX_PRIME_P
 #define RX_LEN_2 32
 #define RX_PRIME_2 0x1f
+#define RX_LEN_M 1024
+#define RX_PRIME_M 0x3fd
+#define RX_LIM_M 8*RX_LEN_M
 
 #endif
