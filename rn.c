@@ -348,10 +348,10 @@ static int equal_s(int s1,int s2) {return strcmp(rn_string+s1,rn_string+s2)==0;}
 
 /* 
  * $Log$
- * Revision 1.17  2003/12/10 09:51:34  dvd
- * rn_end_schema is removed again, but the result is good -- bugs debugged
+ * Revision 1.18  2003/12/10 21:41:26  dvd
+ * +xsd
  *
- * Revision 1.16  2003/12/10 09:38:43  dvd
+ * Revision 1.17  2003/12/10 09:51:34  dvd
  * rn_end_schema is removed again, but the result is good -- bugs debugged
  *
  * Revision 1.15  2003/12/10 01:08:04  dvd

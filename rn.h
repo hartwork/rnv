@@ -20,8 +20,8 @@
 #define P_VALUE 11
 #define P_ATTRIBUTE 12
 #define P_ELEMENT 13
-#define P_AFTER 14
-#define P_REF 15
+#define P_REF 14
+#define P_AFTER 15
 #define P_VOID 255
 
 /*
@@ -152,6 +152,9 @@ extern void rn_clear();
 
 /*
  * $Log$
+ * Revision 1.18  2003/12/10 21:41:26  dvd
+ * +xsd
+ *
  * Revision 1.17  2003/12/10 09:38:43  dvd
  * rn_end_schema is removed again, but the result is good -- bugs debugged
  *

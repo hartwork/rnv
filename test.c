@@ -1,26 +1,16 @@
 #include <stdio.h>
-#include <string.h>
-#include "util.h"
 
-char *samples[]={
-  "file.txt","/otherfile/name",
-  "some/file.txt","/otherfile/name",
-  "/path/to/file.txt","/otherfile/name",
-  "file.txt","otherfile/name",
-  "some/file.txt","otherfile/name",
-  "/path/to/file.txt","otherfile/name",
-  "file.txt","name",
-  "some/file.txt","name",
-  "/path/to/file.txt","name",
-  0};
+char *(param_data[])[2]={{"a","b"},{"c","d"},{"e","f"},{(char*)0,(char*)0}};
 
 int main() {
-  int i=0;
-  char buf[1024];
-  while(samples[i]) {
-    strcpy(buf,samples[i++]);
-    abspath(buf,samples[i++]);
-    printf("%s\n",buf);
+  char *(*param)[2];
+  int i;
+  param=param_data;
+  i=0;
+  while(param[i][0]!=0) {
+    printf("%s=%s\n",param[i][0],param[i][1]);
+    ++i;
   }
   return 0;
+
 }
