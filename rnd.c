@@ -199,7 +199,7 @@ static void ctype(int p) {
 }
 
 static void ctypes(void) {
-  int i=0,p,p1,nc;
+  int i,p,p1,nc;
   for(i=0;i!=n_f;++i) {
     p=flat[i];
     if(P_IS(p,ELEMENT)) {
@@ -360,7 +360,7 @@ static void path(int p,int nc) {
 }
 
 static void paths(void) {
-  int i=0,p,p1,nc=-1;
+  int i,p,p1,nc;
   if(bad_start(flat[0])) error(ER_BADSTART);
   for(i=1;i!=n_f;++i) {
     p=flat[i];

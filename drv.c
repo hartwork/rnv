@@ -289,7 +289,7 @@ int drv_start_tag_close(int p) {return start_tag_close(p,0);}
 int drv_start_tag_close_recover(int p) {return start_tag_close(p,1);}
 
 static int list(int p,char *s,int n) {
-  char *end=s+n,*sp=s;
+  char *end=s+n,*sp;
   for(;;) {
     while(s!=end&&xml_white_space(*s)) ++s;
     sp=s;

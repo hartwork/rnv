@@ -885,7 +885,7 @@ static int parent(struct rnc_source *sp) {
 }
 
 static int relpath(struct rnc_source *sp) {
-  int ret=0;
+  int ret;
   if((ret=chksym(sp,SYM_LITERAL))) {
     int len=strlen(sp->fn)+strlen(CUR(sp).s)+1;
     if(len>len_p) {free(path); len_p=len; path=(char*)calloc(len_p,sizeof(char));}
@@ -1085,7 +1085,7 @@ static int pattern(struct rnc_source *sp) {
 }
 
 static void define(struct rnc_source *sp,int name) {
-  int pat=0,flags=0;
+  int pat,flags=0;
   switch(CUR(sp).sym) {
   case SYM_ASGN: flags=DE_HEAD; break;
   case SYM_ASGN_CHOICE: flags=DE_CHOICE; break;

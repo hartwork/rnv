@@ -7,6 +7,7 @@
 #include <string.h> /*strerror,strncpy,strrchr*/
 #include <errno.h>
 #include EXPAT_H
+#include "util.h" /*xml_white_space*/
 #include "rn.h"
 #include "rnc.h"
 #include "rnd.h"
@@ -15,15 +16,25 @@
 
 #define LEN_T 1024
 
+#define ELEMENT_NOT_ALLOWED "element '%s^%s' not allowed"
+#define ATTRIBUTE_NOT_ALLOWED "attribute '%s^%s=\"%s\"' not allowed"
+#define ELEMENTS_MISSING "required elements missing"
+#define ATTRIBUTES_MISSING "required attributes of element '%s^%s' missing"
+#define TEXT_NOT_ALLOWED "text not allowed"
+
 static char *xml;
 static XML_Parser expat;
 static int start,current,previous;
+static int mixed=0;
 static int errors;
 static int explain=1;
 
 /* Expat does not normalize strings on input unless the whole file is loaded into the buffer */
 static char *text; static int len_t;
 static int n_t;
+
+static char *suri=NULL,*sname; static int len_suri=-1; /* qname() splits, handlers use */
+static char *msg=NULL; static int len_msg=-1; /* buffer for error messages */
 
 static void init(void) {
   rn_init();
@@ -43,7 +54,6 @@ static int load_rnc(char *fn) {
   rnd_deref(start); if(rnd_errors()) return 0;
   rnd_restrictions(); if(rnd_errors()) return 0;
   rnd_traits();
-
   start=rnd_release(); 
 
   return 1;
@@ -67,9 +77,6 @@ static void error(char *msg) {
   fprintf(stderr,"\n");
 }
 
-static char *suri=NULL,*sname;
-static int len_suri=-1;
-
 static void qname(char *name) {
   char *sep; int len;
   if((sep=strrchr(name,':'))) sname=sep+1; else sep=sname=name;
@@ -79,18 +86,17 @@ static void qname(char *name) {
   suri[len-1]='\0';
 }
 
-static char *msg=NULL;
-static int len_msg=-1;
-
-#define ELEMENT_NOT_ALLOWED "element '%s^%s' not allowed"
-#define ATTRIBUTE_NOT_ALLOWED "attribute '%s^%s=\"%s\"' not allowed"
-#define ELEMENTS_MISSING "required elements missing"
-#define ATTRIBUTES_MISSING "required attributes of element '%s^%s' missing"
-#define TEXT_NOT_ALLOWED "text not allowed"
+static int whitespace(void) {
+  char *s=text,*end=text+n_t;
+  for(;;) {
+    if(s==end) return 1;
+    if(!xml_white_space(*(s++))) return 0;
+  }
+}
 
 static void flush_text(void) {
   if(n_t!=0) {
-    if(current!=rn_notAllowed) {
+    if(!(mixed&&whitespace())) {
       current=drv_text(previous=current,text,n_t);
       if(current==rn_notAllowed) {
 	error(TEXT_NOT_ALLOWED);
@@ -102,8 +108,9 @@ static void flush_text(void) {
 }
 
 static void start_element(void *userData,const char *name,const char **attrs) {
-  flush_text();
   if(current!=rn_notAllowed) { 
+    mixed=1;
+    flush_text();
     qname((char*)name);
     current=drv_start_tag_open(previous=current,suri,sname);
     if(current==rn_notAllowed) {
@@ -139,17 +146,19 @@ static void start_element(void *userData,const char *name,const char **attrs) {
 	current=drv_start_tag_close_recover(previous);
       }
     }
+    mixed=0;
   }
 }
 
 static void end_element(void *userData,const char *name) {
-  flush_text();
   if(current!=rn_notAllowed) {
+    flush_text(); 
     current=drv_end_tag(previous=current);
     if(current==rn_notAllowed) {
       error(ELEMENTS_MISSING);
       current=drv_end_tag_recover(previous);
     }
+    mixed=1;
   }
 }
 
