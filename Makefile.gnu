@@ -28,13 +28,16 @@ CFLAGS=${INC} ${DEF} ${WARN} ${OPT}
 LFLAGS=${OPT} ${LBL}
 
 LIBEXPAT=-lexpat
+LIB_SCM=-lscm -lm \
+`sh -c '[ -f /usr/lib/libdl.a ] && echo -ldl \
+      ; [ -f /usr/lib/libsocket.a ] && echo -lsocket \
+'` 
 
 LIB=${LIBEXPAT}
 
 ifeq (${DSL_SCM},1)
 DEF+=-DDSL_SCM=${DSL_SCM} -DSCM_H=${SCM_H}
-LIB_SCM=-lm 
-LIB+=-lscm ${LIB_SCM}
+LIB+=${LIB_SCM}
 endif
 
 ifeq (${DXL_EXC},1)

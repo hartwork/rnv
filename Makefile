@@ -32,13 +32,16 @@ CFLAGS=${INC} ${DEF} ${WARN} ${OPT}
 LFLAGS=${OPT} ${LBL}
 
 LIBEXPAT=-lexpat
+LIB_SCM=-lscm -lm \
+`sh -c '[ -f /usr/lib/libdl.a ] && echo -ldl \
+      ; [ -f /usr/lib/libsocket.a ] && echo -lsocket \
+'` 
 
 LIB=${LIBEXPAT}
 
 .if ${DSL_SCM}
 DEF+=-DDSL_SCM=${DSL_SCM} -DSCM_H=${SCM_H}
-LIB_SCM=-lm 
-LIB+=-lscm ${LIB_SCM}
+LIB+=${LIB_SCM}
 .endif
 
 .if ${DXL_EXC}
@@ -174,6 +177,7 @@ ${DIST}-${VERSION}.zip: ${DISTFILES} ${DISTWIN32} ${DISTTOOLS} ${DISTSCM}
 	cp ${DISTFILES} ${DIST}-${VERSION}/.
 	cp ${DISTTOOLS} ${DIST}-${VERSION}/tools/.
 	cp ${DISTSCM} ${DIST}-${VERSION}/scm/.
+	ln -s Makefile.gnu ${DIST}-${VERSION}/Makefile
 	zip -9 -r ${DIST}-${VERSION}.zip ${DIST}-${VERSION}
 	-rm -rf ${DIST}-${VERSION}
 	zip -9 -r ${DIST}-${VERSION}-win32bin.zip ${DISTWIN32}
