@@ -1,7 +1,8 @@
 /* $Id$ */
 
 1.5.2
-
+Mon Jan 26 21:13:30 AMT 2004
+dvd: Removed ++ from assert in xsd_tm.c
 
 1.5.1 Mon Jan 26 01:25:42 AMT 2004
 dvd: Internal release, regexp in Scheme implemented
