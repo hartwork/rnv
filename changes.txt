@@ -1,9 +1,9 @@
 /* $Id$ */
 
 1.1.1 Fri Dec 19 22:21:15 AMT 2003
-dvd: parameters buffer allocated properly, no space is allocated if no parameters;
-     hash table for string entries is initially 1/16 of the string buffer, which
-     is roughly the average value
+dvd: datatype parameters buffer allocated properly, no space is allocated if no
+     parameters; hash table for string entries is initially 1/16 of the string
+     buffer, which is roughly the average value
 
 1.1.0 Thu Dec 18 05:05:33 AMT 2003
 dvd: drv_start_attribute and memoization implemented; hash values are 
