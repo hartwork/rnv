@@ -80,7 +80,7 @@ static int current,previous;
 static int mixed=0;
 static int ok,wf,any;
 static char *text; static int len_txt;
-static int n_t;
+static int n_txt;
 
 
 static int add_s(char *s) {
@@ -124,7 +124,7 @@ static void clear(void) {
 }
 
 static void windup(void) {
-  text[n_t=0]='\0';
+  text[n_txt=0]='\0';
   i_2=1; i_r=i_s=0;
 }
 
@@ -370,8 +370,8 @@ static int arx(char *fn) {
 }
 
 static void flush_text(void) {
-  ok=rnv_text(&current,&previous,text,n_t,mixed)&&ok;
-  text[n_t=0]='\0';
+  ok=rnv_text(&current,&previous,text,n_txt,mixed)&&ok;
+  text[n_txt=0]='\0';
 }
 
 static void start_element(void *userData,const char *name,const char **attrs) {
@@ -393,11 +393,11 @@ static void end_element(void *userData,const char *name) {
 
 static void characters(void *userData,const char *s,int len) {
   if(current!=rn_notAllowed) {
-    int newlen_txt=n_t+len+1;
+    int newlen_txt=n_txt+len+1;
     if(newlen_txt<=LIM_T&&LIM_T<len_txt) newlen_txt=LIM_T;
     else if(newlen_txt<len_txt) newlen_txt=len_txt;
-    if(len_txt!=newlen_txt) text=(char*)m_stretch(text,len_txt=newlen_txt,n_t,sizeof(char));
-    memcpy(text+n_t,s,len); n_t+=len; text[n_t]='\0'; /* '\0' guarantees that the text is bounded, and strto[ld] work for data */
+    if(len_txt!=newlen_txt) text=(char*)m_stretch(text,len_txt=newlen_txt,n_txt,sizeof(char));
+    memcpy(text+n_txt,s,len); n_txt+=len; text[n_txt]='\0'; /* '\0' guarantees that the text is bounded, and strto[ld] work for data */
   }
 }
 

@@ -66,18 +66,18 @@ static char *qname_open(char **surip,char **snamep,char *name) {
 
 static void qname_close(char *sep) {if(sep) *sep=':';}
 
-static int whitespace(char *text,int n_t) {
-  char *s=text,*end=text+n_t;
+static int whitespace(char *text,int n_txt) {
+  char *s=text,*end=text+n_txt;
   for(;;) {
     if(s==end) return 1;
     if(!xmlc_white_space(*(s++))) return 0;
   }
 }
 
-int rnv_text(int *curp,int *prevp,char *text,int n_t,int mixed) {
+int rnv_text(int *curp,int *prevp,char *text,int n_txt,int mixed) {
   int ok=1;
   if(mixed) {
-    if(!whitespace(text,n_t)) {
+    if(!whitespace(text,n_txt)) {
       *curp=drv_mixed_text(*prevp=*curp);
       if(*curp==rn_notAllowed) { ok=0;
 	*curp=drv_mixed_text_recover(*prevp);
@@ -85,9 +85,9 @@ int rnv_text(int *curp,int *prevp,char *text,int n_t,int mixed) {
       }
     }
   } else {
-    *curp=drv_text(*prevp=*curp,text,n_t);
+    *curp=drv_text(*prevp=*curp,text,n_txt);
     if(*curp==rn_notAllowed) { ok=0;
-      *curp=drv_text_recover(*prevp,text,n_t);
+      *curp=drv_text_recover(*prevp,text,n_txt);
       error_handler(RNV_ER_TEXT);
     }
   }
