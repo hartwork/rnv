@@ -13,7 +13,7 @@ use XML::Parser::Expat;
 
 use strict;
 
-my @RVP=("rvp","-s");
+my @RVP=("rvp");
 
 my ($parser,$errors); # declared here for use in resp()
 
@@ -74,10 +74,17 @@ sub text {
   return resp();
 }
 
+# in mixed content, whitespace is simply discarded, and any
+# non-whitespace is equal; but this optimization gives only only
+# 5% increase in speed at most in practical cases
 sub mixed {
   my($cur,$text)=@_;
-  print RVPIN "mixed $cur $text\0";
-  return resp();
+  if($text=~m/[^\t\n ]/s) {
+    print RVPIN "mixed $cur .\0";
+    return resp();
+  } else {
+    return $cur;
+  }
 }
 
 sub start {
