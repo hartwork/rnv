@@ -194,7 +194,7 @@ void rnc_init() {
 }
 
 static void error(int force,struct rnc_source *sp,int er_no,...) {
-  if(force || sp->line == sp->prevline) {
+  if(force || sp->line != sp->prevline) {
     va_list ap; va_start(ap,er_no); (*ver_handler_p)(er_no,ap); va_end(ap);
     sp->prevline=sp->line;
   }
@@ -1151,7 +1151,10 @@ int rnc_parse(struct rnc_source *sp) {
 
   if(i=sc_find(&defs,0)) {
     start=defs.tab[i][1];
-  } else start=0;
+  } else {
+    error(1,sp,ER_NOSTART,sp->fn,CUR(sp).line,CUR(sp).col);
+    start=0;
+  }
 
   close_scope(sp);
   sc_close(&nss);
@@ -1174,6 +1177,9 @@ int main(int argc,char **argv) {
 
 /*
  * $Log$
+ * Revision 1.26  2003/12/06 00:08:49  dvd
+ * fixed error reporting
+ *
  * Revision 1.25  2003/12/05 23:58:44  dvd
  * parses docbook
  *
