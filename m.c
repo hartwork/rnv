@@ -11,6 +11,10 @@
 
 #if M_STATIC
 
+#ifndef M_FILL 
+#define M_FILL 0
+#endif
+
 static char memory[M_STATIC];
 static char *mp=memory,*pmp=memory;
 
@@ -21,8 +25,9 @@ void m_free(void *p) {
 }
 
 extern void *m_alloc(int length,int size) {
-  char *p=mp; int n=length*size;
+  char *p=mp, *q=mp; int n=length*size;
   pmp=mp; mp+=(n+sizeof(int)-1)/sizeof(int)*sizeof(int);
+  while(q!=mp) *(q++)=M_FILL;
   if(mp>=memory+M_STATIC) {
     (*er_printf)("failed to allocate %i bytes of memory\n",length*size);
     exit(1);

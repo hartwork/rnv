@@ -8,6 +8,7 @@ CC=cc
 
 # optional features
 M_STATIC=0
+M_FILL=0
 DSL_SCM=0
 DXL_EXC=0
 
@@ -20,6 +21,7 @@ LBL=-L/usr/local/lib
 
 DEF=\
 -DM_STATIC=${M_STATIC} \
+-DM_FILL=${M_FILL} \
 -DEXPAT_H=${EXPAT_H} \
 -DUNISTD_H=${UNISTD_H} \
 -DRNV_VERSION="\"${VERSION}\"" \

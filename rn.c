@@ -1,5 +1,7 @@
 /* $Id$ */
 
+#include <stdio.h>
+
 #include <string.h> /* strcmp,strlen,strcpy*/
 
 #include "m.h"
@@ -24,7 +26,7 @@
 #define erased(i) (rn_pattern[i]&RN_P_FLG_ERS)
 #define erase(i) (rn_pattern[i]|=RN_P_FLG_ERS)
 
-static int p_size[]={1,1,1,1,3,3,3,2,2,3,3,3,3,3,3,3};
+static int p_size[]={1,1,1,1,3,3,3,2,2,3,3,3,3,3,2,3};
 static int nc_size[]={1,3,2,1,3,3,3};
 
 int *rn_pattern;
@@ -173,8 +175,7 @@ int rn_newAfter(int p1,int p2) { P_NEW(AFTER);
 
 int rn_newRef(void) { P_NEW(REF);
   rn_pattern[i_p+1]=0;
-  rn_pattern[i_p+2]=i_ref++;
-  return accept_p();
+  return ht_deli(&ht_p,accept_p());
 }
 
 int rn_one_or_more(int p) {
@@ -455,7 +456,10 @@ static void sweep_p(int *starts,int n_st,int since) {
       }
     }
   }
-  while(n_st--!=0) {if(*starts>=since) *starts=xlat[*starts-since]; ++starts;}
+  while(n_st--!=0) {
+    if(*starts>=since) *starts=xlat[*starts-since];
+    ++starts;
+  }
   m_free(xlat);
 }
 
@@ -480,11 +484,12 @@ static void compress_p(int *starts,int n_st,int since) {
       q+=p_size[RN_P_TYP(p)];
     }
   }
-  i_q=q;
-  for(p=since;p!=i_p;p+=p_size[RN_P_TYP(p)]) {
+  i_q=q; p=since;
+  while(p!=i_p) { int psiz=p_size[RN_P_TYP(p)]; /* rn_pattern[p] changes */
     if(xlat[p-since]!=-1) {
       switch(RN_P_TYP(p)) {
-      case RN_P_NOT_ALLOWED: case RN_P_EMPTY: case RN_P_TEXT: case RN_P_DATA: case RN_P_VALUE:
+      case RN_P_NOT_ALLOWED: case RN_P_EMPTY: case RN_P_TEXT:
+      case RN_P_DATA: case RN_P_VALUE:
 	break;
 
       case RN_P_CHOICE: rn_Choice(p,p1,p2); goto BINARY;
@@ -506,18 +511,22 @@ static void compress_p(int *starts,int n_st,int since) {
       default:
 	assert(0);
       }
-      if((q=xlat[p-since])!=p) {
-	int i,psiz=p_size[RN_P_TYP(p)];
+      if((q=xlat[p-since])!=p) { int i;
 	for(i=0;i!=psiz;++i) rn_pattern[q+i]=rn_pattern[p+i];
       }
       ht_put(&ht_p,q);
     }
+    p+=psiz;
   }
-  while(n_st--!=0) {if(*starts>=since) *starts=xlat[*starts-since]; ++starts;}
-  if(i_q!=i_p) {
-    int len_q=i_q*2;
-    i_p=i_q;
-    if(len_p>P_AVG_SIZE*LIM_P&&len_q<len_p) rn_pattern=(int*)m_stretch(rn_pattern,len_p=len_q>P_AVG_SIZE*LEN_P?len_q:P_AVG_SIZE*LEN_P,i_p,sizeof(int));
+  while(n_st--!=0) {
+    if(*starts>=since) *starts=xlat[*starts-since];
+    ++starts;
+  }
+  if(i_q!=i_p) { int len_q=i_q*2;
+    if(len_p>P_AVG_SIZE*LIM_P&&len_q<len_p) 
+      rn_pattern=(int*)m_stretch(rn_pattern,
+        len_p=len_q>P_AVG_SIZE*LEN_P?len_q:P_AVG_SIZE*LEN_P,
+	i_p=i_q,sizeof(int));
   }
 }
 

@@ -10,11 +10,9 @@
 #include "rnd.h"
 
 #define LEN_F RND_LEN_F
-#define LEN_R RND_LEN_R
 
-static int len_f,n_f,len_r,n_r;
+static int len_f,n_f;
 static int *flat;
-static int *refs;
 static int errors;
 
 #define err(msg) (*er_vprintf)("error: "msg"\n",ap)
@@ -53,11 +51,6 @@ static int de(int p) {
   int p0=p,p1;
   RN_P_CHK(p,REF);
   for(;;) {
-    if(!rn_marked(p)) {
-      if(n_r==len_r) refs=(int*)m_stretch(refs,len_r=(n_r*2),n_r,sizeof(int));
-      refs[n_r++]=p;
-    }
-    rn_mark(p);
     rn_Ref(p,p1);
     if(!RN_P_IS(p1,REF)||p1==p0) break;
     p=p1;
@@ -71,8 +64,6 @@ static void deref(int start) {
   int p,p1,p2,nc,i,changed;
 
   flat=(int*)m_alloc(len_f=LEN_F,sizeof(int)); n_f=0;
-  refs=(int*)m_alloc(len_r=LEN_R,sizeof(int)); n_r=0;
-
   if(RN_P_IS(start,REF)) start=de(start);
   flatten(start);
 
@@ -116,8 +107,6 @@ static void deref(int start) {
     }
   } while(i!=n_f);
   for(i=0;i!=n_f;++i) rn_unmark(flat[i]);
-  for(i=0;i!=n_r;++i) {p=refs[i]; rn_pattern[p+1]=0; rn_unmark(p);}
-  m_free(refs);
 }
 
 static int loop(int p) {
