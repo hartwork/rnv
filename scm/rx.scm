@@ -1,12 +1,12 @@
 ; $Id$
 
 ; XML Schema Datatypes Regular Expressions
-; this is a full conformant implementation of the regular expressions
-; syntax in Scheme; the only implementation-dependant feature I am aware of
-; is integer<->char conversions. Normal people (including SCM) use byte value;
-; and everything works. scheme48 adds 1000 to the byte value to make the code
-; general. To make it work with scheme48, redefine char->integer,integer->char
-; to char->ascii,ascii->char.
+;   This is a full conformant implementation of the regular expressions
+;   syntax in Scheme;   the only implementation-dependant feature I am aware of
+;   is integer<->char conversions. Normal people (including SCM) use byte value;
+;   and everything works. scheme48 adds 1000 to the byte value to make the code
+;   general. To make it work with scheme48, redefine char->integer,integer->char
+;   to char->ascii,ascii->char.
 
 ; Synopsis:
 ;   (rx-compile "string")
@@ -20,7 +20,7 @@
 ; Performance:
 ;   it is approximately three times slower than 'regex. It memoizes patterns
 ;   to speed up processing, however, all non-core algorithms are as simple as
-;   possible. 
+;   possible.
 
 (load  (in-vicinity (program-vicinity) "u.scm"))
 (load  (in-vicinity (program-vicinity) "xml-ranges.scm"))
@@ -261,7 +261,7 @@
 		    (or (equal? sym '(chr . 41)) (error! "missing )"))
 		    (getsym)
 		    p))
-		((41 42 43 63 93 123 124 125)
+		((41 42 43 63 93 123 124 125) ; must be escaped: () * + ? ] { | }
 		  (error! "unescaped " (integer->char (cdr sym)))
 		  (getsym) rx-none)
 		(else
@@ -358,7 +358,8 @@
 		(and (pair? list)
 		  (or (car list) (apply or* (cdr list))))))
 	    (in-xml-ranges (lambda (i) (u-in-ranges c (cdr (assv i xml-ranges)))))
-	    (in-rx-ranges (lambda (i) (u-in-ranges c (cdr (assv i rx-ranges))))))
+	    (in-rx-ranges (lambda (i) (u-in-ranges c (cdr (assv i rx-ranges)))))
+	    (join-rx-ranges (lambda (ranges) (apply or* (map in-rx-ranges ranges)))))
 	  (lambda (c id)
 	    (case id
 	      ((NL) (or (= c 13) (= c 10)))
@@ -369,13 +370,13 @@
 		     (apply or* (map in-xml-ranges '(digit combining-char extender)))))
 	      ((W) (not
 		     (or (in-class? c 'U-P) (in-class? c 'U-Z) (in-class? c 'U-C))))
-	      ((U-C) (apply or* (map in-rx-ranges '(U-Cc U-Cf U-Co))))
-	      ((U-L) (apply or* (map in-rx-ranges '(U-Lu U-Ll U-Lt U-Lm U-Lo))))
-	      ((U-M) (apply or* (map in-rx-ranges '(U-Mn U-Mc U-Me))))
-	      ((U-N) (apply or* (map in-rx-ranges '(U-Nd U-Nl U-No))))
-	      ((U-P) (apply or* (map in-rx-ranges '(U-Pc U-Pd U-Ps U-Pe))))
-	      ((U-S) (apply or* (map in-rx-ranges '(U-Sm U-Sc U-Sk U-So))))
-	      ((U-Z) (apply or* (map in-rx-ranges '(U-Zl U-Zs U-Zp))))
+	      ((U-C) (join-rx-ranges '(U-Cc U-Cf U-Co)))
+	      ((U-L) (join-rx-ranges '(U-Lu U-Ll U-Lt U-Lm U-Lo)))
+	      ((U-M) (join-rx-ranges '(U-Mn U-Mc U-Me)))
+	      ((U-N) (join-rx-ranges '(U-Nd U-Nl U-No)))
+	      ((U-P) (join-rx-ranges '(U-Pc U-Pd U-Ps U-Pe)))
+	      ((U-S) (join-rx-ranges '(U-Sm U-Sc U-Sk U-So)))
+	      ((U-Z) (join-rx-ranges '(U-Zl U-Zs U-Zp)))
 	      (else (in-rx-ranges id)))))))
     (let* (
         (n
