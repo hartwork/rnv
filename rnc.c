@@ -949,7 +949,7 @@ static int list(struct rnc_source *sp) {
 static int mixed(struct rnc_source *sp) {
   int mixed;
   chk_get(sp,SYM_LCUR);
-  mixed=rn_choice(pattern(sp),rn_text);
+  mixed=rn_ileave(pattern(sp),rn_text);
   chk_skip_get(sp,SYM_RCUR);
   return mixed;
 }

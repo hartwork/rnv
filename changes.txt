@@ -1,6 +1,9 @@
 /* $Id$ */
 
-1.6.0
+1.6.0 Thu Feb 26 21:14:39 AMT 2004
+dvd: fixed mixed to be interleave, not choice. The test for this
+     was wrong.
+
 Wed Feb 25 03:59:45 AMT 2004
 dvd: got rid of ##; prone to name conflicts
 
