@@ -10,6 +10,7 @@ rnd.c rnd.h -- second pass for RNC parser, restrictions and traits
 rnx.c rnx.h -- auxiliary functions for rn
 drv.c drv.h -- derivative of RNG patterns, validation core
 xsd.c xsd.h -- xml schema datatypes
+xsd_tm.c xsd_tm.h -- dateTime datatype implementation
 sc.c sc.h -- scope tables for rnc
 er.c er.h  -- error reporting (RNC parser and validator)
 ht.c ht.h -- hash table  
@@ -21,7 +22,7 @@ rx_cls_u.c rx_cls_ranges.c -- auto-generated tables; included by rx.c
 
 # hierarchy
 
-... er,ht,strops,xmlc,uc -- used in many places
+... er,ht,strops,xmlc,u -- used in many places
 
 rnv
 . ll
@@ -36,7 +37,8 @@ rnv
 . drv
 .. ll
 .. xsd
+... xsd_tm
 ... rx
-.... rx_cls_u.c
-.... rx_cls_ranges.c
+.... rx_cls_u
+.... rx_cls_ranges
 .... ll

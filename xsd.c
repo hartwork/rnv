@@ -48,8 +48,7 @@ static int initialized=0;
 void xsd_init(void) {
   if(!initialized) { initialized=1;
     rx_init();
-    rxverror0=rx_verror_handler;
-    rx_verror_handler=&verror_handler_rx;
+    rxverror0=rx_verror_handler; rx_verror_handler=&verror_handler_rx;
   }
 }
 
