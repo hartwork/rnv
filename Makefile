@@ -3,7 +3,7 @@
 CC=cc
 EXPAT_H="<expat.h>"
 UNISTD_H="<unistd.h>"
-LIBEXPAT=-lexpat95
+LIBEXPAT=-lexpat
 INC=-I/usr/local/include
 CFLAGS=-Wall -DEXPAT_H=${EXPAT_H} -DUNISTD_H=${UNISTD_H}
 LFLAGS=
@@ -50,9 +50,9 @@ rnd_test: ${OBJ} rnd_test.o
 	${CC} ${OPT} ${LFLAGS} ${LBL} -o rnd_test rnd_test.o ${OBJ} ${LIB} 
 
 clean: 
-	-rm -f *.o rnv rnd_test *_test *.core *.gmon
+	-rm -f *.o rnv rnd_test *_test *.core *.gmon *.gprof rnv.zip
 
-zip: Makefile ${SRC}
+zip: Makefile ${SRC} compile.bat
 	-rm -f rnv.zip
-	zip rnv.zip Makefile ${SRC}
+	zip rnv.zip Makefile ${SRC} compile.bat
 
