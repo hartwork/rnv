@@ -15,13 +15,3 @@ int main(int argc,char **argv) {
   }
   return 0;
 }
-
-/*
- * $Log$
- * Revision 1.2  2003/11/25 13:14:21  dvd
- * scanner ready
- *
- * Revision 1.1  2003/11/19 11:05:55  dvd
- * binary search for u.c
- *
- */

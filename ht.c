@@ -75,7 +75,7 @@ int ht_del(struct hashtable *ht,int i) {
 	    j=next(ht,j);
 	    if(ht->table[j]==-1) break;
 	    j0=first(ht,ht->table[j|ht->tablen]);
-	    if(j0<j&&(j<=k||k<=j0)||j<=k&&k<=j0) break;
+	    if((j0<j&&(j<=k||k<=j0))||(j<=k&&k<=j0)) break;
 	  }
 	  ht->table[k]=ht->table[j]; ht->table[k|ht->tablen]=ht->table[j|ht->tablen];
 	} while(ht->table[j]!=-1);
@@ -86,22 +86,3 @@ int ht_del(struct hashtable *ht,int i) {
   }
   return -1;
 }
-
-/*
- * $Log$
- * Revision 1.5  2003/12/14 20:07:54  dvd
- * cleanups
- *
- * Revision 1.4  2003/12/07 20:41:42  dvd
- * bugfixes, loops, traits
- *
- * Revision 1.3  2003/12/04 22:02:20  dvd
- * refactoring
- *
- * Revision 1.2  2003/11/29 17:47:48  dvd
- * decl
- *
- * Revision 1.1  2003/11/17 21:33:28  dvd
- * +cimpl
- *
- */

@@ -76,19 +76,3 @@ ERRORS:
   fprintf(stderr,"exiting on errors \n");
   return 1;
 }
-
-/* 
- * $Log$
- * Revision 1.5  2003/12/14 20:07:54  dvd
- * cleanups
- *
- * Revision 1.4  2003/12/14 15:21:49  dvd
- * much better hash functions
- *
- * Revision 1.3  2003/12/13 22:03:31  dvd
- * rnv works
- *
- * Revision 1.2  2003/12/11 23:37:58  dvd
- * derivative in progress
- *
- */

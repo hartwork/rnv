@@ -75,31 +75,3 @@ int inRange(int u,int r[][2],int len) {
     else return 1;
   }
 }
-
-/*
- * $Log$
- * Revision 1.13  2003/12/14 20:48:10  dvd
- * cleanups
- *
- * Revision 1.10  2003/12/11 23:35:15  dvd
- * unicode mess
- *
- * Revision 1.9  2003/12/11 17:01:31  dvd
- * utf8 is handled properly
- *
- * Revision 1.8  2003/12/10 23:02:13  dvd
- * prepared to add u_put
- *
- * Revision 1.7  2003/11/25 10:33:53  dvd
- * documentation and comments
- *
- * Revision 1.6  2003/11/21 00:20:06  dvd
- * lexer in progress
- *
- * Revision 1.5  2003/11/20 16:29:08  dvd
- * x escapes sketched
- *
- * Revision 1.4  2003/11/19 11:05:55  dvd
- * binary search for u.c
- *
- */

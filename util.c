@@ -46,16 +46,3 @@ extern char *abspath(char *r,char *b) {
   }
   return r;
 }
-
-/*
- * $Log$
- * Revision 1.3  2003/12/12 22:21:06  dvd
- * drv written, compiled, not yet debugged
- *
- * Revision 1.2  2003/12/11 23:37:58  dvd
- * derivative in progress
- *
- * Revision 1.1  2003/11/27 21:00:23  dvd
- * abspath,strhash
- *
- */

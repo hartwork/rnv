@@ -3,7 +3,7 @@
 CC=cc
 N=95
 INC=-I/usr/local/include
-OPT=-g -O -pg -Wall -Wno-parentheses -DEXPAT${N}=1
+OPT=-g -O -pg -Wall -DEXPAT${N}=1
 LIB=-lexpat${N}
 LBL=-L/usr/local/lib
 OBJ=\
@@ -34,6 +34,9 @@ clean:
 	-rm -f *.o rnv rnd_test *_test *.core *.gmon
 
 # $Log$
+# Revision 1.19  2003/12/14 22:20:59  dvd
+# expat.h incapsulates switching between expat 1.2 and expat 1.95.*
+#
 # Revision 1.18  2003/12/14 20:07:54  dvd
 # cleanups
 #

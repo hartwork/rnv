@@ -59,19 +59,3 @@ void rnx_expected(int p) {
   rnx_n_exp=0;
   expected(p);
 }
-
-/*
- * $Log$
- * Revision 1.4  2003/12/14 20:07:54  dvd
- * cleanups
- *
- * Revision 1.3  2003/12/14 14:52:24  dvd
- * efficient memoization
- *
- * Revision 1.2  2003/12/14 10:52:36  dvd
- * recovery
- *
- * Revision 1.1  2003/12/14 10:39:58  dvd
- * +rnx
- *
- */

@@ -24,22 +24,3 @@ extern int sc_find(struct sc_stack *stp,int key); /* returns 0 if not found, ind
 extern int sc_add(struct sc_stack *stp,int key,int val,int aux); /* returns index for the new record */
 
 #endif
-
-/* 
- * $Log$
- * Revision 1.5  2003/12/06 00:55:14  dvd
- * parses all grammars from nxml-mode samples
- *
- * Revision 1.4  2003/12/04 22:02:20  dvd
- * refactoring
- *
- * Revision 1.3  2003/12/01 14:44:54  dvd
- * patterns in progress
- *
- * Revision 1.2  2003/11/29 20:51:39  dvd
- * nameclasses
- *
- * Revision 1.1  2003/11/29 17:47:48  dvd
- * decl
- * 
- */

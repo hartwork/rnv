@@ -6,11 +6,7 @@
 #include <stdio.h>  /*fprintf,stderr*/
 #include <string.h> /*strerror,strncpy,strrchr*/
 #include <errno.h>
-#ifdef EXPAT95
-#include <expat.h>
-#else
-#include <xmlparse.h>
-#endif
+#include "expat.h"
 #include "rn.h"
 #include "rnc.h"
 #include "rnd.h"
@@ -192,29 +188,3 @@ ERRORS:
   fprintf(stderr,"exiting on errors\n");
   return 1;
 }
-
-
-/*
- * $Log$
- * Revision 1.16  2003/12/14 20:48:10  dvd
- * cleanups
- *
- * Revision 1.15  2003/12/14 20:39:05  dvd
- * ParseBuffer unless len==0
- *
- * Revision 1.13  2003/12/14 14:52:24  dvd
- * efficient memoization
- *
- * Revision 1.12  2003/12/14 10:39:58  dvd
- * +rnx
- *
- * Revision 1.11  2003/12/13 22:55:04  dvd
- * cleanups
- *
- * Revision 1.10  2003/12/13 22:03:31  dvd
- * rnv works
- *
- * Revision 1.9  2003/12/11 23:37:58  dvd
- * derivative in progress
- *
- */

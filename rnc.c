@@ -643,7 +643,7 @@ static void close_scope(struct rnc_source *sp) {
   int i,j,name;
   for(i=refs.base+1;i!=refs.top;++i) {
     name=refs.tab[i][0];
-    if(j=sc_find(&defs,name)) {
+    if((j=sc_find(&defs,name))) {
       rn_pattern[refs.tab[i][1]][1]=defs.tab[j][1];
     } else {
       error(1,sp,ER_UNDEF,rn_string+name,sp->fn,CUR(sp).line,CUR(sp).col);
@@ -687,7 +687,7 @@ static void fold_scope(struct rnc_source *sp) {
 
 static void addns(struct rnc_source *sp,int pfx,int url) {
   int i;
-  if(i=sc_find(&nss,pfx)) {
+  if((i=sc_find(&nss,pfx))) {
     if(nss.tab[i][2]&PFX_INHERITED) {
       nss.tab[i][1]=url; nss.tab[i][2]&=~(PFX_INHERITED|PFX_DEFAULT);
     } else if(nss.tab[i][2]&PFX_DEFAULT) {
@@ -699,7 +699,7 @@ static void addns(struct rnc_source *sp,int pfx,int url) {
 
 static void adddt(struct rnc_source *sp,int pfx,int url) {
   int i;
-  if(i=sc_find(&dts,pfx)) {
+  if((i=sc_find(&dts,pfx))) {
     if(dts.tab[i][2]&PFX_DEFAULT) {
       warning(1,sp,ER_DFLTDT,rn_string+pfx,sp->fn,CUR(sp).line,CUR(sp).col);
       dts.tab[i][1]=url; dts.tab[i][2]&=~PFX_DEFAULT;
@@ -709,7 +709,7 @@ static void adddt(struct rnc_source *sp,int pfx,int url) {
 
 static void adddef(struct rnc_source *sp,int name,int pat,int flags) {
   int i;
-  if(i=sc_find(&defs,name)) {
+  if((i=sc_find(&defs,name))) {
     if(sc_locked(&defs)) {
       defs.tab[i][1]=pat; defs.tab[i][2]=flags;
     } else {
@@ -860,7 +860,7 @@ static int attribute(struct rnc_source *sp) {
 
 static int refname(struct rnc_source *sp,struct sc_stack *stp) {
   int name=newString(CUR(sp).s),i,p;
-  if(i=sc_find(stp,name)) {
+  if((i=sc_find(stp,name))) {
     p=stp->tab[i][1];
   } else {
     p=newRef();
@@ -885,7 +885,7 @@ static int parent(struct rnc_source *sp) {
 
 static int relpath(struct rnc_source *sp) {
   int ret=0;
-  if(ret=chksym(sp,SYM_LITERAL)) {
+  if((ret=chksym(sp,SYM_LITERAL))) {
     int len=strlen(sp->fn)+strlen(CUR(sp).s)+1;
     if(len>len_p) {free(path); len_p=len; path=(char*)calloc(len_p,sizeof(char));}
     strcpy(path,CUR(sp).s); abspath(path,sp->fn);
@@ -925,7 +925,7 @@ static int external(struct rnc_source *sp) {
     open_scope(sp);
     if((ret=file(sp,nsuri))==-1) { /* grammar */
       int i;
-      if(i=sc_find(&defs,0)) {
+      if((i=sc_find(&defs,0))) {
 	ret=defs.tab[i][1];
       }
       close_scope(sp);
@@ -1011,7 +1011,7 @@ static int grammar(struct rnc_source *sp) {
   chk_get(sp,SYM_LCUR);
   while(grammarContent(sp));
   chk_skip_get(sp,SYM_RCUR);
-  if(i=sc_find(&defs,0)) {
+  if((i=sc_find(&defs,0))) {
     start=defs.tab[i][1];
   } else error(1,sp,ER_NOSTART,sp->fn,CUR(sp).line,CUR(sp).col);
   close_scope(sp);
@@ -1155,7 +1155,7 @@ static int topLevel(struct rnc_source *sp) {
 
   getsym(sp); getsym(sp);
   while(decl(sp));
-  if(is_grammar=(CUR(sp).sym==SYM_GRAMMAR)) {
+  if((is_grammar=(CUR(sp).sym==SYM_GRAMMAR))) {
     chk_get(sp,SYM_LCUR);
   }
   if(grammarContent(sp)) {
@@ -1179,7 +1179,7 @@ int rnc_parse(struct rnc_source *sp) {
 
   start=topLevel(sp); if(start!=-1) sc_add(&defs,0,start,0);
 
-  if(i=sc_find(&defs,0)) {
+  if((i=sc_find(&defs,0))) {
     start=defs.tab[i][1];
   } else {
     error(1,sp,ER_NOSTART,sp->fn,CUR(sp).line,CUR(sp).col);
@@ -1191,118 +1191,3 @@ int rnc_parse(struct rnc_source *sp) {
 
   return start;
 }
-
-/*
- * $Log$
- * Revision 1.40  2003/12/14 20:39:05  dvd
- * ParseBuffer unless len==0
- *
- * Revision 1.39  2003/12/14 20:07:54  dvd
- * cleanups
- *
- * Revision 1.38  2003/12/13 22:03:30  dvd
- * rnv works
- *
- * Revision 1.37  2003/12/12 22:48:27  dvd
- * datatype parameters are supported
- *
- * Revision 1.36  2003/12/11 23:37:58  dvd
- * derivative in progress
- *
- * Revision 1.35  2003/12/11 17:01:31  dvd
- * utf8 is handled properly
- *
- * Revision 1.34  2003/12/10 23:02:13  dvd
- * prepared to add u_put
- *
- * Revision 1.33  2003/12/10 22:23:52  dvd
- * *** empty log message ***
- *
- * Revision 1.32  2003/12/09 19:38:44  dvd
- * failed to compress grammar
- *
- * Revision 1.31  2003/12/08 23:16:15  dvd
- * multiple schema files as command-line arguments to rnv, cleanups in file handling code (rnc)
- *
- * Revision 1.30  2003/12/08 21:23:47  dvd
- * +path restrictions
- *
- * Revision 1.29  2003/12/07 16:50:55  dvd
- * stage D, dereferencing and checking for loops
- *
- * Revision 1.28  2003/12/07 09:06:16  dvd
- * +rnd
- *
- * Revision 1.27  2003/12/06 00:55:13  dvd
- * parses all grammars from nxml-mode samples
- *
- * Revision 1.26  2003/12/06 00:08:49  dvd
- * fixed error reporting
- *
- * Revision 1.25  2003/12/05 23:58:44  dvd
- * parses docbook
- *
- * Revision 1.24  2003/12/05 14:28:39  dvd
- * separate stacks for references
- *
- * Revision 1.23  2003/12/04 22:09:30  dvd
- * bug in define
- *
- * Revision 1.22  2003/12/04 22:02:20  dvd
- * refactoring
- *
- * Revision 1.21  2003/12/04 00:37:03  dvd
- * refactoring
- *
- * Revision 1.20  2003/12/01 14:44:53  dvd
- * patterns in progress
- *
- * Revision 1.19  2003/11/29 20:51:39  dvd
- * nameclasses
- *
- * Revision 1.18  2003/11/29 18:06:02  dvd
- * fixes
- *
- * Revision 1.17  2003/11/29 17:47:48  dvd
- * decl
- *
- * Revision 1.16  2003/11/27 23:19:31  dvd
- * syntax and external files
- *
- * Revision 1.14  2003/11/27 14:19:15  dvd
- * syntax done, now to includes
- *
- * Revision 1.13  2003/11/26 23:49:00  dvd
- * syntax almost ready
- *
- * Revision 1.12  2003/11/26 00:37:47  dvd
- * parser in progress, documentation handling removed
- *
- * Revision 1.11  2003/11/25 13:14:21  dvd
- * scanner ready
- *
- * Revision 1.10  2003/11/25 10:33:53  dvd
- * documentation and comments
- *
- * Revision 1.9  2003/11/24 23:00:27  dvd
- * literal, error reporting
- *
- * Revision 1.8  2003/11/23 16:16:06  dvd
- * no roles for elements
- *
- * Revision 1.7  2003/11/21 00:20:06  dvd
- * lexer in progress
- *
- * Revision 1.4  2003/11/20 23:28:50  dvd
- * getu,getv debugged
- *
- * Revision 1.3  2003/11/20 16:29:08  dvd
- * x escapes sketched
- *
- * Revision 1.2  2003/11/20 07:46:16  dvd
- * +er, rnc in progress
- *
- * Revision 1.1  2003/11/19 00:28:57  dvd
- * back to lists of ranges
- *
- */

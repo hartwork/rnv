@@ -169,7 +169,7 @@ int apply_after(int (*f)(int q1,int q2),int p1,int p0) {
 static int start_tag_open(int p,int uri,int name,int recover) {
   int nc,p1,p2,m,ret=0;
   m=newStartTagOpen(p,uri,name);
-  if(m!=-1) if(recover) forget_m(); else return M_RET(m);
+  if(m!=-1) {if(recover) forget_m(); else return M_RET(m);}
   switch(P_TYP(p)) {
   case P_EMPTY: case P_NOT_ALLOWED: case P_TEXT: 
   case P_LIST: case P_DATA: case P_DATA_EXCEPT: case P_VALUE:
@@ -254,7 +254,7 @@ int drv_attribute_recover(int p,char *suri,char *sname,char *s) {
 static int start_tag_close(int p,int recover) {
   int p1,p2,ret=0,m;
   m=newStartTagClose(p);
-  if(m!=-1) if(recover) forget_m(); else return M_RET(m);
+  if(m!=-1) {if(recover) forget_m(); else return M_RET(m);}
   switch(P_TYP(p)) {
   case P_EMPTY: case P_NOT_ALLOWED: case P_TEXT:
   case P_LIST: case P_DATA: case P_DATA_EXCEPT: case P_VALUE:
@@ -356,7 +356,7 @@ int drv_text_recover(int p,char *s,int n) {return p;}
 static int end_tag(int p,int recover) {
   int p1,p2,ret=0,m;
   m=newEndTag(p);
-  if(m!=-1) if(recover) forget_m(); else return M_RET(m);
+  if(m!=-1) {if(recover) forget_m(); else return M_RET(m);}
   switch(P_TYP(p)) {
   case P_EMPTY: case P_NOT_ALLOWED: case P_TEXT:
   case P_INTERLEAVE: case P_GROUP: case P_ONE_OR_MORE:
@@ -378,46 +378,3 @@ static int end_tag(int p,int recover) {
 }
 int drv_end_tag(int p) {return end_tag(p,0);}
 int drv_end_tag_recover(int p) {return end_tag(p,1);}
-
-/*
- * $Log$
- * Revision 1.13  2003/12/14 20:07:54  dvd
- * cleanups
- *
- * Revision 1.12  2003/12/14 15:40:41  dvd
- * If a recovery condition is memoized, error is not reported again. I am not it is a good idea.
- *
- * Revision 1.11  2003/12/14 15:21:49  dvd
- * much better hash functions
- *
- * Revision 1.10  2003/12/14 14:52:24  dvd
- * efficient memoization
- *
- * Revision 1.9  2003/12/14 10:52:36  dvd
- * recovery
- *
- * Revision 1.8  2003/12/14 10:39:58  dvd
- * +rnx
- *
- * Revision 1.7  2003/12/13 22:31:54  dvd
- * a few bugfixes
- *
- * Revision 1.6  2003/12/13 22:03:30  dvd
- * rnv works
- *
- * Revision 1.5  2003/12/12 22:48:27  dvd
- * datatype parameters are supported
- *
- * Revision 1.4  2003/12/12 22:21:06  dvd
- * drv written, compiled, not yet debugged
- *
- * Revision 1.3  2003/12/11 23:35:34  dvd
- * derivative in progress
- *
- * Revision 1.2  2003/12/10 22:23:52  dvd
- * *** empty log message ***
- *
- * Revision 1.1  2003/12/08 22:39:15  dvd
- * +drv
- *
- */

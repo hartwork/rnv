@@ -22,11 +22,3 @@ int main(int argc,char **argv) {
   write(1,wbuf,j);
   return 0;
 }
-
-
-/*
- * $Log$
- * Revision 1.1  2003/12/11 17:01:32  dvd
- * utf8 is handled properly
- *
- */

@@ -22,31 +22,3 @@ extern int drv_end_tag(int p);
 extern int drv_end_tag_recover(int p);
 
 #endif
-
-/*
- * $Log$
- * Revision 1.8  2003/12/14 20:07:54  dvd
- * cleanups
- *
- * Revision 1.7  2003/12/14 10:39:58  dvd
- * +rnx
- *
- * Revision 1.6  2003/12/13 22:03:30  dvd
- * rnv works
- *
- * Revision 1.5  2003/12/12 22:21:06  dvd
- * drv written, compiled, not yet debugged
- *
- * Revision 1.4  2003/12/11 23:37:58  dvd
- * derivative in progress
- *
- * Revision 1.3  2003/12/10 22:23:52  dvd
- * *** empty log message ***
- *
- * Revision 1.2  2003/12/10 21:41:26  dvd
- * +xsd
- *
- * Revision 1.1  2003/12/08 22:39:15  dvd
- * +drv
- *
- */
