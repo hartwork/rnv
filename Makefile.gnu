@@ -1,5 +1,5 @@
 
-VERSION=1.6.0
+VERSION=1.6.1
 CC=cc
 
 # optional features
@@ -123,6 +123,7 @@ xsdck: xsdck.o ${LIBRNV}
 
 ${LIBRNVA}: ${OBJ}
 	ar rc $@ ${OBJ}
+	ranlib ${LIBRNVA}
 
 ${LIBRNVSO}: ${OBJ}
 	gcc -shared -o $@ ${OBJ}

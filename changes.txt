@@ -1,5 +1,8 @@
 /* $Id$ */
 
+1.6.1 Mon Mar  1 12:55:48 AMT 2004
+dvd: Added ranlib to Makefile to make rnv build smoothly on Mac OS X.
+
 1.6.0 Thu Feb 26 21:14:39 AMT 2004
 dvd: fixed mixed to be interleave, not choice. The test for this
      was wrong.
