@@ -142,11 +142,11 @@ static int validate(int fd) {
       fprintf(stderr,"I/O error (%s): %s\n",xml,strerror(errno));
       goto ERROR;
     }
-    if(len!=BUFSIZ) {
+    if(len==0) {
       if(!XML_ParseBuffer(expat,len,1)) goto PARSE_ERROR;
       break;
     } else {
-      if(!XML_ParseBuffer(expat,BUFSIZ,0)) goto PARSE_ERROR;
+      if(!XML_ParseBuffer(expat,len,0)) goto PARSE_ERROR;
       if(current==rn_notAllowed) break;
     }
   }
@@ -196,6 +196,9 @@ ERRORS:
 
 /*
  * $Log$
+ * Revision 1.15  2003/12/14 20:39:05  dvd
+ * ParseBuffer unless len==0
+ *
  * Revision 1.14  2003/12/14 20:07:54  dvd
  * cleanups
  *

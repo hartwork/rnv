@@ -970,12 +970,10 @@ static int datatype(struct rnc_source *sp) {
   switch(CUR(sp).sym) {
   case SYM_TOKEN: dt=newDatatype(0,rn_dt_token); break;
   case SYM_STRING: dt=newDatatype(0,rn_dt_string); break;
-  case SYM_QNAME: {
-      char *s=CUR(sp).s; while(*s!=':') ++s; *(s++)='\0';
+  case SYM_QNAME: 
+    { char *s=CUR(sp).s; while(*s!=':') ++s; *(s++)='\0';
       dt=newDatatype(dt2uri(sp,newString(CUR(sp).s)),newString(s));
-      break;
-    }
-    break;
+    } break;
   case SYM_LITERAL: dt=newDatatype(0,newString("token")); return dt;
   }
   getsym(sp);
@@ -1196,6 +1194,9 @@ int rnc_parse(struct rnc_source *sp) {
 
 /*
  * $Log$
+ * Revision 1.40  2003/12/14 20:39:05  dvd
+ * ParseBuffer unless len==0
+ *
  * Revision 1.39  2003/12/14 20:07:54  dvd
  * cleanups
  *

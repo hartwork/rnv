@@ -349,7 +349,7 @@ static int equal_p(int p1,int p2);
 static int equal_nc(int nc1,int nc2); 
 static int equal_s(int s1,int s2);
 
-static void windup();
+static void windup(void);
 
 static int initialized=0;
 void rn_init() {
@@ -407,6 +407,9 @@ static int equal_s(int s1,int s2) {return strcmp(rn_string+s1,rn_string+s2)==0;}
 
 /* 
  * $Log$
+ * Revision 1.26  2003/12/14 20:39:05  dvd
+ * ParseBuffer unless len==0
+ *
  * Revision 1.25  2003/12/14 20:07:54  dvd
  * cleanups
  *

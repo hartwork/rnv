@@ -12,11 +12,11 @@
 
 #define vx(c,u) c=0x80|((u)&0x3F)
 #define v1(t,u) t[0]=u
-#define v2(t,u) t[0]=0xC0|u>>6;vx(t[1],u)
-#define v3(t,u) t[0]=0xE0|u>>12;vx(t[1],u>>6);vx(t[2],u)
-#define v4(t,u) t[0]=0xF0|u>>18;vx(t[1],u>>12);vx(t[2],u>>6);vx(t[3],u)
-#define v5(t,u) t[0]=0xF8|u>>24;vx(t[1],u>>18);vx(t[2],u>>12);vx(t[3],u>>6);vx(t[4],u)
-#define v6(t,u) t[0]=0xFC|u>>30;t[1]=0xF8|u>>24;vx(t[2],u>>18);vx(t[3],u>>12);vx(t[4],u>>6);vx(t[5],u)
+#define v2(t,u) t[0]=0xC0|(u>>6);vx(t[1],u)
+#define v3(t,u) t[0]=0xE0|(u>>12);vx(t[1],u>>6);vx(t[2],u)
+#define v4(t,u) t[0]=0xF0|(u>>18);vx(t[1],u>>12);vx(t[2],u>>6);vx(t[3],u)
+#define v5(t,u) t[0]=0xF8|(u>>24);vx(t[1],u>>18);vx(t[2],u>>12);vx(t[3],u>>6);vx(t[4],u)
+#define v6(t,u) t[0]=0xFC|(u>>30);vx(t[1],u>>24);vx(t[2],u>>18);vx(t[3],u>>12);vx(t[4],u>>6);vx(t[5],u)
 
 #define B1 0xFFFFFF80
 #define B2 0xFFFFF800
@@ -78,6 +78,9 @@ int inRange(int u,int r[][2],int len) {
 
 /*
  * $Log$
+ * Revision 1.11  2003/12/14 20:39:05  dvd
+ * ParseBuffer unless len==0
+ *
  * Revision 1.10  2003/12/11 23:35:15  dvd
  * unicode mess
  *
