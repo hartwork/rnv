@@ -34,7 +34,7 @@ them to variables in the local scope, and a creator.
 
 /* Pattern Bindings */
 #define RN_P_TYP(i) (rn_pattern[i]&0xFF)
-#define RN_P_IS(i,x)  (RN_P_##x==RN_P_TYP(i))
+#define RN_P_IS(i,x)  (x==RN_P_TYP(i))
 #define RN_P_CHK(i,x)  assert(RN_P_IS(i,x))
 
 #define RN_P_FLG_NUL 0x00000100
@@ -57,21 +57,21 @@ them to variables in the local scope, and a creator.
 
 /* assert: p1 at 1, p2 at 2 */
 
-#define rn_NotAllowed(i) RN_P_CHK(i,NOT_ALLOWED)
-#define rn_Empty(i) RN_P_CHK(i,EMPTY)
-#define rn_Text(i) RN_P_CHK(i,TEXT)
-#define rn_Choice(i,p1,p2) RN_P_CHK(i,CHOICE); p1=rn_pattern[i+1]; p2=rn_pattern[i+2]
-#define rn_Interleave(i,p1,p2) RN_P_CHK(i,INTERLEAVE); p1=rn_pattern[i+1]; p2=rn_pattern[i+2]
-#define rn_Group(i,p1,p2) RN_P_CHK(i,GROUP); p1=rn_pattern[i+1]; p2=rn_pattern[i+2]
-#define rn_OneOrMore(i,p1) RN_P_CHK(i,ONE_OR_MORE); p1=rn_pattern[i+1]
-#define rn_List(i,p1) RN_P_CHK(i,LIST); p1=rn_pattern[i+1]
-#define rn_Data(i,dt,ps) RN_P_CHK(i,DATA); dt=rn_pattern[i+1]; ps=rn_pattern[i+2]
-#define rn_DataExcept(i,p1,p2) RN_P_CHK(i,DATA_EXCEPT); p1=rn_pattern[i+1]; p2=rn_pattern[i+2]
-#define rn_Value(i,dt,s) RN_P_CHK(i,VALUE); dt=rn_pattern[i+1]; s=rn_pattern[i+2]
-#define rn_Attribute(i,nc,p1) RN_P_CHK(i,ATTRIBUTE);  p1=rn_pattern[i+1]; nc=rn_pattern[i+2]
-#define rn_Element(i,nc,p1) RN_P_CHK(i,ELEMENT); p1=rn_pattern[i+1]; nc=rn_pattern[i+2]
-#define rn_After(i,p1,p2) RN_P_CHK(i,AFTER); p1=rn_pattern[i+1]; p2=rn_pattern[i+2]
-#define rn_Ref(i,p) RN_P_CHK(i,REF); p=rn_pattern[i+1]
+#define rn_NotAllowed(i) RN_P_CHK(i,RN_P_NOT_ALLOWED)
+#define rn_Empty(i) RN_P_CHK(i,RN_P_EMPTY)
+#define rn_Text(i) RN_P_CHK(i,RN_P_TEXT)
+#define rn_Choice(i,p1,p2) RN_P_CHK(i,RN_P_CHOICE); p1=rn_pattern[i+1]; p2=rn_pattern[i+2]
+#define rn_Interleave(i,p1,p2) RN_P_CHK(i,RN_P_INTERLEAVE); p1=rn_pattern[i+1]; p2=rn_pattern[i+2]
+#define rn_Group(i,p1,p2) RN_P_CHK(i,RN_P_GROUP); p1=rn_pattern[i+1]; p2=rn_pattern[i+2]
+#define rn_OneOrMore(i,p1) RN_P_CHK(i,RN_P_ONE_OR_MORE); p1=rn_pattern[i+1]
+#define rn_List(i,p1) RN_P_CHK(i,RN_P_LIST); p1=rn_pattern[i+1]
+#define rn_Data(i,dt,ps) RN_P_CHK(i,RN_P_DATA); dt=rn_pattern[i+1]; ps=rn_pattern[i+2]
+#define rn_DataExcept(i,p1,p2) RN_P_CHK(i,RN_P_DATA_EXCEPT); p1=rn_pattern[i+1]; p2=rn_pattern[i+2]
+#define rn_Value(i,dt,s) RN_P_CHK(i,RN_P_VALUE); dt=rn_pattern[i+1]; s=rn_pattern[i+2]
+#define rn_Attribute(i,nc,p1) RN_P_CHK(i,RN_P_ATTRIBUTE);  p1=rn_pattern[i+1]; nc=rn_pattern[i+2]
+#define rn_Element(i,nc,p1) RN_P_CHK(i,RN_P_ELEMENT); p1=rn_pattern[i+1]; nc=rn_pattern[i+2]
+#define rn_After(i,p1,p2) RN_P_CHK(i,RN_P_AFTER); p1=rn_pattern[i+1]; p2=rn_pattern[i+2]
+#define rn_Ref(i,p) RN_P_CHK(i,RN_P_REF); p=rn_pattern[i+1]
 
 /* Name Classes */
 #define RN_NC_ERROR 0
@@ -84,15 +84,15 @@ them to variables in the local scope, and a creator.
 
 /* Name Class Bindings  */
 #define RN_NC_TYP(i) (rn_nameclass[i]&0xFF)
-#define RN_NC_IS(i,x) (RN_NC_##x==RN_NC_TYP(i))
+#define RN_NC_IS(i,x) (x==RN_NC_TYP(i))
 #define RN_NC_CHK(i,x) assert(RN_NC_IS(i,x))
 
-#define rn_QName(i,uri,name) RN_NC_CHK(i,QNAME); uri=rn_nameclass[i+1]; name=rn_nameclass[i+2]
-#define rn_NsName(i,uri) RN_NC_CHK(i,NSNAME); uri=rn_nameclass[i+1]
-#define rn_AnyName(i) RN_NC_CHK(i,ANY_NAME)
-#define rn_NameClassExcept(i,nc1,nc2) RN_NC_CHK(i,EXCEPT); nc1=rn_nameclass[i+1]; nc2=rn_nameclass[i+2]
-#define rn_NameClassChoice(i,nc1,nc2) RN_NC_CHK(i,CHOICE); nc1=rn_nameclass[i+1]; nc2=rn_nameclass[i+2]
-#define rn_Datatype(i,lib,typ) RN_NC_CHK(i,DATATYPE); lib=rn_nameclass[i+1]; typ=rn_nameclass[i+2]
+#define rn_QName(i,uri,name) RN_NC_CHK(i,RN_NC_QNAME); uri=rn_nameclass[i+1]; name=rn_nameclass[i+2]
+#define rn_NsName(i,uri) RN_NC_CHK(i,RN_NC_NSNAME); uri=rn_nameclass[i+1]
+#define rn_AnyName(i) RN_NC_CHK(i,RN_NC_ANY_NAME)
+#define rn_NameClassExcept(i,nc1,nc2) RN_NC_CHK(i,RN_NC_EXCEPT); nc1=rn_nameclass[i+1]; nc2=rn_nameclass[i+2]
+#define rn_NameClassChoice(i,nc1,nc2) RN_NC_CHK(i,RN_NC_CHOICE); nc1=rn_nameclass[i+1]; nc2=rn_nameclass[i+2]
+#define rn_Datatype(i,lib,typ) RN_NC_CHK(i,RN_NC_DATATYPE); lib=rn_nameclass[i+1]; typ=rn_nameclass[i+2]
 
 extern int rn_empty,rn_text,rn_notAllowed,rn_dt_string,rn_dt_token,rn_xsd_uri;
 

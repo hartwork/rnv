@@ -11,7 +11,7 @@
 
 #if M_STATIC
 
-#ifndef M_FILL 
+#ifndef M_FILL
 #define M_FILL '\0'
 #endif
 

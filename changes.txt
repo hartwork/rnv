@@ -1,5 +1,9 @@
 /* $Id$ */
 
+1.6.0
+Wed Feb 25 03:59:45 AMT 2004
+dvd: got rid of ##; prone to name conflicts
+
 1.5.8 Wed Feb 18 16:53:05 AMT 2004
 dvd: enhanced diagnostics: first required elements and attributes
      are reported, then optional

@@ -49,10 +49,10 @@ static void error(int er_no,...) {
 
 static int de(int p) {
   int p0=p,p1;
-  RN_P_CHK(p,REF);
+  RN_P_CHK(p,RN_P_REF);
   for(;;) {
     rn_Ref(p,p1);
-    if(!RN_P_IS(p1,REF)||p1==p0) break;
+    if(!RN_P_IS(p1,RN_P_REF)||p1==p0) break;
     p=p1;
   }
   return p1;
@@ -64,7 +64,7 @@ static void deref(int start) {
   int p,p1,p2,nc,i,changed;
 
   flat=(int*)m_alloc(len_f=LEN_F,sizeof(int)); n_f=0;
-  if(RN_P_IS(start,REF)) start=de(start);
+  if(RN_P_IS(start,RN_P_REF)) start=de(start);
   flatten(start);
 
   i=0;
@@ -80,8 +80,8 @@ static void deref(int start) {
     case RN_P_DATA_EXCEPT: rn_DataExcept(p,p1,p2); goto BINARY;
     BINARY:
       changed=0;
-      if(RN_P_IS(p1,REF)) {p1=de(p1); changed=1;}
-      if(RN_P_IS(p2,REF)) {p2=de(p2); changed=1;}
+      if(RN_P_IS(p1,RN_P_REF)) {p1=de(p1); changed=1;}
+      if(RN_P_IS(p2,RN_P_REF)) {p2=de(p2); changed=1;}
       if(changed) {rn_del_p(p); rn_pattern[p+1]=p1; rn_pattern[p+2]=p2; rn_add_p(p);}
       if(n_f+2>len_f) flat=(int*)m_stretch(flat,len_f=2*(n_f+2),n_f,sizeof(int));
       flatten(p1); flatten(p2);
@@ -93,7 +93,7 @@ static void deref(int start) {
     case RN_P_ELEMENT: rn_Element(p,nc,p1); goto UNARY;
     UNARY:
       changed=0;
-      if(RN_P_IS(p1,REF)) {p1=de(p1); changed=1;}
+      if(RN_P_IS(p1,RN_P_REF)) {p1=de(p1); changed=1;}
       if(changed) {rn_del_p(p); rn_pattern[p+1]=p1; rn_add_p(p);}
       if(n_f+1>len_f) flat=(int*)m_stretch(flat,len_f=2*(n_f+1),n_f,sizeof(int));
       flatten(p1);
@@ -152,7 +152,7 @@ static void loops(void) {
     for(;;) {++i;
       if(i==n_f) return;
       p=flat[i];
-      if(RN_P_IS(p,ELEMENT)) {
+      if(RN_P_IS(p,RN_P_ELEMENT)) {
 	rn_Element(p,nc,p1); p=p1;
 	break;
       }
@@ -192,7 +192,7 @@ static void ctypes(void) {
   int i,p,p1,nc;
   for(i=0;i!=n_f;++i) {
     p=flat[i];
-    if(RN_P_IS(p,ELEMENT)) {
+    if(RN_P_IS(p,RN_P_ELEMENT)) {
       rn_Element(p,nc,p1);
       ctype(p1);
       if(!rn_contentType(p1)) {
@@ -354,7 +354,7 @@ static void paths(void) {
   if(bad_start(flat[0])) error(RND_ER_BADSTART);
   for(i=0;i!=n_f;++i) {
     p=flat[i];
-    if(RN_P_IS(p,ELEMENT)) {
+    if(RN_P_IS(p,RN_P_ELEMENT)) {
       rn_Element(p,nc,p1);
       path(p1,nc);
     }

@@ -269,7 +269,7 @@ static void getsym(void) {
 	getcc(); sym=SYM_NMTC;
       } else {
 	if(getid()) {
-          if(strcmp("valid",value)!=0) {error(ARX_ER_EXP,sym2str(SYM_NVAL),value);} sym=SYM_NVAL;
+	  if(strcmp("valid",value)!=0) {error(ARX_ER_EXP,sym2str(SYM_NVAL),value);} sym=SYM_NVAL;
 	} else {error(ARX_ER_SYN); sym=SYM_INVL;}
       }
       return;
@@ -454,7 +454,7 @@ int main(int argc,char **argv) {
       int i;
       for(i=0;i!=i_r;++i) {
 	switch(rules[i][0]) {
-        case VALID: if((ok=wf)) {validate(rules[i][1],fd=open(xml,O_RDONLY)); close(fd);} break;
+	case VALID: if((ok=wf)) {validate(rules[i][1],fd=open(xml,O_RDONLY)); close(fd);} break;
 	case INVAL: if((ok=wf)) {validate(rules[i][1],fd=open(xml,O_RDONLY)); close(fd); ok=wf&&!ok;} break;
 	case MATCH: ok=rx_match(string+rules[i][1],xml,strlen(xml)); break;
 	case NOMAT: ok=!rx_match(string+rules[i][1],xml,strlen(xml)); break;

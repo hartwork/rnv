@@ -60,14 +60,14 @@ static void verror_handler(int erno,va_list ap) {
 	rnv_default_verror_handler(erno&~ERBIT_RNV,ap);
 	if(nexp) { int req=2, i=0; char *s;
 	  while(req--) {
-            rnx_expected(previous,req);
+	    rnx_expected(previous,req);
 	    if(i==rnx_n_exp) continue;
 	    if(rnx_n_exp>nexp) break;
-            (*er_printf)(req?"required:\n":"allowed:\n");
-            for(;i!=rnx_n_exp;++i) {
-              (*er_printf)("\t%s\n",s=rnx_p2str(rnx_exp[i]));
-              m_free(s);
-            }
+	    (*er_printf)(req?"required:\n":"allowed:\n");
+	    for(;i!=rnx_n_exp;++i) {
+	      (*er_printf)("\t%s\n",s=rnx_p2str(rnx_exp[i]));
+	      m_free(s);
+	    }
 	  }
 	}
       } else {
@@ -182,18 +182,18 @@ ERROR:
 
 static int externalEntityRef(XML_Parser p,const char *context, const char *base,const char *systemId,const char *publicId) {
   ok=0;
-  if(systemId) {    
+  if(systemId) {
     int fd; char *entity;
     assert(base);
     entity=(char*)m_alloc(strlen(base)+strlen(systemId)+2,1);
     strcpy(entity,systemId); s_abspath(entity,(char*)base);
     if((fd=open(entity,O_RDONLY))==-1) {
       error_handler(XCL_ER_NOXENT,entity,strerror(errno));
-    } else { 
+    } else {
       XML_Parser expat0=expat; char *xml0=xml; xml=entity;
       expat=XML_ExternalEntityParserCreate(expat0,context,NULL);
       ok=process(fd);
-      XML_ParserFree(expat); 
+      XML_ParserFree(expat);
       xml=xml0; expat=expat0;
       close(fd);
     }

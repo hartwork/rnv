@@ -50,7 +50,7 @@ static void expected(int p,int first,int req) {
   case RN_P_REF: break;
   default: assert(0);
   }
-  if(px&&(first||RN_P_IS(px,ATTRIBUTE))) {
+  if(px&&(first||RN_P_IS(px,RN_P_ATTRIBUTE))) {
     for(i=0;i!=rnx_n_exp;++i) {
       if(rnx_exp[i]==px) {px=0; break;}
     }

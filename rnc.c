@@ -826,9 +826,9 @@ static int nameclass(struct rnc_source *sp) {
       int nci;
       getsym(sp);
       nci=simplenc(sp);
-      if(nc==nci||RN_NC_IS(nc,ANY_NAME)) {
+      if(nc==nci||RN_NC_IS(nc,RN_NC_ANY_NAME)) {
 	;
-      } else if(RN_NC_IS(nci,ANY_NAME)) {
+      } else if(RN_NC_IS(nci,RN_NC_ANY_NAME)) {
 	nc=nci;
       } else {
 	nc=rn_newNameClassChoice(nc,nci);
@@ -836,7 +836,7 @@ static int nameclass(struct rnc_source *sp) {
     } while(CUR(sp).sym==SYM_CHOICE);
     break;
   case SYM_EXCEPT:
-    if(!(RN_NC_IS(nc,ANY_NAME)||RN_NC_IS(nc,NSNAME))) error(1,sp,RNC_ER_NCEX,sp->fn,CUR(sp).line,CUR(sp).col);
+    if(!(RN_NC_IS(nc,RN_NC_ANY_NAME)||RN_NC_IS(nc,RN_NC_NSNAME))) error(1,sp,RNC_ER_NCEX,sp->fn,CUR(sp).line,CUR(sp).col);
     getsym(sp);
     nc=rn_newNameClassExcept(nc,simplenc(sp));
     break;
@@ -1077,7 +1077,7 @@ static int pattern(struct rnc_source *sp) {
     } while(CUR(sp).sym==op);
     break;
   case SYM_EXCEPT:
-    if(!RN_P_IS(p,DATA)) error(1,sp,RNC_ER_EXPT,sp->fn,CUR(sp).line,CUR(sp).col);
+    if(!RN_P_IS(p,RN_P_DATA)) error(1,sp,RNC_ER_EXPT,sp->fn,CUR(sp).line,CUR(sp).col);
     getsym(sp);
     p=rn_newDataExcept(p,primary(sp));
   }

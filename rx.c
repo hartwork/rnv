@@ -40,21 +40,21 @@
 static int p_size[]={1,1,1,3,3,2,3,3,2,1,2};
 
 #define P_TYP(i) (pattern[i]&0xF)
-#define P_IS(i,x)  (P_##x==P_TYP(i))
+#define P_IS(i,x)  (x==P_TYP(i))
 #define P_CHK(i,x)  assert(P_IS(i,x))
 
 #define P_unop(TYP,p,p1) P_CHK(p,TYP); p1=pattern[p+1]
 #define P_binop(TYP,p,p1,p2) P_unop(TYP,p,p1); p2=pattern[p+2]
-#define NotAllowed(p) P_CHK(p,NotAllowed)
-#define Empty(p) P_CHK(p,Empty)
-#define Any(p) P_CHK(p,Any)
-#define Choice(p,p1,p2) P_binop(CHOICE,p,p1,p2)
-#define Group(p,p1,p2) P_binop(GROUP,p,p1,p2)
-#define OneOrMore(p,p1) P_unop(ONE_OR_MORE,p,p1)
-#define Except(p,p1,p2) P_binop(EXCEPT,p,p1,p2)
-#define Range(p,cf,cl) P_binop(RANGE,p,cf,cl)
-#define Class(p,cn) P_unop(CLASS,p,cn)
-#define Char(p,c) P_unop(CHAR,p,c)
+#define NotAllowed(p) P_CHK(p,P_NotAllowed)
+#define Empty(p) P_CHK(p,P_Empty)
+#define Any(p) P_CHK(p,P_Any)
+#define Choice(p,p1,p2) P_binop(P_CHOICE,p,p1,p2)
+#define Group(p,p1,p2) P_binop(P_GROUP,p,p1,p2)
+#define OneOrMore(p,p1) P_unop(P_ONE_OR_MORE,p,p1)
+#define Except(p,p1,p2) P_binop(P_EXCEPT,p,p1,p2)
+#define Range(p,cf,cl) P_binop(P_RANGE,p,cf,cl)
+#define Class(p,cn) P_unop(P_CLASS,p,cn)
+#define Char(p,c) P_unop(P_CHAR,p,c)
 
 #define P_NUL 0x100
 
@@ -85,52 +85,52 @@ static int accept_p(void) {
   return j;
 }
 
-#define P_NEW(x) (pattern[i_p]=P_##x)
+#define P_NEW(x) (pattern[i_p]=x)
 
 #define P_newunop(TYP,p1) P_NEW(TYP); pattern[i_p+1]=p1
 #define P_newbinop(TYP,p1,p2) P_newunop(TYP,p1); pattern[i_p+2]=p2
-static int newNotAllowed(void) {P_NEW(NOT_ALLOWED); return accept_p();}
-static int newEmpty(void) {P_NEW(EMPTY); setNullable(1); return accept_p();}
-static int newAny(void) {P_NEW(ANY); return accept_p();}
-static int newChoice(int p1,int p2) {P_newbinop(CHOICE,p1,p2); setNullable(nullable(p1)||nullable(p2)); return accept_p();}
-static int newGroup(int p1,int p2) {P_newbinop(GROUP,p1,p2); setNullable(nullable(p1)&&nullable(p2)); return accept_p();}
-static int newOneOrMore(int p1) {P_newunop(ONE_OR_MORE,p1); setNullable(nullable(p1)); return accept_p();}
-static int newExcept(int p1,int p2) {P_newbinop(EXCEPT,p1,p2); return accept_p();}
-static int newRange(int cf,int cl) {P_newbinop(RANGE,cf,cl); return accept_p();}
-static int newClass(int cn) {P_newunop(CLASS,cn); return accept_p();}
-static int newChar(int c) {P_newunop(CHAR,c); return accept_p();}
+static int newNotAllowed(void) {P_NEW(P_NOT_ALLOWED); return accept_p();}
+static int newEmpty(void) {P_NEW(P_EMPTY); setNullable(1); return accept_p();}
+static int newAny(void) {P_NEW(P_ANY); return accept_p();}
+static int newChoice(int p1,int p2) {P_newbinop(P_CHOICE,p1,p2); setNullable(nullable(p1)||nullable(p2)); return accept_p();}
+static int newGroup(int p1,int p2) {P_newbinop(P_GROUP,p1,p2); setNullable(nullable(p1)&&nullable(p2)); return accept_p();}
+static int newOneOrMore(int p1) {P_newunop(P_ONE_OR_MORE,p1); setNullable(nullable(p1)); return accept_p();}
+static int newExcept(int p1,int p2) {P_newbinop(P_EXCEPT,p1,p2); return accept_p();}
+static int newRange(int cf,int cl) {P_newbinop(P_RANGE,cf,cl); return accept_p();}
+static int newClass(int cn) {P_newunop(P_CLASS,cn); return accept_p();}
+static int newChar(int c) {P_newunop(P_CHAR,c); return accept_p();}
 
 static int one_or_more(int p) {
-  if(P_IS(p,EMPTY)) return p;
-  if(P_IS(p,NOT_ALLOWED)) return p;
+  if(P_IS(p,P_EMPTY)) return p;
+  if(P_IS(p,P_NOT_ALLOWED)) return p;
   return newOneOrMore(p);
 }
 
 static int group(int p1,int p2) {
-  if(P_IS(p1,NOT_ALLOWED)) return p1;
-  if(P_IS(p2,NOT_ALLOWED)) return p2;
-  if(P_IS(p1,EMPTY)) return p2;
-  if(P_IS(p2,EMPTY)) return p1;
+  if(P_IS(p1,P_NOT_ALLOWED)) return p1;
+  if(P_IS(p2,P_NOT_ALLOWED)) return p2;
+  if(P_IS(p1,P_EMPTY)) return p2;
+  if(P_IS(p2,P_EMPTY)) return p1;
   return newGroup(p1,p2);
 }
 
 static int samechoice(int p1,int p2) {
-  if(P_IS(p1,CHOICE)) {
+  if(P_IS(p1,P_CHOICE)) {
     int p11,p12; Choice(p1,p11,p12);
     return p12==p2||samechoice(p11,p2);
   } else return p1==p2;
 }
 
 static int choice(int p1,int p2) {
-  if(P_IS(p1,NOT_ALLOWED)) return p2;
-  if(P_IS(p2,NOT_ALLOWED)) return p1;
-  if(P_IS(p2,CHOICE)) {
+  if(P_IS(p1,P_NOT_ALLOWED)) return p2;
+  if(P_IS(p2,P_NOT_ALLOWED)) return p1;
+  if(P_IS(p2,P_CHOICE)) {
     int p21,p22; Choice(p2,p21,p22);
     p1=choice(p1,p21); return choice(p1,p22);
   }
   if(samechoice(p1,p2)) return p1;
-  if(nullable(p1) && (P_IS(p2,EMPTY))) return p1;
-  if(nullable(p2) && (P_IS(p1,EMPTY))) return p2;
+  if(nullable(p1) && (P_IS(p2,P_EMPTY))) return p1;
+  if(nullable(p2) && (P_IS(p1,P_EMPTY))) return p2;
   return newChoice(p1,p2);
 }
 
@@ -331,7 +331,7 @@ static void getsym(void) {
       case 't': sym=SYM_ESC; val=0x9; break;
       case '\\': case '|': case '.': case '-': case '^': case '?': case '*': case '+':
       case '{': case '}': case '[': case ']': case '(': case ')':
-        sym=SYM_ESC; val=u; break;
+	sym=SYM_ESC; val=u; break;
       default: error(RX_ER_BADCH); sym=SYM_ESC; val=u; break;
       }
     } else {
@@ -352,7 +352,7 @@ static int chgroup(void) {
   int p=notAllowed,c;
   for(;;) {
     switch(sym) {
-    case SYM_CHR: chkrch(val); 
+    case SYM_CHR: chkrch(val);
     case SYM_ESC: c=val; getsym();
       if(sym==SYM_CHR&&val=='-') {
 	if(regex[ri]=='[') {
@@ -656,7 +656,7 @@ static int in_class(int c,int cn) {
 
 static int drv(int p,int c) {
   int p1,p2,cf,cl,cn,ret,m;
-  assert(!P_IS(p,ERROR));
+  assert(!P_IS(p,P_ERROR));
   m=new_memo(p,c);
   if(m!=-1) return M_RET(m);
   switch(P_TYP(p)) {
