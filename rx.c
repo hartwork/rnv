@@ -23,8 +23,8 @@
 
 /* it is good to have few patterns when deltas are memoized */
 #define P_ERROR 0
-#define P_EMPTY 1
-#define P_NOT_ALLOWED  2
+#define P_NOT_ALLOWED  1
+#define P_EMPTY 2
 #define P_CHOICE 3
 #define P_GROUP 4
 #define P_ONE_OR_MORE 5 /*+*/
@@ -43,11 +43,11 @@ static int p_size[]={1,1,1,3,3,2,3,3,2,1,2};
 #define P_IS(i,x)  (P_##x==P_TYP(i))
 #define P_CHK(i,x)  assert(P_IS(i,x))
 
-#define P_binop(TYP,p,p1,p2) P_CHK(p,TYP); p1=pattern[p+1]; p2=pattern[p+2]
 #define P_unop(TYP,p,p1) P_CHK(p,TYP); p1=pattern[p+1]
-#define Empty(p) P_CHK(p,Empty)
+#define P_binop(TYP,p,p1,p2) P_unop(TYP,p,p1); p2=pattern[p+2]
 #define NotAllowed(p) P_CHK(p,NotAllowed)
-#define Any(p) P_CHK(p,Empty)
+#define Empty(p) P_CHK(p,Empty)
+#define Any(p) P_CHK(p,Any)
 #define Choice(p,p1,p2) P_binop(CHOICE,p,p1,p2)
 #define Group(p,p1,p2) P_binop(GROUP,p,p1,p2)
 #define OneOrMore(p,p1) P_unop(ONE_OR_MORE,p,p1)
@@ -87,11 +87,11 @@ static int accept_p(void) {
 
 #define P_NEW(x) (pattern[i_p]=P_##x)
 
-#define P_newbinop(TYP,p1,p2) P_NEW(TYP); pattern[i_p+1]=p1; pattern[i_p+2]=p2
 #define P_newunop(TYP,p1) P_NEW(TYP); pattern[i_p+1]=p1
+#define P_newbinop(TYP,p1,p2) P_newunop(TYP,p1); pattern[i_p+2]=p2
+static int newNotAllowed(void) {P_NEW(NOT_ALLOWED); return accept_p();}
 static int newEmpty(void) {P_NEW(EMPTY); setNullable(1); return accept_p();}
 static int newAny(void) {P_NEW(ANY); return accept_p();}
-static int newNotAllowed(void) {P_NEW(NOT_ALLOWED); return accept_p();}
 static int newChoice(int p1,int p2) {P_newbinop(CHOICE,p1,p2); setNullable(nullable(p1)||nullable(p2)); return accept_p();}
 static int newGroup(int p1,int p2) {P_newbinop(GROUP,p1,p2); setNullable(nullable(p1)&&nullable(p2)); return accept_p();}
 static int newOneOrMore(int p1) {P_newunop(ONE_OR_MORE,p1); setNullable(nullable(p1)); return accept_p();}
@@ -659,7 +659,7 @@ static int drv(int p,int c) {
   m=new_memo(p,c);
   if(m!=-1) return M_RET(m);
   switch(P_TYP(p)) {
-  case P_EMPTY: case P_NOT_ALLOWED: ret=notAllowed; break;
+  case P_NOT_ALLOWED: case P_EMPTY: ret=notAllowed; break;
   case P_CHOICE: Choice(p,p1,p2); ret=choice(drv(p1,c),drv(p2,c)); break;
   case P_GROUP: Group(p,p1,p2); {int p11=group(drv(p1,c),p2); ret=nullable(p1)?choice(p11,drv(p2,c)):p11;} break;
   case P_ONE_OR_MORE: OneOrMore(p,p1); ret=group(drv(p1,c),choice(empty,p)); break;
