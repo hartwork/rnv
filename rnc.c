@@ -856,7 +856,7 @@ static int refname(struct rnc_source *sp,struct sc_stack *stp) {
   if(i=sc_find(stp,name)) {
     p=stp->tab[i][1];
   } else {
-    p=newRef(name);
+    p=newRef();
     sc_add(stp,name,p,0);
   }
   return p;
@@ -1165,6 +1165,8 @@ static int topLevel(struct rnc_source *sp) {
 int rnc_parse(struct rnc_source *sp) {
   int start,i;
 
+  rn_new_schema();
+
   sc_open(&nss); add_well_known_nss(0);
   open_scope(sp);
 
@@ -1185,6 +1187,9 @@ int rnc_parse(struct rnc_source *sp) {
 
 /*
  * $Log$
+ * Revision 1.32  2003/12/09 19:38:44  dvd
+ * failed to compress grammar
+ *
  * Revision 1.31  2003/12/08 23:16:15  dvd
  * multiple schema files as command-line arguments to rnv, cleanups in file handling code (rnc)
  *

@@ -20,6 +20,8 @@ static int parse(struct rnc_source *sp) {
   rnd_traits();
   rnd_release();
 
+  fprintf(stderr,"start=%i\n",start);
+
   return 1;
 }
 

@@ -18,8 +18,19 @@ int rn_empty,rn_text,rn_notAllowed;
 
 static struct hashtable ht_p, ht_nc, ht_s;
 
-int i_p, i_nc, i_s;
+static int i_p, i_nc, i_s,base_p,i_ref;
 static int len_p, len_nc, len_s;
+
+void rn_new_schema() {base_p=i_p; i_ref=0;}
+
+void rn_del_p(int i) {ht_del(&ht_p,i);}
+void rn_add_p(int i) {if(ht_get(&ht_p,i)==-1) ht_put(&ht_p,i);}
+
+void setNullable(int i,int x) {if(x) rn_pattern[i][0]|=P_FLG_NUL;}
+void setCdata(int i,int x) {if(x) rn_pattern[i][0]|=P_FLG_TXT;}
+void setContentType(int i,int t1,int t2) {
+  rn_pattern[i][0]|=(t1>t2?t1:t2);
+}
 
 int newString(char *s) {
   int len=strlen(s)+1, j;
@@ -36,15 +47,6 @@ int newString(char *s) {
 }
 
 #define P_NEW(x) rn_pattern[i_p][0]=P_##x
-
-void rn_del_p(int i) {ht_del(&ht_p,i);}
-void rn_add_p(int i) {ht_put(&ht_p,i);}
-
-void setNullable(int i,int x) {if(x) rn_pattern[i][0]|=P_FLG_NUL;}
-void setCdata(int i,int x) {if(x) rn_pattern[i][0]|=P_FLG_TXT;}
-void setContentType(int i,int t1,int t2) {
-  rn_pattern[i][0]|=(t1>t2?t1:t2);
-}
 
 #define accept(name,n,N)  \
 static int accept_##n() { \
@@ -148,9 +150,8 @@ int newAfter(int p1,int p2) { P_NEW(AFTER);
   return accept_p();
 }
 
-int newRef(int name) { P_NEW(REF);
-  rn_pattern[i_p][1]=i_p; /* it is unique */
-  rn_pattern[i_p][2]=name;
+int newRef() { P_NEW(REF);
+  rn_pattern[i_p][2]=i_ref++;
   return accept_p();
 }
 
@@ -336,12 +337,21 @@ static int hash_p(int i) {return hash_ary(i,(int*)rn_pattern,P_SIZE);}
 static int hash_nc(int i) {return hash_ary(i,(int*)rn_nameclass,NC_SIZE);}
 static int hash_s(int i) {return strhash(rn_string+i);}
 
-static int equal_p(int p1,int p2) {return memcmp(&rn_pattern[p1],&rn_pattern[p2],P_SIZE*sizeof(int))==0;}
-static int equal_nc(int nc1,int nc2)  {return memcmp(&rn_nameclass[nc1],&rn_nameclass[nc2],NC_SIZE*sizeof(int))==0;}
+static int equal_p(int p1,int p2) {
+  int *pp1=&rn_pattern[p1][0],*pp2=&rn_pattern[p2][0];
+  return pp1[0]==pp2[0] && pp1[1] == pp2[1] && pp1[2] == pp2[2];
+}
+static int equal_nc(int p1,int p2) {
+  int *ncp1=&rn_nameclass[p1][0],*ncp2=&rn_nameclass[p2][0];
+  return ncp1[0]==ncp2[0] && ncp1[1] == ncp2[1] && ncp1[2] == ncp2[2];
+}
 static int equal_s(int s1,int s2) {return strcmp(rn_string+s1,rn_string+s2)==0;}
 
 /* 
  * $Log$
+ * Revision 1.14  2003/12/09 19:38:44  dvd
+ * failed to compress grammar
+ *
  * Revision 1.13  2003/12/08 18:54:51  dvd
  * content-type checks
  *

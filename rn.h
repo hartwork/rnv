@@ -68,7 +68,7 @@ them to variables in the local scope, and a creator.
 #define Attribute(i,nc,p1) P_CHK(i,ATTRIBUTE);  p1=rn_pattern[i][1]; nc=rn_pattern[i][2]
 #define Element(i,nc,p1) P_CHK(i,ELEMENT); p1=rn_pattern[i][1]; nc=rn_pattern[i][2]
 #define After(i,p1,p2) P_CHK(i,AFTER); p1=rn_pattern[i][1]; p2=rn_pattern[i][2]
-#define Ref(i,p,name) P_CHK(i,REF); p=rn_pattern[i][1]; name=rn_pattern[i][2]
+#define Ref(i,p) P_CHK(i,REF); p=rn_pattern[i][1]
 
 /* Name Classes */
 #define NC_ERROR 0
@@ -101,12 +101,14 @@ extern char *rn_string;
 extern int (*rn_pattern)[P_SIZE];
 extern int (*rn_nameclass)[NC_SIZE];
 
-extern void rn_del_p(int i);
-extern void rn_add_p(int i);
+extern void rn_new_schema();
 
 extern void setNullable(int i,int x);
 extern void setCdata(int i,int x);
 extern void setContentType(int i,int t1,int t2);
+
+extern void rn_del_p(int i);
+extern void rn_add_p(int i);
 
 extern int newString(char *s);
 
@@ -149,6 +151,9 @@ extern void rn_clear();
 
 /*
  * $Log$
+ * Revision 1.15  2003/12/09 19:38:44  dvd
+ * failed to compress grammar
+ *
  * Revision 1.14  2003/12/07 20:41:42  dvd
  * bugfixes, loops, traits
  *

@@ -9,9 +9,11 @@
 #include "rnd.h"
 
 #define LEN_F 1024
+#define LEN_R 1024
 
-static int len_f,n_f;
+static int len_f,n_f,len_r,n_r;
 static int *flat;
+static int *refs;
 static int errors;
 
 int rnd_errors() {
@@ -30,11 +32,20 @@ static void realloc_f() {
   flat=newflat;
 }
 
+static void realloc_r() {
+  int *newrefs;
+  newrefs=(int*)calloc(len_r*=2,sizeof(int));
+  memcpy(newrefs,refs,n_r*sizeof(int)); free(refs);
+  refs=newrefs;
+}
+
 static int deref(int p) {
-  int p0=p,p1,name;
+  int p0=p,p1;
   P_CHK(p,REF);
   for(;;) {
-    Ref(p,p1,name);
+    if(!marked(p)) {if(n_r==len_r) realloc_r(); refs[n_r++]=p;}
+    mark(p);
+    Ref(p,p1);
     if(!P_IS(p1,REF)||p1==p0) break;
     p=p1;
   }
@@ -47,10 +58,11 @@ void rnd_deref(int start) {
   int p,p1,p2,nc,i,changed;
 
   flat=(int*)calloc(len_f=LEN_F,sizeof(int)); n_f=0;
+  refs=(int*)calloc(len_r=LEN_R,sizeof(int)); n_r=0;
   errors=0;
 
   if(P_IS(start,REF)) start=deref(start);
-  flat[n_f++]=start; mark(start);
+  flatten(start);
 
   i=0;
   do {
@@ -91,6 +103,8 @@ void rnd_deref(int start) {
     }
   } while(i!=n_f);
   for(i=0;i!=n_f;++i) unmark(flat[i]);
+  for(i=0;i!=n_r;++i) {p=refs[i]; rn_pattern[p][1]=0; unmark(p);}
+  free(refs);
 }
 
 static int loop(int p) {
@@ -159,8 +173,7 @@ static void ctype(int p) {
       if(rn_groupable(p1,p2)) setContentType(p,contentType(p1),contentType(p2)); break;
     case P_ONE_OR_MORE: OneOrMore(p,p1); ctype(p1);
       if(rn_groupable(p1,p1)) setContentType(p,contentType(p1),0); break;
-    case P_LIST: List(p,p1); ctype(p1); 
-      if(contentType(p1)) setContentType(p,P_FLG_CTS,0); break;
+    case P_LIST: setContentType(p,P_FLG_CTS,0); break;
     case P_DATA: setContentType(p,P_FLG_CTS,0); break;
     case P_DATA_EXCEPT: DataExcept(p,p1,p2); ctype(p1); ctype(p2);
       if(contentType(p2)) setContentType(p,P_FLG_CTS,0); break;
@@ -416,6 +429,9 @@ void rnd_release() {
 
 /*
  * $Log$
+ * Revision 1.7  2003/12/09 19:38:44  dvd
+ * failed to compress grammar
+ *
  * Revision 1.6  2003/12/08 23:18:48  dvd
  * string.h included from rnd for memcpy
  *
