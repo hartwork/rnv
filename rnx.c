@@ -6,7 +6,7 @@
 
 #define LEN_EXP 16
 
-int *rnx_exp;
+int *rnx_exp=NULL;
 int rnx_n_exp;
 static int len_exp;
 
@@ -61,6 +61,9 @@ void rnx_expected(int p) {
 
 /*
  * $Log$
+ * Revision 1.3  2003/12/14 14:52:24  dvd
+ * efficient memoization
+ *
  * Revision 1.2  2003/12/14 10:52:36  dvd
  * recovery
  *

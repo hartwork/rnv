@@ -1,9 +1,9 @@
 /* $Id$ */
 
-#include <stdlib.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <stdio.h>
+#include <stdlib.h> /*calloc,free*/
+#include <fcntl.h>  /*open,close*/
+#include <unistd.h> /*read*/
+#include <stdio.h>  /*fprintf,stderr*/
 #include <string.h> /*strerror,strncpy,strrchr*/
 #include <errno.h>
 #include <xmlparse.h>
@@ -24,6 +24,7 @@ static void init() {
   rn_init();
   rnc_init();
   rnd_init();
+  rnx_init();
   drv_init();
 }
 
@@ -69,8 +70,8 @@ static void qname(char *name) {
   if(len>len_suri) { len_suri=len;
     free(suri); suri=(char*)calloc(len_suri,sizeof(char));
   }
-  strncpy(suri,name,sep-name);
-  suri[sep-name]='\0';
+  strncpy(suri,name,len-1);
+  suri[len-1]='\0';
 }
 
 static void start_element(void *userData,const char *name,const char **attrs) {
@@ -191,6 +192,9 @@ ERRORS:
 
 /*
  * $Log$
+ * Revision 1.13  2003/12/14 14:52:24  dvd
+ * efficient memoization
+ *
  * Revision 1.12  2003/12/14 10:39:58  dvd
  * +rnx
  *

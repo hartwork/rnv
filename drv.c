@@ -4,6 +4,7 @@
 #include <stdlib.h> /*calloc,free*/
 #include <stdio.h> /*debugging*/
 #include "util.h" /*tokncmp,xml_white_space*/
+#include "ht.h"
 #include "rn.h"
 #include "er.h"
 #include "xsd.h"
@@ -17,9 +18,68 @@ struct dtl {
 
 #define LEN_DTL 4
 #define LEN_EXP 16
+#define M_SIZE 6
+#define LEN_M 1024
+
+#define M_STO 0
+#define M_STC 1
+#define M_ATT 2
+#define M_TXT 3
+#define M_END 4
+#define M_TYP(m) memo[m][0]
+#define M_SET(p) memo[i_m][5]=p
+#define M_RET(m) memo[m][5]
+#define M_NEW(x) memset(memo[i_m],0,sizeof(int[M_SIZE])); memo[i_m][0]=M_##x
 
 static struct dtl *dtl;
 static int len_dtl,n_dtl;
+static int (*memo)[M_SIZE];
+static int i_m,len_m;
+static struct hashtable ht_m;
+
+static int equal_m(int m1,int m2) {
+  int *me1=memo[m1],*me2=memo[m2];
+  return (me1[0]==me2[0])&&(me1[1]==me2[1])&&(me1[2]==me2[2])&&(me1[3]==me2[3])&&(me1[4]==me2[4]);
+}
+static int hash_m(int m) {
+  int *me=memo[m];
+  return (me[0]&0xf)+((me[1]&0x1ff)<<4)+((me[2]&0x1ff)<<13)+((me[3]&0x1ff)<<22)+(me[4]<<31);
+}
+
+static int accept_m();
+static int newStartTagOpen(int p,int uri,int name,int recover) { 
+  int *me=memo[i_m];
+  M_NEW(STO);
+  me[1]=p; me[2]=uri; me[3]=name; me[4]=recover;
+  return ht_get(&ht_m,i_m);
+}
+
+static int newStartTagClose(int p,int recover) {
+  int *me=memo[i_m];
+  M_NEW(STC);
+  me[1]=p; me[4]=recover;
+  return ht_get(&ht_m,i_m);
+}
+
+static int newEndTag(int p,int recover) {
+  int *me=memo[i_m];
+  M_NEW(END);
+  me[1]=p; me[4]=recover;
+  return ht_get(&ht_m,i_m);
+}
+
+static int accept_m() {
+  int j;
+  if((j=ht_get(&ht_m,i_m))==-1) {
+    ht_put(&ht_m,j=i_m++);
+    if(i_m==len_m) {
+      int (*newmemo)[M_SIZE]=(int (*)[])calloc(len_m*=2,sizeof(int[M_SIZE]));
+      memcpy(newmemo,memo,(i_m)*sizeof(int[M_SIZE]));
+      free(memo); memo=newmemo;
+    } 
+  }
+  return j;
+}
 
 static int fallback_equal(char *typ,char *val,char *s,int n) {return 1;}
 static int fallback_allows(char *typ,char *ps,char *s,int n) {return 1;}
@@ -39,19 +99,22 @@ static void windup();
 static int initialized=0;
 void drv_init() {
   if(!initialized) { initialized=1;
+    memo=(int (*)[])calloc(len_m=LEN_M,sizeof(int[M_SIZE]));
     dtl=(struct dtl*)calloc(len_dtl=LEN_DTL,sizeof(struct dtl));
+    ht_init(&ht_m,len_m,&hash_m,&equal_m);
     windup();
   }
 }
 
 static void windup() {
-  n_dtl=0;
+  i_m=0; n_dtl=0;
   drv_add_dtl(rn_string+0,&fallback_equal,&fallback_allows); /* guard at 0 */
   drv_add_dtl(rn_string+0,&builtin_equal,&builtin_allows);
   drv_add_dtl(rn_string+rn_xsd_uri,&xsd_equal,&xsd_allows);
 }
 
 void drv_clear() {
+  ht_clear(&ht_m);
   windup();
 }
 
@@ -103,10 +166,10 @@ int apply_after(int (*f)(int q1,int q2),int p1,int p0) {
   return 0;
 }
 
-/* ret is for experiments with memoization of results */
-
 static int start_tag_open(int p,int uri,int name,int recover) {
-  int nc,p1,p2,ret=0;
+  int nc,p1,p2,m,ret=0;
+  m=newStartTagOpen(p,uri,name,recover);
+  if(m!=-1) return M_RET(m);
   switch(P_TYP(p)) {
   case P_EMPTY: case P_NOT_ALLOWED: case P_TEXT: 
   case P_LIST: case P_DATA: case P_DATA_EXCEPT: case P_VALUE:
@@ -136,6 +199,8 @@ static int start_tag_open(int p,int uri,int name,int recover) {
     break;
   default: assert(0);
   }
+  newStartTagOpen(p,uri,name,recover); M_SET(ret); 
+  accept_m();
   return ret;
 }
 
@@ -187,7 +252,9 @@ int drv_attribute_recover(int p,char *suri,char *sname,char *s) {
 }
 
 static int start_tag_close(int p,int recover) {
-  int p1,p2,ret=0;
+  int p1,p2,ret=0,m;
+  m=newStartTagClose(p,recover);
+  if(m!=-1) return M_RET(m);
   switch(P_TYP(p)) {
   case P_EMPTY: case P_NOT_ALLOWED: case P_TEXT:
   case P_LIST: case P_DATA: case P_DATA_EXCEPT: case P_VALUE:
@@ -214,6 +281,8 @@ static int start_tag_close(int p,int recover) {
     break;
   default: assert(0);
   }
+  newStartTagClose(p,recover); M_SET(ret); 
+  accept_m();
   return ret;
 }
 int drv_start_tag_close(int p) {return start_tag_close(p,0);}
@@ -285,7 +354,9 @@ int drv_text(int p,char *s,int n) {return textws(p,s,n);}
 int drv_text_recover(int p,char *s,int n) {return p;}
 
 static int end_tag(int p,int recover) {
-  int p1,p2,ret=0;
+  int p1,p2,ret=0,m;
+  m=newEndTag(p,recover);
+  if(m!=-1) return M_RET(m);
   switch(P_TYP(p)) {
   case P_EMPTY: case P_NOT_ALLOWED: case P_TEXT:
   case P_INTERLEAVE: case P_GROUP: case P_ONE_OR_MORE:
@@ -301,6 +372,8 @@ static int end_tag(int p,int recover) {
     break;
   default: assert(0);
   }
+  newEndTag(p,recover); M_SET(ret);
+  accept_m();
   return ret;
 }
 int drv_end_tag(int p) {return end_tag(p,0);}
@@ -308,6 +381,9 @@ int drv_end_tag_recover(int p) {return end_tag(p,1);}
 
 /*
  * $Log$
+ * Revision 1.10  2003/12/14 14:52:24  dvd
+ * efficient memoization
+ *
  * Revision 1.9  2003/12/14 10:52:36  dvd
  * recovery
  *

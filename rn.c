@@ -55,8 +55,7 @@ int newString(char *s) {
 static int accept_##n() { \
   int j; \
   if((j=ht_get(&ht_##n,i_##n))==-1) { \
-    ht_put(&ht_##n,j=i_##n); \
-    ++i_##n; \
+    ht_put(&ht_##n,j=i_##n++); \
     if(i_##n==len_##n) { \
       int (*name)[N##_SIZE]=(int (*)[])calloc(len_##n*=2,sizeof(int[N##_SIZE])); \
       memcpy(name,rn_##name,i_##n*sizeof(int[N##_SIZE])); \
@@ -388,11 +387,11 @@ static void windup() {
 
 static int hash_p(int p) {
   int *pp=rn_pattern[p];
-  return (pp[0]<<24)+((pp[1]&0xfff)<<12)+(pp[2]&0xfff);
+  return (pp[0]<<24)|((pp[1]&0xfff)<<12)|(pp[2]&0xfff);
 }
 static int hash_nc(int nc) {
   int *ncp=rn_nameclass[nc];
-  return (ncp[0]<<24)+((ncp[1]&0xfff)<<12)+(ncp[2]&0xfff);
+  return (ncp[0]<<24)|((ncp[1]&0xfff)<<12)|(ncp[2]&0xfff);
 }
 static int hash_s(int i) {return strhash(rn_string+i);}
 
@@ -408,6 +407,9 @@ static int equal_s(int s1,int s2) {return strcmp(rn_string+s1,rn_string+s2)==0;}
 
 /* 
  * $Log$
+ * Revision 1.23  2003/12/14 14:52:24  dvd
+ * efficient memoization
+ *
  * Revision 1.22  2003/12/13 22:03:30  dvd
  * rnv works
  *
