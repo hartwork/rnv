@@ -195,7 +195,6 @@ static int isanycont(int p) {
   return res==3;
 }
 
-
 static int isanymix(int p) {
   int p0,nc,p1,p2,i,res,flat[2];
   p0=p; if(!RN_P_IS(p0,ONE_OR_MORE)) return 0;
