@@ -851,7 +851,6 @@ void xsd_test() {
   assert(!rx_match(PAT_BASE64_BINARY,"YF=O",4));
   assert(rx_match(PAT_BASE64_BINARY,"YFZ=",4)!=STRICT_BASE64);
  
-
   assert(b64cmpn("","",0)==0);
   assert(b64cmpn("ABC123","ABC123",6)==0);
   assert(b64cmpn("ABC 123"," ABC123",7)==0);
