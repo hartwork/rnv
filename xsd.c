@@ -57,7 +57,7 @@ static int (*match[])(char *r,char *s,int n)={&rx_match,&rx_rmatch,&rx_cmatch};
 #define TYP_NAME 9
 #define TYP_QNAME 10
 #define TYP_ANY_URI 11
-#define TYP_BASE64BINARY 12
+#define TYP_BASE64_BINARY 12
 #define TYP_BOOLEAN 13
 #define TYP_BYTE 14
 #define TYP_DATE 15
@@ -102,7 +102,7 @@ static char *typtab[NTYP]={
 #define ERR_INVALID_PARAMETER "invalid XML Schema datatype parameter '%s'"
 #define ERR_INVALID_DATATYPE "invalid XML Schema datatype name '%s'"
 
-static int toknlen(char *s,int n) {
+static int toklenn(char *s,int n) {
   char *end=s+n;
   int u,len=-2;
   SKIP_SPACE: ++len;
@@ -119,7 +119,26 @@ static int toknlen(char *s,int n) {
   }
 }
 
-static int tokncnt(char *s,int n) {
+static int b64lenn(char *s,int n) {
+  char *end=s+n;
+  int l=0,len;
+  for(;;) {
+    if(end==s) break;
+    --end;
+    if(!xmlc_white_space(*end)&&*end!='=') {++end; break;}
+  }
+  while(s!=end) {if(!xmlc_white_space(*s)) ++l; ++s;}
+  len=l/4*3;
+  switch(l%4) {
+  case 0: break;
+  case 1: len=-1; break;
+  case 2: len+=1; break;
+  case 3: len+=2; break;
+  }
+  return len;
+}
+
+static int tokcntn(char *s,int n) {
   char *end=s+n;
   int u,cnt=0;
   SKIP_SPACE:
@@ -147,7 +166,6 @@ struct facets {
   int whiteSpace;
 };
 
-
 /* isn't it nice to have an implementation of unicode regular expressions? */
 #define PAT_ORDINAL "([0-9]+)"
 #define PAT_FRACTIONAL "(\\.[0-9]+)"
@@ -158,6 +176,9 @@ struct facets {
 #define PAT_INTEGER "([+-]?"PAT_ORDINAL")"
 #define PAT_DECIMAL PAT_INTEGER PAT_FRACTIONAL"?"
 #define PAT_FLOATING PAT_DECIMAL"([Ee]"PAT_INTEGER")?|INF|-INF|NaN"
+
+#define PAT_HEX_BINARY "[0-9a-fA-F]+"
+#define PAT_BASE64_BINARY "[A-Za-z0-9+/ ]+={0,2}"
 
 #define PAT_ANY_URI "(([a-zA-Z][0-9a-zA-Z+\\-\\.]*:)?/{0,2}[0-9a-zA-Z;/?:@&=+$\\.\\-_!~*'()%]+)?(#[0-9a-zA-Z;/?:@&=+$\\.\\-_!~*'()%]+)?"
 
@@ -182,10 +203,10 @@ struct facets {
 #define PAT_DURAM "("PAT_ORDINAL"M)"
 #define PAT_DURAS "("PAT_ORDINAL"(\\."PAT_ORDINAL")?S)"
 #define PAT_DURATIME \
-  "(" PAT_DURAH   PAT_DURAM"?"PAT_DURAS"?" \
+"(T(" PAT_DURAH   PAT_DURAM"?"PAT_DURAS"?" \
   "|" PAT_DURAM"?"PAT_DURAM   PAT_DURAS"?" \
-  "|" PAT_DURAS"?"PAT_DURAM"?"PAT_DURAS ")"
-#define PAT_DURATION "-?P("PAT_DURADATE"|"PAT_DURATIME"|"PAT_DURADATE"T"PAT_DURATIME")"
+  "|" PAT_DURAS"?"PAT_DURAM"?"PAT_DURAS "))"
+#define PAT_DURATION "-?P("PAT_DURADATE PAT_DURATIME"|"PAT_DURADATE"|"PAT_DURATIME")"
 
 #define PAT_ZONE "(Z|[+-](0[0-9]|1[0-4]):[0-5][0-9])"
 #define PAT_YEAR0 "[0-9]{4,}" 
@@ -284,66 +305,72 @@ int xsd_allows(char *typ,char *ps,char *s,int n) {
   case TYP_G_MONTH:
     fct.pattern[fct.npat++]=PAT_MONTH;
     break;
-  case TYP_HEX_BINARY: break;
-  case TYP_BASE64BINARY: break;
+  case TYP_HEX_BINARY: 
+    fct.pattern[fct.npat++]=PAT_HEX_BINARY;
+    length=(toklenn(s,n)+1)/2;
+    break;
+  case TYP_BASE64_BINARY:
+    fct.pattern[fct.npat++]=PAT_BASE64_BINARY;
+    length=b64lenn(s,n);
+    break;
   case TYP_ANY_URI: 
     fct.pattern[fct.npat++]=PAT_ANY_URI;
-    length=toknlen(s,n);
+    length=toklenn(s,n);
     break;
   case TYP_QNAME:
     fct.pattern[fct.npat++]=PAT_QNAME;
-    length=toknlen(s,n);
+    length=toklenn(s,n);
     break;
   case TYP_NOTATION:
     fct.pattern[fct.npat++]=PAT_QNAME;
-    length=toknlen(s,n);
+    length=toklenn(s,n);
     break;
  /*derived*/
   case TYP_NORMALIZED_STRING: fct.whiteSpace=WS_REPLACE; 
     length=u_strnlen(s,n); 
     break;
   case TYP_TOKEN: 
-    length=toknlen(s,n);
+    length=toklenn(s,n);
     break;
   case TYP_LANGUAGE: 
     fct.pattern[fct.npat++]=PAT_LANGUAGE;
-    length=toknlen(s,n);
+    length=toklenn(s,n);
     break;
   case TYP_NMTOKEN: 
     fct.pattern[fct.npat++]=PAT_NMTOKEN;
-    length=toknlen(s,n);
+    length=toklenn(s,n);
     break;
   case TYP_NMTOKENS: 
     fct.pattern[fct.npat++]=PAT_NMTOKENS;
-    length=tokncnt(s,n);
+    length=tokcntn(s,n);
     break;
   case TYP_NAME: 
     fct.pattern[fct.npat++]=PAT_NAME;
-    length=toknlen(s,n);
+    length=toklenn(s,n);
     break;
   case TYP_NCNAME: 
     fct.pattern[fct.npat++]=PAT_NCNAME;
-    length=toknlen(s,n);
+    length=toklenn(s,n);
     break;
   case TYP_ID: 
     fct.pattern[fct.npat++]=PAT_NCNAME;
-    length=toknlen(s,n);
+    length=toklenn(s,n);
     break;
   case TYP_IDREF: 
     fct.pattern[fct.npat++]=PAT_NCNAME;
-    length=toknlen(s,n);
+    length=toklenn(s,n);
     break;
   case TYP_IDREFS: 
     fct.pattern[fct.npat++]=PAT_NCNAMES;
-    length=tokncnt(s,n);
+    length=tokcntn(s,n);
     break;
   case TYP_ENTITY: 
     fct.pattern[fct.npat++]=PAT_NCNAME;
-    length=toknlen(s,n);
+    length=toklenn(s,n);
     break;
   case TYP_ENTITIES: 
     fct.pattern[fct.npat++]=PAT_NCNAMES;
-    length=tokncnt(s,n);
+    length=tokcntn(s,n);
     break;
   case TYP_INTEGER:
     fct.pattern[fct.npat++]=PAT_INTEGER;
@@ -402,13 +429,44 @@ int xsd_allows(char *typ,char *ps,char *s,int n) {
   return ok;
 }
 
-static int nrmncmp(char *s1,char *s2,int n) {
+static int nrmcmpn(char *s1,char *s2,int n) {
   char *end=s2+n;
   for(;;) {
-    if(!*s1) return (s2==end);
-    if(s2==end) return 0;
-    if(*s1!=*s2&&(!xmlc_white_space(*s1)||!xmlc_white_space(*s2))) return 0;
+    if(s2==end) return *s1;
+    if(!*s1) return -*s2;
+    if(*s1!=*s2&&(!xmlc_white_space(*s1)||!xmlc_white_space(*s2))) return *s1-*s2;
     ++s1; ++s2;
+  }
+}
+
+static int hexcmpn(char *s1,char *s2,int n) {
+  char *end=s2+n;
+  for(;;++s1,++s2) {
+    while(*s1&&xmlc_white_space(*s1)) ++s1;
+    while(s2!=end&&xmlc_white_space(*s2)) ++s2;
+    if(s2==end) return *s1;
+    if(!*s1) return -*s2;
+    switch(*s1) {
+    case 'a': case 'A': if(*s2=='a'||*s2=='A') continue;
+    case 'b': case 'B': if(*s2=='b'||*s2=='B') continue;
+    case 'c': case 'C': if(*s2=='c'||*s2=='C') continue;
+    case 'd': case 'D': if(*s2=='d'||*s2=='D') continue;
+    case 'e': case 'E': if(*s2=='e'||*s2=='E') continue;
+    case 'f': case 'F': if(*s2=='f'||*s2=='F') continue;
+    default: if(*s1==*s2) continue;
+    }
+    return *s1-*s2;
+  }
+}
+
+static int b64cmpn(char *s1,char *s2,int n) {
+  char *end=s2+n;
+  for(;;++s1,++s2) {
+    while(*s1&&xmlc_white_space(*s1)) ++s1;
+    while(s2!=end&&xmlc_white_space(*s2)) ++s2;
+    if(s2==end) return *s1;
+    if(!*s1) return -*s2;
+    return *s1-*s2;
   }
 }
 
@@ -416,7 +474,7 @@ int xsd_equal(char *typ,char *val,char *s,int n) {
   switch(strtab(typ,typtab,NTYP)) {
  /*primitive*/
   case TYP_STRING: return strcmpn(val,s,n)==0;
-  case TYP_BOOLEAN: return (tokcmpn("true",val,strlen(val))||tokcmpn("1",val,strlen(val)))==(tokcmpn("true",s,n)||tokcmpn("1",s,n));
+  case TYP_BOOLEAN: return (tokcmpn("true",val,strlen(val))==0||tokcmpn("1",val,strlen(val))==0)==(tokcmpn("true",s,n)==0||tokcmpn("1",s,n)==0);
   case TYP_DECIMAL:
   case TYP_FLOAT:
   case TYP_DOUBLE: return atof(val)==atof(s);
@@ -430,16 +488,15 @@ int xsd_equal(char *typ,char *val,char *s,int n) {
   case TYP_G_DAY:
   case TYP_G_MONTH:
     return 1;
-  case TYP_HEX_BINARY:
-  case TYP_BASE64BINARY:
-    return 1;
-  case TYP_ANY_URI: return tokcmpn(val,s,n);
+  case TYP_HEX_BINARY: return hexcmpn(val,s,n)==0;
+  case TYP_BASE64_BINARY: return b64cmpn(val,s,n)==0;
+  case TYP_ANY_URI: return tokcmpn(val,s,n)==0;
   case TYP_QNAME: case TYP_NOTATION: /* context is not passed over; compare local parts */  
     { char *ln=strchr(val,':'),m=val-ln+1; 
-      return ln?m<n?tokcmpn(ln+1,s,n-m):0:tokcmpn(val,s,n);
+      return ln?m<n?tokcmpn(ln+1,s,n-m)==0:0:tokcmpn(val,s,n)==0;
     }
  /*derived*/
-  case TYP_NORMALIZED_STRING: return nrmncmp(val,s,n);
+  case TYP_NORMALIZED_STRING: return nrmcmpn(val,s,n)==0;
   case TYP_TOKEN:
   case TYP_LANGUAGE:
   case TYP_NMTOKEN:
@@ -450,7 +507,7 @@ int xsd_equal(char *typ,char *val,char *s,int n) {
   case TYP_IDREF:
   case TYP_IDREFS: 
   case TYP_ENTITY:
-  case TYP_ENTITIES: return tokcmpn(val,s,n);
+  case TYP_ENTITIES: return tokcmpn(val,s,n)==0;
   case TYP_INTEGER:
   case TYP_POSITIVE_INTEGER:
   case TYP_NON_NEGATIVE_INTEGER:
