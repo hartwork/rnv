@@ -1,11 +1,17 @@
 # $Id$
 #
+
+#PUBLIC
+
 VERSION=1.4.2
 CC=cc
 
+# optional features
+DSL_SCM=0
+
 EXPAT_H="<expat.h>"
 UNISTD_H="<unistd.h>"
-DSL_SCM=0
+SCM_H="<scm/scm.h>"
 
 INC=-I/usr/local/include
 LBL=-L/usr/local/lib
@@ -27,7 +33,7 @@ LIBEXPAT=-lexpat
 LIB=${LIBEXPAT}
 
 .if ${DSL_SCM}
-DEF+=-DDSL_SCM=${DSL_SCM}
+DEF+=-DDSL_SCM=${DSL_SCM} -DSCM_H=${SCM_H}
 LIB+=-lscm -lm
 .endif
 
@@ -106,9 +112,6 @@ rvp: rvp.o ${LIBRNV}
 xsdck: xsdck.o ${LIBRNV}
 	${CC} ${LFLAGS} -o xsdck xsdck.o ${LIBRNV} ${LIB}
 
-rnd_test: ${LIBRNV} tst/c/rnd_test.c
-	${CC} ${LFLAGS} -I. -o rnd_test tst/c/rnd_test.c ${LIBRNV} ${LIB}
-
 ${LIBRNVA}: ${OBJ}
 	ar rc $@ ${OBJ}
 
@@ -121,8 +124,25 @@ depend: ${SRC}
 clean:
 	-rm -f *.o tst/c/*.o  *.a *.so rnv arx rnd_test *_test *.core *.gmon *.gprof rnv*.zip rnv.txt rnv.pdf rnv.html rnv.xml
 
+rnd_test: ${LIBRNV} tst/c/rnd_test.c
+	${CC} ${LFLAGS} -I. -o rnd_test tst/c/rnd_test.c ${LIBRNV} ${LIB}
+
+#PRIVATE
+
+Makefile.gnu: Makefile.bsd
+	cat $> | \
+	sed -E	-e 's/^\.if ([$${}A-Za-z_]+)/ifeq (\1,1)/' \
+		-e 's/^\.endif/endif/' | \
+	cat > $@
+
+Makefile.bsd: Makefile
+	cat $> | \
+	sed -En -e '/^#PUBLIC/,/^#PRIVATE/ p' | \
+	grep -Ev '^#PUBLIC|^#PRIVATE' | \
+	cat > $@
+
 DIST=rnv
-DISTFILES=license.txt ${SRC} Makefile Makefile.bcc readme.txt changes.txt src.txt
+DISTFILES=license.txt ${SRC} Makefile.gnu Makefile.bsd Makefile.bcc readme.txt changes.txt src.txt
 DISTWIN32=rnv.exe arx.exe readme32.txt license.txt
 DISTTOOLS=\
 tools/xck tools/rnv.vim tools/arx.conf \

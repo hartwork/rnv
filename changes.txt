@@ -1,6 +1,12 @@
 /* $Id$ */
 
-1.4.2
+1.5.0
+
+Tue Jan 20 04:45:39 AMT 2004
+dvd: rearranged a lot of things; put error reporting through a single
+     function er_vprintf, useful for interfacing to scripting languages;
+     some success with dsl -- dsl-equal? works
+     
 Tue Jan 20 00:24:56 AMT 2004
 dvd: renamed strops to s, memops to m, functions has s_ and m_ prefixes
 

@@ -13,7 +13,7 @@ char *dsl_scm=NULL;
 
 #include <string.h>
 #include UNISTD_H
-#include <scm/scm.h>
+#include SCM_H
 #include "m.h"
 #include "er.h"
 

@@ -3,7 +3,7 @@
 /* validation pipe:
  synopsis
 
-   rvp -qsvh grammar.rnc
+   rvp -qsdevh grammar.rnc
 
  reads from 0, writes to 1, 2 for grammar parse errors only, then redirected.
    -q switches to numerical error codes
@@ -210,7 +210,7 @@ static int query(void) {
 }
 
 static void version(void) {(*er_printf)("rvp version %s\n",RVP_VERSION);}
-static void usage(void) {(*er_printf)("usage: rvp {-[qdsvh?]} {schema.rnc}\n");}
+static void usage(void) {(*er_printf)("usage: rvp {-[qsdevh?]} {schema.rnc}\n");}
 
 int main(int argc,char **argv) {
   int i, ok;
