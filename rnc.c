@@ -356,7 +356,6 @@ static int sym(struct utf_source *sp) {
   case '>':
     getv(sp); if(v!='>') (*er_handler)(ER_LEX,'>',v,sp->fn,sp->line,sp->col);
     getv(sp); return SYM_ANNOTATION;
-  case ':':
   case '"': 
     break;
   case '\'':
@@ -384,6 +383,9 @@ int main(int argc,char **argv) {
 
 /*
  * $Log$
+ * Revision 1.8  2003/11/23 16:16:06  dvd
+ * no roles for elements
+ *
  * Revision 1.7  2003/11/21 00:20:06  dvd
  * lexer in progress
  *
