@@ -3,6 +3,7 @@
 #include <stdlib.h> /* calloc */
 #include <string.h> /* strcmp,memcmp,strlen,strcpy,memcpy,memset */
 
+#include "util.h"
 #include "ht.h"
 #include "rn.h"
 
@@ -69,7 +70,7 @@ static int hash_ary(int i,int *ary,int size) {
 
 static int hash_p(int i) {return hash_ary(i,(int*)rn_pattern,P_SIZE);}
 static int hash_nc(int i) {return hash_ary(i,(int*)rn_nameclass,NC_SIZE);}
-static int hash_s(int i) {char *s=rn_string+i-1; int h=0; while(*(++s)) h=h*31+*s; return h;}
+static int hash_s(int i) {return strhash(rn_string+i);}
 
 static int equal_p(int p1,int p2) {return memcmp(rn_pattern[p1],rn_pattern[p2],P_SIZE)==0;}
 static int equal_nc(int nc1,int nc2) {return memcmp(rn_nameclass[nc1],rn_pattern[nc2],NC_SIZE)==0;}
@@ -107,6 +108,9 @@ int rn_accept_s(char *s) {
 
 /* 
  * $Log$
+ * Revision 1.3  2003/11/27 21:00:23  dvd
+ * abspath,strhash
+ *
  * Revision 1.2  2003/11/26 00:37:47  dvd
  * parser in progress, documentation handling removed
  *
