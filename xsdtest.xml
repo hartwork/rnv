@@ -62,16 +62,16 @@
     />
 
   <types
-    decimal=" 123.4567 "
+    decimal=" 123."
     />
 
   <types
-    decimal="  0000123.4570000   "
+    decimal="  .4570000   "
     int="5"
     />
 
   <types
-    decimal=" -123.457890 "
+    decimal=" -."
     int="3"
     />
 
@@ -85,8 +85,18 @@
     />
 
   <values
+    duration= " -P1Y10.2S "
     />
 
   <values
+     qname = " block "
     />
+
+  <values
+     qname = " fo:block "
+    />
+
+  <values
+     qname = " bar:block "
+     />
 </typetest>

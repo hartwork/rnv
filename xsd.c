@@ -105,6 +105,41 @@ static char *typtab[NTYP]={
 #define ERR_INVALID_PARAMETER "invalid XML Schema datatype parameter '%s'"
 #define ERR_INVALID_DATATYPE "invalid XML Schema datatype name '%s'"
 
+struct dura {int yr,mo,dy,hr,mi;double se;};
+static void durainit(struct dura *d) {d->yr=d->mo=d->dy=d->hr=d->mi=0; d->se=0.0;}
+
+static void s2dura(struct dura *dp,char *s,int n) {
+  char *end=s+n,*np="0";
+  int sign=1,time=0;
+  durainit(dp);
+  while(s!=end) {
+    switch(*s) {
+    case '-': sign=-1; break;
+    case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7':
+    case '8': case '9': case '.': np=s; break;
+    case 'T': time=1; break;
+    case 'Y': dp->yr=sign*atoi(np); break;
+    case 'M': if(time) dp->mi=sign*atoi(np); else dp->mo=sign*atoi(np); break;
+    case 'D': dp->dy=sign*atoi(np); break;
+    case 'H': dp->hr=sign*atoi(np); break;
+    case 'S': dp->se=sign*atof(np); break;
+    }
+    ++s;
+  }
+}
+
+static int duracmp(char *s1,char *s2,int n) {
+  struct dura d1,d2;
+  s2dura(&d1,s1,strlen(s1)); s2dura(&d2,s2,n);
+  if(d1.yr!=d2.yr) return d1.yr-d2.yr;
+  if(d1.mo!=d2.mo) return d1.mo-d2.mo;
+  if(d1.dy!=d2.dy) return d1.dy-d2.dy;
+  if(d1.hr!=d2.hr) return d1.hr-d2.hr;
+  if(d1.mi!=d2.mi) return d1.mi-d2.mi;
+  if(d1.se!=d2.se) return d1.se<d2.se?-1:1;
+  return 0;
+}
+
 static int toklenn(char *s,int n) {
   char *end=s+n;
   int u,len=-2;
@@ -169,6 +204,7 @@ static int diglenn(char *s,int n) {
     if(s==end||*s=='.'||xmlc_white_space(*s)) break;
     ++len; ++s;
   }
+  if(len==0) len=1;
   if(*s=='.') len+=fdiglenn(s,end-s);
   return len;
 }
@@ -201,16 +237,19 @@ struct facets {
   int whiteSpace;
 };
 
-/* isn't it nice to have an implementation of unicode regular expressions? */
+/* PAT_DECIMAL is unsigned decimal, signed decimal matches PAT_FIXED */
 #define PAT_ORDINAL "([0-9]+)"
 #define PAT_FRACTIONAL "(\\.[0-9]+)"
+#define PAT_DECIMAL "("PAT_ORDINAL"\\.?|"PAT_ORDINAL"?"PAT_FRACTIONAL")"
+
 #define PAT_POSITIVE "\\+?"PAT_ORDINAL
 #define PAT_NON_NEGATIVE "\\+?"PAT_ORDINAL
 #define PAT_NON_POSITIVE "\\-"PAT_ORDINAL"|0+"
 #define PAT_NEGATIVE "\\-"PAT_ORDINAL
 #define PAT_INTEGER "([+-]?"PAT_ORDINAL")"
-#define PAT_DECIMAL PAT_INTEGER PAT_FRACTIONAL"?"
-#define PAT_FLOATING PAT_DECIMAL"([Ee]"PAT_INTEGER")?|INF|-INF|NaN"
+
+#define PAT_FIXED "([+-]?"PAT_DECIMAL")"
+#define PAT_FLOATING PAT_FIXED"([Ee]"PAT_INTEGER")?|INF|-INF|NaN"
 
 #define PAT_HEX_BINARY "[0-9a-fA-F]+"
 #define PAT_BASE64_BINARY "[A-Za-z0-9+/ ]+={0,2}"
@@ -236,7 +275,7 @@ struct facets {
   "|" PAT_DURAY"?"PAT_DURAM"?"PAT_DURAD ")"
 #define PAT_DURAH "("PAT_ORDINAL"H)"
 #define PAT_DURAM "("PAT_ORDINAL"M)"
-#define PAT_DURAS "("PAT_ORDINAL"(\\."PAT_ORDINAL")?S)"
+#define PAT_DURAS "("PAT_DECIMAL"S)"
 #define PAT_DURATIME \
 "(T(" PAT_DURAH   PAT_DURAM"?"PAT_DURAS"?" \
   "|" PAT_DURAM"?"PAT_DURAM   PAT_DURAS"?" \
@@ -380,7 +419,6 @@ int xsd_allows(char *typ,char *ps,char *s,int n) {
     }
   }
 
-
   fct.whiteSpace=WS_COLLAPSE; 
   length=INT_MAX;
   switch(dt) {
@@ -392,7 +430,7 @@ int xsd_allows(char *typ,char *ps,char *s,int n) {
     fct.pattern[fct.npat++]="true|false|1|0";
     break;
   case TYP_DECIMAL: 
-    fct.pattern[fct.npat++]=PAT_DECIMAL;
+    fct.pattern[fct.npat++]=PAT_FIXED;
     if(fct.set&(1<<FCT_FRACTION_DIGITS)) ok=ok&&fdiglenn(s,n)<=fct.fractionDigits;
     if(fct.set&(1<<FCT_TOTAL_DIGITS)) ok=ok&&diglenn(s,n)<=fct.totalDigits;
     if(fct.set&FCT_BOUNDS) ok=ok&chkd(&fct,s,n);
@@ -521,16 +559,6 @@ int xsd_allows(char *typ,char *ps,char *s,int n) {
   return ok;
 }
 
-static int nrmcmpn(char *s1,char *s2,int n) {
-  char *end=s2+n;
-  for(;;) {
-    if(s2==end) return *s1;
-    if(!*s1) return -*s2;
-    if(*s1!=*s2&&(!xmlc_white_space(*s1)||!xmlc_white_space(*s2))) return *s1-*s2;
-    ++s1; ++s2;
-  }
-}
-
 static int hexcmpn(char *s1,char *s2,int n) {
   char *end=s2+n;
   for(;;++s1,++s2) {
@@ -562,6 +590,28 @@ static int b64cmpn(char *s1,char *s2,int n) {
   }
 }
 
+static int nrmcmpn(char *s1,char *s2,int n) {
+  char *end=s2+n;
+  for(;;) {
+    if(s2==end) return *s1;
+    if(!*s1) return -*s2;
+    if(*s1!=*s2&&(!xmlc_white_space(*s1)||!xmlc_white_space(*s2))) return *s1-*s2;
+    ++s1; ++s2;
+  }
+}
+
+static int qncmpn(char *s1,char *s2,int n2) { /* context is not passed over; compare local parts */  
+  char *ln1=s1,*ln2=s2;
+  int n=n2;
+  while(*ln1&&*ln1!=':') ++ln1; 
+  while(n!=0&&*ln2!=':') {++ln2; --n;}
+  if(*ln1) {
+    return n?tokcmpn(ln1+1,ln2+1,n-1):tokcmpn(ln1+1,s2,n2);
+  } else {
+    return n?tokcmpn(s1,ln2+1,n-1):tokcmpn(s1,s2,n2);
+  }
+}
+
 int xsd_equal(char *typ,char *val,char *s,int n) {
   switch(strtab(typ,typtab,NTYP)) {
  /*primitive*/
@@ -570,7 +620,7 @@ int xsd_equal(char *typ,char *val,char *s,int n) {
   case TYP_DECIMAL:
   case TYP_FLOAT:
   case TYP_DOUBLE: return atof(val)==atof(s);
-  case TYP_DURATION:
+  case TYP_DURATION: return duracmp(val,s,n)==0;
   case TYP_DATE_TIME:
   case TYP_DATE:
   case TYP_TIME:
@@ -583,10 +633,8 @@ int xsd_equal(char *typ,char *val,char *s,int n) {
   case TYP_HEX_BINARY: return hexcmpn(val,s,n)==0;
   case TYP_BASE64_BINARY: return b64cmpn(val,s,n)==0;
   case TYP_ANY_URI: return tokcmpn(val,s,n)==0;
-  case TYP_QNAME: case TYP_NOTATION: /* context is not passed over; compare local parts */  
-    { char *ln=strchr(val,':'),m=val-ln+1; 
-      return ln?m<n?tokcmpn(ln+1,s,n-m)==0:0:tokcmpn(val,s,n)==0;
-    }
+  case TYP_QNAME: case TYP_NOTATION:
+    return qncmpn(val,s,n)==0;
  /*derived*/
   case TYP_NORMALIZED_STRING: return nrmcmpn(val,s,n)==0;
   case TYP_TOKEN:

@@ -88,8 +88,10 @@ char *rnx_p2str(int p) {
     break;
   case P_DATA_EXCEPT: s=strclone("dataExcept (-)");  break;
   case P_VALUE: Value(p,dt,val);
-    s=(char*)calloc(strlen("value \"\"")+1+strlen(rn_string+val),sizeof(char));
-    strcpy(s,"value \""); strcat(s,rn_string+val); strcat(s,"\"");
+    s1=rnx_nc2str(dt);
+    s=(char*)calloc(strlen("value \"\" ")+1+strlen(s1)+strlen(rn_string+val),sizeof(char));
+    strcpy(s,"value "); strcat(s,s1); strcat(s," \""); strcat(s,rn_string+val); strcat(s,"\"");
+    free(s1);
     break;
   case P_ATTRIBUTE: Attribute(p,nc,p1);
     s1=rnx_nc2str(nc);
