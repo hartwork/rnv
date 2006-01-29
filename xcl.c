@@ -186,7 +186,7 @@ static int process(int fd) {
     if(!XML_ParseBuffer(expat,len,len==0)) goto PARSE_ERROR;
     if(len==0) break;
   }
-  return 1;
+  return ok;
 
 PARSE_ERROR:
   error_handler(XCL_ER_XML,XML_ErrorString(XML_GetErrorCode(expat)));
