@@ -16,8 +16,8 @@ EXPAT_H="<expat.h>"
 UNISTD_H="<unistd.h>"
 SCM_H="<scm/scm.h>"
 
-INC=-I/usr/local/include
-LBL=-L/usr/local/lib
+INC=-I/usr/local/include ${CPPFLAGS}
+LBL=-L/usr/local/lib ${LDFLAGS}
 
 DEF=\
 -DM_STATIC=${M_STATIC} \
