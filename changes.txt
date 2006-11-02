@@ -1,5 +1,8 @@
 /* $Id$ */
 
+1.7.8 Thu Nov  2 12:52:18 AMT 2006
+dvd: build script for OpenVMS by Jim Duff, http://eight-cubed.com/
+
 1.7.7 Sun Jan 29 11:13:23 PST 2006
 dvd: rnv exits with non-zero return code if validation fails.
 
