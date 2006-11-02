@@ -160,7 +160,7 @@ Makefile.bsd: Makefile
 	cat > $@
 
 DIST=rnv
-DISTFILES=license.txt ${SRC} Makefile.gnu Makefile.bsd Makefile.bcc readme.txt changes.txt src.txt
+DISTFILES=license.txt ${SRC} Makefile.gnu Makefile.bsd build_vms.com Makefile.bcc readme.txt changes.txt src.txt
 DISTWIN32=rnv.exe arx.exe readme32.txt license.txt
 DISTTOOLS=\
 tools/xck tools/rnv.vim tools/arx.conf \
@@ -169,8 +169,7 @@ tools/rvp.pl tools/rvp.py \
 /usr/local/share/rng-c/fo.rnc \
 /usr/local/share/rng-c/none.rnc \
 /usr/local/share/rng-c/relaxng.rnc \
-tools/addr-spec.rnc tools/addr-spec-dsl.rnc tools/xslt-dsl.rnc \
-tools/build-vms.com
+tools/addr-spec.rnc tools/addr-spec-dsl.rnc tools/xslt-dsl.rnc
 DISTSCM=\
 scm/u.scm \
 scm/xml-ranges.scm \
