@@ -1,16 +1,16 @@
 
-VERSION=1.7.8
+VERSION=1.8.0
 CC=cc
 
 # optional features
 M_STATIC=0
 M_FILL=0
-DSL_SCM=0
+DSL_PY=0
 DXL_EXC=0
 
 EXPAT_H="<expat.h>"
 UNISTD_H="<unistd.h>"
-SCM_H="<scm/scm.h>"
+PY_H="<scm/scm.h>"
 
 INC=-I/usr/local/include ${CPPFLAGS}
 LBL=-L/usr/local/lib ${LDFLAGS}
@@ -30,16 +30,16 @@ CFLAGS=${INC} ${DEF} ${WARN} ${OPT}
 LFLAGS=${OPT} ${LBL}
 
 LIBEXPAT=-lexpat
-LIB_SCM=-lscm -lm \
+LIB_PY=-lscm -lm \
 `sh -c '[ -f /usr/lib/libdl.a ] && echo -ldl \
       ; [ -f /usr/lib/libsocket.a ] && echo -lsocket \
 '` 
 
 LIB=${LIBEXPAT}
 
-ifeq (${DSL_SCM},1)
-DEF+=-DDSL_SCM=${DSL_SCM} -DSCM_H=${SCM_H}
-LIB+=${LIB_SCM}
+ifeq (${DSL_PY},1)
+DEF+=-DDSL_PY=${DSL_PY} -DPY_H=${PY_H}
+LIB+=${LIB_PY}
 endif
 
 ifeq (${DXL_EXC},1)

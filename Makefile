@@ -3,18 +3,18 @@
 
 #PUBLIC
 
-VERSION=1.7.8
+VERSION=1.8.0
 CC=cc
 
 # optional features
 M_STATIC=0
 M_FILL=0
-DSL_SCM=0
+DSL_PY=0
 DXL_EXC=0
 
 EXPAT_H="<expat.h>"
 UNISTD_H="<unistd.h>"
-SCM_H="<scm/scm.h>"
+PY_H="<scm/scm.h>"
 
 INC=-I/usr/local/include ${CPPFLAGS}
 LBL=-L/usr/local/lib ${LDFLAGS}
@@ -34,16 +34,16 @@ CFLAGS=${INC} ${DEF} ${WARN} ${OPT}
 LFLAGS=${OPT} ${LBL}
 
 LIBEXPAT=-lexpat
-LIB_SCM=-lscm -lm \
+LIB_PY=-lscm -lm \
 `sh -c '[ -f /usr/lib/libdl.a ] && echo -ldl \
       ; [ -f /usr/lib/libsocket.a ] && echo -lsocket \
 '` 
 
 LIB=${LIBEXPAT}
 
-.if ${DSL_SCM}
-DEF+=-DDSL_SCM=${DSL_SCM} -DSCM_H=${SCM_H}
-LIB+=${LIB_SCM}
+.if ${DSL_PY}
+DEF+=-DDSL_PY=${DSL_PY} -DPY_H=${PY_H}
+LIB+=${LIB_PY}
 .endif
 
 .if ${DXL_EXC}
@@ -177,14 +177,18 @@ scm/rx-ranges.scm \
 scm/rx.scm \
 scm/spat.scm \
 scm/dsl.scm
+DISTPY=\
+py/rnvmodule.c \
+py/setup.py
 
 zip: ${DIST}-${VERSION}.zip
-${DIST}-${VERSION}.zip: ${DISTFILES} ${DISTWIN32} ${DISTTOOLS} ${DISTSCM}
+${DIST}-${VERSION}.zip: ${DISTFILES} ${DISTWIN32} ${DISTTOOLS} ${DISTSCM} ${DISTPY}
 	-rm -rf rnv.zip ${DIST}-[0-9]*.[0-9]*.[0-9]*
-	mkdir ${DIST}-${VERSION} ${DIST}-${VERSION}/tools ${DIST}-${VERSION}/scm
+	mkdir ${DIST}-${VERSION} ${DIST}-${VERSION}/tools ${DIST}-${VERSION}/scm ${DIST}-${VERSION}/py
 	cp ${DISTFILES} ${DIST}-${VERSION}/.
 	cp ${DISTTOOLS} ${DIST}-${VERSION}/tools/.
 	cp ${DISTSCM} ${DIST}-${VERSION}/scm/.
+	cp ${DISTPY} ${DIST}-${VERSION}/py/.
 	ln -s Makefile.gnu ${DIST}-${VERSION}/Makefile
 	zip -9 -r ${DIST}-${VERSION}.zip ${DIST}-${VERSION}
 	-rm -rf ${DIST}-${VERSION}
