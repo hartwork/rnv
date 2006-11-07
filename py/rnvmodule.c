@@ -33,9 +33,9 @@ load(PyObject *self, PyObject *args)
 
   *erbuf = 0;
   if(!PyArg_ParseTuple(args, "s", &name)) return NULL;
-  if(!(start = rnl_fn(name))) start = rn_notAllowed;
+  start = rnl_fn(name);
   
-  return Py_BuildValue("i", start);
+  return Py_BuildValue("(ii)", !!start, start);
 }
 
 static PyObject *
@@ -43,12 +43,13 @@ text(PyObject *self, PyObject *args)
 {
   char *text; int len, mixed;
   int prevp = rn_notAllowed, curp;
+  int ok;
 
   *erbuf = 0;
   if(!PyArg_ParseTuple(args, "is#i", &curp, &text, &len, &mixed)) return NULL;
-  if(!rnv_text(&curp, &prevp, text, len, mixed)) curp = rn_notAllowed;
+  ok = rnv_text(&curp, &prevp, text, len, mixed);
 
-  return Py_BuildValue("i", curp);
+  return Py_BuildValue("(ii)", ok, curp);
 }
 
 static PyObject *
@@ -56,12 +57,13 @@ start_tag_open(PyObject *self, PyObject *args)
 {
   char *name;
   int prevp = rn_notAllowed, curp;
+  int ok;
 
   *erbuf = 0;
   if(!PyArg_ParseTuple(args,"is",&curp,&name)) return NULL;
-  if(!rnv_start_tag_open(&curp, &prevp, name)) curp = rn_notAllowed;
+  ok = rnv_start_tag_open(&curp, &prevp, name);
 
-  return Py_BuildValue("i", curp);
+  return Py_BuildValue("(ii)", ok, curp);
 }
 
 static PyObject *
@@ -69,12 +71,13 @@ attribute(PyObject *self, PyObject *args)
 {
   char *name, *val;
   int prevp = rn_notAllowed, curp;
+  int ok;
 
   *erbuf = 0;
   if(!PyArg_ParseTuple(args,"iss",&curp,&name,&val)) return NULL;
-  if(!rnv_attribute(&curp,&prevp,name,val)) curp = rn_notAllowed;
+  ok = rnv_attribute(&curp,&prevp,name,val);
 
-  return Py_BuildValue("i", curp);
+  return Py_BuildValue("(ii)", ok, curp);
 }
 
 static PyObject *
@@ -82,12 +85,13 @@ start_tag_close(PyObject *self, PyObject *args)
 {
   char *name;
   int prevp = rn_notAllowed, curp;
+  int ok;
 
   *erbuf = 0;
   if(!PyArg_ParseTuple(args,"is",&curp,&name)) return NULL;
-  if(!rnv_start_tag_close(&curp, &prevp, name)) curp = rn_notAllowed;
+  ok = rnv_start_tag_close(&curp, &prevp, name);
 
-  return Py_BuildValue("i", curp);
+  return Py_BuildValue("(ii)", ok, curp);
 }
 
 static PyObject *
@@ -95,12 +99,14 @@ end_tag(PyObject *self, PyObject *args)
 {
   char *name;
   int prevp = rn_notAllowed, curp;
+  int ok;
+
 
   *erbuf = 0;
   if(!PyArg_ParseTuple(args,"is",&curp,&name)) return NULL;
-  if(!rnv_end_tag(&curp, &prevp, name)) curp = rn_notAllowed;
+  ok = rnv_end_tag(&curp, &prevp, name);
 
-  return Py_BuildValue("i", curp);
+  return Py_BuildValue("(ii)", ok, curp);
 }
 
 static PyMethodDef RnvMethods[] = {
