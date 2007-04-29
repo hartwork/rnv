@@ -6,7 +6,7 @@ TESTS = rnvtest
 
 
 
-rnv_CFLAGS = -DRNV_VERSION=\"@VERSION@\"
+rnv_CPPFLAGS = -DRNV_VERSION=\"@VERSION@\"
 
 rnv_SOURCES = \
 	ary.h ary.c \
@@ -37,7 +37,7 @@ rnv_SOURCES = \
 
 
 
-arx_CFLAGS = -DARX_VERSION=\"@VERSION@\"
+arx_CPPFLAGS = -DARX_VERSION=\"@VERSION@\"
 
 arx_SOURCES = \
 	ary.h ary.c \
@@ -64,7 +64,7 @@ arx_SOURCES = \
 
 
 
-rvp_CFLAGS = -DRVP_VERSION=\"@VERSION@\"
+rvp_CPPFLAGS = -DRVP_VERSION=\"@VERSION@\"
 
 rvp_SOURCES = \
 	ary.h ary.c \
