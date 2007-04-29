@@ -1,14 +1,14 @@
 AUTOMAKE_OPTIONS = foreign dist-bzip2 dist-zip
 
-bin_PROGRAMS = rnv arx rvp xsdck rnvtest
+bin_PROGRAMS = rnv arx rvp xsdck
+check_PROGRAMS = rnvtest
+noinst_LIBRARIES = librnv1.a librnv2.a
 
 TESTS = rnvtest
 
 
 
-rnv_CPPFLAGS = -DRNV_VERSION=\"@VERSION@\"
-
-rnv_SOURCES = \
+librnv1_a_SOURCES = \
 	ary.h ary.c \
 	drv.h drv.c \
 	er.h er.c \
@@ -27,120 +27,54 @@ rnv_SOURCES = \
 	u.h u.c \
 	xmlc.h xmlc.c \
 	xsd.h xsd.c \
-	xsd_tm.h xsd_tm.c \
-	\
+	xsd_tm.h xsd_tm.c
+
+
+
+librnv2_a_SOURCES = \
 	dxl.h dxl.c \
-	dsl.h dsl.c \
-	\
+	dsl.h dsl.c
+
+
+
+rnv_CPPFLAGS = -DRNV_VERSION=\"@VERSION@\"
+rnv_LDADD = librnv1.a librnv2.a
+
+rnv_SOURCES = \
 	ll.h \
 	xcl.c
 
 
 
 arx_CPPFLAGS = -DARX_VERSION=\"@VERSION@\"
+arx_LDADD = librnv1.a
 
 arx_SOURCES = \
-	ary.h ary.c \
-	drv.h drv.c \
-	er.h er.c \
-	erbit.h \
-	ht.h ht.c \
-	m.h m.c \
-	rn.h rn.c \
-	rnc.h rnc.c \
-	rnd.h rnd.c \
-	rnl.h rnl.c \
-	rnv.h rnv.c \
-	rnx.h rnx.c \
-	rx.h rx.c \
-	s.h s.c \
-	sc.h sc.c \
-	u.h u.c \
-	xmlc.h xmlc.c \
-	xsd.h xsd.c \
-	xsd_tm.h xsd_tm.c \
-	\
 	arx.c
 
 
 
 rvp_CPPFLAGS = -DRVP_VERSION=\"@VERSION@\"
+rvp_LDADD = librnv1.a librnv2.a
 
 rvp_SOURCES = \
-	ary.h ary.c \
-	drv.h drv.c \
-	er.h er.c \
-	erbit.h \
-	ht.h ht.c \
-	m.h m.c \
-	rn.h rn.c \
-	rnc.h rnc.c \
-	rnd.h rnd.c \
-	rnl.h rnl.c \
-	rnv.h rnv.c \
-	rnx.h rnx.c \
-	rx.h rx.c \
-	s.h s.c \
-	sc.h sc.c \
-	u.h u.c \
-	xmlc.h xmlc.c \
-	xsd.h xsd.c \
-	xsd_tm.h xsd_tm.c \
-	\
-	dxl.h dxl.c \
-	dsl.h dsl.c \
-	\
 	rvp.c
 
 
 
+xsdck_LDADD = librnv1.a
+
 xsdck_SOURCES = \
-	ary.h ary.c \
-	drv.h drv.c \
-	er.h er.c \
-	erbit.h \
-	ht.h ht.c \
-	m.h m.c \
-	rn.h rn.c \
-	rnc.h rnc.c \
-	rnd.h rnd.c \
-	rnl.h rnl.c \
-	rnv.h rnv.c \
-	rnx.h rnx.c \
-	rx.h rx.c \
-	s.h s.c \
-	sc.h sc.c \
-	u.h u.c \
-	xmlc.h xmlc.c \
-	xsd.h xsd.c \
-	xsd_tm.h xsd_tm.c \
-	\
 	xsdck.c
 
 
 
+rnvtest_LDADD = librnv1.a
+
 rnvtest_SOURCES = \
-	ary.h ary.c \
-	drv.h drv.c \
-	er.h er.c \
-	erbit.h \
-	ht.h ht.c \
-	m.h m.c \
-	rn.h rn.c \
-	rnc.h rnc.c \
-	rnd.h rnd.c \
-	rnl.h rnl.c \
-	rnv.h rnv.c \
-	rnx.h rnx.c \
-	rx.h rx.c \
-	s.h s.c \
-	sc.h sc.c \
-	u.h u.c \
-	xmlc.h xmlc.c \
-	xsd.h xsd.c \
-	xsd_tm.h xsd_tm.c \
-	\
 	test.c
+
+
 
 EXTRA_DIST = \
 	scm/dsl.scm \

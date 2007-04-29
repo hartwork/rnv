@@ -6,6 +6,7 @@ AM_INIT_AUTOMAKE(rnv, 1.7.9)
 # Checks for programs.
 AC_PROG_INSTALL
 AC_PROG_CC
+AC_PROG_RANLIB
 
 # Checks for header files.
 AC_HEADER_STDC
