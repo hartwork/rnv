@@ -48,12 +48,12 @@ Extra options:
 	CPPFLAGS="${CPPFLAGS} -DDXL_EXC=1"
 ], [])
 
-dnl // M_STATIC
+# M_STATIC
 AC_ARG_ENABLE(mem-static, [  --enable-mem-static=N   work with static memory of N bytes size], [
 	CPPFLAGS="${CPPFLAGS} -DM_STATIC=${enableval}"
 ], [])
 
-dnl // M_FILL
+# M_FILL
 AC_ARG_ENABLE(mem-fill, [  --enable-mem-fill=C     specify memory fill character, e.g. 'X'], [
 	CPPFLAGS="${CPPFLAGS} -DM_FILL=${enableval}"
 ], [])
@@ -63,17 +63,26 @@ AC_ARG_ENABLE(mem-fill, [  --enable-mem-fill=C     specify memory fill character
 # Expat
 AC_ARG_WITH(expat, [
 Dependency locations:
-  --with-expat            specify path of Expat
+  --with-expat=DIR        override path of Expat
                           ("/lib" or "/include" is appended)], [
+	if test "x${withval}" = "x"; then
+		AC_MSG_ERROR([No path given for option --with-expat])
+	fi
 	LDFLAGS="${LDFLAGS} -L${withval}/lib"
 	CPPFLAGS="${CPPFLAGS} -I${withval}/include"
 ], [])
 
-AC_ARG_WITH(expat-inc, [  --with-expat-inc        specify include path of Expat], [
+AC_ARG_WITH(expat-inc, [  --with-expat-inc=DIR    override include path of Expat], [
+	if test "x${withval}" = "x"; then
+		AC_MSG_ERROR([No path given for option --with-expat-inc])
+	fi
 	CPPFLAGS="${CPPFLAGS} -I${withval}"
 ], [])
 
-AC_ARG_WITH(expat-lib, [  --with-expat-lib        specify library path of Expat], [
+AC_ARG_WITH(expat-lib, [  --with-expat-lib=DIR    override library path of Expat], [
+	if test "x${withval}" = "x"; then
+		AC_MSG_ERROR([No path given for option --with-expat-lib])
+	fi
 	LDFLAGS="${LDFLAGS} -L${withval}"
 ], [])
 
@@ -81,19 +90,27 @@ AC_ARG_WITH(expat-lib, [  --with-expat-lib        specify library path of Expat]
 
 # SCM
 RNV_WITH_SCM=0
-AC_ARG_WITH(scm, [  --with-scm              specify path of SCM
+AC_ARG_WITH(scm, [  --with-scm[=DIR]        enable SCM (disabled by default)
                           ("/lib" or "/include" is appended)], [
-	LDFLAGS="${LDFLAGS} -L${withval}/lib"
-	CPPFLAGS="${CPPFLAGS} -I${withval}/include"
+	if test "x${withval}" != "x"; then
+		LDFLAGS="${LDFLAGS} -L${withval}/lib"
+		CPPFLAGS="${CPPFLAGS} -I${withval}/include"
+	fi
 	RNV_WITH_SCM=1
 ], [])
 
-AC_ARG_WITH(scm-inc, [  --with-scm-inc          specify include path of SCM], [
+AC_ARG_WITH(scm-inc, [  --with-scm-inc=DIR      specify include path of SCM], [
+	if test "x${withval}" = "x"; then
+		AC_MSG_ERROR([No path given for option --with-scm-inc])
+	fi
 	CPPFLAGS="${CPPFLAGS} -I${withval}"
 	RNV_WITH_SCM=1
 ], [])
 
-AC_ARG_WITH(scm-lib, [  --with-scm-lib          specify library path of SCM], [
+AC_ARG_WITH(scm-lib, [  --with-scm-lib=DIR      specify library path of SCM], [
+	if test "x${withval}" = "x"; then
+		AC_MSG_ERROR([No path given for option --with-scm-lib])
+	fi
 	LDFLAGS="${LDFLAGS} -L${withval}"
 	RNV_WITH_SCM=1
 ], [])
