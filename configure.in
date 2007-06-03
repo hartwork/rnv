@@ -68,22 +68,22 @@ Dependency locations:
 	if test "x${withval}" = "x"; then
 		AC_MSG_ERROR([No path given for option --with-expat])
 	fi
-	LDFLAGS="${LDFLAGS} -L${withval}/lib"
-	CPPFLAGS="${CPPFLAGS} -I${withval}/include"
+	LDFLAGS="-L${withval}/lib ${LDFLAGS}"
+	CPPFLAGS="-I${withval}/include ${CPPFLAGS}"
 ], [])
 
 AC_ARG_WITH(expat-inc, [  --with-expat-inc=DIR    override include path of Expat], [
 	if test "x${withval}" = "x"; then
 		AC_MSG_ERROR([No path given for option --with-expat-inc])
 	fi
-	CPPFLAGS="${CPPFLAGS} -I${withval}"
+	CPPFLAGS="-I${withval} ${CPPFLAGS}"
 ], [])
 
 AC_ARG_WITH(expat-lib, [  --with-expat-lib=DIR    override library path of Expat], [
 	if test "x${withval}" = "x"; then
 		AC_MSG_ERROR([No path given for option --with-expat-lib])
 	fi
-	LDFLAGS="${LDFLAGS} -L${withval}"
+	LDFLAGS="-L${withval} ${LDFLAGS}"
 ], [])
 
 
@@ -93,8 +93,8 @@ RNV_WITH_SCM=0
 AC_ARG_WITH(scm, [  --with-scm[=DIR]        enable SCM (disabled by default)
                           ("/lib" or "/include" is appended)], [
 	if test "x${withval}" != "x"; then
-		LDFLAGS="${LDFLAGS} -L${withval}/lib"
-		CPPFLAGS="${CPPFLAGS} -I${withval}/include"
+		LDFLAGS="-L${withval}/lib ${LDFLAGS}"
+		CPPFLAGS="-I${withval}/include ${CPPFLAGS}"
 	fi
 	RNV_WITH_SCM=1
 ], [])
@@ -103,7 +103,7 @@ AC_ARG_WITH(scm-inc, [  --with-scm-inc=DIR      specify include path of SCM], [
 	if test "x${withval}" = "x"; then
 		AC_MSG_ERROR([No path given for option --with-scm-inc])
 	fi
-	CPPFLAGS="${CPPFLAGS} -I${withval}"
+	CPPFLAGS="-I${withval} ${CPPFLAGS}"
 	RNV_WITH_SCM=1
 ], [])
 
@@ -111,7 +111,7 @@ AC_ARG_WITH(scm-lib, [  --with-scm-lib=DIR      specify library path of SCM], [
 	if test "x${withval}" = "x"; then
 		AC_MSG_ERROR([No path given for option --with-scm-lib])
 	fi
-	LDFLAGS="${LDFLAGS} -L${withval}"
+	LDFLAGS="-L${withval} ${LDFLAGS}"
 	RNV_WITH_SCM=1
 ], [])
 
