@@ -148,12 +148,12 @@ AC_CHECK_HEADER(xmlparse.h,[
 
 
 # Test SCM
-if test "${BUILD_WITH_SCM}" == "1"; then
-	SCM_MISSING="Please install SCM."
+if test ${RNV_WITH_SCM} == 1 ; then
+	SCM_MISSING='Please install SCM.'
 	AC_CHECK_LIB(scm, main,, AC_MSG_ERROR($SCM_MISSING))
 	AC_CHECK_HEADER(scm/scm.h,, AC_MSG_ERROR($SCM_MISSING))
 	
-	CPPFLAGS="${CPPFLAGS} -DDSL_SCM=1 -DSCM_H=<scm/scm.h>"
+	CPPFLAGS="${CPPFLAGS} -DDSL_SCM=1 -DSCM_H=\<scm/scm.h\>"
 fi
 
 
