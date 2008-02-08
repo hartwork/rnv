@@ -1,10 +1,12 @@
-AUTOMAKE_OPTIONS = foreign dist-bzip2 dist-zip
+AUTOMAKE_OPTIONS = 1.10.1 foreign dist-bzip2 dist-zip dist-lzma
 
 bin_PROGRAMS = rnv arx rvp xsdck
 check_PROGRAMS = rnvtest
 noinst_LIBRARIES = librnv1.a librnv2.a
 
 TESTS = rnvtest
+
+man_MANS = rnv.1
 
 
 
@@ -102,15 +104,13 @@ EXTRA_DIST = \
 	\
 	readme.txt \
 	readme32.txt \
+	rnv.1 \
 	src.txt \
 	\
 	build_vms.com \
-	Makefile___TRY_CONFIGURE_INSTEAD \
-	Makefile.bcc___TRY_CONFIGURE_INSTEAD \
-	Makefile.bsd___TRY_CONFIGURE_INSTEAD \
-	Makefile.gnu___TRY_CONFIGURE_INSTEAD \
 	\
 	rx_cls_ranges.c \
 	rx_cls_u.c
 
 ## NOTE: The two source files above are included by rx.c
+

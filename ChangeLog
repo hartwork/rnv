@@ -1,8 +1,9 @@
 /* $Id$ */
 
-???
+1.7.10 Wed Feb  6 14:26:13 GMT 2008
 hartwork: Path order fixes for configure.in
 hartwork: SCM fix for configure.in
+hartwork: Debian man page added
 
 1.7.9 Tue May  1 03:12:23 GMT 2007
 hartwork: GNU build files
