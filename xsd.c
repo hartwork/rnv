@@ -328,7 +328,7 @@ struct facets {
 #define PAT_MONTH0 "(0[1-9]|1[0-2])"
 #define PAT_DAY0 "([0-2][0-9]|3[01])"
 #define PAT_YEAR "-?"PAT_YEAR0 PAT_ZONE"?"
-#define PAT_MONTH "--"PAT_MONTH0"--"PAT_ZONE"?"
+#define PAT_MONTH "--"PAT_MONTH0 PAT_ZONE"?"
 #define PAT_DAY "---"PAT_DAY0 PAT_ZONE"?"
 #define PAT_YEAR_MONTH "-?"PAT_YEAR0"-"PAT_MONTH0 PAT_ZONE"?"
 #define PAT_MONTH_DAY "--"PAT_MONTH0"-"PAT_DAY0 PAT_ZONE"?"
