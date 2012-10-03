@@ -1,7 +1,7 @@
 # Process this file with autoconf to produce a configure script.
 AC_PREREQ(2.61)
 AC_INIT(rnv.c)
-AM_INIT_AUTOMAKE(rnv, 1.7.10)
+AM_INIT_AUTOMAKE(rnv, 1.7.11)
 
 # Checks for programs.
 AC_PROG_INSTALL

@@ -1,4 +1,4 @@
-AUTOMAKE_OPTIONS = 1.10.1 foreign dist-bzip2 dist-zip dist-lzma
+AUTOMAKE_OPTIONS = 1.12.1 foreign dist-bzip2 dist-zip dist-xz no-dist-gzip
 
 bin_PROGRAMS = rnv arx rvp xsdck
 check_PROGRAMS = rnvtest
