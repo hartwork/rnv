@@ -6,8 +6,6 @@ noinst_LIBRARIES = librnv1.a librnv2.a
 
 TESTS = rnvtest
 
-man_MANS = rnv.1
-
 
 
 librnv1_a_SOURCES = \
@@ -104,7 +102,6 @@ EXTRA_DIST = \
 	\
 	readme.txt \
 	readme32.txt \
-	rnv.1 \
 	src.txt \
 	\
 	build_vms.com \
