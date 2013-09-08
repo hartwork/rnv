@@ -1,11 +1,27 @@
 AUTOMAKE_OPTIONS = 1.12.1 foreign dist-bzip2 dist-zip dist-xz no-dist-gzip
 
+# Silent rule support for AsciiDoc
+V ?= $(AM_DEFAULT_VERBOSITY)
+SILENT_RULE_A2X_MESSAGE_PLAIN  = $(if $(subst 0,,$(V)),@:,@echo "  A2X     " $@)
+HIDE_A2X = $(if $(subst 0,,$(V)),,@)
+
+# Man page config
+_MANUAL_PACKAGE = @PACKAGE_NAME@
+_MANUAL_TITLE = @PACKAGE_NAME@ Manual
+_MANUAL_VERSION = @PACKAGE_VERSION@
+
+
 bin_PROGRAMS = rnv arx rvp xsdck
 check_PROGRAMS = rnvtest
 noinst_LIBRARIES = librnv1.a librnv2.a
 
 TESTS = rnvtest
 
+man1_MANS = \
+	man/arx.1 \
+	man/rnv.1 \
+	man/rvp.1 \
+	man/xsdck.1
 
 
 librnv1_a_SOURCES = \
@@ -75,8 +91,33 @@ rnvtest_SOURCES = \
 	test.c
 
 
+man/%.1: man/%.1.txt man/asciidoc.conf Makefile.am configure.ac
+	@chmod u+w docbook-xsl.css 2>/dev/null || true
+	@$(MKDIR_P) man
+	$(SILENT_RULE_A2X_MESSAGE_PLAIN)
+	$(HIDE_A2X)a2x \
+		--conf-file=$(srcdir)/man/asciidoc.conf \
+		--attribute="manual_package=$(_MANUAL_PACKAGE)" \
+		--attribute="manual_title=$(_MANUAL_TITLE)" \
+		--attribute="manual_version=$(_MANUAL_VERSION)" \
+		--format=manpage -D man \
+		"$<"
+
+clean-local:
+	rm -f "$(builddir)"/man/*.1
+
 
 EXTRA_DIST = \
+	man/asciidoc.conf \
+	man/arx.1 \
+	man/arx.1.txt \
+	man/rnv.1 \
+	man/rnv.1.txt \
+	man/rvp.1 \
+	man/rvp.1.txt \
+	man/xsdck.1 \
+	man/xsdck.1.txt \
+	\
 	scm/dsl.scm \
 	scm/M.scm \
 	scm/rx.scm \

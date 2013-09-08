@@ -1,6 +1,9 @@
 XSDCK(1)
 ========
 :doctype: manpage
+:man source:   {manual_package}
+:man version:  {manual_version}
+:man manual:   {manual_title}
 
 NAME
 ----
