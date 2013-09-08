@@ -1,7 +1,7 @@
 # Process this file with autoconf to produce a configure script.
 AC_PREREQ(2.61)
-AC_INIT(rnv.c)
-AM_INIT_AUTOMAKE(rnv, 1.7.11)
+AC_INIT([RNV], [1.7.11], [http://sourceforge.net/projects/rnv/], [rnv])
+AM_INIT_AUTOMAKE([])
 
 # Checks for programs.
 AC_PROG_INSTALL
