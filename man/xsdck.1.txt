@@ -1,0 +1,28 @@
+XSDCK(1)
+========
+:doctype: manpage
+
+NAME
+----
+xsdck - example rnv plugin for XSD datatypes
+
+SYNOPSIS
+--------
+*rnv -d xsdck* ['RNV_OPTIONS'] 'grammar.rnc' {document.xml ...}
+
+DESCRIPTION
+-----------
+Both *RNV* and *RVP* can use pluggable datatypes. This module is an example providing support for XSD datatypes.
+
+HOMEPAGE
+--------
+http://sourceforge.net/projects/rnv/
+
+AUTHOR
+------
+Michael Simacek <msimacek@redhat.com>.
+
+
+SEE ALSO
+--------
+rnv(1), rvp(1)

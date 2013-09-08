@@ -1,0 +1,81 @@
+RVP(1)
+======
+:doctype: manpage
+
+NAME
+----
+rvp - Relax NG validation pipe
+
+SYNOPSIS
+--------
+*rvp* {*-q*|*-s*|*-v*|*-h*} {'schema.rnc'}
+
+OPTIONS
+-------
+*-q*::
+returns only error numbers, suppresses messages
+
+*-s*::
+takes less memory and runs slower
+
+*-v*::
+prints current version
+
+*-h*::
+displays usage sumary and exits
+
+DESCRIPTION
+-----------
+*RVP* is abbreviation for *Relax NG Validation Pipe* It reads validation primitives from the standard input and reports result to the standard output. It's main purpose is to ease embedding of a Relax NG validator into various languages and environments. An application would launch RVP as a parallel proces and use a simple protocol to perform validation. The protocol, in BNF, is:
+
+ query ::= (
+ quit
+ | start
+ | start-tag-open
+ | attribute
+ | start-tag-close
+ | text
+ | end-tag) z.
+ quit ::= "quit".
+ start ::= "start" [gramno].
+ start-tag-open ::= "start-tag-open" patno name.
+ attribute ::= "attribute" patno name value.
+ start-tag-close :: = "start-tag-close" patno name.
+ text ::= ("text"|"mixed") patno text.
+ end-tag ::= "end-tag" patno name.
+ response ::= (ok | er | error) z.
+ ok ::= "ok" patno.
+ er ::= "er" patno erno.
+ error ::= "error" patno erno error.
+ z ::= "\0" .
+
+RVP assumes that the last colon in a name separates the local part from the namespace URI (it is what one gets if specifies `:' as namespace separator to Expat).
+
+Error codes can be grabbed from rvp sources by grep \_ER_.h and OR-ing them with corresponding masks from erbit.h. Additionally, error 0 is the protocol format error.
+
+Either er or error responses are returned, not both; -q chooses between concise and verbose forms (invocation syntax described later).
+
+Start passes the index of a grammar (first frammar in the list of command-line arguments has number 0); if the number is omitted, 0 is assumed.
+
+Quit is not opposite of start; instead, it quits RVP.
+
+EXAMPLES
+--------
+To assist emvessing RVP, samples in Perl and Python are provided. The scripts use Expat wrappers for each of the languages to parse documents. They take a Relax NG grammar (in the compact syntax) as the command line argument and read the XML from the standard input. For example, the following commands validate rnv.dbx against docbook.rnc:
+
+ perl rvp.pl docbook.rnc < rnv.dbx
+ python rvp.py docbook.rnc < rnv.dbx
+
+The scripts are kept simple and unobscured to illustrate the technique, rather than being designed as general-purpose modules. Programmers using Perl, Python, Ruby and other languages are encouraged to implement and share reusable RVP-based components for languages of choice.
+
+HOMEPAGE
+--------
+http://sourceforge.net/projects/rnv/
+
+AUTHOR
+------
+Michael Simacek <msimacek@redhat.com>. This manpage was made from readme written by *RNV*'s author David Tolpin <dvd@davidashen.net>.
+
+SEE ALSO
+--------
+rnv(1), arx(1)
