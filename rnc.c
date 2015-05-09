@@ -1158,7 +1158,7 @@ static int topLevel(struct rnc_source *sp) {
   getsym(sp); getsym(sp);
   while(decl(sp));
   if((is_grammar=(CUR(sp).sym==SYM_GRAMMAR))) {
-    chk_get(sp,SYM_LCUR);
+    getsym(sp); chk_get(sp,SYM_LCUR);
   }
   if(grammarContent(sp)) {
     while(grammarContent(sp));
