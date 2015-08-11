@@ -1,11 +1,2 @@
 #! /bin/sh
-echo "[  0%] aclocal"
-aclocal || exit 1
-
-echo "[ 33%] autoconf"
-autoconf || exit 1
-
-echo "[ 67%] automake"
-automake --add-missing --copy || exit 1
-
-echo "[100%] ."
+autoreconf -i
