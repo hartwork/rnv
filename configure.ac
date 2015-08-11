@@ -135,11 +135,11 @@ AC_CHECK_HEADER(xmlparse.h,[
 if test "${RNV_WITH_SCM}" == "1"; then
 	SCM_MISSING="Please install scm.
    On a Debian-based system enter 'sudo apt-get install libscm-dev'."
+	LIBS="-lncurses -lreadline -lX11 -lm -ldl ${LIBS}"
 	AC_CHECK_LIB(scm, main,, AC_MSG_ERROR($SCM_MISSING))
 	AC_CHECK_HEADER(scm.h,, AC_MSG_ERROR($SCM_MISSING))
 	
 	CPPFLAGS="${CPPFLAGS} -DDSL_SCM=1 -DSCM_H=\<scm.h\>"
-	LDFLAGS="$LDFLAGS -lncurses -lreadline -lX11 -lm -ldl"
 fi
 
 
