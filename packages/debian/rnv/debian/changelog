@@ -1,3 +1,9 @@
+rnv (1.7.11-1) unstable; urgency=low
+
+  * Sync with latest upstream
+
+ -- Sebastian Pipping <sebastian@pipping.org>  Tue, 11 Aug 2015 00:58:52 +0000
+
 rnv (1.7.10-2) unstable; urgency=low
 
   * QA upload.
