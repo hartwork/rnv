@@ -155,10 +155,26 @@ EXTRA_DIST = \
 
 @PACKAGE_TARNAME@-@PACKAGE_VERSION@.tar.bz2: | distcheck
 
+
+REQUIRED_DEBIAN_PACKAGES = asciidoc build-essential docbook-xml libxml2-utils xsltproc xz-utils zip \
+	devscripts fakeroot \
+	debhelper autotools-dev libexpat1-dev libscm-dev libncurses5-dev libreadline-dev libx11-dev
+
+DEBIAN_PACKAGE_CHECK_TARGETS = $(patsubst %,%-installed,$(REQUIRED_DEBIAN_PACKAGES))
+
+%-installed:
+	@P=`echo "$@" | sed 's,-installed,,'`; dpkg --status "$${P}" 2>/dev/null \
+		| fgrep -q installed \
+		|| { echo "ERROR: Package \"$${P}\" not installed, please install." 1>&2; exit 1 ; }
+
+enforce-debian-package-requirements:
+	$(MAKE) -j$(words $(DEBIAN_PACKAGE_CHECK_TARGETS)) $(DEBIAN_PACKAGE_CHECK_TARGETS)
+
 packages/debian/@PACKAGE_TARNAME@_@PACKAGE_VERSION@.orig.tar.bz2:
 	$(LN_S) ../../@PACKAGE_TARNAME@-@PACKAGE_VERSION@.tar.bz2 $@
 
-deb: @PACKAGE_TARNAME@-@PACKAGE_VERSION@.tar.bz2 packages/debian/@PACKAGE_TARNAME@_@PACKAGE_VERSION@.orig.tar.bz2
+deb: enforce-debian-package-requirements
+	$(MAKE) @PACKAGE_TARNAME@-@PACKAGE_VERSION@.tar.bz2 packages/debian/@PACKAGE_TARNAME@_@PACKAGE_VERSION@.orig.tar.bz2
 	$(RM) -R packages/debian/@PACKAGE_TARNAME@-@PACKAGE_VERSION@
 	( cd packages/debian && tar xf @PACKAGE_TARNAME@_@PACKAGE_VERSION@.orig.tar.bz2 )
 	( cd packages/debian && cp -R rnv/debian @PACKAGE_TARNAME@-@PACKAGE_VERSION@/ )
