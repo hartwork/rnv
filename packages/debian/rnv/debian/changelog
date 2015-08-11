@@ -1,0 +1,28 @@
+rnv (1.7.10-2) unstable; urgency=low
+
+  * QA upload.
+  * Set maintainer to QA, removed uploaders
+  * Switched to debhelper 7
+  * Introduced patch system, thus switching to Source Format 3.0 (quilt)
+  * Added debian/watch
+  * Change build-dep libreadline5-dev to libreadline-dev (Closes: #553839)
+  * Set LIBS='-ldl' to fix FTBFS with binutils-gold (Closes: #556323)
+  * Updated debian/copyright
+  * Updated standards-version to 3.8.4
+
+ -- Jan Hauke Rahm <jhr@debian.org>  Wed, 03 Feb 2010 11:59:28 +0100
+
+rnv (1.7.10-1) unstable; urgency=low
+
+  * New upstream release
+
+ -- Sebastian Pipping <webmaster@hartwork.org>  Wed, 06 Feb 2008 21:01:14 +0100
+
+rnv (1.7.9-1) unstable; urgency=low
+
+  * Initial release (Closes: #345959)
+  * Post-release patch for Scheme-enabled compilation
+  * Post-release addition of man page
+
+ -- Sebastian Pipping <webmaster@hartwork.org>  Sat, 05 Jan 2008 02:37:13 +0100
+

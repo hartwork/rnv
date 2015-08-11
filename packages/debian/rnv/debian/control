@@ -1,0 +1,25 @@
+Source: rnv
+Section: text
+Priority: optional
+Maintainer: Debian QA Group <packages@qa.debian.org>
+Build-Depends: debhelper (>= 7.4.10), autotools-dev, quilt (>= 0.46-7),
+ libexpat1-dev, libscm-dev,
+ libncurses5-dev, libreadline-dev, libx11-dev
+Standards-Version: 3.8.4
+Homepage: http://sourceforge.net/projects/rnv/
+
+Package: rnv
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Relax NG Compact Syntax validator
+ Relax NG is an XML Schema language like DTD or W3C XML Schema.
+ Relax NG schemas can be written in either XML (.rng files) or an
+ alternative compact syntax (.rnc files). RNV uses the latter to check
+ if a give XML file is valid in respect to the language defined by
+ the Relax NG schema. RNV uses Expat for XML parsing.
+ .
+ If you intend to validate against Relax NG schemas in XML syntax
+ instead have a look at xmllint (package libxml2-utils) or xmlstarlet.
+ Also trang can convert Relax NG schemas from XML to compact syntax
+ and back.
+

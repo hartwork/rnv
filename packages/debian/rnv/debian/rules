@@ -1,0 +1,12 @@
+#!/usr/bin/make -f
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+
+%:
+	dh $@ --with quilt --parallel
+
+override_dh_auto_configure:
+	LIBS='-ldl' dh_auto_configure -- --with-scm=/usr
+
+override_dh_auto_test:
