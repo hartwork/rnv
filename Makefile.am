@@ -152,3 +152,17 @@ EXTRA_DIST = \
 
 ## NOTE: The two source files above are included by rx.c
 
+
+@PACKAGE_TARNAME@-@PACKAGE_VERSION@.tar.bz2: | distcheck
+
+packages/debian/@PACKAGE_TARNAME@_@PACKAGE_VERSION@.orig.tar.bz2:
+	$(LN_S) ../../@PACKAGE_TARNAME@-@PACKAGE_VERSION@.tar.bz2 $@
+
+deb: @PACKAGE_TARNAME@-@PACKAGE_VERSION@.tar.bz2 packages/debian/@PACKAGE_TARNAME@_@PACKAGE_VERSION@.orig.tar.bz2
+	$(RM) -R packages/debian/@PACKAGE_TARNAME@-@PACKAGE_VERSION@
+	( cd packages/debian && tar xf @PACKAGE_TARNAME@_@PACKAGE_VERSION@.orig.tar.bz2 )
+	( cd packages/debian && cp -R rnv/debian @PACKAGE_TARNAME@-@PACKAGE_VERSION@/ )
+	( cd packages/debian/@PACKAGE_TARNAME@-@PACKAGE_VERSION@ && debuild -us -uc )
+	ls -l packages/debian/@PACKAGE_TARNAME@_*
+
+.PHONY: deb

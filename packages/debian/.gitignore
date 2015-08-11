@@ -1,0 +1,7 @@
+/rnv-*/
+/*.orig.tar.*
+/*.debian.tar.gz
+/*.dsc
+/*.build
+/*.changes
+/*.deb
