@@ -7,6 +7,6 @@
 	dh $@ --with quilt --parallel
 
 override_dh_auto_configure:
-	LIBS='-ldl' dh_auto_configure -- --with-scm=/usr
+	dh_auto_configure -- --with-scm=/usr
 
 override_dh_auto_test:

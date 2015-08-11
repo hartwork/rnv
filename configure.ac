@@ -139,7 +139,7 @@ if test "${RNV_WITH_SCM}" == "1"; then
 	AC_CHECK_HEADER(scm.h,, AC_MSG_ERROR($SCM_MISSING))
 	
 	CPPFLAGS="${CPPFLAGS} -DDSL_SCM=1 -DSCM_H=\<scm.h\>"
-	LDFLAGS="$LDFLAGS -lncurses -lreadline -lX11 -lm"
+	LDFLAGS="$LDFLAGS -lncurses -lreadline -lX11 -lm -ldl"
 fi
 
 
