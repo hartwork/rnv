@@ -7,6 +7,7 @@ AM_INIT_AUTOMAKE([])
 AC_PROG_INSTALL
 AC_PROG_CC
 AC_PROG_RANLIB
+AC_PROG_LN_S
 
 # Checks for header files.
 AC_HEADER_STDC
@@ -138,7 +139,7 @@ if test "${RNV_WITH_SCM}" == "1"; then
 	AC_CHECK_HEADER(scm.h,, AC_MSG_ERROR($SCM_MISSING))
 	
 	CPPFLAGS="${CPPFLAGS} -DDSL_SCM=1 -DSCM_H=\<scm.h\>"
-	LDFLAGS="$LDFLAGS -lncurses -lreadline -lX11 -lm"
+	LDFLAGS="$LDFLAGS -lncurses -lreadline -lX11 -lm -ldl"
 fi
 
 
