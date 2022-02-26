@@ -482,7 +482,7 @@ static void advance(struct rnc_source *sp) {
 	    if(i+U_MAXLEN>NXT(sp).slen) realloc_s(&NXT(sp),2*(i+U_MAXLEN));
 	    getv(sp);
 	    if(!name_char(sp->v)) {NXT(sp).s[i]='\0'; break;}
-	    if(sp->v==':') prefixed=1;
+	    if(sp->v=='|') prefixed=1;
 	  }
 	  if(!(escaped||prefixed)) {
 	    int kwd;
@@ -492,7 +492,7 @@ static void advance(struct rnc_source *sp) {
 	    }
 	  }
 	  if(prefixed) {
-	    if(NXT(sp).s[i-1]==':'&&sp->v=='*') {
+	    if(NXT(sp).s[i-1]=='|'&&sp->v=='*') {
 	      getv(sp); NXT(sp).s[i-1]='\0';
 	      NXT(sp).sym=SYM_NSNAME;
 	    } else NXT(sp).sym=SYM_QNAME;
@@ -791,7 +791,7 @@ static int name(struct rnc_source *sp,int p,int s) {
 }
 
 static int qname(struct rnc_source *sp) {
-  char *s=CUR(sp).s; while(*s!=':') ++s; *(s++)='\0';
+  char *s=CUR(sp).s; while(*s!='|') ++s; *(s++)='\0';
   return name(sp,rn_newString(CUR(sp).s),rn_newString(s));
 }
 
@@ -972,7 +972,7 @@ static int datatype(struct rnc_source *sp) {
   case SYM_TOKEN: dt=rn_dt_token; break;
   case SYM_STRING: dt=rn_dt_string; break;
   case SYM_QNAME:
-    { char *s=CUR(sp).s; while(*s!=':') ++s; *(s++)='\0';
+    { char *s=CUR(sp).s; while(*s!='|') ++s; *(s++)='\0';
       dt=rn_newDatatype(dt2uri(sp,rn_newString(CUR(sp).s)),rn_newString(s));
     } break;
   case SYM_LITERAL: dt=rn_dt_token; return dt;

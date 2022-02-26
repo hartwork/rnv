@@ -134,7 +134,7 @@ errors=0
 launch()
 pat=start('0') # that is, start of the first grammar;
 	       # multiple grammars can be passed to rvp
-parser=xml.parsers.expat.ParserCreate('UTF-8',':') # last colon in the name
+parser=xml.parsers.expat.ParserCreate('UTF-8','|') # pipe in the name
                                   # separates local name from namespace URI
 parser.StartElementHandler=start_element
 parser.EndElementHandler=end_element

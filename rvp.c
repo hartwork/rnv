@@ -30,7 +30,7 @@
   z ::= "\0" .
 
   conventions:
-    last colon in name separates namespace uri and local part
+    pipe in name separates namespace uri and local part
     -q?er:error
     error==0 yields message 'protocol error' and happens when a query is not understood
     start assumes gramno=0 if the argument is omitted

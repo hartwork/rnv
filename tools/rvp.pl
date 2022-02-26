@@ -112,10 +112,10 @@ sub flush_text {
   $text="";
 }
 
-# last colon in a name separates the local name from the URI
+# pipe in a name separates the local name from the URI
 sub qname {
    my ($p,$name)=@_;
-   return join(':',$p->namespace($name),$name);
+   return join('|',$p->namespace($name),$name);
 }
 
 sub start_element {

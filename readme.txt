@@ -266,8 +266,8 @@ RVP
        error ::= "error" patno erno error.
      z ::= "\0" .
 
-     * RVP assumes that the last colon in a name separates the local part
-       from the namespace URI (it is what one gets if specifies `:' as
+     * RVP assumes that a pipe in a name separates the local part
+       from the namespace URI (it is what one gets if specifies `|' as
        namespace separator to Expat).
      * Error codes can be grabbed from rvp sources by grep _ER_ *.h and
        OR-ing them with corresponding masks from erbit.h. Additionally,

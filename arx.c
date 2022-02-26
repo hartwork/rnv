@@ -406,7 +406,7 @@ static void validate(int start,int fd) {
   void *buf; int len;
   previous=current=start;
 
-  expat=XML_ParserCreateNS(NULL,':');
+  expat=XML_ParserCreateNS(NULL,'|');
   XML_SetElementHandler(expat,&start_element,&end_element);
   XML_SetCharacterDataHandler(expat,&characters);
   ok=1; any=0;

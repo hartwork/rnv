@@ -721,8 +721,8 @@ static int nrmcmpn(char *s1,char *s2,int n) {
 static int qncmpn(char *s1,char *s2,int n2) { /* context is not passed over; compare local parts */
   char *ln1=s1,*ln2=s2;
   int n=n2;
-  while(*ln1&&*ln1!=':') ++ln1;
-  while(n!=0&&*ln2!=':') {++ln2; --n;}
+  while(*ln1&&*ln1!='|') ++ln1;
+  while(n!=0&&*ln2!='|') {++ln2; --n;}
   if(*ln1) {
     return n?s_tokcmpn(ln1+1,ln2+1,n-1):s_tokcmpn(ln1+1,s2,n2);
   } else {

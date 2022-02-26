@@ -56,7 +56,7 @@ static void windup(void) {
 
 static char *qname_open(char **surip,char **snamep,char *name) {
   char *sep;
-  if((sep=strrchr(name,':'))) {
+  if((sep=strrchr(name,'|'))) {
     *snamep=sep+1; *surip=name; *sep='\0';
   } else {
     *snamep=name; while(*name) ++name; *surip=name;
@@ -64,7 +64,7 @@ static char *qname_open(char **surip,char **snamep,char *name) {
   return sep; /* NULL if no namespace */
 }
 
-static void qname_close(char *sep) {if(sep) *sep=':';}
+static void qname_close(char *sep) {if(sep) *sep='|';}
 
 static int whitespace(char *text,int n_txt) {
   char *s=text,*end=text+n_txt;

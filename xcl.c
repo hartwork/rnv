@@ -203,7 +203,7 @@ static int externalEntityRef(XML_Parser p,const char *context,
 
 static void validate(int fd) {
   previous=current=start;
-  expat=XML_ParserCreateNS(NULL,':');
+  expat=XML_ParserCreateNS(NULL,'|');
   XML_SetParamEntityParsing(expat,XML_PARAM_ENTITY_PARSING_ALWAYS);
   XML_SetElementHandler(expat,&start_element,&end_element);
   XML_SetCharacterDataHandler(expat,&characters);
