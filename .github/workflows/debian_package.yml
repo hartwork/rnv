@@ -1,0 +1,46 @@
+# Copyright (C) 2022 Sebastian Pipping <sebastian@pipping.org>
+# Licensed under the BSD-3 license
+
+name: Build Debian package
+
+on:
+  pull_request:
+  push:
+  schedule:
+    - cron: '0 16 * * 5'  # Every Friday 4pm
+
+jobs:
+  debian_package:
+    name: Build Debian package
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2.4.0
+
+      - name: Install build dependencies
+        run: |-
+          set -x
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -V \
+            asciidoc \
+            autotools-dev \
+            build-essential \
+            debhelper \
+            devscripts \
+            docbook-xml \
+            fakeroot \
+            libexpat1-dev \
+            libncurses5-dev \
+            libreadline-dev \
+            libscm-dev \
+            libx11-dev \
+            libxml2-utils \
+            xsltproc \
+            xz-utils \
+            zip
+
+      - name: Build Debian package
+        run: |-
+          set -x
+          ./bootstrap
+          ./configure
+          make deb

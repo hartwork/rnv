@@ -1,0 +1,45 @@
+# Copyright (C) 2022 Sebastian Pipping <sebastian@pipping.org>
+# Licensed under the BSD-3 license
+
+name: Build and test
+
+on:
+  pull_request:
+  push:
+  schedule:
+    - cron: '0 16 * * 5'  # Every Friday 4pm
+
+jobs:
+  build_and_test:
+    name: Build and test
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2.4.0
+
+      - name: Install build dependencies
+        run: |-
+          set -x
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -V \
+            asciidoc \
+            autoconf \
+            automake \
+            build-essential \
+            docbook-xml \
+            xsltproc
+
+      - name: Build
+        run: |-
+          set -x
+          ./bootstrap
+          mkdir build
+          ( cd build && ../configure )
+          make -C build "-j$(nproc)"
+
+      - name: Test
+        run: |-
+          set -x
+          make -C build check
+          make -C build distcheck
+          make -C build install DESTDIR="${PWD}"/ROOT
+          find ROOT/ -not -type d | sort | xargs ls -l
