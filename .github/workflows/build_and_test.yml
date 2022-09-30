@@ -26,6 +26,7 @@ jobs:
             automake \
             build-essential \
             docbook-xml \
+            docbook-xsl \
             xsltproc
 
       - name: Build
