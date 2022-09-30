@@ -27,6 +27,7 @@ jobs:
             debhelper \
             devscripts \
             docbook-xml \
+            docbook-xsl \
             fakeroot \
             libexpat1-dev \
             libncurses5-dev \
